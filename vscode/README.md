@@ -6,7 +6,7 @@ Build cross-platform apps in Object Pascal with Pastel. This extension connects 
 
 - The `pastel` program on your `PATH` (or set `pastel.path`). Check your setup with **Pastel: Check Setup**.
 - [Free Pascal](https://www.freepascal.org/) 3.2 or newer.
-- Recommended: the **Pascal** extension (`alefragnani.pascal`) for colors in `.pas` files, and **C/C++** (`ms-vscode.cpptools`) for debugging with F5.
+- Recommended: **C/C++** (`ms-vscode.cpptools`) for debugging with F5.
 
 ## Features
 
@@ -25,9 +25,25 @@ Build cross-platform apps in Object Pascal with Pastel. This extension connects 
 
 **New projects.** *Pastel: New Project…* creates an app or console project and opens it. New projects come with VS Code settings, so `Ctrl+Shift+B` builds and `F5` starts debugging.
 
+**Pastel panel.** The palette icon in the activity bar opens the Pastel panel: Run and Build buttons, your forms (click one to open the designer; expand it for its `.pform` and `.pas` files), the other source files and the project settings.
+
+**Pascal code.** `.pas` files get syntax colors, an outline (classes, methods), symbol search across your project and the Pastel framework (`Ctrl+T`), and go to definition: `Ctrl+click` a class or method name, or a unit in a `uses` clause to open that unit.
+
+**Delphi keys** (in Pastel projects; turn off with `pastel.delphiShortcuts`):
+
+| Key | |
+|---|---|
+| `F9` | Run |
+| `Ctrl+F9` | Build |
+| `F12` | Switch between a form (designer or `.pform`) and its code |
+| `Ctrl+Shift+Up` / `Down` | Jump between a method's declaration and its body |
+
+These replace VS Code's own F9 (toggle breakpoint) and F12 (go to definition) in Pastel projects. Breakpoints can still be set by clicking left of the line numbers, and `Ctrl+click` still goes to a definition.
+
 ## Settings
 
 | Setting | Default | |
 |---|---|---|
 | `pastel.path` | `pastel` | Path to the `pastel` program |
 | `pastel.checkWhileTyping` | `true` | Check `.pform` files while you type |
+| `pastel.delphiShortcuts` | `true` | F9, Ctrl+F9, F12 and Ctrl+Shift+Up/Down as in Delphi |

@@ -346,7 +346,7 @@ begin
 
   WriteText(V + 'extensions.json', Fill([
     '{',
-    '  "recommendations": ["alefragnani.pascal", "ms-vscode.cpptools"]',
+    '  "recommendations": ["ms-vscode.cpptools"]',
     '}'
   ], Name, Ident));
 

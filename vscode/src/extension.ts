@@ -8,10 +8,13 @@ import {
   SchemaProperty, stripComment,
 } from './model';
 import { FormPreview } from './preview';
+import { PascalIndex, registerNavigation, toggleDeclarationCommand } from './navigation';
+import { registerSidebar } from './sidebar';
 
 let schema: Schema | undefined;
 let schemaLoading: Promise<Schema | undefined> | undefined;
 let diagnostics: vscode.DiagnosticCollection;
+const pascalIndex = new PascalIndex();
 const checkTimers = new Map<string, NodeJS.Timeout>();
 
 const PLATFORMS: { label: string; description: string }[] = [
@@ -29,6 +32,18 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(diagnostics);
 
   updateProjectContext();
+  registerSidebar(context);
+  registerNavigation(context, pascalIndex);
+  loadSchema().then(sch => pascalIndex.build(sch?.frameworkDir));
+  updateFormContext(vscode.window.activeTextEditor);
+  context.subscriptions.push(
+    vscode.window.onDidChangeActiveTextEditor(e => updateFormContext(e)),
+    vscode.workspace.onDidChangeTextDocument(e => {
+      if (e.document.languageId === 'pascal' || e.document.languageId === 'objectpascal') {
+        pascalIndex.update(e.document.uri.fsPath, e.document.getText());
+      }
+    }),
+  );
   context.subscriptions.push(
     vscode.workspace.onDidChangeWorkspaceFolders(() => updateProjectContext()));
 
@@ -62,6 +77,8 @@ export function activate(context: vscode.ExtensionContext): void {
       }
     }),
     vscode.commands.registerCommand('pastel.addHandler', addHandler),
+    vscode.commands.registerCommand('pastel.toggleFormCode', toggleFormCode),
+    vscode.commands.registerCommand('pastel.toggleDeclaration', () => toggleDeclarationCommand(pascalIndex)),
   );
 
   // tasks ("pastel: build" etc. in Terminal > Run Task, and in tasks.json)
@@ -118,6 +135,37 @@ export function deactivate(): void {
 async function updateProjectContext(): Promise<void> {
   const found = await vscode.workspace.findFiles('**/pastel.toml', '**/build/**', 1);
   vscode.commands.executeCommand('setContext', 'pastel.isProject', found.length > 0);
+}
+
+/** pastel.hasForm: the active .pas file has a .pform next to it (a form unit). */
+function updateFormContext(editor: vscode.TextEditor | undefined): void {
+  const file = editor?.document.uri.fsPath;
+  const has = !!file && /\.pas$/i.test(file) && fs.existsSync(file.replace(/\.pas$/i, '.pform'));
+  vscode.commands.executeCommand('setContext', 'pastel.hasForm', has);
+}
+
+/** Delphi's F12: from the form (designer or .pform) to its code, and back. */
+async function toggleFormCode(): Promise<void> {
+  const designed = FormPreview.activeDocument;
+  const editorDoc = vscode.window.activeTextEditor?.document;
+  const pform = designed ?? (editorDoc?.languageId === 'pform' ? editorDoc : undefined);
+  if (pform) {
+    const pas = pform.uri.fsPath.replace(/\.pform$/i, '.pas');
+    if (!fs.existsSync(pas)) {
+      vscode.window.showInformationMessage(`Pastel: ${path.basename(pas)} was not found.`);
+      return;
+    }
+    await vscode.window.showTextDocument(vscode.Uri.file(pas), { viewColumn: vscode.ViewColumn.One });
+    return;
+  }
+  if (editorDoc && /\.pas$/i.test(editorDoc.uri.fsPath)) {
+    const form = editorDoc.uri.fsPath.replace(/\.pas$/i, '.pform');
+    if (fs.existsSync(form)) {
+      await openPreview(vscode.Uri.file(form));
+      return;
+    }
+  }
+  vscode.window.setStatusBarMessage('Pastel: this file is not part of a form', 2500);
 }
 
 // ---------- tasks ----------
@@ -227,6 +275,7 @@ async function newProject(): Promise<void> {
     vscode.window.showErrorMessage(`Pastel: ${(result.stderr || result.stdout).trim()}`);
     return;
   }
+  vscode.commands.executeCommand('pastel.refreshTree');
   const folder = vscode.Uri.file(path.join(parent[0].fsPath, name));
   const open = await vscode.window.showInformationMessage(
     `Project "${name}" was created. Open it now?`, { modal: true },
@@ -240,6 +289,9 @@ async function openPreview(uri?: vscode.Uri): Promise<void> {
   let doc = vscode.window.activeTextEditor?.document;
   if (uri) {
     doc = await vscode.workspace.openTextDocument(uri);
+  } else if (doc && /\.pas$/i.test(doc.uri.fsPath) && fs.existsSync(doc.uri.fsPath.replace(/\.pas$/i, '.pform'))) {
+    // from a form's code: design its .pform
+    doc = await vscode.workspace.openTextDocument(vscode.Uri.file(doc.uri.fsPath.replace(/\.pas$/i, '.pform')));
   }
   if (!doc || doc.languageId !== 'pform') {
     vscode.window.showInformationMessage('Pastel: open a .pform file to preview it.');

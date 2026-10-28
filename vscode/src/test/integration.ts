@@ -20,7 +20,10 @@ class Range {
     else { this.start = a; this.end = b as Position; }
   }
 }
-class Selection extends Range {}
+class Selection extends Range {
+  get active() { return this.end; }
+  get anchor() { return this.start; }
+}
 class SnippetString {
   value: string;
   constructor(v = '') { this.value = v; }
@@ -50,6 +53,13 @@ class Uri {
 class Task { group?: unknown; presentationOptions?: unknown;
   constructor(public definition: unknown, public scope: unknown, public name: string, public source: string,
     public execution: unknown, public matcher?: unknown) {} }
+class ThemeIcon { constructor(public id: string) {} }
+class TreeItem {
+  iconPath?: unknown; description?: string; tooltip?: string; command?: any; resourceUri?: Uri; contextValue?: string;
+  constructor(public label: string, public collapsibleState?: number) {}
+}
+class EventEmitter { event = () => ({ dispose() {} }); fire() {} }
+class SymbolInformation { constructor(public name: string, public kind: number, public containerName: string, public location: Location) {} }
 class ProcessExecution { constructor(public process: string, public args: string[], public options: unknown) {} }
 
 class FakeDocument {
@@ -60,7 +70,7 @@ class FakeDocument {
   get lineCount() { return this.text.split('\n').length; }
   lineAt(i: number) {
     const t = this.text.split('\n')[i] ?? '';
-    return { text: t, firstNonWhitespaceCharacterIndex: Math.max(0, t.search(/\S/)) };
+    return { text: t, firstNonWhitespaceCharacterIndex: Math.max(0, t.search(/\S/)), range: new Range(i, 0, i, t.length) };
   }
   getWordRangeAtPosition(pos: Position, re: RegExp) {
     const line = this.lineAt(pos.line).text;
@@ -94,7 +104,10 @@ const vscodeFake = {
   CodeAction, DocumentSymbol, Uri, Task, ProcessExecution,
   CompletionItemKind: { Class: 6, Property: 9, Event: 22, EnumMember: 19, Value: 11, Method: 1, Keyword: 13, Color: 15 },
   DiagnosticSeverity: { Error: 0, Warning: 1 },
-  SymbolKind: { Object: 18 },
+  SymbolKind: { Module: 1, Class: 4, Method: 5, Property: 6, Field: 7, Interface: 10, Function: 11, Variable: 12,
+    Object: 18, Struct: 22, TypeParameter: 25 },
+  TreeItemCollapsibleState: { None: 0, Collapsed: 1, Expanded: 2 },
+  ThemeIcon, TreeItem, EventEmitter, SymbolInformation,
   CodeActionKind: { QuickFix: 'quickfix' },
   StatusBarAlignment: { Left: 1 },
   ViewColumn: { Beside: -2, Active: -1 },
@@ -118,9 +131,14 @@ const vscodeFake = {
     }),
     registerCompletionItemProvider: (_s: unknown, p: unknown) => { providers.completion = p; return { dispose() {} }; },
     registerHoverProvider: (_s: unknown, p: unknown) => { providers.hover = p; return { dispose() {} }; },
-    registerDefinitionProvider: (_s: unknown, p: unknown) => { providers.definition = p; return { dispose() {} }; },
-    registerDocumentSymbolProvider: (_s: unknown, p: unknown) => { providers.symbols = p; return { dispose() {} }; },
+    registerDefinitionProvider: (s: any, p: unknown) => {
+      providers[JSON.stringify(s).includes('pascal') ? 'pascalDefinition' : 'definition'] = p; return { dispose() {} };
+    },
+    registerDocumentSymbolProvider: (s: any, p: unknown) => {
+      providers[JSON.stringify(s).includes('pascal') ? 'pascalSymbols' : 'symbols'] = p; return { dispose() {} };
+    },
     registerCodeActionsProvider: (_s: unknown, p: unknown) => { providers.actions = p; return { dispose() {} }; },
+    registerWorkspaceSymbolProvider: (p: unknown) => { providers.workspaceSymbols = p; return { dispose() {} }; },
   },
   commands: {
     registerCommand: (id: string, fn: (...a: any[]) => any) => { commands[id] = fn; return { dispose() {} }; },
@@ -132,7 +150,9 @@ const vscodeFake = {
     showErrorMessage: async (m: string) => { throw new Error('unexpected error message: ' + m); },
     showWarningMessage: async () => undefined,
     showInformationMessage: async () => undefined,
-    showTextDocument: async () => ({ selection: undefined, revealRange() {} }),
+    showTextDocument: async (d: any) => { providers.lastShown = d; return { selection: undefined, revealRange() {} }; },
+    setStatusBarMessage: (m: string) => { providers.status = m; return { dispose() {} }; },
+    registerTreeDataProvider: (_id: string, p: unknown) => { providers.tree = p; return { dispose() {} }; },
     onDidChangeActiveTextEditor: on('activeEditor'),
     onDidChangeTextEditorSelection: on('selection'),
     visibleTextEditors: [] as any[],
@@ -144,6 +164,7 @@ const vscodeFake = {
       },
       onDidDispose: () => ({ dispose() {} }),
       reveal() {},
+      active: false,
       title: '',
     }),
   },
@@ -151,7 +172,17 @@ const vscodeFake = {
     textDocuments: docs,
     workspaceFolders: [{ uri: Uri.file(projectDir) }],
     getConfiguration: () => ({ get: (k: string, d?: unknown) => (k === 'path' ? process.env.PASTEL_BIN ?? 'pastel' : d) }),
-    findFiles: async () => [Uri.file(path.join(projectDir, 'pastel.toml'))],
+    findFiles: async (pattern: string) => {
+      if (pattern.includes('pastel.toml')) { return [Uri.file(path.join(projectDir, 'pastel.toml'))]; }
+      const out: Uri[] = [];
+      const walk = (d: string) => fs.readdirSync(d).forEach(n => {
+        const f = path.join(d, n);
+        if (fs.statSync(f).isDirectory()) { walk(f); } else if (/\.pas$/.test(n)) { out.push(Uri.file(f)); }
+      });
+      walk(projectDir);
+      return out;
+    },
+    createFileSystemWatcher: () => ({ onDidChange() {}, onDidCreate() {}, onDidDelete() {}, dispose() {} }),
     onDidChangeWorkspaceFolders: on('folders'),
     onDidOpenTextDocument: on('open'),
     onDidSaveTextDocument: on('save'),
@@ -329,6 +360,71 @@ async function main() {
     assert.ok(!pform.getText().includes('Label1'));
     const r = [...webviewMessages].reverse().find(m => m.type === 'render');
     assert.ok(r.layout.controls.every((c: any) => c.name !== 'Label1'), 'redrawn after delete');
+  });
+
+  await test('sidebar shows actions, forms and settings', async () => {
+    const top = await providers.tree.getChildren();
+    assert.deepStrictEqual(top.map((n: any) => n.label), [path.basename(projectDir), 'Forms', 'Source', 'Project settings']);
+    const actions = top[0].children.map((n: any) => `${n.label}${n.description ? ' ' + n.description : ''}`);
+    assert.ok(actions.includes('Run F9') && actions.includes('Build Ctrl+F9'), actions.join(','));
+    const home = top[1].children[0];
+    assert.strictEqual(home.label, 'Home');
+    assert.strictEqual(home.command.command, 'pastel.openPreview');
+    assert.deepStrictEqual(home.children.map((n: any) => n.label), ['Home.pform', 'Home.pas']);
+  });
+
+  const pasDoc = new FakeDocument(Uri.file(pasPath), 'pascal', fs.readFileSync(pasPath, 'utf8'));
+  docs.push(pasDoc);
+  const pasLine = (re: RegExp) => pasDoc.getText().split('\n').findIndex(l => re.test(l));
+
+  await test('Pascal outline', () => {
+    const syms = providers.pascalSymbols.provideDocumentSymbols(pasDoc);
+    const cls = syms.find((s: any) => s.name === 'THomeForm');
+    assert.ok(cls, syms.map((s: any) => s.name).join(','));
+    assert.ok(cls.children.some((c: any) => c.name === 'SendClick'));
+    assert.ok(syms.some((s: any) => s.name === 'THomeForm.SendClick'));
+  });
+
+  await test('Ctrl+click on a unit in uses opens the framework file', async () => {
+    const l = pasLine(/Pastel\.UI/);
+    const ch = pasDoc.lineAt(l).text.indexOf('Pastel.UI') + 8;
+    const loc = await providers.pascalDefinition.provideDefinition(pasDoc, new Position(l, ch));
+    assert.ok(loc && /pastel\.ui\.pas$/.test(loc.uri.fsPath), JSON.stringify(loc));
+  });
+
+  await test('Ctrl+click on a method declaration goes to its body', async () => {
+    const l = pasLine(/^\s+procedure SendClick/);
+    const ch = pasDoc.lineAt(l).text.indexOf('SendClick') + 2;
+    const loc = await providers.pascalDefinition.provideDefinition(pasDoc, new Position(l, ch));
+    assert.strictEqual(loc.range.start.line, pasLine(/^procedure THomeForm\.SendClick/));
+  });
+
+  await test('Ctrl+click on a framework class finds it', async () => {
+    const l = pasLine(/THomeForm = class/);
+    pasDoc.setText(pasDoc.getText().replace('THomeForm = class(THomeFormBase)', 'THomeForm = class(THomeFormBase) // TCanvas32'));
+    const ch = pasDoc.lineAt(l).text.indexOf('TCanvas32') + 3;
+    const locs = await providers.pascalDefinition.provideDefinition(pasDoc, new Position(l, ch));
+    assert.ok(Array.isArray(locs) && locs.some((x: any) => /pastel\.graphics\.pas$/.test(x.uri.fsPath)));
+    pasDoc.setText(fs.readFileSync(pasPath, 'utf8'));
+  });
+
+  await test('workspace symbol search includes the framework', async () => {
+    const res = await providers.workspaceSymbols.provideWorkspaceSymbols('TCanvas32');
+    assert.ok(res.some((r: any) => r.name === 'TCanvas32' && r.containerName === 'Pastel framework'));
+  });
+
+  await test('Ctrl+Shift+Down: declaration to body', async () => {
+    const l = pasLine(/^\s+procedure ClearClick/);
+    const editor: any = { document: pasDoc, selection: new Selection(new Position(l, 6), new Position(l, 6)), revealRange() {} };
+    vscodeFake.window.activeTextEditor = editor;
+    await commands['pastel.toggleDeclaration']();
+    assert.strictEqual(editor.selection.start.line, pasLine(/^procedure THomeForm\.ClearClick/));
+  });
+
+  await test('F12: from the form to its code', async () => {
+    vscodeFake.window.activeTextEditor = { document: pform };
+    await commands['pastel.toggleFormCode']();
+    assert.strictEqual(providers.lastShown.fsPath, pasPath);
   });
 
   await test('build command runs a task with the problem matcher', async () => {

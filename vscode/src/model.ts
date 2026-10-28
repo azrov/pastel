@@ -17,6 +17,7 @@ export interface SchemaClass {
 
 export interface Schema {
   version: string;
+  frameworkDir?: string;
   form: SchemaClass;
   controls: SchemaClass[];
 }

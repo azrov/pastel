@@ -1,0 +1,87 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Object Pascal (Pastel)",
+  "scopeName": "source.pascal.pastel",
+  "patterns": [
+    { "include": "#directives" },
+    { "include": "#comments" },
+    { "include": "#strings" },
+    {
+      "match": "(?i)\\b(procedure|function|constructor|destructor|operator)\\s+([A-Za-z_]\\w*(?:\\.[A-Za-z_]\\w*)*)",
+      "captures": {
+        "1": { "name": "storage.type.function.pascal" },
+        "2": { "name": "entity.name.function.pascal" }
+      }
+    },
+    {
+      "match": "(?i)^\\s*(unit|program|library)\\s+([A-Za-z_][\\w.]*)",
+      "captures": {
+        "1": { "name": "keyword.other.unit.pascal" },
+        "2": { "name": "entity.name.namespace.pascal" }
+      }
+    },
+    {
+      "match": "(?i)\\b([A-Za-z_]\\w*)\\s*(=)\\s*(?:packed\\s+)?(class|record|interface|object)\\b",
+      "captures": {
+        "1": { "name": "entity.name.type.class.pascal" },
+        "2": { "name": "keyword.operator.pascal" },
+        "3": { "name": "storage.type.class.pascal" }
+      }
+    },
+    {
+      "name": "keyword.control.pascal",
+      "match": "(?i)\\b(if|then|else|case|of|for|to|downto|do|while|repeat|until|with|begin|end|try|except|finally|raise|exit|break|continue|goto|on|in)\\b"
+    },
+    {
+      "name": "keyword.other.pascal",
+      "match": "(?i)\\b(unit|program|library|uses|interface|implementation|initialization|finalization|type|var|const|resourcestring|threadvar|out|property|read|write|default|stored|index|inherited|absolute|label|array|set|file|packed|specialize|generic|class|record|object|helper|forward|external|cdecl|stdcall|inline|overload|override|virtual|abstract|dynamic|reintroduce|static|message|deprecated|platform|private|protected|public|published|strict|self|result)\\b"
+    },
+    {
+      "name": "keyword.operator.word.pascal",
+      "match": "(?i)\\b(and|or|xor|not|div|mod|shl|shr|is|as)\\b"
+    },
+    {
+      "name": "storage.type.pascal",
+      "match": "(?i)\\b(procedure|function|constructor|destructor|operator)\\b"
+    },
+    {
+      "name": "support.type.pascal",
+      "match": "(?i)\\b(integer|cardinal|byte|word|longint|longword|int64|qword|shortint|smallint|boolean|char|widechar|ansichar|string|ansistring|unicodestring|widestring|shortstring|real|single|double|extended|currency|pointer|pchar|variant|tobject|tclass|sizeint|sizeuint|nativeint|nativeuint)\\b"
+    },
+    {
+      "name": "constant.language.pascal",
+      "match": "(?i)\\b(true|false|nil)\\b"
+    },
+    {
+      "name": "constant.numeric.pascal",
+      "match": "(\\$[0-9A-Fa-f]+|%[01]+|&[0-7]+|\\b\\d+(\\.\\d+)?([eE][-+]?\\d+)?)\\b"
+    },
+    { "name": "keyword.operator.assignment.pascal", "match": ":=" }
+  ],
+  "repository": {
+    "directives": {
+      "patterns": [
+        { "name": "meta.preprocessor.pascal", "begin": "\\{\\$", "end": "\\}" },
+        { "name": "meta.preprocessor.pascal", "begin": "\\(\\*\\$", "end": "\\*\\)" }
+      ]
+    },
+    "comments": {
+      "patterns": [
+        { "name": "comment.line.double-slash.pascal", "match": "//.*$" },
+        { "name": "comment.block.pascal.one", "begin": "\\{", "end": "\\}" },
+        { "name": "comment.block.pascal.two", "begin": "\\(\\*", "end": "\\*\\)" }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.single.pascal",
+          "begin": "'",
+          "end": "'(?!')|$",
+          "patterns": [{ "name": "constant.character.escape.pascal", "match": "''" }]
+        },
+        { "name": "constant.character.pascal", "match": "#(\\$[0-9A-Fa-f]+|\\d+)" }
+      ]
+    }
+  }
+}

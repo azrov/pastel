@@ -78,6 +78,8 @@ The `vscode/` folder contains the Pastel extension for Visual Studio Code. Build
 - a **form designer** beside the editor: click to select, edit properties, drag to move, drag in new controls; updated as you type
 - completion, hover help and checks while typing in `.pform` files
 - `Ctrl+click` from `OnClick = SendClick` to the code, and a quick fix that creates missing event handlers
+- a Pastel panel in the activity bar, Pascal outline and go to definition (into the framework too)
+- Delphi keys: F9 run, Ctrl+F9 build, F12 form/code, Ctrl+Shift+Up/Down declaration/body
 
 New projects come with `.vscode` settings: `Ctrl+Shift+B` builds, `F5` debugs with gdb (needs the C/C++ extension).
 

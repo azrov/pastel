@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.0
+
+- Pastel panel in the activity bar: Run/Build actions, forms (click to design), source files, project settings;
+  "New Project" button when the folder has no project
+- "Open Form Designer" in the right-click menus of the Explorer, the editor and editor tabs,
+  and as a button on a form's .pas file
+- Delphi keys in Pastel projects: F9 run, Ctrl+F9 build, F12 form/code, Ctrl+Shift+Up/Down declaration/body
+  (setting: pastel.delphiShortcuts)
+- Pascal: syntax colors, outline, symbol search in the project and the Pastel framework (Ctrl+T),
+  go to definition, Ctrl+click on a unit in "uses" opens it
+
 ## 0.2.0
 
 - Form designer: select controls, edit properties in a panel, drag to move, add from the toolbox, delete

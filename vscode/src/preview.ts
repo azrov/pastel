@@ -33,6 +33,12 @@ export class FormPreview {
   private readonly layoutFile: string;
   private readonly disposables: vscode.Disposable[] = [];
 
+  /** The .pform shown in the designer, if the designer is the active tab. */
+  static get activeDocument(): vscode.TextDocument | undefined {
+    const c = FormPreview.current;
+    return c && c.panel.active ? c.document : undefined;
+  }
+
   static show(document: vscode.TextDocument, services: DesignerServices): void {
     if (FormPreview.current) {
       FormPreview.current.document = document;

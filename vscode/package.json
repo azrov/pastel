@@ -2,7 +2,7 @@
   "name": "pastel-vscode",
   "displayName": "Pastel",
   "description": "Build cross-platform apps in Object Pascal with Pastel: run, build, live form preview, .pform completion and checks.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "pastel",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -23,7 +23,9 @@
   ],
   "activationEvents": [
     "workspaceContains:**/pastel.toml",
-    "onLanguage:pform"
+    "onLanguage:pform",
+    "onLanguage:pascal",
+    "onView:pastel.project"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -38,6 +40,21 @@
           ".pform"
         ],
         "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "pascal",
+        "aliases": [
+          "Pascal",
+          "Object Pascal"
+        ],
+        "extensions": [
+          ".pas",
+          ".pp",
+          ".inc",
+          ".lpr",
+          ".dpr"
+        ],
+        "configuration": "./pascal-language-configuration.json"
       }
     ],
     "grammars": [
@@ -45,6 +62,11 @@
         "language": "pform",
         "scopeName": "source.pform",
         "path": "./syntaxes/pform.tmLanguage.json"
+      },
+      {
+        "language": "pascal",
+        "scopeName": "source.pascal.pastel",
+        "path": "./syntaxes/pascal.tmLanguage.json"
       }
     ],
     "snippets": [
@@ -63,7 +85,8 @@
       {
         "command": "pastel.build",
         "title": "Build",
-        "category": "Pastel"
+        "category": "Pastel",
+        "icon": "$(tools)"
       },
       {
         "command": "pastel.buildRelease",
@@ -100,25 +123,95 @@
         "command": "pastel.refreshSchema",
         "title": "Reload Control List",
         "category": "Pastel"
+      },
+      {
+        "command": "pastel.toggleFormCode",
+        "title": "Toggle Form / Code",
+        "category": "Pastel",
+        "icon": "$(arrow-swap)"
+      },
+      {
+        "command": "pastel.toggleDeclaration",
+        "title": "Go to Declaration / Body",
+        "category": "Pastel"
+      },
+      {
+        "command": "pastel.refreshTree",
+        "title": "Refresh",
+        "category": "Pastel",
+        "icon": "$(refresh)"
       }
     ],
     "menus": {
       "editor/title": [
         {
           "command": "pastel.openPreview",
-          "when": "resourceLangId == pform",
-          "group": "navigation"
+          "when": "resourceLangId == pform || pastel.hasForm",
+          "group": "navigation@1"
+        },
+        {
+          "command": "pastel.toggleFormCode",
+          "when": "resourceLangId == pform || pastel.hasForm",
+          "group": "navigation@2"
         },
         {
           "command": "pastel.run",
           "when": "pastel.isProject && (resourceLangId == pform || resourceLangId == pascal || resourceLangId == objectpascal)",
-          "group": "navigation"
+          "group": "navigation@3"
         }
       ],
       "commandPalette": [
         {
           "command": "pastel.openPreview",
-          "when": "resourceLangId == pform"
+          "when": "resourceLangId == pform || pastel.hasForm"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "pastel.openPreview",
+          "when": "resourceExtname == .pform",
+          "group": "navigation@1"
+        }
+      ],
+      "editor/title/context": [
+        {
+          "command": "pastel.openPreview",
+          "when": "resourceExtname == .pform",
+          "group": "1_pastel"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "pastel.openPreview",
+          "when": "resourceLangId == pform || pastel.hasForm",
+          "group": "navigation@1"
+        },
+        {
+          "command": "pastel.toggleFormCode",
+          "when": "resourceLangId == pform || pastel.hasForm",
+          "group": "navigation@2"
+        },
+        {
+          "command": "pastel.toggleDeclaration",
+          "when": "editorLangId == pascal || editorLangId == objectpascal",
+          "group": "navigation@3"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "pastel.run",
+          "when": "view == pastel.project",
+          "group": "navigation@1"
+        },
+        {
+          "command": "pastel.build",
+          "when": "view == pastel.project",
+          "group": "navigation@2"
+        },
+        {
+          "command": "pastel.refreshTree",
+          "when": "view == pastel.project",
+          "group": "navigation@3"
         }
       ]
     },
@@ -183,14 +276,72 @@
           "type": "boolean",
           "default": true,
           "description": "Check .pform files for mistakes while you type."
+        },
+        "pastel.delphiShortcuts": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Delphi-style keys in Pastel projects: **F9** run, **Ctrl+F9** build, **F12** switch between form and code, **Ctrl+Shift+Up/Down** jump between a method's declaration and body. Turn off to keep VS Code's own F9 (breakpoint) and F12 (go to definition)."
         }
       }
-    }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "pastel",
+          "title": "Pastel",
+          "icon": "media/activity.svg"
+        }
+      ]
+    },
+    "views": {
+      "pastel": [
+        {
+          "id": "pastel.project",
+          "name": "Project"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "pastel.project",
+        "contents": "There is no Pastel project in this folder yet.\n[New Project](command:pastel.newProject)\n[Open Folder](command:vscode.openFolder)\nPastel builds apps for Linux, Windows, macOS and Raspberry Pi from Object Pascal."
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "pastel.run",
+        "key": "f9",
+        "when": "pastel.isProject && config.pastel.delphiShortcuts"
+      },
+      {
+        "command": "pastel.build",
+        "key": "ctrl+f9",
+        "mac": "cmd+f9",
+        "when": "pastel.isProject && config.pastel.delphiShortcuts"
+      },
+      {
+        "command": "pastel.toggleFormCode",
+        "key": "f12",
+        "when": "config.pastel.delphiShortcuts && (editorLangId == pform || (editorTextFocus && pastel.hasForm) || activeWebviewPanelId == 'pastelPreview')"
+      },
+      {
+        "command": "pastel.toggleDeclaration",
+        "key": "ctrl+shift+up",
+        "mac": "cmd+shift+up",
+        "when": "config.pastel.delphiShortcuts && editorTextFocus && (editorLangId == pascal || editorLangId == objectpascal)"
+      },
+      {
+        "command": "pastel.toggleDeclaration",
+        "key": "ctrl+shift+down",
+        "mac": "cmd+shift+down",
+        "when": "config.pastel.delphiShortcuts && editorTextFocus && (editorLangId == pascal || editorLangId == objectpascal)"
+      }
+    ]
   },
   "scripts": {
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "test": "node ./out/test/unit.js && node ./out/test/edit.test.js && node ./out/test/designer.test.js",
+    "test": "node ./out/test/unit.js && node ./out/test/edit.test.js && node ./out/test/designer.test.js && node ./out/test/pascal.test.js",
     "package": "vsce package --no-dependencies --allow-missing-repository",
     "test:integration": "node ./out/test/integration.js"
   },

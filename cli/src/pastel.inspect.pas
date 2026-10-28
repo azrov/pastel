@@ -43,7 +43,7 @@ implementation
 
 uses
   TypInfo, Pastel.Console, Pastel.PForm, Pastel.UI, Pastel.Forms, Pastel.Graphics,
-  Pastel.Project;
+  Pastel.Project, Pastel.Builder;
 
 function JsonStr(const S: string): string;
 var
@@ -435,7 +435,8 @@ function SchemaJson: string;
 var
   I: Integer;
 begin
-  Result := '{"version":' + JsonStr(PastelVersion) + ',"form":' + ClassJson(TForm, True) +
+  Result := '{"version":' + JsonStr(PastelVersion) + ',"frameworkDir":' + JsonStr(FrameworkDir) +
+    ',"form":' + ClassJson(TForm, True) +
     ',"controls":[';
   for I := 0 to ControlClassCount - 1 do
   begin
