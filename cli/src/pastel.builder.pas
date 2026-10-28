@@ -36,7 +36,7 @@ function SplitOptions(const S: string): TStringArray;
 implementation
 
 uses
-  Process, Pastel.Console, Pastel.Codegen;
+  Process, Pastel.Console, Pastel.Codegen, Pastel.Inspect;
 
 function FrameworkDir: string;
 var
@@ -207,6 +207,7 @@ var
   Host, MissingTarget, HaveBinutils: Boolean;
   BinPrefix, GenDir, Framework: string;
   Gen: TCodegenResult;
+  Issues: TIssues;
 begin
   Result := False;
   ExePath := '';
@@ -243,6 +244,22 @@ begin
 
   { .pform files -> generated units. Debug builds point at the .pform files
     so the running app can reload them (hot reload). }
+  { check .pform files first: the compiler cannot see mistakes in them }
+  Issues := CheckProject(Project.Root);
+  if Length(Issues) > 0 then
+  begin
+    PrintIssues(Issues, False);
+    Errors := 0;
+    for I := 0 to High(Issues) do
+      if Issues[I].Severity = 'error' then
+        Inc(Errors);
+    if Errors > 0 then
+    begin
+      Fail(Format('could not compile %s (%d error(s) in .pform files)', [Project.Name, Errors]));
+      Exit;
+    end;
+  end;
+
   GenDir := OutDir + PathDelim + 'gen';
   Gen := GenerateForms(Project.Root, GenDir, not Opts.Release);
   if Gen.Errors > 0 then

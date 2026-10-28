@@ -285,6 +285,79 @@ begin
   ], Name, Ident));
 end;
 
+{ VS Code settings: Ctrl+Shift+B builds, F5 debugs, errors go to Problems.
+  The tasks call the pastel program directly, so they work even without
+  the Pastel extension. }
+procedure WriteVSCodeFiles(const Dir, Name, Ident: string);
+var
+  V: string;
+begin
+  V := Dir + '.vscode' + PathDelim;
+  WriteText(V + 'tasks.json', Fill([
+    '{',
+    '  "version": "2.0.0",',
+    '  "tasks": [',
+    '    {',
+    '      "label": "pastel: build",',
+    '      "type": "shell",',
+    '      "command": "pastel",',
+    '      "args": ["build"],',
+    '      "options": { "env": { "NO_COLOR": "1" } },',
+    '      "group": { "kind": "build", "isDefault": true },',
+    '      "problemMatcher": {',
+    '        "owner": "pastel",',
+    '        "fileLocation": ["autoDetect", "${workspaceFolder}"],',
+    '        "pattern": {',
+    '          "regexp": "^(.+?)\\((\\d+)(?:,(\\d+))?\\)\\s+(Error|Fatal|Warning):\\s+(.*)$",',
+    '          "file": 1, "line": 2, "column": 3, "severity": 4, "message": 5',
+    '        }',
+    '      }',
+    '    },',
+    '    {',
+    '      "label": "pastel: run",',
+    '      "type": "shell",',
+    '      "command": "pastel",',
+    '      "args": ["run"],',
+    '      "options": { "env": { "NO_COLOR": "1" } },',
+    '      "problemMatcher": []',
+    '    }',
+    '  ]',
+    '}'
+  ], Name, Ident));
+
+  WriteText(V + 'launch.json', Fill([
+    '{',
+    '  "version": "0.2.0",',
+    '  "configurations": [',
+    '    {',
+    '      "name": "Debug {{name}}",',
+    '      "type": "cppdbg",',
+    '      "request": "launch",',
+    '      "program": "${workspaceFolder}/build/linux/debug/{{name}}",',
+    '      "windows": { "program": "${workspaceFolder}/build/windows/debug/{{name}}.exe" },',
+    '      "cwd": "${workspaceFolder}",',
+    '      "MIMode": "gdb",',
+    '      "externalConsole": false,',
+    '      "preLaunchTask": "pastel: build"',
+    '    }',
+    '  ]',
+    '}'
+  ], Name, Ident));
+
+  WriteText(V + 'extensions.json', Fill([
+    '{',
+    '  "recommendations": ["alefragnani.pascal", "ms-vscode.cpptools"]',
+    '}'
+  ], Name, Ident));
+
+  WriteText(V + 'settings.json', Fill([
+    '{',
+    '  "search.exclude": { "build/**": true },',
+    '  "files.watcherExclude": { "**/build/**": true }',
+    '}'
+  ], Name, Ident));
+end;
+
 function CreateProject(const Kind, Name, ParentDir: string): Boolean;
 var
   Dir, Ident: string;
@@ -323,6 +396,7 @@ begin
     WriteAppProject(Dir, Name, Ident)
   else
     WriteConsoleProject(Dir, Name, Ident);
+  WriteVSCodeFiles(Dir, Name, Ident);
 
   Status('Created', Format('%s project "%s"', [Kind, Name]));
   WriteLn;

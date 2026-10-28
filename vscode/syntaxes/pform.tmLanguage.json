@@ -1,0 +1,54 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Pastel Form",
+  "scopeName": "source.pform",
+  "patterns": [
+    { "include": "#comments" },
+    {
+      "name": "meta.object.pform",
+      "match": "^\\s*(object)\\s+([A-Za-z_]\\w*)\\s*(:)\\s*([A-Za-z_]\\w*)",
+      "captures": {
+        "1": { "name": "keyword.control.object.pform" },
+        "2": { "name": "variable.other.object.pform" },
+        "3": { "name": "punctuation.separator.pform" },
+        "4": { "name": "entity.name.type.class.pform" }
+      }
+    },
+    { "name": "keyword.control.end.pform", "match": "^\\s*end\\b" },
+    {
+      "name": "meta.event.pform",
+      "match": "^\\s*(On[A-Za-z_]\\w*)\\s*(=)\\s*([A-Za-z_]\\w*)",
+      "captures": {
+        "1": { "name": "variable.other.property.event.pform" },
+        "2": { "name": "keyword.operator.assignment.pform" },
+        "3": { "name": "entity.name.function.pform" }
+      }
+    },
+    {
+      "name": "meta.property.pform",
+      "match": "^\\s*([A-Za-z_][\\w.]*)\\s*(=)",
+      "captures": {
+        "1": { "name": "variable.other.property.pform" },
+        "2": { "name": "keyword.operator.assignment.pform" }
+      }
+    },
+    { "name": "string.quoted.single.color.pform", "match": "'#[0-9A-Fa-f]{3,8}'" },
+    {
+      "name": "string.quoted.single.pform",
+      "begin": "'",
+      "end": "'(?!')",
+      "patterns": [{ "name": "constant.character.escape.pform", "match": "''" }]
+    },
+    { "name": "constant.language.boolean.pform", "match": "\\b(True|False)\\b" },
+    { "name": "constant.numeric.pform", "match": "-?\\b\\d+(\\.\\d+)?\\b" },
+    { "name": "constant.other.enum.pform", "match": "\\b[A-Z]\\w*\\b" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        { "name": "comment.line.double-slash.pform", "match": "//.*$" },
+        { "name": "comment.block.pform", "begin": "\\{", "end": "\\}" }
+      ]
+    }
+  }
+}

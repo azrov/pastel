@@ -30,6 +30,11 @@ function FindFormSource(Form: TForm): TFormSource;
   Raises EPFormError on problems (unknown type, property or event). }
 procedure BuildForm(Form: TForm; Root: TPFormNode);
 
+var
+  { False: event handlers that do not exist are skipped instead of being an
+    error. Used by tools that load a form without its code (preview, check). }
+  StrictEvents: Boolean = True;
+
 implementation
 
 uses
@@ -192,6 +197,8 @@ begin
         if P.Kind <> pvIdent then
           Fail(Format('%s expects the name of a method, like %s = ButtonClick', [P.Name, P.Name]));
         M.Code := Form.MethodAddress(P.Value);
+        if (M.Code = nil) and not StrictEvents then
+          Exit;
         if M.Code = nil then
           Fail(Format('event handler "%s" was not found in %s. Add it to the form class: ' +
             'procedure %s(Sender: TObject);', [P.Value, Form.ClassName, P.Value]));

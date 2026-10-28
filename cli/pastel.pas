@@ -5,9 +5,9 @@ program pastel;
 {$mode objfpc}{$H+}
 
 uses
-  SysUtils,
+  Classes, SysUtils,
   Pastel.Console, Pastel.Toml, Pastel.Project, Pastel.Targets,
-  Pastel.Builder, Pastel.Templates, Pastel.Doctor;
+  Pastel.Builder, Pastel.Templates, Pastel.Doctor, Pastel.Inspect;
 
 const
   ExitOk = 0;
@@ -21,6 +21,9 @@ type
     PassThrough: TStringArray;  { everything after "--" }
     Target: string;
     Release, Verbose, All, Help: Boolean;
+    Json, Stdin: Boolean;
+    Output: string;
+    Width, Height: Integer;
   end;
 
 procedure Append(var A: TStringArray; const S: string);
@@ -42,6 +45,9 @@ begin
   WriteLn('  clean                Remove the build folder');
   WriteLn('  targets              List the platforms Pastel can build for');
   WriteLn('  doctor               Check your setup');
+  WriteLn('  check [file]         Check .pform files for mistakes');
+  WriteLn('  preview <file>       Draw a .pform file into a PNG (-o out.png)');
+  WriteLn('  schema               Controls and properties as JSON (for editors)');
   WriteLn('  version              Show the Pastel version');
   WriteLn('  help                 Show this help');
   WriteLn;
@@ -96,6 +102,25 @@ begin
       CL.Verbose := True
     else if A = '--all' then
       CL.All := True
+    else if A = '--json' then
+      CL.Json := True
+    else if A = '--stdin' then
+      CL.Stdin := True
+    else if (A = '-o') or (A = '--output') or (A = '--width') or (A = '--height') then
+    begin
+      Inc(I);
+      if I > ParamCount then
+      begin
+        Fail(A + ' needs a value');
+        Exit(False);
+      end;
+      if (A = '-o') or (A = '--output') then
+        CL.Output := ParamStr(I)
+      else if A = '--width' then
+        CL.Width := StrToIntDef(ParamStr(I), 0)
+      else
+        CL.Height := StrToIntDef(ParamStr(I), 0);
+    end
     else if (A = '-h') or (A = '--help') then
       CL.Help := True
     else if A = '--version' then
@@ -274,6 +299,114 @@ begin
   Result := ExitOk;
 end;
 
+function ReadStdin: string;
+var
+  Buf: array[0..4095] of Char;
+  N: LongInt;
+  Chunk: string;
+  F: THandle;
+begin
+  Result := '';
+  F := GetFileHandle(Input);
+  repeat
+    N := FileRead(F, Buf, SizeOf(Buf));
+    if N > 0 then
+    begin
+      SetString(Chunk, PChar(@Buf[0]), N);
+      Result := Result + Chunk;
+    end;
+  until N <= 0;
+end;
+
+function ReadText(const FileName: string; FromStdin: Boolean; out Text: string): Boolean;
+var
+  L: TStringList;
+begin
+  Result := True;
+  if FromStdin then
+  begin
+    Text := ReadStdin;
+    Exit;
+  end;
+  if not FileExists(FileName) then
+  begin
+    Fail(Format('file "%s" not found', [FileName]));
+    Exit(False);
+  end;
+  L := TStringList.Create;
+  try
+    L.LoadFromFile(FileName);
+    Text := L.Text;
+  finally
+    L.Free;
+  end;
+end;
+
+function HasErrors(const Issues: TIssues): Boolean;
+var
+  I: Integer;
+begin
+  for I := 0 to High(Issues) do
+    if Issues[I].Severity = 'error' then
+      Exit(True);
+  Result := False;
+end;
+
+function CmdCheck(const CL: TCommandLine): Integer;
+var
+  Issues: TIssues;
+  Root, Text: string;
+begin
+  if Length(CL.Positional) > 0 then
+  begin
+    if not ReadText(CL.Positional[0], CL.Stdin, Text) then
+      Exit(ExitError);
+    Issues := CheckFormText(CL.Positional[0], Text);
+  end
+  else
+  begin
+    Root := TPastelProject.FindRoot(GetCurrentDir);
+    if Root = '' then
+    begin
+      Fail('no ' + ProjectFileName + ' found; give a .pform file: pastel check src/forms/Home.pform');
+      Exit(ExitError);
+    end;
+    Issues := CheckProject(Root);
+  end;
+  PrintIssues(Issues, CL.Json);
+  if not CL.Json and (Length(Issues) = 0) then
+    Status('Checked', 'no problems found');
+  if HasErrors(Issues) then
+    Result := ExitError
+  else
+    Result := ExitOk;
+end;
+
+function CmdPreview(const CL: TCommandLine): Integer;
+var
+  Text, OutFile, Err: string;
+begin
+  if Length(CL.Positional) = 0 then
+  begin
+    Fail('usage: pastel preview <file.pform> [-o out.png] [--width W] [--height H]');
+    Exit(ExitUsage);
+  end;
+  if not ReadText(CL.Positional[0], CL.Stdin, Text) then
+    Exit(ExitError);
+  OutFile := CL.Output;
+  if OutFile = '' then
+    OutFile := ChangeFileExt(ExtractFileName(CL.Positional[0]), '.png');
+  Err := PreviewForm(CL.Positional[0], Text, OutFile, CL.Width, CL.Height);
+  if Err <> '' then
+  begin
+    WriteLn(StdErr, Err);
+    Exit(ExitError);
+  end;
+  if not CL.Json then
+    Status('Saved', OutFile);
+  Result := ExitOk;
+end;
+
 var
   CL: TCommandLine;
 begin
@@ -293,6 +426,9 @@ begin
       'clean':   ExitCode := CmdClean;
       'targets': ExitCode := CmdTargets;
       'doctor':  if RunDoctor then ExitCode := ExitOk else ExitCode := ExitError;
+      'check':   ExitCode := CmdCheck(CL);
+      'preview': ExitCode := CmdPreview(CL);
+      'schema':  WriteLn(SchemaJson);
       'version': WriteLn('pastel ', PastelVersion);
     else
       Fail(Format('unknown command "%s"', [CL.Command]));

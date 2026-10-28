@@ -285,6 +285,8 @@ const
 
 procedure RegisterControl(AClass: TControlClass);
 function FindControlClass(const AName: string): TControlClass;
+function ControlClassCount: Integer;
+function ControlClassAt(Index: Integer): TControlClass;
 
 implementation
 
@@ -309,6 +311,16 @@ begin
     Result := TControlClass(ControlClasses.Objects[I])
   else
     Result := nil;
+end;
+
+function ControlClassCount: Integer;
+begin
+  Result := ControlClasses.Count;
+end;
+
+function ControlClassAt(Index: Integer): TControlClass;
+begin
+  Result := TControlClass(ControlClasses.Objects[Index]);
 end;
 
 procedure DefaultTheme;

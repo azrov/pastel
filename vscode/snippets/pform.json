@@ -1,0 +1,42 @@
+{
+  "Button": {
+    "prefix": "button",
+    "body": ["object ${1:SaveButton}: TButton", "  Text = '${2:Save}'", "  OnClick = ${3:${1}Click}", "end"],
+    "description": "A button with a click handler"
+  },
+  "Edit": {
+    "prefix": "edit",
+    "body": ["object ${1:NameEdit}: TEdit", "  Placeholder = '${2:Name}'", "end"],
+    "description": "A text input"
+  },
+  "Label": {
+    "prefix": "label",
+    "body": ["object ${1:TitleLabel}: TLabel", "  Text = '${2:Hello}'", "end"],
+    "description": "A text label"
+  },
+  "Row": {
+    "prefix": "row",
+    "body": ["object ${1:Buttons}: TRow", "  Gap = ${2:8}", "  $0", "end"],
+    "description": "Places children left to right"
+  },
+  "Column": {
+    "prefix": "column",
+    "body": ["object ${1:Content}: TColumn", "  Gap = ${2:12}", "  $0", "end"],
+    "description": "Stacks children top to bottom"
+  },
+  "Card": {
+    "prefix": "card",
+    "body": ["object ${1:Card}: TCard", "  $0", "end"],
+    "description": "A white panel with a border"
+  },
+  "Spacer": {
+    "prefix": "spacer",
+    "body": ["object ${1:Space}: TSpacer", "end"],
+    "description": "Takes the free space in a row or column"
+  },
+  "Form": {
+    "prefix": "form",
+    "body": ["object ${1:Home}Form: T${1}Form", "  Title = '${2:My app}'", "  Width = ${3:460}", "  Height = ${4:340}", "  $0", "end"],
+    "description": "A new form"
+  }
+}

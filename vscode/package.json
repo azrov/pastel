@@ -1,0 +1,203 @@
+{
+  "name": "pastel-vscode",
+  "displayName": "Pastel",
+  "description": "Build cross-platform apps in Object Pascal with Pastel: run, build, live form preview, .pform completion and checks.",
+  "version": "0.1.0",
+  "publisher": "pastel",
+  "license": "MIT",
+  "icon": "media/icon.png",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Snippets",
+    "Other"
+  ],
+  "keywords": [
+    "pascal",
+    "object pascal",
+    "free pascal",
+    "delphi",
+    "gui"
+  ],
+  "activationEvents": [
+    "workspaceContains:**/pastel.toml",
+    "onLanguage:pform"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "pform",
+        "aliases": [
+          "Pastel Form",
+          "pform"
+        ],
+        "extensions": [
+          ".pform"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "pform",
+        "scopeName": "source.pform",
+        "path": "./syntaxes/pform.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "pform",
+        "path": "./snippets/pform.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "pastel.run",
+        "title": "Run",
+        "category": "Pastel",
+        "icon": "$(play)"
+      },
+      {
+        "command": "pastel.build",
+        "title": "Build",
+        "category": "Pastel"
+      },
+      {
+        "command": "pastel.buildRelease",
+        "title": "Build Release",
+        "category": "Pastel"
+      },
+      {
+        "command": "pastel.buildTarget",
+        "title": "Build for Platform...",
+        "category": "Pastel"
+      },
+      {
+        "command": "pastel.clean",
+        "title": "Clean",
+        "category": "Pastel"
+      },
+      {
+        "command": "pastel.doctor",
+        "title": "Check Setup (Doctor)",
+        "category": "Pastel"
+      },
+      {
+        "command": "pastel.newProject",
+        "title": "New Project...",
+        "category": "Pastel"
+      },
+      {
+        "command": "pastel.openPreview",
+        "title": "Open Form Preview",
+        "category": "Pastel",
+        "icon": "$(open-preview)"
+      },
+      {
+        "command": "pastel.refreshSchema",
+        "title": "Reload Control List",
+        "category": "Pastel"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "pastel.openPreview",
+          "when": "resourceLangId == pform",
+          "group": "navigation"
+        },
+        {
+          "command": "pastel.run",
+          "when": "pastel.isProject && (resourceLangId == pform || resourceLangId == pascal || resourceLangId == objectpascal)",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "pastel.openPreview",
+          "when": "resourceLangId == pform"
+        }
+      ]
+    },
+    "taskDefinitions": [
+      {
+        "type": "pastel",
+        "required": [
+          "command"
+        ],
+        "properties": {
+          "command": {
+            "type": "string",
+            "enum": [
+              "build",
+              "run",
+              "clean",
+              "check",
+              "doctor"
+            ],
+            "description": "The pastel command to run."
+          },
+          "target": {
+            "type": "string",
+            "description": "Platform to build for, e.g. windows or rpi (see 'pastel targets')."
+          },
+          "release": {
+            "type": "boolean",
+            "description": "Optimized build without debug information."
+          }
+        }
+      }
+    ],
+    "problemMatchers": [
+      {
+        "name": "pastel",
+        "owner": "pastel",
+        "source": "pastel",
+        "fileLocation": [
+          "autoDetect",
+          "${workspaceFolder}"
+        ],
+        "severity": "error",
+        "pattern": {
+          "regexp": "^(.+?)\\((\\d+)(?:,(\\d+))?\\)\\s+(Error|Fatal|Warning):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        }
+      }
+    ],
+    "configuration": {
+      "title": "Pastel",
+      "properties": {
+        "pastel.path": {
+          "type": "string",
+          "default": "pastel",
+          "description": "Path to the pastel program. Leave as 'pastel' if it is on your PATH."
+        },
+        "pastel.checkWhileTyping": {
+          "type": "boolean",
+          "default": true,
+          "description": "Check .pform files for mistakes while you type."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "test": "node ./out/test/unit.js",
+    "package": "vsce package --no-dependencies --allow-missing-repository",
+    "test:integration": "node ./out/test/integration.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "1.85.0",
+    "@vscode/vsce": "^3.0.0",
+    "typescript": "^5.4.0"
+  }
+}

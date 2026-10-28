@@ -98,10 +98,21 @@ expect "unknown component fails the build" '[ "$code" = 1 ]'
 expect "pform error has file and line"     'echo "$out" | grep -q "src/forms/Home.pform(13) Error: unknown component type"'
 mv Home.bak src/forms/Home.pform
 
+cp src/forms/Home.pform Home.bak
 sed -i 's/OnClick = ClearClick/OnClick = Missing/' src/forms/Home.pform
-"$PASTEL" build >/dev/null
-set +e; out="$(PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT=ui.txt ./build/*/debug/gui-demo 2>&1)"; code=$?; set -e
-expect "missing event handler is explained" 'echo "$out" | grep -q "event handler \"Missing\" was not found"'
+set +e; out="$("$PASTEL" build 2>&1)"; code=$?; set -e
+expect "missing event handler fails the build" '[ "$code" = 1 ]'
+expect "missing event handler is explained"    'echo "$out" | grep -q "Home.pform(27) Error: event handler \"Missing\" is not declared in Home.pas"'
+mv Home.bak src/forms/Home.pform
+
+# --- editor tools ---
+out="$("$PASTEL" check --json)"
+expect "check --json reports no problems" '[ "$out" = "[]" ]'
+out="$(sed 's/Bold = True/Bold = Yes/' src/forms/Home.pform | "$PASTEL" check src/forms/Home.pform --stdin --json || true)"
+expect "check --stdin reads unsaved text" 'echo "$out" | grep -q "\"line\":11,\"severity\":\"error\",\"message\":\"Bold expects True or False\""'
+expect "schema lists TButton"             '"$PASTEL" schema | grep -q "\"name\":\"TButton\""'
+"$PASTEL" preview src/forms/Home.pform -o preview.png >/dev/null
+expect "preview writes a PNG"             'head -c 4 preview.png | grep -q PNG'
 cd "$WORK"
 
 echo "e2e: $pass passed, $fail failed"
