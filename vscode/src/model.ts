@@ -152,7 +152,8 @@ export interface TextInsert {
  * Edits that add an event handler to a form unit: a declaration in the
  * form class and an empty implementation before "end.".
  */
-export function handlerInserts(pascal: string, name: string): TextInsert[] | undefined {
+export function handlerInserts(pascal: string, name: string,
+  params = '(Sender: TObject)'): TextInsert[] | undefined {
   const lines = pascal.split(/\r?\n/);
   const classRe = /^\s*(T[A-Za-z_]\w*)\s*=\s*class\s*\(\s*T[A-Za-z_]\w*Base\s*\)/i;
   let classLine = -1;
@@ -189,10 +190,10 @@ export function handlerInserts(pascal: string, name: string): TextInsert[] | und
     return undefined;
   }
   return [
-    { line: declLine, text: `    procedure ${name}(Sender: TObject);\n` },
+    { line: declLine, text: `    procedure ${name}${params};\n` },
     {
       line: endLine,
-      text: `procedure ${className}.${name}(Sender: TObject);\nbegin\n  \nend;\n\n`,
+      text: `procedure ${className}.${name}${params};\nbegin\n  \nend;\n\n`,
     },
   ];
 }
@@ -219,4 +220,10 @@ export function parseIssues(json: string): Issue[] {
 export function missingHandlerName(message: string): string | undefined {
   const m = /^event handler "([A-Za-z_]\w*)" is not declared/.exec(message);
   return m ? m[1] : undefined;
+}
+
+/** The parameter list suggested in a "is not declared" message, e.g. "(Sender: TObject)". */
+export function missingHandlerParams(message: string): string {
+  const m = /add: procedure [A-Za-z_]\w*(\(.*\));\s*$/.exec(message);
+  return m ? m[1] : '(Sender: TObject)';
 }

@@ -31,8 +31,11 @@ procedure PrintIssues(const Issues: TIssues; AsJson: Boolean);
 
 function SchemaJson: string;
 
-{ Renders a form to a PNG. Returns '' or an error in compiler style. }
-function PreviewForm(const FileName, Text, OutFile: string; AWidth, AHeight: Integer): string;
+{ Renders a form to a PNG. Returns '' or an error in compiler style.
+  If LayoutFile is given, the position of every control is written there
+  as JSON (used by the visual designer). }
+function PreviewForm(const FileName, Text, OutFile, LayoutFile: string;
+  AWidth, AHeight: Integer): string;
 
 function JsonStr(const S: string): string;
 
@@ -131,6 +134,16 @@ type
   end;
   PEventCheck = ^TEventCheck;
 
+{ Parameter list of an event handler, e.g. '(Sender: TObject)'. }
+function EventSignature(T: PTypeInfo): string;
+begin
+  case T^.Name of
+    'TCloseQueryEvent': Result := '(Sender: TObject; var CanClose: Boolean)';
+  else
+    Result := '(Sender: TObject)';
+  end;
+end;
+
 procedure CheckNodeEvents(Node: TPFormNode; Cls: TClass; Data: Pointer);
 var
   E: PEventCheck;
@@ -149,8 +162,8 @@ begin
       Continue;
     if E^.Handlers.IndexOf(P.Value) < 0 then
       AddIssue(E^.Issues^, E^.FileName, P.Line, 'error',
-        Format('event handler "%s" is not declared in %s; add: procedure %s(Sender: TObject);',
-          [P.Value, ExtractFileName(E^.PasFile), P.Value]));
+        Format('event handler "%s" is not declared in %s; add: procedure %s%s;',
+          [P.Value, ExtractFileName(E^.PasFile), P.Value, EventSignature(PI^.PropType)]));
   end;
 end;
 
@@ -327,6 +340,14 @@ begin
     'OnChange': Result := 'Runs whenever the text changes.';
     'OnSubmit': Result := 'Runs when Enter is pressed in the edit.';
     'OnCreate': Result := 'Runs after the form is created (and after each hot reload).';
+    'OnCloseQuery': Result := 'Runs when the window is about to close. Set CanClose := False to keep it open.';
+    'OnClose': Result := 'Runs when the window closes.';
+    'OnResize': Result := 'Runs after the window size changed.';
+    'Resizable': Result := 'Can the user resize and maximize the window?';
+    'MinWidth': Result := 'Smallest window width the user can resize to.';
+    'MinHeight': Result := 'Smallest window height the user can resize to.';
+    'WindowState': Result := 'Normal, Maximized, Minimized or FullScreen. Can also be changed from code.';
+    'AlwaysOnTop': Result := 'Keeps the window above other windows.';
   else
     Result := '';
   end;
@@ -384,7 +405,11 @@ begin
           end;
         tkSString, tkLString, tkAString, tkUString, tkWString: Kind := 'string';
         tkFloat: Kind := 'number';
-        tkMethod: Kind := 'event';
+        tkMethod:
+          begin
+            Kind := 'event';
+            Extra := ',"signature":' + JsonStr(EventSignature(T));
+          end;
       else
         Continue;
       end;
@@ -423,8 +448,37 @@ end;
 
 { ---- preview ---- }
 
-function PreviewForm(const FileName, Text, OutFile: string; AWidth, AHeight: Integer): string;
+function ControlJson(C: TControl; const AName, ParentName: string): string;
 var
+  Container, Row: Boolean;
+begin
+  Container := C is TBox;
+  Row := Container and TBox(C).Horizontal;
+  Result := Format('{"name":%s,"class":%s,"parent":%s,"x":%d,"y":%d,"w":%d,"h":%d,' +
+    '"container":%s,"row":%s,"visible":%s}',
+    [JsonStr(AName), JsonStr(C.ClassName), JsonStr(ParentName), C.Bounds.X, C.Bounds.Y,
+     C.Bounds.W, C.Bounds.H, BoolToStr(Container, 'true', 'false'),
+     BoolToStr(Row, 'true', 'false'), BoolToStr(C.Visible, 'true', 'false')]);
+end;
+
+procedure CollectLayout(C: TControl; const ParentName: string; List: TStrings);
+var
+  I: Integer;
+begin
+  for I := 0 to C.ChildCount - 1 do
+  begin
+    List.Add(ControlJson(C.Children[I], C.Children[I].Name, ParentName));
+    CollectLayout(C.Children[I], C.Children[I].Name, List);
+  end;
+end;
+
+function PreviewForm(const FileName, Text, OutFile, LayoutFile: string;
+  AWidth, AHeight: Integer): string;
+var
+  Items: TStringList;
+  Json: string;
+  I: Integer;
+  F: TFileStream;
   Root: TPFormNode;
   Form: TForm;
   Canvas: TCanvas32;
@@ -461,6 +515,29 @@ begin
     Form.Layout(W, H);
     Form.Render(Canvas);
     Canvas.SaveToPNG(OutFile);
+    if LayoutFile <> '' then
+    begin
+      Items := TStringList.Create;
+      try
+        Items.Add(ControlJson(Form, Root.Name, ''));
+        CollectLayout(Form, Root.Name, Items);
+        Json := Format('{"width":%d,"height":%d,"controls":[', [W, H]);
+        for I := 0 to Items.Count - 1 do
+        begin
+          if I > 0 then Json := Json + ',';
+          Json := Json + Items[I];
+        end;
+        Json := Json + ']}';
+        F := TFileStream.Create(LayoutFile, fmCreate);
+        try
+          F.WriteBuffer(Json[1], Length(Json));
+        finally
+          F.Free;
+        end;
+      finally
+        Items.Free;
+      end;
+    end;
     Result := '';
   finally
     StrictEvents := True;

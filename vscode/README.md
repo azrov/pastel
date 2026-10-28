@@ -12,7 +12,7 @@ Build cross-platform apps in Object Pascal with Pastel. This extension connects 
 
 **Run and build.** Press the **Pastel Run** button in the status bar, or use the commands *Pastel: Run*, *Build*, *Build Release*, *Build for Platform…* and *Clean*. `Ctrl+Shift+B` builds. Errors from your Pascal code and from `.pform` files appear in the Problems panel; click one to jump to the line.
 
-**Live form preview.** Open a `.pform` file and press the preview button in the editor title. The form is drawn beside the editor and updates as you type, before you even save.
+**Form designer.** Open a `.pform` file and press the designer button in the editor title. The form is drawn beside the editor and updates as you type. Click a control to select it and edit its properties; drag controls to move them; drag new ones in from the toolbox; press `Delete` to remove one. Selection follows the cursor in the editor and the other way round, and every change is a normal text edit, so `Ctrl+Z` undoes it.
 
 **Writing forms.** In `.pform` files you get:
 

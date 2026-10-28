@@ -73,6 +73,10 @@ class FakeDocument {
     }
     return undefined;
   }
+  positionAt(offset: number) {
+    const before = this.text.substring(0, offset).split('\n');
+    return new Position(before.length - 1, before[before.length - 1].length);
+  }
   getRangeText(r: Range) { return this.lineAt(r.start.line).text.substring(r.start.character, r.end.character); }
   async save() { fs.writeFileSync(this.uri.fsPath, this.text); return true; }
 }
@@ -98,10 +102,13 @@ const vscodeFake = {
   TaskScope: { Workspace: 2 },
   TaskRevealKind: { Always: 1 },
   TaskPanelKind: { Dedicated: 2 },
-  TextEditorRevealType: { InCenter: 2 },
+  TextEditorRevealType: { InCenter: 2, InCenterIfOutsideViewport: 3 },
   WorkspaceEdit: class {
     inserts: { uri: Uri; pos: Position; text: string }[] = [];
+    replaces: { uri: Uri; text: string }[] = [];
     insert(uri: Uri, pos: Position, text: string) { this.inserts.push({ uri, pos, text }); }
+    // only whole-document replaces are used by the designer
+    replace(uri: Uri, _r: Range, text: string) { this.replaces.push({ uri, text }); }
   },
   languages: {
     createDiagnosticCollection: () => ({
@@ -127,8 +134,14 @@ const vscodeFake = {
     showInformationMessage: async () => undefined,
     showTextDocument: async () => ({ selection: undefined, revealRange() {} }),
     onDidChangeActiveTextEditor: on('activeEditor'),
+    onDidChangeTextEditorSelection: on('selection'),
+    visibleTextEditors: [] as any[],
     createWebviewPanel: () => ({
-      webview: { html: '', postMessage: (m: any) => { webviewMessages.push(m); return Promise.resolve(true); } },
+      webview: {
+        html: '',
+        postMessage: (m: any) => { webviewMessages.push(m); return Promise.resolve(true); },
+        onDidReceiveMessage: (fn: (m: any) => void) => { providers.fromWebview = fn; return { dispose() {} }; },
+      },
       onDidDispose: () => ({ dispose() {} }),
       reveal() {},
       title: '',
@@ -149,7 +162,12 @@ const vscodeFake = {
       if (!d) { d = new FakeDocument(uri, uri.fsPath.endsWith('.pform') ? 'pform' : 'pascal', fs.readFileSync(uri.fsPath, 'utf8')); docs.push(d); }
       return d;
     },
-    applyEdit: async (edit: { inserts: { uri: Uri; pos: Position; text: string }[] }) => {
+    applyEdit: async (edit: { inserts: { uri: Uri; pos: Position; text: string }[]; replaces: { uri: Uri; text: string }[] }) => {
+      for (const r of edit.replaces ?? []) {
+        const d = docs.find(x => x.uri.fsPath === r.uri.fsPath)!;
+        d.setText(r.text);
+        listeners.change?.forEach(f => f({ document: d }));
+      }
       const byFile = new Map<string, { pos: Position; text: string }[]>();
       edit.inserts.forEach(i => byFile.set(i.uri.fsPath, [...(byFile.get(i.uri.fsPath) ?? []), i]));
       for (const [file, ins] of byFile) {
@@ -274,13 +292,43 @@ async function main() {
     assert.ok(/procedure THomeForm\.ResetClick\(Sender: TObject\);\nbegin/.test(pas), 'implementation');
   });
 
-  await test('form preview draws the unsaved text', async () => {
+  await test('form designer draws the unsaved text and the layout', async () => {
     pform.setText(pform.getText().replace("Text = 'Hello!'", "Text = 'Preview!'"));
     await commands['pastel.openPreview']();
     await wait(2500);
-    const img = webviewMessages.find(m => m.type === 'image');
-    assert.ok(img, JSON.stringify(webviewMessages.map(m => m.type === 'error' ? m.message : m.type)));
-    assert.ok(Buffer.from(img.data, 'base64').subarray(1, 4).toString() === 'PNG');
+    const r = webviewMessages.find(m => m.type === 'render');
+    assert.ok(r, JSON.stringify(webviewMessages.map(m => m.type === 'error' ? m.message : m.type)));
+    assert.ok(Buffer.from(r.data, 'base64').subarray(1, 4).toString() === 'PNG');
+    assert.ok(r.layout.controls.some((c: any) => c.name === 'SendButton' && c.w > 0), 'layout has SendButton');
+    assert.ok(webviewMessages.some(m => m.type === 'schema'), 'toolbox schema sent');
+  });
+
+  const send = async (m: unknown) => { await providers.fromWebview(m); await wait(1200); };
+
+  await test('designer: selecting shows the properties', async () => {
+    await send({ type: 'select', name: 'SendButton' });
+    const sel = [...webviewMessages].reverse().find(m => m.type === 'select');
+    assert.strictEqual(sel.name, 'SendButton');
+    assert.strictEqual(sel.props.find((p: any) => p.name === 'Text').value, 'Send');
+    assert.ok(sel.handlers.includes('SendClick'));
+  });
+
+  await test('designer: editing a property changes the .pform text', async () => {
+    await send({ type: 'setProp', name: 'SendButton', prop: 'Text', propType: 'string', value: 'Gönder' });
+    assert.ok(pform.getText().includes("        Text = 'Gönder'"), pform.getText());
+    await send({ type: 'setProp', name: 'SendButton', prop: 'Style', propType: 'enum', value: 'Danger' });
+    assert.ok(pform.getText().includes('        Style = Danger'));
+  });
+
+  await test('designer: add, move and delete controls', async () => {
+    await send({ type: 'add', className: 'TLabel', parent: 'Card', index: 0 });
+    assert.ok(/object Card: TCard\n    object Label1: TLabel\n      Text = 'Label1'\n    end/.test(pform.getText()), pform.getText());
+    await send({ type: 'move', name: 'Label1', parent: 'HomeForm', index: 0 });
+    assert.ok(/object HomeForm: THomeForm[\s\S]*?\n  object Label1: TLabel\n    Text = 'Label1'\n  end\n  object Card/.test(pform.getText()), pform.getText());
+    await send({ type: 'delete', name: 'Label1' });
+    assert.ok(!pform.getText().includes('Label1'));
+    const r = [...webviewMessages].reverse().find(m => m.type === 'render');
+    assert.ok(r.layout.controls.every((c: any) => c.name !== 'Label1'), 'redrawn after delete');
   });
 
   await test('build command runs a task with the problem matcher', async () => {

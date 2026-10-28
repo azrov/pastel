@@ -22,7 +22,7 @@ type
     Target: string;
     Release, Verbose, All, Help: Boolean;
     Json, Stdin: Boolean;
-    Output: string;
+    Output, Layout: string;
     Width, Height: Integer;
   end;
 
@@ -106,7 +106,7 @@ begin
       CL.Json := True
     else if A = '--stdin' then
       CL.Stdin := True
-    else if (A = '-o') or (A = '--output') or (A = '--width') or (A = '--height') then
+    else if (A = '-o') or (A = '--output') or (A = '--width') or (A = '--height') or (A = '--layout') then
     begin
       Inc(I);
       if I > ParamCount then
@@ -116,6 +116,8 @@ begin
       end;
       if (A = '-o') or (A = '--output') then
         CL.Output := ParamStr(I)
+      else if A = '--layout' then
+        CL.Layout := ParamStr(I)
       else if A = '--width' then
         CL.Width := StrToIntDef(ParamStr(I), 0)
       else
@@ -396,7 +398,7 @@ begin
   OutFile := CL.Output;
   if OutFile = '' then
     OutFile := ChangeFileExt(ExtractFileName(CL.Positional[0]), '.png');
-  Err := PreviewForm(CL.Positional[0], Text, OutFile, CL.Width, CL.Height);
+  Err := PreviewForm(CL.Positional[0], Text, OutFile, CL.Layout, CL.Width, CL.Height);
   if Err <> '' then
   begin
     WriteLn(StdErr, Err);

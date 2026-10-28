@@ -58,6 +58,45 @@ end
 - Events name a method of your form class: `OnClick = SendClick`. The method must be declared in the class: `procedure SendClick(Sender: TObject);`
 - Comments: `// to the end of the line` and `{ like this }`.
 
+## The window
+
+Window settings are properties of the form:
+
+| Property | Default | |
+|---|---|---|
+| `Title` | `'Pastel'` | Window title |
+| `Width`, `Height` | 480 × 360 | Size when the window opens |
+| `MinWidth`, `MinHeight` | 200 × 120 | Smallest size the user can resize to |
+| `Resizable` | `True` | `False`: fixed size, no maximize |
+| `WindowState` | `Normal` | `Maximized`, `Minimized` or `FullScreen` when the window opens |
+| `AlwaysOnTop` | `False` | Keep the window above other windows |
+
+From code: `Maximize`, `Minimize`, `Restore`, `Close`, or set `WindowState` and `Resizable` while the app runs. `WindowState` also tells you what the user did (for example `wsMaximized` after they maximized the window).
+
+Window events:
+
+```pascal
+// OnCloseQuery = HomeCloseQuery: runs when the user closes the window or Close is called
+procedure THomeForm.HomeCloseQuery(Sender: TObject; var CanClose: Boolean);
+begin
+  CanClose := not FHasUnsavedChanges;
+end;
+```
+
+`OnClose` runs when the window really closes, `OnResize` after the size changed. The minimize, maximize and close buttons in the title bar are drawn by the operating system, so they always match the platform.
+
+## Designing in VS Code
+
+With the Pastel extension, open a `.pform` file and press the designer button in the editor title:
+
+- click a control to select it; the editor jumps to its line, and moving the cursor in the editor selects it in the designer
+- change properties in the panel on the right; the → button next to an event opens its code, or creates the handler if it does not exist yet
+- drag controls to move them: the orange line shows where the control will go (between other controls, or into a row, column or card)
+- drag new controls in from the toolbox, or click one to add it after the selected control
+- `Delete` removes the selected control
+
+Every change is an ordinary edit of the `.pform` text, so `Ctrl+Z` in the editor undoes it.
+
 ## Hot reload
 
 `pastel run` builds a debug version that reads the `.pform` file from disk. While the app is running, save the `.pform` file and the window updates right away. If the file has a mistake, a red bar explains it and the last working layout stays visible.
@@ -81,7 +120,7 @@ All controls have `Width`, `Height`, `Grow`, `Visible` and `Enabled`.
 
 | Control | Properties | Events |
 |---|---|---|
-| `TForm` | `Title`, `Padding` (24), `Gap` (12), `Color` and the column properties | `OnCreate` |
+| `TForm` | `Title`, window properties (see above), `Padding` (24), `Gap` (12), `Color` and the column properties | `OnCreate`, `OnCloseQuery`, `OnClose`, `OnResize` |
 | `TColumn`, `TRow` | `Gap`, `Padding`, `Align`, `Justify`, `Color`, `Radius`, `BorderColor`, `BorderWidth` | |
 | `TCard` | Like `TColumn`, with a white background, border, rounded corners and padding | |
 | `TSpacer` | Empty space with `Grow = 1` | |
@@ -106,4 +145,4 @@ shot screenshot.png
 PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT=ui.txt ./build/linux/debug/myapp
 ```
 
-Commands: `click <name>`, `hover <name>`, `type <name> <text>`, `key enter|tab|backspace|delete|left|right|home|end|space`, `expect <name> <text>`, `print <name>`, `resize <w> <h>`, `shot <file.png>`, `sleep <ms>`, `quit`. The exit code is 1 if an `expect` fails. `PASTEL_HEADLESS=1` draws into memory without opening a window, so no display is needed.
+Commands: `click <name>`, `hover <name>`, `type <name> <text>`, `key enter|tab|backspace|delete|left|right|home|end|space`, `expect <name> <text>`, `print <name>`, `resize <w> <h>`, `close`, `shot <file.png>`, `sleep <ms>`, `quit`. The exit code is 1 if an `expect` fails. `PASTEL_HEADLESS=1` draws into memory without opening a window, so no display is needed.

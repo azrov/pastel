@@ -20,6 +20,10 @@ const
   SDL_WINDOWPOS_CENTERED = $2FFF0000;
   SDL_WINDOW_SHOWN = $00000004;
   SDL_WINDOW_RESIZABLE = $00000020;
+  SDL_WINDOW_MINIMIZED = $00000040;
+  SDL_WINDOW_MAXIMIZED = $00000080;
+  SDL_WINDOW_FULLSCREEN_DESKTOP = $00001001;
+  SDL_WINDOW_ALWAYS_ON_TOP = $00008000;
 
   SDL_RENDERER_SOFTWARE = $00000001;
   SDL_RENDERER_ACCELERATED = $00000002;
@@ -43,6 +47,9 @@ const
   SDL_WINDOWEVENT_EXPOSED = 3;
   SDL_WINDOWEVENT_RESIZED = 5;
   SDL_WINDOWEVENT_SIZE_CHANGED = 6;
+  SDL_WINDOWEVENT_MINIMIZED = 7;
+  SDL_WINDOWEVENT_MAXIMIZED = 8;
+  SDL_WINDOWEVENT_RESTORED = 9;
   SDL_WINDOWEVENT_LEAVE = 11;
   SDL_WINDOWEVENT_FOCUS_LOST = 13;
 
@@ -170,6 +177,14 @@ var
   SDL_SetWindowTitle: procedure(window: PSDL_Window; title: PChar); cdecl;
   SDL_GetWindowSize: procedure(window: PSDL_Window; w, h: PLongInt); cdecl;
   SDL_SetWindowMinimumSize: procedure(window: PSDL_Window; w, h: LongInt); cdecl;
+  SDL_GetWindowFlags: function(window: PSDL_Window): LongWord; cdecl;
+  SDL_MaximizeWindow: procedure(window: PSDL_Window); cdecl;
+  SDL_MinimizeWindow: procedure(window: PSDL_Window); cdecl;
+  SDL_RestoreWindow: procedure(window: PSDL_Window); cdecl;
+  SDL_SetWindowFullscreen: function(window: PSDL_Window; flags: LongWord): LongInt; cdecl;
+  { optional: nil with SDL older than 2.0.5 / 2.0.16 }
+  SDL_SetWindowResizable: procedure(window: PSDL_Window; resizable: LongInt); cdecl;
+  SDL_SetWindowAlwaysOnTop: procedure(window: PSDL_Window; onTop: LongInt); cdecl;
 
   SDL_CreateRenderer: function(window: PSDL_Window; index: LongInt; flags: LongWord): PSDL_Renderer; cdecl;
   SDL_DestroyRenderer: procedure(renderer: PSDL_Renderer); cdecl;
@@ -253,6 +268,13 @@ begin
   Bind(SDL_SetWindowTitle, 'SDL_SetWindowTitle');
   Bind(SDL_GetWindowSize, 'SDL_GetWindowSize');
   Bind(SDL_SetWindowMinimumSize, 'SDL_SetWindowMinimumSize');
+  Bind(SDL_GetWindowFlags, 'SDL_GetWindowFlags');
+  Bind(SDL_MaximizeWindow, 'SDL_MaximizeWindow');
+  Bind(SDL_MinimizeWindow, 'SDL_MinimizeWindow');
+  Bind(SDL_RestoreWindow, 'SDL_RestoreWindow');
+  Bind(SDL_SetWindowFullscreen, 'SDL_SetWindowFullscreen');
+  Pointer(SDL_SetWindowResizable) := GetProcedureAddress(LibHandle, 'SDL_SetWindowResizable');
+  Pointer(SDL_SetWindowAlwaysOnTop) := GetProcedureAddress(LibHandle, 'SDL_SetWindowAlwaysOnTop');
   Bind(SDL_CreateRenderer, 'SDL_CreateRenderer');
   Bind(SDL_DestroyRenderer, 'SDL_DestroyRenderer');
   Bind(SDL_GetRendererOutputSize, 'SDL_GetRendererOutputSize');

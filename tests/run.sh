@@ -105,6 +105,16 @@ expect "missing event handler fails the build" '[ "$code" = 1 ]'
 expect "missing event handler is explained"    'echo "$out" | grep -q "Home.pform(27) Error: event handler \"Missing\" is not declared in Home.pas"'
 mv Home.bak src/forms/Home.pform
 
+# --- window events ---
+cp src/forms/Home.pform Home.bak
+sed -i 's/^  Height = 340$/  Height = 340\n  OnCloseQuery = AskClose/' src/forms/Home.pform
+out="$("$PASTEL" check --json || true)"
+expect "close-query handler signature is suggested" 'echo "$out" | grep -q "procedure AskClose(Sender: TObject; var CanClose: Boolean);"'
+mv Home.bak src/forms/Home.pform
+printf 'close\n' > close.txt
+set +e; out="$(PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT=close.txt ./build/*/debug/gui-demo 2>&1)"; set -e
+expect "close works without a handler" 'echo "$out" | grep -q "^closed"'
+
 # --- editor tools ---
 out="$("$PASTEL" check --json)"
 expect "check --json reports no problems" '[ "$out" = "[]" ]'
@@ -113,6 +123,8 @@ expect "check --stdin reads unsaved text" 'echo "$out" | grep -q "\"line\":11,\"
 expect "schema lists TButton"             '"$PASTEL" schema | grep -q "\"name\":\"TButton\""'
 "$PASTEL" preview src/forms/Home.pform -o preview.png >/dev/null
 expect "preview writes a PNG"             'head -c 4 preview.png | grep -q PNG'
+"$PASTEL" preview src/forms/Home.pform -o preview.png --layout layout.json --json
+expect "preview writes the layout"        'grep -q "\"name\":\"SendButton\",\"class\":\"TButton\",\"parent\":\"Buttons\"" layout.json'
 cd "$WORK"
 
 echo "e2e: $pass passed, $fail failed"

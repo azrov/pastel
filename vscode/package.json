@@ -2,7 +2,7 @@
   "name": "pastel-vscode",
   "displayName": "Pastel",
   "description": "Build cross-platform apps in Object Pascal with Pastel: run, build, live form preview, .pform completion and checks.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "pastel",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -92,7 +92,7 @@
       },
       {
         "command": "pastel.openPreview",
-        "title": "Open Form Preview",
+        "title": "Open Form Designer",
         "category": "Pastel",
         "icon": "$(open-preview)"
       },
@@ -190,14 +190,16 @@
   "scripts": {
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "test": "node ./out/test/unit.js",
+    "test": "node ./out/test/unit.js && node ./out/test/edit.test.js && node ./out/test/designer.test.js",
     "package": "vsce package --no-dependencies --allow-missing-repository",
     "test:integration": "node ./out/test/integration.js"
   },
   "devDependencies": {
+    "@types/jsdom": "^30.0.0",
     "@types/node": "^20.11.0",
     "@types/vscode": "1.85.0",
     "@vscode/vsce": "^3.0.0",
+    "jsdom": "^26.1.0",
     "typescript": "^5.4.0"
   }
 }

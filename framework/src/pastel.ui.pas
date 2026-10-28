@@ -20,6 +20,8 @@ type
   TTextAlign = (taLeft, taCenter, taRight);
   TButtonStyle = (bsPrimary, bsSecondary, bsDanger);
   TCursorKind = (ckArrow, ckIBeam, ckHand);
+  TWindowState = (wsNormal, wsMaximized, wsMinimized, wsFullScreen);
+  TCloseQueryEvent = procedure(Sender: TObject; var CanClose: Boolean) of object;
 
   TForm = class;
 
@@ -99,6 +101,9 @@ type
     procedure Measure(AvailWidth: Integer; out W, H: Integer); override;
     procedure Arrange(const R: TRectI); override;
     procedure Paint(C: TCanvas32); override;
+  public
+    { True for TRow: children are placed left to right. }
+    property Horizontal: Boolean read FRow;
   published
     property Gap: Integer read FGap write SetGap default 0;
     property Padding: Integer read FPadding write SetPadding default 0;
@@ -213,8 +218,17 @@ type
     FTitle: string;
     FFocused, FHover, FCaptured: TControl;
     FFocusVisible: Boolean;
-    FOnCreate: TNotifyEvent;
+    FOnCreate, FOnClose, FOnResize: TNotifyEvent;
+    FOnCloseQuery: TCloseQueryEvent;
+    FResizable, FAlwaysOnTop: Boolean;
+    FMinWidth, FMinHeight: Integer;
+    FWindowState: TWindowState;
     procedure SetTitle(const AValue: string);
+    procedure SetResizable(AValue: Boolean);
+    procedure SetAlwaysOnTop(AValue: Boolean);
+    procedure SetMinWidth(AValue: Integer);
+    procedure SetMinHeight(AValue: Integer);
+    procedure SetWindowState(AValue: TWindowState);
     procedure CollectFocusable(C: TControl; List: TFPList);
   public
     constructor Create(AOwner: TComponent); override;
@@ -242,9 +256,28 @@ type
     property Hovered: TControl read FHover;
     { True when focus came from the keyboard (Tab): buttons show a focus ring. }
     property FocusVisible: Boolean read FFocusVisible;
+    { Window commands. They take effect on the next pass of the event loop. }
+    procedure Maximize;
+    procedure Minimize;
+    procedure Restore;
+    procedure Close;
+    { Asks OnCloseQuery; True if the window may close. }
+    function CloseQuery: Boolean;
+    { Called by the platform layer when the user changed the window state. }
+    procedure WindowStateChanged(AState: TWindowState);
   published
     property Title: string read FTitle write SetTitle;
+    { Can the user resize (and maximize) the window? }
+    property Resizable: Boolean read FResizable write SetResizable default True;
+    property MinWidth: Integer read FMinWidth write SetMinWidth default 200;
+    property MinHeight: Integer read FMinHeight write SetMinHeight default 120;
+    property WindowState: TWindowState read FWindowState write SetWindowState default wsNormal;
+    property AlwaysOnTop: Boolean read FAlwaysOnTop write SetAlwaysOnTop default False;
     property OnCreate: TNotifyEvent read FOnCreate write FOnCreate;
+    { Set CanClose to False to keep the window open, e.g. to ask about unsaved work. }
+    property OnCloseQuery: TCloseQueryEvent read FOnCloseQuery write FOnCloseQuery;
+    property OnClose: TNotifyEvent read FOnClose write FOnClose;
+    property OnResize: TNotifyEvent read FOnResize write FOnResize;
   end;
 
   TFormClass = class of TForm;
@@ -265,6 +298,10 @@ var
   NeedsRepaint: Boolean = True;
   { Caret blink phase, toggled by the application loop. }
   CaretVisible: Boolean = True;
+  { Set when window properties changed; the platform layer applies them. }
+  NeedsWindowSync: Boolean = False;
+  { Set by TForm.Close; the application loop handles it. }
+  CloseRequested: Boolean = False;
   { Clipboard access, provided by the platform layer. }
   ClipboardGetText: function: string = nil;
   ClipboardSetText: procedure(const S: string) = nil;
@@ -1167,6 +1204,71 @@ begin
   FPadding := 24;
   FGap := 12;
   FTitle := 'Pastel';
+  FResizable := True;
+  FMinWidth := 200;
+  FMinHeight := 120;
+end;
+
+procedure TForm.SetResizable(AValue: Boolean);
+begin
+  FResizable := AValue;
+  NeedsWindowSync := True;
+end;
+
+procedure TForm.SetAlwaysOnTop(AValue: Boolean);
+begin
+  FAlwaysOnTop := AValue;
+  NeedsWindowSync := True;
+end;
+
+procedure TForm.SetMinWidth(AValue: Integer);
+begin
+  FMinWidth := Max(1, AValue);
+  NeedsWindowSync := True;
+end;
+
+procedure TForm.SetMinHeight(AValue: Integer);
+begin
+  FMinHeight := Max(1, AValue);
+  NeedsWindowSync := True;
+end;
+
+procedure TForm.SetWindowState(AValue: TWindowState);
+begin
+  FWindowState := AValue;
+  NeedsWindowSync := True;
+end;
+
+procedure TForm.WindowStateChanged(AState: TWindowState);
+begin
+  FWindowState := AState;
+end;
+
+procedure TForm.Maximize;
+begin
+  SetWindowState(wsMaximized);
+end;
+
+procedure TForm.Minimize;
+begin
+  SetWindowState(wsMinimized);
+end;
+
+procedure TForm.Restore;
+begin
+  SetWindowState(wsNormal);
+end;
+
+procedure TForm.Close;
+begin
+  CloseRequested := True;
+end;
+
+function TForm.CloseQuery: Boolean;
+begin
+  Result := True;
+  if Assigned(FOnCloseQuery) then
+    FOnCloseQuery(Self, Result);
 end;
 
 procedure TForm.SetTitle(const AValue: string);

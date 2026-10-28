@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.0
+
+- Form designer: select controls, edit properties in a panel, drag to move, add from the toolbox, delete
+- Selection follows the editor cursor, and the editor follows the designer
+- Event buttons in the designer open a handler's code or create it
+- Quick fixes create handlers with the right parameters (e.g. OnCloseQuery)
+- "New Project" asks in a dialog whether to open the project, so the question is not missed
+
 ## 0.1.0
 
 First version:

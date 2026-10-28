@@ -29,6 +29,11 @@ type
     FTextureW, FTextureH: Integer;
     FCursors: array[TCursorKind] of Pointer;
     FCursorShown: TCursorKind;
+    { window settings as last applied to the real window }
+    FAppliedState: TWindowState;
+    FAppliedResizable, FAppliedOnTop: Boolean;
+    FAppliedMinW, FAppliedMinH: Integer;
+    FLaidOutW, FLaidOutH: Integer;
     FWindowTitle: string;
     { hot reload }
     FSourcePath: string;
@@ -46,6 +51,9 @@ type
     procedure PaintOverlay;
     procedure Present;
     procedure UpdateCursor;
+    procedure SyncWindow;
+    procedure TryClose;
+    procedure DoLayout;
     procedure RunScript(const FileName: string);
   public
     constructor Create;
@@ -209,6 +217,7 @@ procedure TApplication.CreateWindow;
 var
   Err: string;
   W, H: Integer;
+  Flags: LongWord;
 begin
   W := FMainForm.Width;
   H := FMainForm.Height;
@@ -226,11 +235,27 @@ begin
   if SDL_Init(SDL_INIT_VIDEO) <> 0 then
     Fatal('could not open a window: ' + StrPas(SDL_GetError()));
   FWindowTitle := FMainForm.Title;
+  Flags := SDL_WINDOW_SHOWN;
+  if FMainForm.Resizable then
+    Flags := Flags or SDL_WINDOW_RESIZABLE;
+  if FMainForm.AlwaysOnTop then
+    Flags := Flags or SDL_WINDOW_ALWAYS_ON_TOP;
+  case FMainForm.WindowState of
+    wsMaximized: Flags := Flags or SDL_WINDOW_MAXIMIZED;
+    wsMinimized: Flags := Flags or SDL_WINDOW_MINIMIZED;
+    wsFullScreen: Flags := Flags or SDL_WINDOW_FULLSCREEN_DESKTOP;
+  end;
   FWindow := SDL_CreateWindow(PChar(FWindowTitle), SDL_WINDOWPOS_CENTERED,
-    SDL_WINDOWPOS_CENTERED, W, H, SDL_WINDOW_SHOWN or SDL_WINDOW_RESIZABLE);
+    SDL_WINDOWPOS_CENTERED, W, H, Flags);
   if FWindow = nil then
     Fatal('could not open a window: ' + StrPas(SDL_GetError()));
-  SDL_SetWindowMinimumSize(FWindow, 200, 120);
+  SDL_SetWindowMinimumSize(FWindow, FMainForm.MinWidth, FMainForm.MinHeight);
+  FAppliedState := FMainForm.WindowState;
+  FAppliedResizable := FMainForm.Resizable;
+  FAppliedOnTop := FMainForm.AlwaysOnTop;
+  FAppliedMinW := FMainForm.MinWidth;
+  FAppliedMinH := FMainForm.MinHeight;
+  NeedsWindowSync := False;
   FRenderer := SDL_CreateRenderer(FWindow, -1, SDL_RENDERER_ACCELERATED or SDL_RENDERER_PRESENTVSYNC);
   if FRenderer = nil then
     FRenderer := SDL_CreateRenderer(FWindow, -1, SDL_RENDERER_SOFTWARE);
@@ -244,11 +269,70 @@ begin
   SDL_StartTextInput;
 end;
 
+procedure TApplication.DoLayout;
+begin
+  FMainForm.Layout(FWidth, FHeight);
+  if ((FLaidOutW <> 0) or (FLaidOutH <> 0)) and
+     ((FLaidOutW <> FWidth) or (FLaidOutH <> FHeight)) and Assigned(FMainForm.OnResize) then
+    FMainForm.OnResize(FMainForm);
+  FLaidOutW := FWidth;
+  FLaidOutH := FHeight;
+end;
+
 procedure TApplication.Refresh;
 begin
   if NeedsLayout or (FMainForm.Bounds.W <> FWidth) or (FMainForm.Bounds.H <> FHeight) then
-    FMainForm.Layout(FWidth, FHeight);
+    DoLayout;
   Paint;
+end;
+
+procedure TApplication.TryClose;
+begin
+  CloseRequested := False;
+  if not FMainForm.CloseQuery then
+    Exit;
+  if Assigned(FMainForm.OnClose) then
+    FMainForm.OnClose(FMainForm);
+  FTerminated := True;
+end;
+
+{ Applies window settings changed from code (Maximize, Resizable := ...). }
+procedure TApplication.SyncWindow;
+var
+  Want: TWindowState;
+begin
+  NeedsWindowSync := False;
+  if FHeadless or (FWindow = nil) then
+    Exit;
+  if (FMainForm.Resizable <> FAppliedResizable) and Assigned(SDL_SetWindowResizable) then
+  begin
+    SDL_SetWindowResizable(FWindow, Ord(FMainForm.Resizable));
+    FAppliedResizable := FMainForm.Resizable;
+  end;
+  if (FMainForm.AlwaysOnTop <> FAppliedOnTop) and Assigned(SDL_SetWindowAlwaysOnTop) then
+  begin
+    SDL_SetWindowAlwaysOnTop(FWindow, Ord(FMainForm.AlwaysOnTop));
+    FAppliedOnTop := FMainForm.AlwaysOnTop;
+  end;
+  if (FMainForm.MinWidth <> FAppliedMinW) or (FMainForm.MinHeight <> FAppliedMinH) then
+  begin
+    SDL_SetWindowMinimumSize(FWindow, FMainForm.MinWidth, FMainForm.MinHeight);
+    FAppliedMinW := FMainForm.MinWidth;
+    FAppliedMinH := FMainForm.MinHeight;
+  end;
+  Want := FMainForm.WindowState;
+  if Want <> FAppliedState then
+  begin
+    if FAppliedState = wsFullScreen then
+      SDL_SetWindowFullscreen(FWindow, 0);
+    case Want of
+      wsNormal: SDL_RestoreWindow(FWindow);
+      wsMaximized: SDL_MaximizeWindow(FWindow);
+      wsMinimized: SDL_MinimizeWindow(FWindow);
+      wsFullScreen: SDL_SetWindowFullscreen(FWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
+    end;
+    FAppliedState := Want;
+  end;
 end;
 
 procedure TApplication.Paint;
@@ -333,9 +417,25 @@ begin
   begin
     case Ev.type_ of
       SDL_QUIT_EV:
-        FTerminated := True;
+        TryClose;
       SDL_WINDOWEVENT:
         case Ev.window.event of
+          SDL_WINDOWEVENT_MINIMIZED:
+            begin
+              FAppliedState := wsMinimized;
+              FMainForm.WindowStateChanged(wsMinimized);
+            end;
+          SDL_WINDOWEVENT_MAXIMIZED:
+            begin
+              FAppliedState := wsMaximized;
+              FMainForm.WindowStateChanged(wsMaximized);
+            end;
+          SDL_WINDOWEVENT_RESTORED:
+            if FAppliedState <> wsFullScreen then
+            begin
+              FAppliedState := wsNormal;
+              FMainForm.WindowStateChanged(wsNormal);
+            end;
           SDL_WINDOWEVENT_RESIZED, SDL_WINDOWEVENT_SIZE_CHANGED:
             begin
               FWidth := Max(1, Ev.window.data1);
@@ -570,6 +670,16 @@ begin
           WriteLn(Arg1, ': ', TextOf(Ctl(Arg1)));
         'sleep':
           Sleep(StrToIntDef(Arg1, 100));
+        'close':
+          begin
+            TryClose;
+            if FTerminated then
+            begin
+              WriteLn('closed');
+              Break;
+            end;
+            WriteLn('close cancelled');
+          end;
         'quit':
           Break;
       else
@@ -611,14 +721,22 @@ begin
     if FTerminated then
       Break;
     CheckHotReload;
+    if CloseRequested then
+    begin
+      TryClose;
+      if FTerminated then
+        Break;
+    end;
+    if NeedsWindowSync then
+      SyncWindow;
     if (FMainForm.Focused is TEdit) and (GetTickCount64 - FLastBlink >= 530) then
     begin
       FLastBlink := GetTickCount64;
       CaretVisible := not CaretVisible;
       NeedsRepaint := True;
     end;
-    if NeedsLayout then
-      FMainForm.Layout(FWidth, FHeight);
+    if NeedsLayout or (FLaidOutW <> FWidth) or (FLaidOutH <> FHeight) then
+      DoLayout;
     if NeedsRepaint then
     begin
       Paint;

@@ -75,7 +75,7 @@ Building for another platform needs the Free Pascal cross-compiler for it. `past
 The `vscode/` folder contains the Pastel extension for Visual Studio Code. Build it with `cd vscode && npm install && npm run compile && npm run package`, then install the `.vsix` file with *Extensions: Install from VSIX…*. It gives you:
 
 - a **Pastel Run** button and Run / Build / Build for Platform commands, with errors in the Problems panel
-- a **live preview** of `.pform` files beside the editor, updated as you type
+- a **form designer** beside the editor: click to select, edit properties, drag to move, drag in new controls; updated as you type
 - completion, hover help and checks while typing in `.pform` files
 - `Ctrl+click` from `OnClick = SendClick` to the code, and a quick fix that creates missing event handlers
 
@@ -153,12 +153,12 @@ Today Pastel draws everything in software, which is plenty for typical apps. The
 
 1. ✅ `pastel` CLI: `new`, `run`, `build`, `clean`, `doctor` for console apps (Linux, Windows, Raspberry Pi)
 2. ✅ First window: forms from `.pform` files, hot reload, software rendering (SDL2 + FreeType)
-3. 🔶 Core components and flexbox-style layout (started: label, button, edit, card, row, column)
-4. 🔶 VS Code extension: build/run commands, live form preview, .pform completion and checks (done); Pascal language server (next)
+3. 🔶 Core components and flexbox-style layout (started: label, button, edit, card, row, column; window settings and events)
+4. 🔶 VS Code extension: build/run commands, visual form designer, .pform completion and checks (done); Pascal language server (next)
    - Also: list views, checkboxes, images, scrolling, multi-line text, more forms per app, high-DPI screens
 5. Android support and packaging
 6. Raspberry Pi and macOS support
-7. Visual drag-and-drop designer
+7. 🔶 Visual drag-and-drop designer (first version in the VS Code extension)
 
 ## Contributing
 

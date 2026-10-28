@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import { currentProjectRoot, findProjectRoot, pastelPath, runPastel } from './cli';
 import {
   allObjects, classFor, completionContext, declaredProcedures, enclosingObjects,
-  findProcedure, handlerInserts, missingHandlerName, parseIssues, Schema, SchemaClass,
+  findProcedure, handlerInserts, missingHandlerName, missingHandlerParams, parseIssues, Schema, SchemaClass,
   SchemaProperty, stripComment,
 } from './model';
 import { FormPreview } from './preview';
@@ -229,7 +229,8 @@ async function newProject(): Promise<void> {
   }
   const folder = vscode.Uri.file(path.join(parent[0].fsPath, name));
   const open = await vscode.window.showInformationMessage(
-    `Pastel: project "${name}" created.`, 'Open in This Window', 'Open in New Window');
+    `Project "${name}" was created. Open it now?`, { modal: true },
+    'Open in This Window', 'Open in New Window');
   if (open) {
     await vscode.commands.executeCommand('vscode.openFolder', folder, open === 'Open in New Window');
   }
@@ -244,7 +245,10 @@ async function openPreview(uri?: vscode.Uri): Promise<void> {
     vscode.window.showInformationMessage('Pastel: open a .pform file to preview it.');
     return;
   }
-  FormPreview.show(doc);
+  FormPreview.show(doc, {
+    loadSchema,
+    addHandler: (uri, name, params) => addHandler(uri, name, params),
+  });
 }
 
 // ---------- checks ----------
@@ -534,7 +538,10 @@ function provideCodeActions(doc: vscode.TextDocument, _range: vscode.Range,
       continue;
     }
     const action = new vscode.CodeAction(`Add "${name}" to the form's code`, vscode.CodeActionKind.QuickFix);
-    action.command = { command: 'pastel.addHandler', title: 'Add handler', arguments: [doc.uri, name] };
+    action.command = {
+      command: 'pastel.addHandler', title: 'Add handler',
+      arguments: [doc.uri, name, missingHandlerParams(d.message)],
+    };
     action.diagnostics = [d];
     action.isPreferred = true;
     actions.push(action);
@@ -542,7 +549,7 @@ function provideCodeActions(doc: vscode.TextDocument, _range: vscode.Range,
   return actions;
 }
 
-async function addHandler(pformUri: vscode.Uri, name: string): Promise<void> {
+async function addHandler(pformUri: vscode.Uri, name: string, params?: string): Promise<void> {
   const pasUri = vscode.Uri.file(pformUri.fsPath.replace(/\.pform$/i, '.pas'));
   let pasDoc: vscode.TextDocument;
   try {
@@ -551,7 +558,7 @@ async function addHandler(pformUri: vscode.Uri, name: string): Promise<void> {
     vscode.window.showErrorMessage(`Pastel: ${path.basename(pasUri.fsPath)} was not found next to the .pform file.`);
     return;
   }
-  const inserts = handlerInserts(pasDoc.getText(), name);
+  const inserts = handlerInserts(pasDoc.getText(), name, params);
   if (!inserts) {
     vscode.window.showErrorMessage('Pastel: could not find the form class (T...Form = class(T...FormBase)) in ' +
       path.basename(pasUri.fsPath));
