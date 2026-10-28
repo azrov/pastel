@@ -153,14 +153,7 @@ Today Pastel draws everything in software, which is plenty for typical apps. The
 
 ## Roadmap
 
-1. ✅ `pastel` CLI: `new`, `run`, `build`, `clean`, `doctor` for console apps (Linux, Windows, Raspberry Pi)
-2. ✅ First window: forms from `.pform` files, hot reload, software rendering (SDL2 + FreeType)
-3. 🔶 Core components and flexbox-style layout (started: label, button, edit, card, row, column; window settings and events)
-4. 🔶 VS Code extension: build/run commands, visual form designer, .pform completion and checks (done); Pascal language server (next)
-   - Also: list views, checkboxes, images, scrolling, multi-line text, more forms per app, high-DPI screens
-5. Android support and packaging
-6. Raspberry Pi and macOS support
-7. 🔶 Visual drag-and-drop designer (first version in the VS Code extension)
+Pastel grows in this order: console programs (0.2), Linux services with web APIs and databases (0.3), code intelligence in VS Code (0.4), then desktop apps (0.5–0.6), up to a stable 1.0. See [ROADMAP.md](ROADMAP.md) for the full list.
 
 ## Contributing
 
