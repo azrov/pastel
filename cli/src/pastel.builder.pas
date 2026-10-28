@@ -28,13 +28,28 @@ function RunProject(Project: TPastelProject; Release, Verbose: Boolean;
 procedure CleanProject(Project: TPastelProject);
 
 function DeleteTree(const Dir: string): Boolean;
+{ Folder with the Pastel framework units, '' if it cannot be found. }
+function FrameworkDir: string;
 function BinutilsHint(const T: TTarget): string;
 function SplitOptions(const S: string): TStringArray;
 
 implementation
 
 uses
-  Process, Pastel.Console;
+  Process, Pastel.Console, Pastel.Codegen;
+
+function FrameworkDir: string;
+var
+  Home: string;
+begin
+  Home := GetEnvironmentVariable('PASTEL_HOME');
+  if Home = '' then
+    { bin/pastel -> the repository (or install) folder above it }
+    Home := ExtractFileDir(ExtractFileDir(ExpandFileName(ParamStr(0))));
+  Result := IncludeTrailingPathDelimiter(Home) + 'framework' + PathDelim + 'src';
+  if not FileExists(Result + PathDelim + 'pastel.app.pas') then
+    Result := '';
+end;
 
 function FindFpc: string;
 var
@@ -190,7 +205,8 @@ var
   Code, Errors, Warnings, I: Integer;
   Started: QWord;
   Host, MissingTarget, HaveBinutils: Boolean;
-  BinPrefix: string;
+  BinPrefix, GenDir, Framework: string;
+  Gen: TCodegenResult;
 begin
   Result := False;
   ExePath := '';
@@ -212,6 +228,28 @@ begin
   ForceDirectories(Project.Root + UnitDir);
   ExePath := OutDir + PathDelim + Project.Name + Opts.Target.ExeExt;
   Host := IsHost(Opts.Target);
+
+  Framework := '';
+  if Project.Kind = 'app' then
+  begin
+    Framework := FrameworkDir;
+    if Framework = '' then
+    begin
+      Fail('the Pastel framework was not found next to the pastel program');
+      Hint('set PASTEL_HOME to the folder that contains framework/');
+      Exit;
+    end;
+  end;
+
+  { .pform files -> generated units. Debug builds point at the .pform files
+    so the running app can reload them (hot reload). }
+  GenDir := OutDir + PathDelim + 'gen';
+  Gen := GenerateForms(Project.Root, GenDir, not Opts.Release);
+  if Gen.Errors > 0 then
+  begin
+    Fail(Format('could not compile %s (%d error(s) in .pform files)', [Project.Name, Gen.Errors]));
+    Exit;
+  end;
 
   Args := TStringList.Create;
   Dirs := TStringList.Create;
@@ -239,6 +277,10 @@ begin
     CollectSourceDirs(Project.Root, 'src', Dirs);
     for D in Project.UnitPaths do
       Dirs.Add(SetDirSeparators(D));
+    if Gen.Generated > 0 then
+      Dirs.Add(GenDir);
+    if Framework <> '' then
+      Dirs.Add(Framework);
     for D in Dirs do
     begin
       Args.Add('-Fu' + D);
@@ -249,6 +291,9 @@ begin
     if Opts.Release then
     begin
       Args.Add('-dPASTEL_RELEASE');
+      { GUI apps on Windows: no console window in release builds }
+      if (Project.Kind = 'app') and ((Opts.Target.OS = 'win32') or (Opts.Target.OS = 'win64')) then
+        Args.Add('-WG');
       Args.Add('-O2');
       Args.Add('-Xs');
       Args.Add('-CX');
@@ -353,6 +398,8 @@ begin
   if not BuildProject(Project, Opts, ExePath) then
     Exit(1);
   Status('Running', ExePath);
+  if Project.Kind = 'app' then
+    WriteLn(Dim('             edit .pform files while the app runs: changes appear immediately'));
   WriteLn;
   Flush(Output);
   Proc := TProcess.Create(nil);

@@ -17,7 +17,7 @@ fi
 mkdir -p bin build/cli
 
 "$FPC" -Mobjfpc -Sh -O2 -Xs -XX -vewn \
-  -FUbuild/cli -Fucli/src -FEbin -opastel \
+  -FUbuild/cli -Fucli/src -Fuframework/src -FEbin -opastel \
   cli/pastel.pas
 
 echo "Built bin/pastel"

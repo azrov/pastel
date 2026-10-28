@@ -12,7 +12,68 @@ function CanBuildTarget(const Fpc: string; Index: Integer): Boolean;
 implementation
 
 uses
-  Classes, SysUtils, Pastel.Console, Pastel.Project, Pastel.Targets, Pastel.Builder;
+  Classes, SysUtils, dynlibs, Pastel.Console, Pastel.Project, Pastel.Targets, Pastel.Builder;
+
+function CanLoad(const Names: array of string): Boolean;
+var
+  N: string;
+  H: TLibHandle;
+begin
+  for N in Names do
+  begin
+    H := LoadLibrary(N);
+    if H <> NilHandle then
+    begin
+      UnloadLibrary(H);
+      Exit(True);
+    end;
+  end;
+  Result := False;
+end;
+
+procedure CheckAppLibraries;
+const
+  {$IF defined(WINDOWS)}
+  SdlNames: array[0..0] of string = ('SDL2.dll');
+  FtNames: array[0..2] of string = ('freetype.dll', 'libfreetype.dll', 'libfreetype-6.dll');
+  {$ELSEIF defined(DARWIN)}
+  SdlNames: array[0..0] of string = ('libSDL2-2.0.0.dylib');
+  FtNames: array[0..0] of string = ('libfreetype.6.dylib');
+  {$ELSE}
+  SdlNames: array[0..0] of string = ('libSDL2-2.0.so.0');
+  FtNames: array[0..0] of string = ('libfreetype.so.6');
+  {$ENDIF}
+var
+  Fw: string;
+begin
+  WriteLn(Bold('GUI apps'));
+  Fw := FrameworkDir;
+  if Fw <> '' then
+    WriteLn('  ', MarkOk, ' Pastel framework  ', Dim(Fw))
+  else
+    WriteLn('  ', MarkFail, ' Pastel framework not found ', Dim('(set PASTEL_HOME)'));
+  if CanLoad(SdlNames) then
+    WriteLn('  ', MarkOk, ' SDL2 (windows, input)')
+  else
+  begin
+    WriteLn('  ', MarkFail, ' SDL2 not found');
+    {$IFDEF LINUX}
+    WriteLn('      ', Dim('sudo apt install libsdl2-2.0-0'));
+    {$ELSE}
+    WriteLn('      ', Dim('put SDL2.dll next to your program (https://libsdl.org)'));
+    {$ENDIF}
+  end;
+  if CanLoad(FtNames) then
+    WriteLn('  ', MarkOk, ' FreeType (text)')
+  else
+  begin
+    WriteLn('  ', MarkFail, ' FreeType not found');
+    {$IFDEF LINUX}
+    WriteLn('      ', Dim('sudo apt install libfreetype6'));
+    {$ENDIF}
+  end;
+  WriteLn;
+end;
 
 function VersionAtLeast(const V: string; Major, Minor: Integer): Boolean;
 var
@@ -103,6 +164,8 @@ begin
   else
     WriteLn('  ', Dim('-'), ' gdb debugger not found ', Dim('(optional, needed for debugging in VS Code later)'));
   WriteLn;
+
+  CheckAppLibraries;
 
   WriteLn(Bold('Targets'));
   Ready := 0;

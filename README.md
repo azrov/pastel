@@ -2,9 +2,9 @@
 
 **A modern cross-platform app framework and toolchain for Object Pascal.**
 
-Write your app once in Object Pascal and run it on desktop, mobile, server and Raspberry Pi. Pastel is built on top of the [Free Pascal](https://www.freepascal.org/) compiler and brings a modern developer experience: a simple command-line tool, a VS Code extension, clear project conventions and a GPU-rendered UI that looks the same everywhere.
+Write your app once in Object Pascal and run it on desktop, mobile, server and Raspberry Pi. Pastel is built on top of the [Free Pascal](https://www.freepascal.org/) compiler and brings a modern developer experience: a simple command-line tool, clear project conventions, forms with hot reload, and a UI drawn by Pastel itself so it looks the same everywhere.
 
-> ⚠️ **Status: early development.** The `pastel` command-line tool already builds and runs console apps for Linux, Windows and Raspberry Pi. The UI framework is not started yet. Ideas, feedback and contributions are very welcome.
+> ⚠️ **Status: early development.** Working today: the `pastel` command-line tool (console apps for Linux, Windows and Raspberry Pi) and a first version of the UI framework (windows, forms from `.pform` files, buttons, edits, labels, flexbox-style layout, hot reload) on Linux and Windows. Ideas, feedback and contributions are very welcome.
 
 ## Why Pastel?
 
@@ -26,7 +26,7 @@ Pastel aims to be the missing piece: free, open source, modern, and easy to set 
 
 ## Try it today
 
-You need [Free Pascal](https://www.freepascal.org/) 3.2 or newer (on Linux Mint / Ubuntu: `sudo apt install fpc`).
+You need [Free Pascal](https://www.freepascal.org/) 3.2 or newer (on Linux Mint / Ubuntu: `sudo apt install fpc`). GUI apps also use SDL2 and FreeType, which most Linux desktops already have (`sudo apt install libsdl2-2.0-0 libfreetype6`). On Windows, put `SDL2.dll` and `freetype.dll` next to your program.
 
 ```sh
 git clone https://github.com/<you>/pastel.git
@@ -34,7 +34,15 @@ cd pastel
 ./build.sh            # Windows: build.bat
 ```
 
-This creates `bin/pastel`. Put it on your `PATH`, then:
+This creates `bin/pastel`. Put it on your `PATH` (for example `ln -s "$PWD/bin/pastel" ~/.local/bin/pastel`), then create a desktop app:
+
+```sh
+pastel new app hello
+cd hello
+pastel run          # opens the window; edit src/forms/Home.pform while it runs
+```
+
+Or a console program:
 
 ```sh
 pastel new console hello
@@ -54,6 +62,7 @@ Building for another platform needs the Free Pascal cross-compiler for it. `past
 
 | Command | What it does |
 |---|---|
+| `pastel new app <name>` | Create a desktop app with a form |
 | `pastel new console <name>` | Create a console project |
 | `pastel build` | Compile (`-t <platform>`, `-r` release, `--all`, `-v` verbose) |
 | `pastel run` | Compile and run on this computer |
@@ -61,7 +70,7 @@ Building for another platform needs the Free Pascal cross-compiler for it. `past
 | `pastel targets` | List platforms and short names (`rpi`, `win`, ...) |
 | `pastel doctor` | Check the compiler and which platforms are ready |
 
-## A first look at GUI apps (planned)
+## How a GUI app looks
 
 ```
 pastel new app myapp
@@ -71,20 +80,21 @@ pastel build android
 pastel build rpi
 ```
 
-A form is described in a readable `.pform` file:
+A form is described in a readable `.pform` file (see [docs/forms.md](docs/forms.md) for all controls and properties):
 
 ```
-object MainForm: TMainForm
+object HomeForm: THomeForm
   Title = 'Hello'
-  object Body: TColumn
-    Padding = 16
-    Gap = 12
+  object Card: TCard
     object NameEdit: TEdit
+      Placeholder = 'Your name'
     end
     object SendButton: TButton
       Text = 'Send'
       OnClick = SendClick
     end
+  end
+  object Greeting: TLabel
   end
 end
 ```
@@ -92,11 +102,13 @@ end
 And the logic stays in plain Object Pascal:
 
 ```pascal
-procedure TMainForm.SendClick(Sender: TObject);
+procedure THomeForm.SendClick(Sender: TObject);
 begin
-  ShowMessage('Hello, ' + NameEdit.Text);
+  Greeting.Text := 'Hello, ' + NameEdit.Text;
 end;
 ```
+
+Pastel generates a base class with a field for every control in the `.pform` file, so the code can use `NameEdit` and `Greeting` directly. The generated code never mixes with yours.
 
 ## Project structure
 
@@ -105,7 +117,7 @@ myapp/
 ├── pastel.toml        project settings
 ├── src/
 │   ├── main.pas       entry point
-│   ├── forms/         screens (.pform + .pas)
+│   ├── forms/         screens: Home.pform + Home.pas
 │   ├── models/        data classes
 │   └── services/      business logic, HTTP, database
 ├── assets/            images, fonts, translations
@@ -119,17 +131,20 @@ myapp/
 | Layer | Written in |
 |---|---|
 | Your app (`.pas` + `.pform`) | Object Pascal |
-| Component library and shared services | Object Pascal |
-| UI core: layout, styling, animation | Object Pascal |
-| Rendering ([Skia](https://skia.org/)) and platform layer ([SDL3](https://libsdl.org/)) | Existing C libraries |
+| Controls, layout, `.pform` loading, hot reload (`framework/`) | Object Pascal |
+| Drawing: anti-aliased shapes and text into a pixel buffer | Object Pascal |
+| Glyph rendering ([FreeType](https://freetype.org/)), windows and input ([SDL2](https://libsdl.org/)) | Existing C libraries, loaded at run time |
 | Compiler | [Free Pascal](https://www.freepascal.org/), unmodified |
+
+Today Pastel draws everything in software, which is plenty for typical apps. The drawing calls are kept small so a GPU backend (such as [Skia](https://skia.org/)) can be added later, and SDL2 can be swapped for SDL3 once Linux distributions ship it.
 
 ## Roadmap
 
 1. ✅ `pastel` CLI: `new`, `run`, `build`, `clean`, `doctor` for console apps (Linux, Windows, Raspberry Pi)
-2. First window: Skia + SDL3 rendering, `.pform` loading and hot reload
-3. Core components and flexbox-style layout
+2. ✅ First window: forms from `.pform` files, hot reload, software rendering (SDL2 + FreeType)
+3. 🔶 Core components and flexbox-style layout (started: label, button, edit, card, row, column)
 4. VS Code extension: language server, build commands, live preview
+   - Also: list views, checkboxes, images, scrolling, multi-line text, more forms per app, high-DPI screens
 5. Android support and packaging
 6. Raspberry Pi and macOS support
 7. Visual drag-and-drop designer

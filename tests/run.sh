@@ -19,6 +19,8 @@ echo "== unit tests"
 mkdir -p "$WORK/units"
 "$FPC" -Mobjfpc -Sh -vew -FU"$WORK/units" -Fucli/src -o"$WORK/toml_test" tests/toml_test.pas >/dev/null
 "$WORK/toml_test"
+"$FPC" -Mobjfpc -Sh -vew -FU"$WORK/units" -Fucli/src -Fuframework/src -o"$WORK/pform_test" tests/pform_test.pas >/dev/null
+"$WORK/pform_test"
 
 echo "== end-to-end tests"
 cd "$WORK"
@@ -67,6 +69,40 @@ expect "clean removes build folder" '[ ! -d build ]'
 
 cd "$WORK"
 expect "build outside a project fails" '! "$PASTEL" build 2>/dev/null'
+
+# --- GUI apps (run headless: no window, drawing in memory) ---
+"$PASTEL" new app gui-demo >/dev/null
+expect "new app creates Home.pform" '[ -f gui-demo/src/forms/Home.pform ]'
+expect "new app creates Home.pas"   '[ -f gui-demo/src/forms/Home.pas ]'
+cd gui-demo
+"$PASTEL" build >/dev/null
+expect "app builds"                 '[ -x build/*/debug/gui-demo ]'
+expect "form code is generated"     '[ -f build/*/debug/gen/Home.g.pas ]'
+cat > ui.txt <<'EOS'
+type NameEdit Ayşe
+click SendButton
+expect Greeting Hello, Ayşe! Welcome to Pastel.
+key tab
+click ClearButton
+expect NameEdit 
+shot shot.png
+EOS
+set +e; out="$(PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT=ui.txt ./build/*/debug/gui-demo 2>&1)"; code=$?; set -e
+expect "UI script passes"           '[ "$code" = 0 ]'
+expect "screenshot is a PNG"        'head -c 4 shot.png | grep -q PNG'
+
+cp src/forms/Home.pform Home.bak
+sed -i 's/object Hint: TLabel/object Hint: TLable/' src/forms/Home.pform
+set +e; out="$("$PASTEL" build 2>&1)"; code=$?; set -e
+expect "unknown component fails the build" '[ "$code" = 1 ]'
+expect "pform error has file and line"     'echo "$out" | grep -q "src/forms/Home.pform(13) Error: unknown component type"'
+mv Home.bak src/forms/Home.pform
+
+sed -i 's/OnClick = ClearClick/OnClick = Missing/' src/forms/Home.pform
+"$PASTEL" build >/dev/null
+set +e; out="$(PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT=ui.txt ./build/*/debug/gui-demo 2>&1)"; code=$?; set -e
+expect "missing event handler is explained" 'echo "$out" | grep -q "event handler \"Missing\" was not found"'
+cd "$WORK"
 
 echo "e2e: $pass passed, $fail failed"
 [ "$fail" = 0 ]

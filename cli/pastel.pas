@@ -36,7 +36,7 @@ begin
   WriteLn(Bold('Usage:'), ' pastel <command> [options]');
   WriteLn;
   WriteLn(Bold('Commands:'));
-  WriteLn('  new <kind> <name>    Create a new project (kinds: console)');
+  WriteLn('  new <kind> <name>    Create a new project (kinds: app, console)');
   WriteLn('  build                Compile the project');
   WriteLn('  run [-- args]        Compile and run on this computer');
   WriteLn('  clean                Remove the build folder');

@@ -10,6 +10,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Free Pascal
-        run: sudo apt-get update && sudo apt-get install -y fpc
+        run: sudo apt-get update && sudo apt-get install -y fpc libfreetype6 fonts-dejavu-core
       - name: Build and test
         run: sh build.sh test
