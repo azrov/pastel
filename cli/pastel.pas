@@ -7,7 +7,7 @@ program pastel;
 uses
   Classes, SysUtils,
   Pastel.Console, Pastel.Toml, Pastel.Project, Pastel.Targets,
-  Pastel.Builder, Pastel.Templates, Pastel.Doctor, Pastel.Inspect;
+  Pastel.Builder, Pastel.Templates, Pastel.Doctor, Pastel.Inspect, Pastel.TestCmd;
 
 const
   ExitOk = 0;
@@ -42,6 +42,7 @@ begin
   WriteLn('  new <kind> <name>    Create a new project (kinds: app, console)');
   WriteLn('  build                Compile the project');
   WriteLn('  run [-- args]        Compile and run on this computer');
+  WriteLn('  test [filter]        Run the tests in tests/ (only names matching filter)');
   WriteLn('  clean                Remove the build folder');
   WriteLn('  targets              List the platforms Pastel can build for');
   WriteLn('  doctor               Check your setup');
@@ -263,6 +264,20 @@ begin
   end;
 end;
 
+function CmdTest(const CL: TCommandLine): Integer;
+var
+  Project: TPastelProject;
+begin
+  Project := OpenProject;
+  if Project = nil then
+    Exit(ExitError);
+  try
+    Result := RunProjectTests(Project, CL.Positional, CL.Json, CL.Verbose);
+  finally
+    Project.Free;
+  end;
+end;
+
 function CmdClean: Integer;
 var
   Project: TPastelProject;
@@ -426,6 +441,7 @@ begin
       'build':   ExitCode := CmdBuild(CL);
       'run':     ExitCode := CmdRun(CL);
       'clean':   ExitCode := CmdClean;
+      'test':    ExitCode := CmdTest(CL);
       'targets': ExitCode := CmdTargets;
       'doctor':  if RunDoctor then ExitCode := ExitOk else ExitCode := ExitError;
       'check':   ExitCode := CmdCheck(CL);

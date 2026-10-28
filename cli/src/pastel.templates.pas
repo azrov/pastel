@@ -121,6 +121,42 @@ begin
     'end.'
   ], Name, Ident));
 
+  WriteText(Dir + 'tests' + PathDelim + 'greeting_test.pas', Fill([
+    '{ Tests for src/services/greeting.pas. Run them with: pastel test',
+    '  Every published method of a TTestSuite class is one test. }',
+    'unit Greeting_Test;',
+    '',
+    '{$mode objfpc}{$H+}',
+    '',
+    'interface',
+    '',
+    'uses',
+    '  Pastel.Testing, Greeting;',
+    '',
+    'type',
+    '  TGreetingTests = class(TTestSuite)',
+    '  published',
+    '    procedure GreetsByName;',
+    '    procedure MentionsTheProgram;',
+    '  end;',
+    '',
+    'implementation',
+    '',
+    'procedure TGreetingTests.GreetsByName;',
+    'begin',
+    '  AssertStartsWith(''Hello, Ali!'', MakeGreeting(''Ali''));',
+    'end;',
+    '',
+    'procedure TGreetingTests.MentionsTheProgram;',
+    'begin',
+    '  AssertContains(''{{name}}'', MakeGreeting(''Ali''));',
+    'end;',
+    '',
+    'initialization',
+    '  RegisterTests(TGreetingTests);',
+    'end.'
+  ], Name, Ident));
+
   WriteText(Dir + '.gitignore', Fill([
     'build/',
     '*.o',
@@ -136,6 +172,7 @@ begin
     '```',
     'pastel run                     # build and run on this computer',
     'pastel run -- Ali              # pass arguments to the program',
+    'pastel test                    # run the tests in tests/',
     'pastel build --target windows  # build a Windows .exe',
     'pastel build --all --release   # build every platform in pastel.toml',
     '```'

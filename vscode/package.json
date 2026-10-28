@@ -2,7 +2,7 @@
   "name": "pastel-vscode",
   "displayName": "Pastel",
   "description": "Build cross-platform apps in Object Pascal with Pastel: run, build, live form preview, .pform completion and checks.",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "publisher": "pastel",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -87,6 +87,12 @@
         "title": "Build",
         "category": "Pastel",
         "icon": "$(tools)"
+      },
+      {
+        "command": "pastel.test",
+        "title": "Run Tests",
+        "category": "Pastel",
+        "icon": "$(beaker)"
       },
       {
         "command": "pastel.buildRelease",
@@ -227,6 +233,7 @@
             "enum": [
               "build",
               "run",
+              "test",
               "clean",
               "check",
               "doctor"

@@ -64,6 +64,58 @@ sed -i '$d' pastel.toml
 expect "unknown target is rejected" '! "$PASTEL" build --target amiga 2>/dev/null'
 expect "targets lists rpi alias"    '"$PASTEL" targets | grep -q "rpi "'
 
+# --- pastel test ---
+out="$("$PASTEL" test 2>&1)"
+expect "template tests pass"          'echo "$out" | grep -q "Tests: 2 passed, 2 total"'
+cat > tests/library_test.pas <<'EOS'
+unit Library_Test;
+{$mode objfpc}{$H+}
+interface
+uses SysUtils, Pastel.Testing;
+type
+  TLibraryTests = class(TTestSuite)
+  private
+    FValue: Integer;
+    procedure Boom;
+  public
+    procedure SetUp; override;
+  published
+    procedure SetUpRunsFirst;
+    procedure ComparesText;
+    procedure CatchesExpectedErrors;
+    procedure SkipsWithReason;
+    procedure ReportsUnexpectedErrors;
+  end;
+implementation
+procedure TLibraryTests.SetUp; begin FValue := 41; end;
+procedure TLibraryTests.Boom; begin raise EConvertError.Create('bad'); end;
+procedure TLibraryTests.SetUpRunsFirst; begin AssertEquals(42, FValue + 1); end;
+procedure TLibraryTests.ComparesText;
+begin
+  AssertEquals('abc', 'abd');
+end;
+procedure TLibraryTests.CatchesExpectedErrors; begin AssertRaises(EConvertError, @Boom); end;
+procedure TLibraryTests.SkipsWithReason; begin Skip('later'); end;
+procedure TLibraryTests.ReportsUnexpectedErrors; begin raise EInOutError.Create('disk'); end;
+procedure PlainTest; begin AssertTrue(True); end;
+initialization
+  RegisterTests(TLibraryTests);
+  Test('plain procedure test', @PlainTest);
+end.
+EOS
+set +e; out="$("$PASTEL" test 2>&1)"; code=$?; set -e
+expect "failing tests give exit code 1"   '[ "$code" = 1 ]'
+expect "summary counts every outcome"      'echo "$out" | grep -q "Tests: 2 failed, 5 passed, 1 skipped, 8 total"'
+expect "failure shows expected and actual" 'echo "$out" | grep -q "expected \"abc\" but got \"abd\""'
+expect "failure shows file and line"       'echo "$out" | grep -q "at tests/library_test.pas:25"'
+expect "errors show the exception"         'echo "$out" | grep -q "EInOutError: disk"'
+expect "names are readable"                'echo "$out" | grep -q "PASS set up runs first"'
+out="$("$PASTEL" test greeting 2>&1)"
+expect "filter runs matching tests only"   'echo "$out" | grep -q "Tests: 2 passed, 2 total"'
+set +e; out="$("$PASTEL" test --json 2>/dev/null)"; set -e
+expect "json output for editors"           'echo "$out" | grep -q "\"name\":\"skips with reason\",\"method\":\"SkipsWithReason\",\"outcome\":\"skipped\""'
+rm tests/library_test.pas
+
 "$PASTEL" clean >/dev/null
 expect "clean removes build folder" '[ ! -d build ]'
 

@@ -40,7 +40,7 @@ What exists today.
 Goal: writing a command-line tool in Pastel is pleasant from the first line to the release.
 
 **Tool**
-- [ ] `pastel test`: finds and runs tests in `tests/`, clear report, exit code for CI
+- [x] `pastel test`: finds and runs tests in `tests/`, clear report, exit code for CI
 - [ ] `pastel run --watch`: rebuild and restart when a file changes
 - [ ] `pastel fmt`: format Pascal code with one standard style
 - [ ] `pastel package`: a `.tar.gz` (Linux) or `.zip` (Windows) with the program, ready to hand out
@@ -49,7 +49,7 @@ Goal: writing a command-line tool in Pastel is pleasant from the first line to t
 - [ ] `pastel.toml`: version shown by the program (`--version`), build-time defines per profile
 
 **Library (`Pastel.Core`, usable without the GUI)**
-- [ ] `Pastel.Testing`: test cases, asserts with readable messages
+- [x] `Pastel.Testing`: test cases, asserts with readable messages
 - [ ] `Pastel.Args`: command-line arguments and sub-commands, automatic `--help`
 - [ ] `Pastel.Term`: colors, tables, progress bars, prompts (yes/no, input, choice)
 - [ ] `Pastel.Log`: log levels, to the console or a file, with timestamps
@@ -215,4 +215,5 @@ Things that work differently than one would expect, so they are not surprises:
 - One window per app; no dialogs yet
 - No text selection in edits; no multi-line text
 - Pascal completion only knows `.pform` files, not members of Pascal classes
+- Test results show in the terminal; the VS Code test explorer comes later in 0.2
 - macOS and 32-bit Raspberry Pi are not tested yet

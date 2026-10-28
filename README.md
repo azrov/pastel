@@ -53,6 +53,7 @@ pastel build --release            # optimized build
 pastel build --target windows     # a Windows .exe, built on Linux
 pastel build --target rpi         # a Raspberry Pi program
 pastel build --all --release      # every platform listed in pastel.toml
+pastel test                       # run the tests in tests/ (see docs/testing.md)
 pastel doctor                     # what can this computer build?
 ```
 
@@ -66,6 +67,7 @@ Building for another platform needs the Free Pascal cross-compiler for it. `past
 | `pastel new console <name>` | Create a console project |
 | `pastel build` | Compile (`-t <platform>`, `-r` release, `--all`, `-v` verbose) |
 | `pastel run` | Compile and run on this computer |
+| `pastel test [filter]` | Run the tests in `tests/` |
 | `pastel clean` | Remove the `build/` folder |
 | `pastel targets` | List platforms and short names (`rpi`, `win`, ...) |
 | `pastel doctor` | Check the compiler and which platforms are ready |

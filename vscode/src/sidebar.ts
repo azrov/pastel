@@ -77,6 +77,7 @@ export class ProjectTree implements vscode.TreeDataProvider<ProjectNode> {
     actions.children = [
       action('Run', 'pastel.run', 'play', 'F9'),
       action('Build', 'pastel.build', 'tools', 'Ctrl+F9'),
+      action('Run Tests', 'pastel.test', 'beaker'),
       action('Build Release', 'pastel.buildRelease', 'rocket'),
       action('Build for Platform…', 'pastel.buildTarget', 'device-desktop'),
       action('Clean', 'pastel.clean', 'trash'),

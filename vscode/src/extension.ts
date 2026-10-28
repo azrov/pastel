@@ -63,6 +63,7 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand('pastel.run', () => runTask('run')),
     vscode.commands.registerCommand('pastel.build', () => runTask('build')),
+    vscode.commands.registerCommand('pastel.test', () => runTask('test')),
     vscode.commands.registerCommand('pastel.buildRelease', () => runTask('build', { release: true })),
     vscode.commands.registerCommand('pastel.buildTarget', buildForPlatform),
     vscode.commands.registerCommand('pastel.clean', () => runTask('clean')),
@@ -91,6 +92,7 @@ export function activate(context: vscode.ExtensionContext): void {
       return [
         makeTask('build', root),
         makeTask('run', root),
+        makeTask('test', root),
         makeTask('build', root, { release: true }),
         makeTask('clean', root),
       ];

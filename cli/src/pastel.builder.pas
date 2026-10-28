@@ -14,6 +14,13 @@ type
     Target: TTarget;
     Release: Boolean;
     Verbose: Boolean;
+    Quiet: Boolean;             { no "Compiling"/"Finished"/"Output" lines }
+    { optional overrides, used by "pastel test" }
+    Profile: string;            { output folder name, default debug/release }
+    MainFile: string;           { program to compile instead of the project's main }
+    OutName: string;            { executable name instead of the project name }
+    ExtraDirs: TStringArray;    { more unit folders }
+    Defines: TStringArray;      { more -d defines }
   end;
 
 function FindFpc: string;
@@ -36,7 +43,8 @@ function SplitOptions(const S: string): TStringArray;
 implementation
 
 uses
-  Process, Pastel.Console, Pastel.Codegen, Pastel.Inspect;
+  Process, {$IFDEF UNIX}BaseUnix,{$ENDIF}
+  Pastel.Console, Pastel.Codegen, Pastel.Inspect;
 
 function FrameworkDir: string;
 var
@@ -151,7 +159,7 @@ begin
       if (SR.Attr and faDirectory) <> 0 then
         Result := DeleteTree(Base + SR.Name) and Result
       else
-        Result := DeleteFile(Base + SR.Name) and Result;
+        Result := SysUtils.DeleteFile(Base + SR.Name) and Result;
     until FindNext(SR) <> 0;
   finally
     FindClose(SR);
@@ -190,6 +198,62 @@ begin
     [T.Name]);
 end;
 
+{ File modification time with sub-second precision (0 if unknown). }
+function ModTime(const FileName: string): Int64;
+{$IFDEF UNIX}
+var
+  St: Stat;
+begin
+  if fpStat(FileName, St) <> 0 then
+    Exit(0);
+  Result := Int64(St.st_mtime) * 1000000000 + St.st_mtime_nsec;
+end;
+{$ELSE}
+var
+  SR: TSearchRec;
+begin
+  Result := 0;
+  if FindFirst(FileName, faAnyFile, SR) = 0 then
+  begin
+    Result := Int64(SR.Time) * 1000000000;
+    {$IFDEF WINDOWS}
+    Result := Int64(SR.FindData.ftLastWriteTime.dwHighDateTime) shl 32 or
+      SR.FindData.ftLastWriteTime.dwLowDateTime;
+    {$ENDIF}
+    FindClose(SR);
+  end;
+end;
+{$ENDIF}
+
+{ Free Pascal compares file times in whole seconds, so a unit saved in the
+  same second as its last compile would be skipped. Removing its compiled
+  .ppu when the source is newer forces a recompile. }
+procedure ForgetStaleUnits(const Root: string; Dirs: TStrings; const UnitDir: string);
+var
+  D, Ppu: string;
+  SR: TSearchRec;
+  SrcTime: Int64;
+begin
+  for D in Dirs do
+  begin
+    if (D = '') or (D[1] = PathDelim) or ((Length(D) > 1) and (D[2] = ':')) then
+      Continue;   { absolute paths: the framework, not edited by the project }
+    if FindFirst(Root + D + PathDelim + '*.pas', faAnyFile, SR) = 0 then
+    try
+      repeat
+        Ppu := Root + UnitDir + PathDelim + LowerCase(ChangeFileExt(SR.Name, '.ppu'));
+        if not FileExists(Ppu) then
+          Continue;
+        SrcTime := ModTime(Root + D + PathDelim + SR.Name);
+        if SrcTime > ModTime(Ppu) then
+          SysUtils.DeleteFile(Ppu);
+      until FindNext(SR) <> 0;
+    finally
+      FindClose(SR);
+    end;
+  end;
+end;
+
 function IsNoise(const Line: string): Boolean;
 begin
   Result := (Pos('Compilation aborted', Line) > 0) or
@@ -224,16 +288,21 @@ begin
   end;
 
   if Opts.Release then Profile := 'release' else Profile := 'debug';
+  if Opts.Profile <> '' then
+    Profile := Opts.Profile;
   OutDir := 'build' + PathDelim + Opts.Target.Name + PathDelim + Profile;
   UnitDir := OutDir + PathDelim + 'units';
   ForceDirectories(Project.Root + UnitDir);
-  ExePath := OutDir + PathDelim + Project.Name + Opts.Target.ExeExt;
+  if Opts.OutName <> '' then
+    ExePath := OutDir + PathDelim + Opts.OutName + Opts.Target.ExeExt
+  else
+    ExePath := OutDir + PathDelim + Project.Name + Opts.Target.ExeExt;
   Host := IsHost(Opts.Target);
 
-  Framework := '';
+  { every project can use the Pastel units (Pastel.Testing, ...); apps need them }
+  Framework := FrameworkDir;
   if Project.Kind = 'app' then
   begin
-    Framework := FrameworkDir;
     if Framework = '' then
     begin
       Fail('the Pastel framework was not found next to the pastel program');
@@ -292,6 +361,8 @@ begin
     Args.Add('-o' + ExePath);
 
     CollectSourceDirs(Project.Root, 'src', Dirs);
+    for D in Opts.ExtraDirs do
+      Dirs.Add(D);
     for D in Project.UnitPaths do
       Dirs.Add(SetDirSeparators(D));
     if Gen.Generated > 0 then
@@ -303,6 +374,7 @@ begin
       Args.Add('-Fu' + D);
       Args.Add('-Fi' + D);
     end;
+    ForgetStaleUnits(Project.Root, Dirs, UnitDir);
 
     Args.Add('-dPASTEL');
     if Opts.Release then
@@ -329,13 +401,19 @@ begin
     end;
     for D in Project.Defines do
       Args.Add('-d' + D);
+    for D in Opts.Defines do
+      Args.Add('-d' + D);
 
     { -vb: full file paths in messages; shortened below to project-relative. }
     Args.Add('-vewnb');
-    Args.Add(Project.MainFile);
+    if Opts.MainFile <> '' then
+      Args.Add(Opts.MainFile)
+    else
+      Args.Add(Project.MainFile);
 
-    Status('Compiling', Format('%s v%s (%s, %s)',
-      [Project.Name, Project.Version, Opts.Target.Name, Profile]));
+    if not Opts.Quiet then
+      Status('Compiling', Format('%s v%s (%s, %s)',
+        [Project.Name, Project.Version, Opts.Target.Name, Profile]));
     if Opts.Verbose then
       WriteLn(Dim('             ' + Fpc + ' ' + StringReplace(Trim(Args.Text),
         LineEnding, ' ', [rfReplaceAll])));
@@ -350,6 +428,8 @@ begin
     for I := 0 to Lines.Count - 1 do
     begin
       Line := StringReplace(Lines[I], Project.Root, '', [rfReplaceAll]);
+      if Copy(Line, 1, 2) = '.' + PathDelim then
+        Delete(Line, 1, 2);
       if (Pos('Can''t find unit system', Line) > 0) or
          (Pos('can''t be executed', Line) > 0) or
          (Pos('Can''t find unit sysutils', Line) > 0) or
@@ -390,10 +470,13 @@ begin
       Exit;
     end;
 
-    Status('Finished', Format('%s in %.2fs%s', [Profile,
-      (GetTickCount64 - Started) / 1000,
-      BoolToStr(Warnings > 0, Format(', %d warning(s)', [Warnings]), '')]));
-    Status('Output', ExePath);
+    if not Opts.Quiet then
+    begin
+      Status('Finished', Format('%s in %.2fs%s', [Profile,
+        (GetTickCount64 - Started) / 1000,
+        BoolToStr(Warnings > 0, Format(', %d warning(s)', [Warnings]), '')]));
+      Status('Output', ExePath);
+    end;
     Result := True;
   finally
     Args.Free;

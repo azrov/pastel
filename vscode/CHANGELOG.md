@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1
+
+- "Pastel: Run Tests" command, task and button in the Pastel panel (runs `pastel test`)
+
 ## 0.3.0
 
 - Pastel panel in the activity bar: Run/Build actions, forms (click to design), source files, project settings;
