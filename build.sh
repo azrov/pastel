@@ -6,6 +6,14 @@ set -e
 cd "$(dirname "$0")"
 
 FPC="${PASTEL_FPC:-fpc}"
+
+if ! command -v "$FPC" >/dev/null 2>&1; then
+  echo "error: the Free Pascal compiler (fpc) was not found" >&2
+  echo "hint: on Linux Mint / Ubuntu / Debian: sudo apt install fpc" >&2
+  echo "      other systems: https://www.freepascal.org/download.html" >&2
+  exit 1
+fi
+
 mkdir -p bin build/cli
 
 "$FPC" -Mobjfpc -Sh -O2 -Xs -XX -vewn \
