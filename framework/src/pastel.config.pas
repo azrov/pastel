@@ -25,7 +25,7 @@ unit Pastel.Config;
 interface
 
 uses
-  Classes, SysUtils;
+  Classes, SysUtils, Pastel.Env;
 
 type
   EConfigError = class(Exception);
@@ -101,7 +101,7 @@ type
 function SystemConfigDir(const AppName: string): string;
 begin
   {$IFDEF WINDOWS}
-  Result := IncludeTrailingPathDelimiter(GetEnvironmentVariable('ProgramData')) + AppName;
+  Result := IncludeTrailingPathDelimiter(GetEnv('ProgramData')) + AppName;
   {$ELSE}
   Result := '/etc/' + AppName;
   {$ENDIF}
@@ -112,11 +112,11 @@ var
   Base: string;
 begin
   {$IFDEF WINDOWS}
-  Base := GetEnvironmentVariable('APPDATA');
+  Base := GetEnv('APPDATA');
   {$ELSE}
-  Base := GetEnvironmentVariable('XDG_CONFIG_HOME');
+  Base := GetEnv('XDG_CONFIG_HOME');
   if Base = '' then
-    Base := IncludeTrailingPathDelimiter(GetEnvironmentVariable('HOME')) + '.config';
+    Base := IncludeTrailingPathDelimiter(GetEnv('HOME')) + '.config';
   {$ENDIF}
   Result := IncludeTrailingPathDelimiter(Base) + AppName;
 end;
@@ -359,9 +359,9 @@ begin
     Exit(True);
   end;
   Env := EnvName(Key);
-  if (Env <> '') and (GetEnvironmentVariable(Env) <> '') then
+  if (Env <> '') and (GetEnv(Env) <> '') then
   begin
-    Value := GetEnvironmentVariable(Env);
+    Value := GetEnv(Env);
     Source := 'environment ' + Env;
     Exit(True);
   end;

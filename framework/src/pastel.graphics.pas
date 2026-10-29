@@ -12,7 +12,7 @@ unit Pastel.Graphics;
 interface
 
 uses
-  Classes, SysUtils, Pastel.FreeType;
+  Classes, SysUtils, Pastel.FreeType, Pastel.Env;
 
 type
   { $AARRGGBB. A distinct type so .pform files can use '#RRGGBB' for it. }
@@ -368,10 +368,10 @@ var
   Dir: string;
 {$ENDIF}
 begin
-  RegularFontFile := GetEnvironmentVariable('PASTEL_FONT');
-  BoldFontFile := GetEnvironmentVariable('PASTEL_FONT_BOLD');
+  RegularFontFile := GetEnv('PASTEL_FONT');
+  BoldFontFile := GetEnv('PASTEL_FONT_BOLD');
   {$IF defined(WINDOWS)}
-  Dir := IncludeTrailingPathDelimiter(GetEnvironmentVariable('WINDIR')) + 'Fonts\';
+  Dir := IncludeTrailingPathDelimiter(GetEnv('WINDIR')) + 'Fonts\';
   if RegularFontFile = '' then
     RegularFontFile := FirstExisting([Dir + 'segoeui.ttf', Dir + 'arial.ttf', Dir + 'tahoma.ttf']);
   if BoldFontFile = '' then

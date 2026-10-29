@@ -15,7 +15,7 @@ unit Pastel.App;
 interface
 
 uses
-  Classes, SysUtils, Pastel.Graphics, Pastel.UI, Pastel.PForm, Pastel.Forms;
+  Classes, SysUtils, Pastel.Graphics, Pastel.UI, Pastel.PForm, Pastel.Forms, Pastel.Env;
 
 type
   TApplication = class
@@ -146,7 +146,7 @@ begin
   Err := InitFonts;
   if Err <> '' then
     Fatal(Err);
-  FHeadless := GetEnvironmentVariable('PASTEL_HEADLESS') = '1';
+  FHeadless := GetEnv('PASTEL_HEADLESS') = '1';
 end;
 
 procedure TApplication.LoadForm(Form: TForm);
@@ -706,7 +706,7 @@ begin
   Refresh;
   Present;
 
-  Script := GetEnvironmentVariable('PASTEL_TEST_SCRIPT');
+  Script := GetEnv('PASTEL_TEST_SCRIPT');
   if Script <> '' then
   begin
     RunScript(Script);

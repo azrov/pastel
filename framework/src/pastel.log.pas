@@ -21,7 +21,7 @@ unit Pastel.Log;
 interface
 
 uses
-  Classes, SysUtils;
+  Classes, SysUtils, Pastel.Env;
 
 type
   TLogLevel = (llDebug, llInfo, llWarn, llError, llOff);
@@ -197,10 +197,10 @@ begin
   FFormat := lfAuto;
   FConsole := True;
   {$IFDEF UNIX}
-  FColors := (IsATTY(StdErrorHandle) = 1) and (GetEnvironmentVariable('NO_COLOR') = '');
+  FColors := (IsATTY(StdErrorHandle) = 1) and (GetEnv('NO_COLOR') = '');
   {$ENDIF}
   { LOG_LEVEL=debug works for every Pastel program }
-  L := GetEnvironmentVariable('LOG_LEVEL');
+  L := GetEnv('LOG_LEVEL');
   if L <> '' then
     try
       SetLevel(L);
@@ -239,7 +239,7 @@ begin
   if Result = lfAuto then
   begin
     { systemd sets JOURNAL_STREAM when stderr goes to the journal }
-    if GetEnvironmentVariable('JOURNAL_STREAM') <> '' then
+    if GetEnv('JOURNAL_STREAM') <> '' then
       Result := lfJournal
     else
       Result := lfText;

@@ -18,7 +18,7 @@ unit Pastel.Term;
 interface
 
 uses
-  Classes, SysUtils;
+  Classes, SysUtils, Pastel.Env;
 
 type
   TTextAlign = (alLeft, alRight, alCenter);
@@ -164,14 +164,14 @@ var
 begin
   ColorsDecided := True;
   UseColors := False;
-  if SysUtils.GetEnvironmentVariable('NO_COLOR') <> '' then
+  if GetEnv('NO_COLOR') <> '' then
     Exit;
-  if SysUtils.GetEnvironmentVariable('FORCE_COLOR') <> '' then
+  if GetEnv('FORCE_COLOR') <> '' then
   begin
     UseColors := True;
     Exit;
   end;
-  if SysUtils.GetEnvironmentVariable('TERM') = 'dumb' then
+  if GetEnv('TERM') = 'dumb' then
     Exit;
   {$IFDEF WINDOWS}
   SetConsoleOutputCP(65001);
@@ -207,7 +207,7 @@ var
   Info: TConsoleScreenBufferInfo;
 {$ENDIF}
 begin
-  Result := StrToIntDef(SysUtils.GetEnvironmentVariable('COLUMNS'), 0);
+  Result := StrToIntDef(GetEnv('COLUMNS'), 0);
   if Result > 0 then
     Exit;
   Result := 80;

@@ -29,7 +29,7 @@ unit Pastel.Args;
 interface
 
 uses
-  Classes, SysUtils;
+  Classes, SysUtils, Pastel.Env;
 
 type
   EArgsError = class(Exception);
@@ -855,8 +855,8 @@ begin
       for K := 0 to Sub.FDefs.Count - 1 do
       begin
         D := TArgDef(Sub.FDefs[K]);
-        if (D.FValues.Count = 0) and (D.FEnv <> '') and (SysUtils.GetEnvironmentVariable(D.FEnv) <> '') then
-          SetValue(D, SysUtils.GetEnvironmentVariable(D.FEnv));
+        if (D.FValues.Count = 0) and (D.FEnv <> '') and (GetEnv(D.FEnv) <> '') then
+          SetValue(D, GetEnv(D.FEnv));
         if D.FRequired and (D.FValues.Count = 0) then
           if D.FKind = akPositional then
             Fail(Format('missing argument <%s>: %s', [D.FName, D.FHelp]))

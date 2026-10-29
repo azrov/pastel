@@ -75,6 +75,31 @@ begin
   WriteLn;
 end;
 
+procedure CheckNetLibraries;
+const
+  {$IF defined(WINDOWS)}
+  SslNames: array[0..3] of string = ('libssl-3-x64.dll', 'libssl-3.dll', 'libssl-1_1-x64.dll', 'libssl-1_1.dll');
+  {$ELSEIF defined(DARWIN)}
+  SslNames: array[0..1] of string = ('libssl.3.dylib', 'libssl.1.1.dylib');
+  {$ELSE}
+  SslNames: array[0..2] of string = ('libssl.so.3', 'libssl.so.1.1', 'libssl.so');
+  {$ENDIF}
+begin
+  WriteLn(Bold('Network'));
+  if CanLoad(SslNames) then
+    WriteLn('  ', MarkOk, ' OpenSSL (HTTPS in Pastel.Http)')
+  else
+  begin
+    WriteLn('  ', MarkFail, ' OpenSSL not found: plain HTTP works, HTTPS does not');
+    {$IFDEF LINUX}
+    WriteLn('      ', Dim('sudo apt install libssl3'));
+    {$ELSE}
+    WriteLn('      ', Dim('put libssl-3-x64.dll and libcrypto-3-x64.dll next to your program'));
+    {$ENDIF}
+  end;
+  WriteLn;
+end;
+
 function VersionAtLeast(const V: string; Major, Minor: Integer): Boolean;
 var
   Parts: TStringArray;
@@ -166,6 +191,7 @@ begin
   WriteLn;
 
   CheckAppLibraries;
+  CheckNetLibraries;
 
   WriteLn(Bold('Targets'));
   Ready := 0;

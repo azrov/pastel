@@ -26,7 +26,7 @@ unit Pastel.Testing;
 interface
 
 uses
-  Classes, SysUtils;
+  Classes, SysUtils, Pastel.Env;
 
 type
   { Raised by a failing assert. }
@@ -434,7 +434,7 @@ end;
 
 function UseColor: Boolean;
 begin
-  Result := (GetEnvironmentVariable('NO_COLOR') = '') and (GetEnvironmentVariable('PASTEL_COLOR') = '1');
+  Result := (GetEnv('NO_COLOR') = '') and (GetEnv('PASTEL_COLOR') = '1');
 end;
 
 function Paint(const Code, S: string): string;

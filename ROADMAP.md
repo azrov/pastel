@@ -58,8 +58,9 @@ Goal: writing a command-line tool in Pastel is pleasant from the first line to t
 - [x] `Pastel.Log`: log levels, to the console or a file, with timestamps (also JSON, journald, rotation, threads)
 - [x] `Pastel.Config`: settings from `.toml`, `.json` and environment variables
 - [x] `Pastel.Json`: easy reading and writing of JSON (on top of FPC's fpjson)
-- [ ] `Pastel.Files` and `Pastel.Process`: paths, reading/writing files, running other programs
-- [ ] `Pastel.Http` client: GET/POST with JSON, timeouts, HTTPS
+- [x] `Pastel.Files` and `Pastel.Process`: paths, reading/writing files, running other programs
+- [x] `Pastel.Http` client: GET/POST with JSON, timeouts, HTTPS with certificate checks, proxies
+- [x] `Pastel.Env`: environment variables in UTF-8 (also on Windows)
 
 **VS Code**
 - [ ] Test explorer: run and debug single tests from the editor
@@ -69,7 +70,7 @@ Goal: writing a command-line tool in Pastel is pleasant from the first line to t
 
 **Docs**
 - [ ] Getting started guide (install, first project, debug, release)
-- [x] Console programs: `docs/console.md`; testing: `docs/testing.md`; JSON, settings, logging: `docs/data.md`
+- [x] Console programs: `docs/console.md`; testing: `docs/testing.md`; JSON, settings, logging: `docs/data.md`; files, programs, HTTP: `docs/system.md`
 - [ ] Guide: writing a command-line tool
 - [ ] Examples: a file tool, a tool that calls a web API
 

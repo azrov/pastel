@@ -77,6 +77,45 @@ sed -i '$d' pastel.toml
 expect "unknown target is rejected" '! "$PASTEL" build --target amiga 2>/dev/null'
 expect "targets lists rpi alias"    '"$PASTEL" targets | grep -q "rpi "'
 
+# --- files, processes and HTTPS from a program ---
+cd "$WORK"
+"$PASTEL" new console fetch >/dev/null
+cat > fetch/src/main.pas <<'PAS'
+program fetch;
+{$mode objfpc}{$H+}
+uses SysUtils, Pastel.Http, Pastel.Files, Pastel.Process;
+begin
+  try
+    WriteText('out/page.html', HttpGetText(ParamStr(1)));
+    WriteLn('saved ', FormatSize(FileSize('out/page.html')));
+    WriteLn('echo says ', RunOutput('echo', ['ağaç']));
+  except
+    on E: Exception do
+    begin
+      WriteLn(StdErr, 'error: ', E.Message);
+      Halt(1);
+    end;
+  end;
+end.
+PAS
+cd fetch && "$PASTEL" build >/dev/null
+if command -v openssl >/dev/null; then
+  openssl req -x509 -newkey rsa:2048 -nodes -keyout key.pem -out cert.pem -days 1 \
+    -subj /CN=localhost -addext subjectAltName=DNS:localhost >/dev/null 2>&1
+  port=$((30000 + $$ % 20000))
+  openssl s_server -accept $port -cert cert.pem -key key.pem -www -quiet >/dev/null 2>&1 &
+  server=$!
+  sleep 1
+  set +e; out="$(./build/*/debug/fetch https://localhost:$port/ 2>&1)"; code=$?; set -e
+  expect "HTTPS refuses an untrusted certificate" '[ "$code" = 1 ] && echo "$out" | grep -q "certificate of \"localhost\" is not trusted: self-signed certificate"'
+  out="$(SSL_CERT_FILE=cert.pem ./build/*/debug/fetch https://localhost:$port/ 2>&1)"
+  expect "HTTPS works with a trusted certificate" 'echo "$out" | grep -q "^saved .* KB$"'
+  expect "file was written"                       'grep -q "s_server" out/page.html'
+  expect "process output is captured"             'echo "$out" | grep -q "^echo says ağaç$"'
+  kill $server 2>/dev/null || true
+fi
+cd "$WORK/demo-app"
+
 # --- pastel test ---
 out="$("$PASTEL" test 2>&1)"
 expect "template tests pass"          'echo "$out" | grep -q "Tests: 2 passed, 2 total"'
