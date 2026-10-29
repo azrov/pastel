@@ -79,21 +79,32 @@ begin
   ], Name, Ident));
 
   WriteText(Dir + 'src' + PathDelim + 'main.pas', Fill([
+    '{ {{name}} - try: pastel run -- --help }',
     'program {{ident}};',
     '',
     '{$mode objfpc}{$H+}',
     '',
     'uses',
-    '  SysUtils, Greeting;',
+    '  SysUtils, Pastel.Args, Pastel.Text, AppInfo, Greeting;',
     '',
     'var',
+    '  Args: TArgs;',
     '  Who: string;',
     'begin',
-    '  if ParamCount > 0 then',
-    '    Who := ParamStr(1)',
-    '  else',
-    '    Who := ''world'';',
-    '  WriteLn(MakeGreeting(Who));',
+    '  Args := TArgs.Create(AppName, ''Says hello. Change src/main.pas to make it yours.'');',
+    '  try',
+    '    Args.Version := AppVersion;     { from pastel.toml }',
+    '    Args.Flag(''shout'', ''s'', ''Use capital letters'');',
+    '    Args.Positional(''name'', ''Who to greet'').Default(''world'');',
+    '    Args.Parse;                     { handles --help, --version and mistakes }',
+    '',
+    '    Who := Args.Get(''name'');',
+    '    if Args.Has(''shout'') then',
+    '      Who := Upper(Who);           { Unicode-aware, unlike UpperCase }',
+    '    WriteLn(MakeGreeting(Who));',
+    '  finally',
+    '    Args.Free;',
+    '  end;',
     'end.'
   ], Name, Ident));
 

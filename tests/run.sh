@@ -22,10 +22,16 @@ mkdir -p "$WORK/units"
 "$FPC" -Mobjfpc -Sh -vew -FU"$WORK/units" -Fucli/src -Fuframework/src -o"$WORK/pform_test" tests/pform_test.pas >/dev/null
 "$WORK/pform_test"
 
+echo "== framework tests"
+(cd framework/tests && PASTEL_ARGS_TEST_TOKEN=secret "$PASTEL" test >"$WORK/framework.log" 2>&1) || { cat "$WORK/framework.log"; exit 1; }
+tail -1 "$WORK/framework.log"
+
 echo "== end-to-end tests"
 cd "$WORK"
 
 "$PASTEL" new console demo-app >/dev/null
+out="$(cd demo-app && "$PASTEL" build 2>&1)"
+expect "build reports what it did" 'echo "$out" | grep -q "Compiling demo-app" && echo "$out" | grep -q "Finished debug"'
 expect "new creates pastel.toml"   '[ -f demo-app/pastel.toml ]'
 expect "new creates main.pas"      '[ -f demo-app/src/main.pas ]'
 expect "new creates service unit"  '[ -f demo-app/src/services/greeting.pas ]'
@@ -37,6 +43,12 @@ out="$("$PASTEL" run 2>&1)"
 expect "run prints greeting"       'echo "$out" | grep -q "Hello, world! This is demo-app"'
 out="$("$PASTEL" run -- Ayla 2>&1)"
 expect "run passes arguments"      'echo "$out" | grep -q "Hello, Ayla!"'
+out="$("$PASTEL" run -- --shout ayşe 2>&1)"
+expect "template uses Pastel.Args and Pastel.Text" 'echo "$out" | grep -q "Hello, AYŞE!"'
+out="$(./build/*/debug/demo-app --version)"
+expect "--version comes from pastel.toml" '[ "$out" = "demo-app 0.1.0" ]'
+set +e; out="$(./build/*/debug/demo-app --shuot 2>&1)"; code=$?; set -e
+expect "typos get a suggestion and exit code 2" '[ "$code" = 2 ] && echo "$out" | grep -q "did you mean --shout?"'
 
 cd src/services
 out="$("$PASTEL" run 2>&1)"

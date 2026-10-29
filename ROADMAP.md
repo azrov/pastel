@@ -46,12 +46,15 @@ Goal: writing a command-line tool in Pastel is pleasant from the first line to t
 - [ ] `pastel package`: a `.tar.gz` (Linux) or `.zip` (Windows) with the program, ready to hand out
 - [ ] `pastel new lib`: a library project that other projects can use
 - [ ] Use another local Pastel project as a dependency (`[dependencies]` in `pastel.toml`)
-- [ ] `pastel.toml`: version shown by the program (`--version`), build-time defines per profile
+- [x] `pastel.toml`: version shown by the program (`--version`, generated `AppInfo` unit)
+- [ ] `pastel.toml`: build-time defines per profile
 
 **Library (`Pastel.Core`, usable without the GUI)**
 - [x] `Pastel.Testing`: test cases, asserts with readable messages
-- [ ] `Pastel.Args`: command-line arguments and sub-commands, automatic `--help`
-- [ ] `Pastel.Term`: colors, tables, progress bars, prompts (yes/no, input, choice)
+- [x] `Pastel.Args`: command-line arguments and sub-commands, automatic `--help`
+- [x] `Pastel.Term`: colors, tables, progress bars, prompts (yes/no, input, choice)
+- [x] `Pastel.Text`: upper/lower case and lengths for every language (Turkish/Azerbaijani i)
+- [x] UTF-8 everywhere, also in the Windows console
 - [ ] `Pastel.Log`: log levels, to the console or a file, with timestamps
 - [ ] `Pastel.Config`: settings from `.toml`, `.json` and environment variables
 - [ ] `Pastel.Json`: easy reading and writing of JSON (on top of FPC's fpjson)
@@ -66,6 +69,7 @@ Goal: writing a command-line tool in Pastel is pleasant from the first line to t
 
 **Docs**
 - [ ] Getting started guide (install, first project, debug, release)
+- [x] Console programs: `docs/console.md`; testing: `docs/testing.md`
 - [ ] Guide: writing a command-line tool
 - [ ] Examples: a file tool, a tool that calls a web API
 

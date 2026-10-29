@@ -42,7 +42,7 @@ cd hello
 pastel run          # opens the window; edit src/forms/Home.pform while it runs
 ```
 
-Or a console program:
+Or a console program (arguments, `--help`, colors, tables and questions are ready to use; see [docs/console.md](docs/console.md)):
 
 ```sh
 pastel new console hello

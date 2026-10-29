@@ -202,6 +202,7 @@ begin
   if Project = nil then
     Exit(ExitError);
   try
+    Opts := Default(TBuildOptions);
     Opts.Release := CL.Release;
     Opts.Verbose := CL.Verbose;
     if CL.All then
