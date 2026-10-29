@@ -54,10 +54,10 @@ Goal: writing a command-line tool in Pastel is pleasant from the first line to t
 - [x] `Pastel.Args`: command-line arguments and sub-commands, automatic `--help`
 - [x] `Pastel.Term`: colors, tables, progress bars, prompts (yes/no, input, choice)
 - [x] `Pastel.Text`: upper/lower case and lengths for every language (Turkish/Azerbaijani i)
-- [x] UTF-8 everywhere, also in the Windows console
-- [ ] `Pastel.Log`: log levels, to the console or a file, with timestamps
-- [ ] `Pastel.Config`: settings from `.toml`, `.json` and environment variables
-- [ ] `Pastel.Json`: easy reading and writing of JSON (on top of FPC's fpjson)
+- [x] UTF-8 everywhere, also in the Windows console; thread support without `cthreads` in `uses`
+- [x] `Pastel.Log`: log levels, to the console or a file, with timestamps (also JSON, journald, rotation, threads)
+- [x] `Pastel.Config`: settings from `.toml`, `.json` and environment variables
+- [x] `Pastel.Json`: easy reading and writing of JSON (on top of FPC's fpjson)
 - [ ] `Pastel.Files` and `Pastel.Process`: paths, reading/writing files, running other programs
 - [ ] `Pastel.Http` client: GET/POST with JSON, timeouts, HTTPS
 
@@ -69,7 +69,7 @@ Goal: writing a command-line tool in Pastel is pleasant from the first line to t
 
 **Docs**
 - [ ] Getting started guide (install, first project, debug, release)
-- [x] Console programs: `docs/console.md`; testing: `docs/testing.md`
+- [x] Console programs: `docs/console.md`; testing: `docs/testing.md`; JSON, settings, logging: `docs/data.md`
 - [ ] Guide: writing a command-line tool
 - [ ] Examples: a file tool, a tool that calls a web API
 
@@ -89,7 +89,7 @@ Goal: a REST API with a database, deployed on a Linux server as a systemd servic
 
 **Library (`Pastel.Service`, `Pastel.Web`, `Pastel.Db`)**
 - [ ] Service life cycle: start, stop on SIGTERM/SIGINT, reload config on SIGHUP
-- [ ] Logging to stdout in a form journald understands; optional JSON logs
+- [x] Logging in a form journald understands; optional JSON logs
 - [ ] Timers and scheduled jobs (every N seconds, daily at a time)
 - [ ] Background worker threads and safe message passing between them
 - [ ] HTTP server: routing (`GET /users/:id`), JSON requests and responses, static files

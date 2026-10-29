@@ -17,13 +17,14 @@ expect() { if eval "$2"; then ok; else bad "$1"; fi; }
 
 echo "== unit tests"
 mkdir -p "$WORK/units"
-"$FPC" -Mobjfpc -Sh -vew -FU"$WORK/units" -Fucli/src -o"$WORK/toml_test" tests/toml_test.pas >/dev/null
+"$FPC" -Mobjfpc -Sh -vew -FU"$WORK/units" -Fucli/src -Fuframework/src -o"$WORK/toml_test" tests/toml_test.pas >/dev/null
 "$WORK/toml_test"
 "$FPC" -Mobjfpc -Sh -vew -FU"$WORK/units" -Fucli/src -Fuframework/src -o"$WORK/pform_test" tests/pform_test.pas >/dev/null
 "$WORK/pform_test"
 
 echo "== framework tests"
-(cd framework/tests && PASTEL_ARGS_TEST_TOKEN=secret "$PASTEL" test >"$WORK/framework.log" 2>&1) || { cat "$WORK/framework.log"; exit 1; }
+(cd framework/tests && PASTEL_ARGS_TEST_TOKEN=secret FWTEST_SERVER_PORT=9090 FWTEST_FEATURES="a, b" \
+  "$PASTEL" test >"$WORK/framework.log" 2>&1) || { cat "$WORK/framework.log"; exit 1; }
 tail -1 "$WORK/framework.log"
 
 echo "== end-to-end tests"
@@ -127,6 +128,33 @@ expect "filter runs matching tests only"   'echo "$out" | grep -q "Tests: 2 pass
 set +e; out="$("$PASTEL" test --json 2>/dev/null)"; set -e
 expect "json output for editors"           'echo "$out" | grep -q "\"name\":\"skips with reason\",\"method\":\"SkipsWithReason\",\"outcome\":\"skipped\""'
 rm tests/library_test.pas
+
+# --- logging and settings in a real program ---
+cat > src/main.pas <<'EOS'
+program demo_app;
+{$mode objfpc}{$H+}
+uses Pastel.Log, Pastel.Config;
+var C: TConfig;
+begin
+  C := TConfig.Create('demo-app');
+  C.SetDefault('server.port', '80');
+  C.LoadStandard;
+  Log.Debug('debug line');
+  Log.Fields(['port', C.GetInt('server.port')]).Info('started');
+  Log.Error('boom');
+  C.Free;
+end.
+EOS
+printf '[server]\nport = 8080\n' > config.toml
+"$PASTEL" build >/dev/null
+out="$(./build/*/debug/demo-app 2>&1)"
+expect "log text format with fields"     'echo "$out" | grep -q "INFO  started port=8080"'
+expect "debug hidden by default"         '! echo "$out" | grep -q "debug line"'
+out="$(LOG_LEVEL=debug DEMO_APP_SERVER_PORT=9000 ./build/*/debug/demo-app 2>&1)"
+expect "LOG_LEVEL and env settings"      'echo "$out" | grep -q "debug line" && echo "$out" | grep -q "port=9000"'
+out="$(JOURNAL_STREAM=8:1 ./build/*/debug/demo-app 2>&1)"
+expect "journald format under systemd"   'echo "$out" | grep -q "^<6>started port=8080" && echo "$out" | grep -q "^<3>boom"'
+rm config.toml
 
 "$PASTEL" clean >/dev/null
 expect "clean removes build folder" '[ ! -d build ]'

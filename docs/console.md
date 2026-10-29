@@ -213,6 +213,9 @@ WriteLn(AppTarget);                   // linux, windows, linux-arm64, ...
 
 Change `version` in `pastel.toml` and `--version` follows.
 
-## UTF-8
+## UTF-8 and threads
 
-Pastel programs use UTF-8 for all text on every platform. On Windows, Pastel switches the program and its console to UTF-8 at start, so `WriteLn('Çiğdem')` and arguments like `mytool ayşe` work as on Linux.
+Pastel adds a small start-up unit to every program:
+
+- All text is UTF-8 on every platform. On Windows the console is switched to UTF-8 too, so `WriteLn('Çiğdem')` and arguments like `mytool ayşe` work as on Linux.
+- Threads work right away. (With plain Free Pascal on Linux, `cthreads` has to be the first unit in the program's `uses`, or `TThread` stops the program with "no thread support".)

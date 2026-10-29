@@ -422,9 +422,9 @@ begin
     end;
     ForgetStaleUnits(Project.Root, Dirs, UnitDir);
 
-    { UTF-8 strings and console on every platform }
+    { threads, UTF-8 strings and console on every platform }
     if Framework <> '' then
-      Args.Add('-FaPastel.Utf8');
+      Args.Add('-FaPastel.Startup');
     Args.Add('-dPASTEL');
     if Opts.Release then
     begin
