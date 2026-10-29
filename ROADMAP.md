@@ -41,11 +41,11 @@ Goal: writing a command-line tool in Pastel is pleasant from the first line to t
 
 **Tool**
 - [x] `pastel test`: finds and runs tests in `tests/`, clear report, exit code for CI
-- [ ] `pastel run --watch`: rebuild and restart when a file changes
-- [ ] `pastel fmt`: format Pascal code with one standard style
+- [x] `pastel run --watch`: rebuild and restart when a file changes (also `pastel test --watch`)
+- [x] `pastel fmt`: format Pascal code with one standard style (`--check` for CI, `--stdin` for editors)
 - [ ] `pastel package`: a `.tar.gz` (Linux) or `.zip` (Windows) with the program, ready to hand out
-- [ ] `pastel new lib`: a library project that other projects can use
-- [ ] Use another local Pastel project as a dependency (`[dependencies]` in `pastel.toml`)
+- [x] `pastel new lib`: a library project that other projects can use
+- [x] Use another local Pastel project as a dependency (`[dependencies]` in `pastel.toml`)
 - [x] `pastel.toml`: version shown by the program (`--version`, generated `AppInfo` unit)
 - [ ] `pastel.toml`: build-time defines per profile
 
@@ -66,11 +66,11 @@ Goal: writing a command-line tool in Pastel is pleasant from the first line to t
 - [ ] Test explorer: run and debug single tests from the editor
 - [ ] Pascal snippets (class, procedure, try/finally, for, case, ...)
 - [ ] F5 debugging without manual setup; readable strings and arrays in the debugger
-- [ ] Format on save (uses `pastel fmt`)
+- [x] Format on save (uses `pastel fmt`)
 
 **Docs**
 - [ ] Getting started guide (install, first project, debug, release)
-- [x] Console programs: `docs/console.md`; testing: `docs/testing.md`; JSON, settings, logging: `docs/data.md`; files, programs, HTTP: `docs/system.md`
+- [x] Console programs: `docs/console.md`; testing: `docs/testing.md`; JSON, settings, logging: `docs/data.md`; files, programs, HTTP: `docs/system.md`; watch, format, libraries: `docs/workflow.md`
 - [ ] Guide: writing a command-line tool
 - [ ] Examples: a file tool, a tool that calls a web API
 

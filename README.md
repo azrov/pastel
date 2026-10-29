@@ -53,7 +53,9 @@ pastel build --release            # optimized build
 pastel build --target windows     # a Windows .exe, built on Linux
 pastel build --target rpi         # a Raspberry Pi program
 pastel build --all --release      # every platform listed in pastel.toml
+pastel run --watch                # build and run again on every save
 pastel test                       # run the tests in tests/ (see docs/testing.md)
+pastel fmt                        # format the code
 pastel doctor                     # what can this computer build?
 ```
 
@@ -65,9 +67,11 @@ Building for another platform needs the Free Pascal cross-compiler for it. `past
 |---|---|
 | `pastel new app <name>` | Create a desktop app with a form |
 | `pastel new console <name>` | Create a console project |
+| `pastel new lib <name>` | Create a library that other projects use ([docs/workflow.md](docs/workflow.md)) |
 | `pastel build` | Compile (`-t <platform>`, `-r` release, `--all`, `-v` verbose) |
-| `pastel run` | Compile and run on this computer |
-| `pastel test [filter]` | Run the tests in `tests/` |
+| `pastel run` | Compile and run on this computer (`--watch`: again on every save) |
+| `pastel test [filter]` | Run the tests in `tests/` (`--watch`) |
+| `pastel fmt` | Format the code (`--check` for CI) |
 | `pastel clean` | Remove the `build/` folder |
 | `pastel targets` | List platforms and short names (`rpi`, `win`, ...) |
 | `pastel doctor` | Check the compiler and which platforms are ready |
@@ -82,6 +86,7 @@ The `vscode/` folder contains the Pastel extension for Visual Studio Code. Build
 - `Ctrl+click` from `OnClick = SendClick` to the code, and a quick fix that creates missing event handlers
 - a Pastel panel in the activity bar, Pascal outline and go to definition (into the framework too)
 - Delphi keys: F9 run, Ctrl+F9 build, F12 form/code, Ctrl+Shift+Up/Down declaration/body
+- Format Document and format on save with `pastel fmt`; Run and Watch
 
 New projects come with `.vscode` settings: `Ctrl+Shift+B` builds, `F5` debugs with gdb (needs the C/C++ extension).
 

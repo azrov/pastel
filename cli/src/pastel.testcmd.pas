@@ -13,42 +13,10 @@ uses
 function RunProjectTests(Project: TPastelProject; const Filters: TStringArray;
   Json, Verbose: Boolean): Integer;
 
-{ The unit name declared in a Pascal file ("unit Foo;"), or '' for programs. }
-function UnitNameOf(const FileName: string): string;
-
 implementation
 
 uses
   Classes, Process, Pastel.Console, Pastel.Targets, Pastel.Builder;
-
-function UnitNameOf(const FileName: string): string;
-var
-  L: TStringList;
-  I, P: Integer;
-  S: string;
-begin
-  Result := '';
-  L := TStringList.Create;
-  try
-    L.LoadFromFile(FileName);
-    for I := 0 to L.Count - 1 do
-    begin
-      S := Trim(L[I]);
-      if LowerCase(Copy(S, 1, 5)) = 'unit ' then
-      begin
-        S := Trim(Copy(S, 6, MaxInt));
-        P := Pos(';', S);
-        if P > 0 then
-          S := Copy(S, 1, P - 1);
-        Exit(Trim(S));
-      end;
-      if LowerCase(Copy(S, 1, 8)) = 'program ' then
-        Exit('');
-    end;
-  finally
-    L.Free;
-  end;
-end;
 
 procedure FindTests(const Root, Rel: string; Units, Dirs: TStrings);
 var

@@ -151,9 +151,34 @@ begin
   end;
 end;
 
+procedure TestInlineTables;
+var
+  D: TTomlDocument;
+  K: TStringArray;
+begin
+  D := Parse('[dependencies]'#10 +
+    'utils = { path = "../utils" }'#10 +
+    'json = { path = ''../json'', features = ["a", "b"], extra = { x = 1 } }'#10 +
+    'empty = {}'#10);
+  try
+    Check(D.GetString('dependencies.utils.path') = '../utils', 'inline table value');
+    Check(D.GetString('dependencies.json.path') = '../json', 'inline table literal string');
+    Check(Length(D.GetArray('dependencies.json.features')) = 2, 'array in inline table');
+    Check(D.GetInt('dependencies.json.extra.x') = 1, 'nested inline table');
+    Check(D.Has('dependencies.empty'), 'empty inline table exists');
+    K := D.Keys('dependencies');
+    Check((Length(K) = 3) and (K[0] = 'empty') and (K[1] = 'json') and (K[2] = 'utils'), 'keys of a table');
+  finally
+    D.Free;
+  end;
+  Check(FailsWith('a = { b = 1'#10, 'expected "," or "}"'), 'unterminated inline table');
+  Check(FailsWith('a = { b = 1, b = 2 }'#10, 'defined twice'), 'duplicate key in inline table');
+end;
+
 begin
   Passed := 0;
   Failed := 0;
+  TestInlineTables;
   TestBasics;
   TestEscapes;
   TestWindowsLineEndings;

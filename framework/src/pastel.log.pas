@@ -202,11 +202,11 @@ begin
   { LOG_LEVEL=debug works for every Pastel program }
   L := GetEnv('LOG_LEVEL');
   if L <> '' then
-    try
-      SetLevel(L);
-    except
-      on EConvertError do ;
-    end;
+  try
+    SetLevel(L);
+  except
+    on EConvertError do ;
+  end;
 end;
 
 destructor TLogger.Destroy;

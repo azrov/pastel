@@ -140,12 +140,12 @@ type
     FOutput: TStream;
     FOnProgressCb: THttpProgressEvent;
     procedure GetHandler(Sender: TObject; const UseSSL: Boolean; out AHandler: TSocketHandler);
-    procedure Redirected(Sender: TObject; const ASrc: String; var ADest: String);
+    procedure Redirected(Sender: TObject; const ASrc: string; var ADest: string);
     procedure DataReceived(Sender: TObject; const ContentLength, CurrentPos: Int64);
   protected
-    procedure DoMethod(const AMethod, AURL: String; Stream: TStream;
+    procedure DoMethod(const AMethod, AURL: string; Stream: TStream;
       const AllowedResponseCodes: array of Integer); override;
-    procedure ConnectToServer(const AHost: String; APort: Integer; UseSSL: Boolean = False); override;
+    procedure ConnectToServer(const AHost: string; APort: Integer; UseSSL: Boolean = False); override;
   end;
 
   TPastelSSLHandler = class(TOpenSSLSocketHandler)
@@ -287,7 +287,7 @@ begin
   end;
 end;
 
-procedure TPastelHttpClient.Redirected(Sender: TObject; const ASrc: String; var ADest: String);
+procedure TPastelHttpClient.Redirected(Sender: TObject; const ASrc: string; var ADest: string);
 begin
   { the body of the redirect answer is not part of the result }
   if FOutput <> nil then
@@ -303,7 +303,7 @@ begin
     FOnProgressCb(CurrentPos, ContentLength);
 end;
 
-procedure TPastelHttpClient.DoMethod(const AMethod, AURL: String; Stream: TStream;
+procedure TPastelHttpClient.DoMethod(const AMethod, AURL: string; Stream: TStream;
   const AllowedResponseCodes: array of Integer);
 var
   Host, PHost, PUser, PPass, ProxyUrl: string;
@@ -345,7 +345,7 @@ begin
   inherited DoMethod(AMethod, AURL, Stream, AllowedResponseCodes);
 end;
 
-procedure TPastelHttpClient.ConnectToServer(const AHost: String; APort: Integer; UseSSL: Boolean);
+procedure TPastelHttpClient.ConnectToServer(const AHost: string; APort: Integer; UseSSL: Boolean);
 begin
   FFailure := '';
   if UseSSL and (FTunnelHost <> '') then

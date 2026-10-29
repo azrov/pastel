@@ -53,6 +53,10 @@ class Uri {
 class Task { group?: unknown; presentationOptions?: unknown;
   constructor(public definition: unknown, public scope: unknown, public name: string, public source: string,
     public execution: unknown, public matcher?: unknown) {} }
+class TextEdit {
+  constructor(public range: Range, public newText: string) {}
+  static replace(r: Range, t: string) { return new TextEdit(r, t); }
+}
 class ThemeIcon { constructor(public id: string) {} }
 class TreeItem {
   iconPath?: unknown; description?: string; tooltip?: string; command?: any; resourceUri?: Uri; contextValue?: string;
@@ -67,6 +71,7 @@ class FakeDocument {
   constructor(public uri: Uri, public languageId: string, private text: string) {}
   getText(r?: Range) { return r ? this.lineAt(r.start.line).text.substring(r.start.character, r.end.character) : this.text; }
   setText(t: string) { this.text = t; this.version++; }
+  get fileName() { return this.uri.fsPath; }
   get lineCount() { return this.text.split('\n').length; }
   lineAt(i: number) {
     const t = this.text.split('\n')[i] ?? '';
@@ -101,7 +106,7 @@ const on = (name: string) => (fn: (e: any) => void) => { (listeners[name] ??= []
 
 const vscodeFake = {
   Position, Range, Selection, SnippetString, CompletionItem, MarkdownString, Hover, Location, Diagnostic,
-  CodeAction, DocumentSymbol, Uri, Task, ProcessExecution,
+  CodeAction, DocumentSymbol, Uri, Task, ProcessExecution, TextEdit,
   CompletionItemKind: { Class: 6, Property: 9, Event: 22, EnumMember: 19, Value: 11, Method: 1, Keyword: 13, Color: 15 },
   DiagnosticSeverity: { Error: 0, Warning: 1 },
   SymbolKind: { Module: 1, Class: 4, Method: 5, Property: 6, Field: 7, Interface: 10, Function: 11, Variable: 12,
@@ -139,6 +144,7 @@ const vscodeFake = {
     },
     registerCodeActionsProvider: (_s: unknown, p: unknown) => { providers.actions = p; return { dispose() {} }; },
     registerWorkspaceSymbolProvider: (p: unknown) => { providers.workspaceSymbols = p; return { dispose() {} }; },
+    registerDocumentFormattingEditProvider: (_s: unknown, p: unknown) => { providers.formatting = p; return { dispose() {} }; },
   },
   commands: {
     registerCommand: (id: string, fn: (...a: any[]) => any) => { commands[id] = fn; return { dispose() {} }; },
@@ -432,6 +438,27 @@ async function main() {
     const t = providers.lastTask as Task;
     assert.deepStrictEqual((t.execution as ProcessExecution).args, ['build']);
     assert.strictEqual(t.matcher, '$pastel');
+  });
+
+  await test('Format Document uses pastel fmt', async () => {
+    const messy = new FakeDocument(Uri.file(pasPath), 'pascal', 'unit X;\ninterface\nimplementation\nprocedure P;\nbegin\nif A then\nB:=1;\nend;\nend.\n');
+    const edits = await providers.formatting.provideDocumentFormattingEdits(messy);
+    assert.strictEqual(edits.length, 1);
+    assert.ok(edits[0].newText.includes('\n  if A then\n    B := 1;\n'), edits[0].newText);
+  });
+
+  await test('broken code is left alone, with a note in the status bar', async () => {
+    const broken = new FakeDocument(Uri.file(pasPath), 'pascal', 'begin\nif A then begin\nend.\n');
+    const edits = await providers.formatting.provideDocumentFormattingEdits(broken);
+    assert.strictEqual(edits.length, 0);
+    assert.ok(String(providers.status).includes('could not format'), providers.status);
+  });
+
+  await test('run and watch, format all', async () => {
+    await commands['pastel.runWatch']();
+    assert.deepStrictEqual(((providers.lastTask as Task).execution as ProcessExecution).args, ['run', '--watch']);
+    await commands['pastel.formatAll']();
+    assert.deepStrictEqual(((providers.lastTask as Task).execution as ProcessExecution).args, ['fmt']);
   });
 
   console.log(`integration: ${passed} passed`);

@@ -7,7 +7,7 @@ unit Pastel.Templates;
 interface
 
 const
-  ProjectKinds: array[0..2] of string = ('console', 'app', 'server');
+  ProjectKinds: array[0..3] of string = ('console', 'app', 'lib', 'server');
 
 function CreateProject(const Kind, Name, ParentDir: string): Boolean;
 
@@ -26,6 +26,17 @@ begin
   Result := StringReplace(Result, '{{name}}', Name, [rfReplaceAll]);
   Result := StringReplace(Result, '{{ident}}', Ident, [rfReplaceAll]);
   Result := StringReplace(Result, '{{pastel}}', PastelVersion, [rfReplaceAll]);
+end;
+
+{ my-string-tools -> MyStringTools }
+function UnitNameFor(const Name: string): string;
+var
+  Part: string;
+begin
+  Result := '';
+  for Part in Name.Split(['-', '_']) do
+    if Part <> '' then
+      Result := Result + UpCase(Part[1]) + Copy(Part, 2, MaxInt);
 end;
 
 procedure WriteText(const FileName, Content: string);
@@ -190,6 +201,123 @@ begin
   ], Name, Ident));
 end;
 
+procedure WriteLibProject(const Dir, Name, Ident: string);
+var
+  UnitName, FileBase, Content: string;
+begin
+  UnitName := UnitNameFor(Name);
+  FileBase := LowerCase(UnitName);
+  WriteText(Dir + 'pastel.toml', Fill([
+    '# Pastel project file',
+    '',
+    '[project]',
+    'name = "{{name}}"',
+    'version = "0.1.0"',
+    'type = "lib"             # units for other projects; no program of its own',
+    '',
+    '[build]',
+    'mode = "objfpc"          # objfpc or delphi',
+    'defines = []'
+  ], Name, Ident));
+
+  Content := Fill([
+    '{ {{name}}: a Pastel library.',
+    '',
+    '  Another project uses it with two lines in its pastel.toml:',
+    '    [dependencies]',
+    '    {{name}} = { path = "../{{name}}" }',
+    '  and then "uses {{unit}};" in its code. }',
+    'unit {{unit}};',
+    '',
+    '{$mode objfpc}{$H+}',
+    '',
+    'interface',
+    '',
+    '{ S repeated Count times: Repeated(''ab'', 3) = ''ababab'' }',
+    'function Repeated(const S: string; Count: Integer): string;',
+    '',
+    'implementation',
+    '',
+    'function Repeated(const S: string; Count: Integer): string;',
+    'var',
+    '  I: Integer;',
+    'begin',
+    '  Result := '''';',
+    '  for I := 1 to Count do',
+    '    Result := Result + S;',
+    'end;',
+    '',
+    'end.'
+  ], Name, Ident);
+  WriteText(Dir + 'src' + PathDelim + FileBase + '.pas',
+    StringReplace(Content, '{{unit}}', UnitName, [rfReplaceAll]));
+
+  Content := Fill([
+    '{ Tests for src/{{file}}.pas. Run them with: pastel test }',
+    'unit {{unit}}_Test;',
+    '',
+    '{$mode objfpc}{$H+}',
+    '',
+    'interface',
+    '',
+    'uses',
+    '  Pastel.Testing, {{unit}};',
+    '',
+    'type',
+    '  T{{unit}}Tests = class(TTestSuite)',
+    '  published',
+    '    procedure RepeatsText;',
+    '    procedure ZeroTimesIsEmpty;',
+    '  end;',
+    '',
+    'implementation',
+    '',
+    'procedure T{{unit}}Tests.RepeatsText;',
+    'begin',
+    '  AssertEquals(''ababab'', Repeated(''ab'', 3));',
+    'end;',
+    '',
+    'procedure T{{unit}}Tests.ZeroTimesIsEmpty;',
+    'begin',
+    '  AssertEquals('''', Repeated(''ab'', 0));',
+    'end;',
+    '',
+    'initialization',
+    '  RegisterTests(T{{unit}}Tests);',
+    'end.'
+  ], Name, Ident);
+  Content := StringReplace(Content, '{{unit}}', UnitName, [rfReplaceAll]);
+  WriteText(Dir + 'tests' + PathDelim + FileBase + '_test.pas',
+    StringReplace(Content, '{{file}}', FileBase, [rfReplaceAll]));
+
+  WriteText(Dir + '.gitignore', Fill([
+    'build/',
+    '*.o',
+    '*.ppu'
+  ], Name, Ident));
+
+  Content := Fill([
+    '# {{name}}',
+    '',
+    'A Pascal library made with Pastel.',
+    '',
+    '```',
+    'pastel build     # compile every unit in src/',
+    'pastel test      # run the tests in tests/',
+    'pastel fmt       # format the code',
+    '```',
+    '',
+    'To use it in another Pastel project, add to its `pastel.toml`:',
+    '',
+    '```toml',
+    '[dependencies]',
+    '{{name}} = { path = "../{{name}}" }',
+    '```',
+    '',
+    'and `uses {{unit}};` in the code.'
+  ], Name, Ident);
+  WriteText(Dir + 'README.md', StringReplace(Content, '{{unit}}', UnitName, [rfReplaceAll]));
+end;
 
 procedure WriteAppProject(const Dir, Name, Ident: string);
 begin
@@ -336,7 +464,7 @@ end;
 { VS Code settings: Ctrl+Shift+B builds, F5 debugs, errors go to Problems.
   The tasks call the pastel program directly, so they work even without
   the Pastel extension. }
-procedure WriteVSCodeFiles(const Dir, Name, Ident: string);
+procedure WriteVSCodeFiles(const Dir, Name, Ident, Kind: string);
 var
   V: string;
 begin
@@ -362,35 +490,54 @@ begin
     '      }',
     '    },',
     '    {',
+    '      "label": "pastel: test",',
+    '      "type": "shell",',
+    '      "command": "pastel",',
+    '      "args": ["test"],',
+    '      "options": { "env": { "NO_COLOR": "1" } },',
+    '      "group": "test",',
+    '      "problemMatcher": []',
+    '    },',
+    '    {',
     '      "label": "pastel: run",',
     '      "type": "shell",',
     '      "command": "pastel",',
     '      "args": ["run"],',
     '      "options": { "env": { "NO_COLOR": "1" } },',
     '      "problemMatcher": []',
+    '    },',
+    '    {',
+    '      "label": "pastel: watch",',
+    '      "detail": "build and run again on every save",',
+    '      "type": "shell",',
+    '      "command": "pastel",',
+    '      "args": ["run", "--watch"],',
+    '      "isBackground": true,',
+    '      "problemMatcher": []',
     '    }',
     '  ]',
     '}'
   ], Name, Ident));
 
-  WriteText(V + 'launch.json', Fill([
-    '{',
-    '  "version": "0.2.0",',
-    '  "configurations": [',
-    '    {',
-    '      "name": "Debug {{name}}",',
-    '      "type": "cppdbg",',
-    '      "request": "launch",',
-    '      "program": "${workspaceFolder}/build/linux/debug/{{name}}",',
-    '      "windows": { "program": "${workspaceFolder}/build/windows/debug/{{name}}.exe" },',
-    '      "cwd": "${workspaceFolder}",',
-    '      "MIMode": "gdb",',
-    '      "externalConsole": false,',
-    '      "preLaunchTask": "pastel: build"',
-    '    }',
-    '  ]',
-    '}'
-  ], Name, Ident));
+  if Kind <> 'lib' then
+    WriteText(V + 'launch.json', Fill([
+      '{',
+      '  "version": "0.2.0",',
+      '  "configurations": [',
+      '    {',
+      '      "name": "Debug {{name}}",',
+      '      "type": "cppdbg",',
+      '      "request": "launch",',
+      '      "program": "${workspaceFolder}/build/linux/debug/{{name}}",',
+      '      "windows": { "program": "${workspaceFolder}/build/windows/debug/{{name}}.exe" },',
+      '      "cwd": "${workspaceFolder}",',
+      '      "MIMode": "gdb",',
+      '      "externalConsole": false,',
+      '      "preLaunchTask": "pastel: build"',
+      '    }',
+      '  ]',
+      '}'
+    ], Name, Ident));
 
   WriteText(V + 'extensions.json', Fill([
     '{',
@@ -401,7 +548,11 @@ begin
   WriteText(V + 'settings.json', Fill([
     '{',
     '  "search.exclude": { "build/**": true },',
-    '  "files.watcherExclude": { "**/build/**": true }',
+    '  "files.watcherExclude": { "**/build/**": true },',
+    '  "[pascal]": {',
+    '    "editor.defaultFormatter": "pastel.pastel-vscode",',
+    '    "editor.formatOnSave": true',
+    '  }',
     '}'
   ], Name, Ident));
 end;
@@ -424,10 +575,10 @@ begin
     Hint('this is coming in a later Pastel version; available now: console, app');
     Exit;
   end;
-  if (Kind <> 'console') and (Kind <> 'app') then
+  if (Kind <> 'console') and (Kind <> 'app') and (Kind <> 'lib') then
   begin
     Fail(Format('unknown project kind "%s"', [Kind]));
-    Hint('available kinds: console, app');
+    Hint('available kinds: console, app, lib');
     Exit;
   end;
 
@@ -442,15 +593,23 @@ begin
 
   if Kind = 'app' then
     WriteAppProject(Dir, Name, Ident)
+  else if Kind = 'lib' then
+    WriteLibProject(Dir, Name, Ident)
   else
     WriteConsoleProject(Dir, Name, Ident);
-  WriteVSCodeFiles(Dir, Name, Ident);
+  WriteVSCodeFiles(Dir, Name, Ident, Kind);
 
-  Status('Created', Format('%s project "%s"', [Kind, Name]));
+  if Kind = 'lib' then
+    Status('Created', Format('library "%s" (unit %s)', [Name, UnitNameFor(Name)]))
+  else
+    Status('Created', Format('%s project "%s"', [Kind, Name]));
   WriteLn;
   WriteLn('  Next steps:');
   WriteLn('    cd ', Name);
-  WriteLn('    pastel run');
+  if Kind = 'lib' then
+    WriteLn('    pastel test')
+  else
+    WriteLn('    pastel run');
   WriteLn;
   Result := True;
 end;

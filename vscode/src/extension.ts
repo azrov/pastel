@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { registerFormatter } from './format';
 import { currentProjectRoot, findProjectRoot, pastelPath, runPastel } from './cli';
 import {
   allObjects, classFor, completionContext, declaredProcedures, enclosingObjects,
@@ -60,8 +61,13 @@ export function activate(context: vscode.ExtensionContext): void {
   });
 
   // commands
+  registerFormatter(context);
+
   context.subscriptions.push(
     vscode.commands.registerCommand('pastel.run', () => runTask('run')),
+    vscode.commands.registerCommand('pastel.runWatch', () => runTask('run', { watch: true })),
+    vscode.commands.registerCommand('pastel.testWatch', () => runTask('test', { watch: true })),
+    vscode.commands.registerCommand('pastel.formatAll', () => runTask('fmt')),
     vscode.commands.registerCommand('pastel.build', () => runTask('build')),
     vscode.commands.registerCommand('pastel.test', () => runTask('test')),
     vscode.commands.registerCommand('pastel.buildRelease', () => runTask('build', { release: true })),
@@ -179,7 +185,7 @@ interface PastelTaskDefinition extends vscode.TaskDefinition {
 }
 
 function makeTask(command: string, root: string,
-  opts: { target?: string; release?: boolean } = {},
+  opts: { target?: string; release?: boolean; watch?: boolean } = {},
   definition?: vscode.TaskDefinition): vscode.Task {
   const def: PastelTaskDefinition = definition as PastelTaskDefinition ??
     { type: 'pastel', command, ...opts };
@@ -190,12 +196,18 @@ function makeTask(command: string, root: string,
   if (opts.release) {
     args.push('--release');
   }
+  if (opts.watch) {
+    args.push('--watch');
+  }
   let name = command;
   if (opts.release) {
     name += ' (release)';
   }
   if (opts.target) {
     name += ` (${opts.target})`;
+  }
+  if (opts.watch) {
+    name += ' (watch)';
   }
   const folder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(root));
   const task = new vscode.Task(def, folder ?? vscode.TaskScope.Workspace, name, 'pastel',
@@ -204,21 +216,25 @@ function makeTask(command: string, root: string,
   if (command === 'build') {
     task.group = vscode.TaskGroup.Build;
   }
+  if (opts.watch) {
+    task.isBackground = true;
+  }
   task.presentationOptions = { reveal: vscode.TaskRevealKind.Always, clear: true, panel: vscode.TaskPanelKind.Dedicated };
   return task;
 }
 
-async function runTask(command: string, opts: { target?: string; release?: boolean } = {}): Promise<void> {
+async function runTask(command: string, opts: { target?: string; release?: boolean; watch?: boolean } = {}): Promise<void> {
   const root = await currentProjectRoot();
   if (!root) {
     vscode.window.showWarningMessage('Pastel: no pastel.toml found in this workspace. Create a project with "Pastel: New Project".');
     return;
   }
   await vscode.workspace.saveAll(false);
-  if (command === 'run') {
-    // stop a previous run of the app first
+  if (command === 'run' || opts.watch) {
+    // stop a previous run (or watch) first
     for (const exec of vscode.tasks.taskExecutions) {
-      if (exec.task.source === 'pastel' && (exec.task.definition as PastelTaskDefinition).command === 'run') {
+      const def = exec.task.definition as PastelTaskDefinition;
+      if (exec.task.source === 'pastel' && def.command === command) {
         exec.terminate();
       }
     }
@@ -252,6 +268,7 @@ async function newProject(): Promise<void> {
   const kind = await vscode.window.showQuickPick([
     { label: 'app', description: 'Desktop app with a window and forms' },
     { label: 'console', description: 'Terminal program' },
+    { label: 'lib', description: 'Units for other projects (a library)' },
   ], { placeHolder: 'What kind of project?' });
   if (!kind) {
     return;

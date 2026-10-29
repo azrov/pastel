@@ -2,7 +2,7 @@
   "name": "pastel-vscode",
   "displayName": "Pastel",
   "description": "Build cross-platform apps in Object Pascal with Pastel: run, build, live form preview, .pform completion and checks.",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "publisher": "pastel",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -146,6 +146,21 @@
         "title": "Refresh",
         "category": "Pastel",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "pastel.runWatch",
+        "title": "Run and Watch (again on every save)",
+        "category": "Pastel"
+      },
+      {
+        "command": "pastel.testWatch",
+        "title": "Test and Watch (again on every save)",
+        "category": "Pastel"
+      },
+      {
+        "command": "pastel.formatAll",
+        "title": "Format All Files",
+        "category": "Pastel"
       }
     ],
     "menus": {
@@ -236,7 +251,8 @@
               "test",
               "clean",
               "check",
-              "doctor"
+              "doctor",
+              "fmt"
             ],
             "description": "The pastel command to run."
           },
@@ -247,6 +263,10 @@
           "release": {
             "type": "boolean",
             "description": "Optimized build without debug information."
+          },
+          "watch": {
+            "type": "boolean",
+            "description": "Build and run again whenever a file is saved."
           }
         }
       }

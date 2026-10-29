@@ -147,10 +147,10 @@ function CommandLineToArgvW(lpCmdLine: PWideChar; out pNumArgs: Integer): PPWide
 function CommandLineWords: TStringArray;
 var
   I: Integer;
-{$IFDEF WINDOWS}
+  {$IFDEF WINDOWS}
   Argv: PPWideChar;
   N: Integer;
-{$ENDIF}
+  {$ENDIF}
 begin
   Result := nil;
   {$IFDEF WINDOWS}

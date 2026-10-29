@@ -1,8 +1,9 @@
 { Pastel - a small TOML reader for pastel.toml files.
 
   Supported: [tables], dotted keys, basic and literal strings, integers,
-  floats, booleans, arrays of scalars (also across lines), comments.
-  Not supported yet: multi-line strings, dates, inline tables, [[arrays of tables]].
+  floats, booleans, arrays of scalars (also across lines), inline tables
+  (on one line, in curly brackets), comments.
+  Not supported yet: multi-line strings, dates, [[arrays of tables]].
   Part of the Pastel project, MIT License. }
 unit Pastel.Toml;
 
@@ -40,6 +41,8 @@ type
     function GetBool(const Path: string; Default: Boolean = False): Boolean;
     function GetInt(const Path: string; Default: Int64 = 0): Int64;
     function GetArray(const Path: string): TStringArray;
+    { Names directly inside a table: Keys('dependencies') -> ['json', 'utils'] }
+    function Keys(const Table: string): TStringArray;
     property Values: TStringList read FValues;
   end;
 
@@ -97,7 +100,6 @@ procedure TTomlDocument.LoadFromString(const Src: string);
 var
   P, Len, Line: Integer;
   Table, Key: string;
-  V: TTomlValue;
 
   procedure Error(const Msg: string);
   begin
@@ -334,6 +336,60 @@ var
       Into.Text := ParseScalar(Into.Kind);
   end;
 
+  procedure AddValue(const Key: string);
+  var
+    V: TTomlValue;
+  begin
+    if FValues.IndexOf(Key) >= 0 then
+      Error('key "' + Key + '" is defined twice');
+    V := TTomlValue.Create;
+    try
+      ParseValue(V);
+    except
+      V.Free;
+      raise;
+    end;
+    FValues.AddObject(Key, V);
+  end;
+
+  // an inline table on one line: Key = { name = "x", path = "../y" },
+  // stored as Key.name and Key.path
+  procedure ParseInlineTable(const Key: string);
+  var
+    Sub: string;
+  begin
+    Inc(P);
+    if FTables.IndexOf(Key) < 0 then
+      FTables.Add(Key);
+    SkipSpaces;
+    if Peek = '}' then
+    begin
+      Inc(P);
+      Exit;
+    end;
+    repeat
+      Sub := Key + '.' + ParseKey;
+      if Peek <> '=' then
+        Error('expected "=" in inline table');
+      Inc(P);
+      SkipSpaces;
+      if Peek = '{' then
+        ParseInlineTable(Sub)
+      else
+        AddValue(Sub);
+      SkipSpaces;
+      if Peek = ',' then
+        Inc(P)
+      else if Peek = '}' then
+      begin
+        Inc(P);
+        Break;
+      end
+      else
+        Error('expected "," or "}" in inline table');
+    until False;
+  end;
+
 begin
   FValues.Clear;
   FTables.Clear;
@@ -377,16 +433,10 @@ begin
       SkipSpaces;
       if Table <> '' then
         Key := Table + '.' + Key;
-      if FValues.IndexOf(Key) >= 0 then
-        Error('key "' + Key + '" is defined twice');
-      V := TTomlValue.Create;
-      try
-        ParseValue(V);
-      except
-        V.Free;
-        raise;
-      end;
-      FValues.AddObject(Key, V);
+      if Peek = '{' then
+        ParseInlineTable(Key)
+      else
+        AddValue(Key);
       ExpectLineEnd;
     end;
   end;
@@ -442,6 +492,40 @@ begin
   if V.Kind <> tkInteger then
     raise ETomlError.CreateFmt('"%s" must be a whole number', [Path]);
   Result := StrToInt64(V.Text);
+end;
+
+function TTomlDocument.Keys(const Table: string): TStringArray;
+var
+  I, J: Integer;
+  Prefix, Name: string;
+  Seen: TStringList;
+begin
+  Result := nil;
+  Prefix := Table + '.';
+  Seen := TStringList.Create;
+  try
+    Seen.Sorted := True;
+    Seen.Duplicates := dupIgnore;
+    for I := 0 to FValues.Count + FTables.Count - 1 do
+    begin
+      if I < FValues.Count then
+        Name := FValues[I]
+      else
+        Name := FTables[I - FValues.Count];
+      if Copy(Name, 1, Length(Prefix)) <> Prefix then
+        Continue;
+      Delete(Name, 1, Length(Prefix));
+      J := Pos('.', Name);
+      if J > 0 then
+        SetLength(Name, J - 1);
+      Seen.Add(Name);
+    end;
+    SetLength(Result, Seen.Count);
+    for I := 0 to Seen.Count - 1 do
+      Result[I] := Seen[I];
+  finally
+    Seen.Free;
+  end;
 end;
 
 function TTomlDocument.GetArray(const Path: string): TStringArray;

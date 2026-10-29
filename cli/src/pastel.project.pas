@@ -16,17 +16,26 @@ const
 type
   EProjectError = class(Exception);
 
+  TDependency = record
+    Name: string;
+    Path: string;      { as written in pastel.toml }
+    Root: string;      { absolute, with trailing path delimiter }
+  end;
+
   TPastelProject = class
   public
     Root: string;               { project folder, with trailing path delimiter }
     Name: string;
     Version: string;
-    Kind: string;               { console, app, server }
+    Kind: string;               { console, app, server, lib }
     MainFile: string;           { relative to Root }
     Mode: string;               { objfpc or delphi }
     Defines: TStringArray;
     UnitPaths: TStringArray;    { extra unit folders, relative to Root }
     Platforms: TStringArray;    { targets built by "pastel build --all" }
+    Dependencies: array of TDependency;   // [dependencies] name = { path = "../x" }
+    FormatIndent: Integer;      { [format] indent }
+    FormatKeywords: string;     { [format] keywords: lower or keep }
     class function FindRoot(const StartDir: string): string;
     class function Load(const Dir: string): TPastelProject;
   end;
@@ -69,6 +78,8 @@ class function TPastelProject.Load(const Dir: string): TPastelProject;
 var
   Doc: TTomlDocument;
   P: TPastelProject;
+  Dep: string;
+  D: TDependency;
 begin
   P := TPastelProject.Create;
   Doc := TTomlDocument.Create;
@@ -84,6 +95,22 @@ begin
       P.Defines := Doc.GetArray('build.defines');
       P.UnitPaths := Doc.GetArray('build.unit_paths');
       P.Platforms := Doc.GetArray('targets.platforms');
+      P.FormatIndent := Doc.GetInt('format.indent', 2);
+      P.FormatKeywords := LowerCase(Doc.GetString('format.keywords', 'lower'));
+      for Dep in Doc.Keys('dependencies') do
+      begin
+        D.Name := Dep;
+        if Doc.Has('dependencies.' + Dep + '.path') then
+          D.Path := Doc.GetString('dependencies.' + Dep + '.path')
+        else if Doc.Find('dependencies.' + Dep) <> nil then
+          D.Path := Doc.GetString('dependencies.' + Dep)
+        else
+          raise EProjectError.CreateFmt('%s: dependency "%s" needs a path, e.g. %s = { path = "../%s" }',
+            [ProjectFileName, Dep, Dep, Dep]);
+        D.Root := IncludeTrailingPathDelimiter(ExpandFileName(P.Root + SetDirSeparators(D.Path)));
+        SetLength(P.Dependencies, Length(P.Dependencies) + 1);
+        P.Dependencies[High(P.Dependencies)] := D;
+      end;
     except
       on E: ETomlError do
         raise EProjectError.Create(ProjectFileName + ': ' + E.Message);
@@ -94,13 +121,23 @@ begin
     if not IsValidProjectName(P.Name) then
       raise EProjectError.CreateFmt('%s: invalid project name "%s" (use letters, digits, "-" and "_")',
         [ProjectFileName, P.Name]);
-    if (P.Kind <> 'console') and (P.Kind <> 'app') and (P.Kind <> 'server') then
-      raise EProjectError.CreateFmt('%s: unknown project type "%s" (console, app or server)',
+    if (P.Kind <> 'console') and (P.Kind <> 'app') and (P.Kind <> 'server') and (P.Kind <> 'lib') then
+      raise EProjectError.CreateFmt('%s: unknown project type "%s" (console, app, server or lib)',
         [ProjectFileName, P.Kind]);
+    if (P.FormatIndent < 1) or (P.FormatIndent > 8) then
+      raise EProjectError.CreateFmt('%s: [format] indent must be between 1 and 8', [ProjectFileName]);
+    if (P.FormatKeywords <> 'lower') and (P.FormatKeywords <> 'keep') then
+      raise EProjectError.CreateFmt('%s: [format] keywords must be "lower" or "keep"', [ProjectFileName]);
+    for D in P.Dependencies do
+      if not FileExists(D.Root + ProjectFileName) then
+        raise EProjectError.CreateFmt('%s: dependency "%s": no %s in "%s"',
+          [ProjectFileName, D.Name, ProjectFileName, D.Path]);
     if (P.Mode <> 'objfpc') and (P.Mode <> 'delphi') then
       raise EProjectError.CreateFmt('%s: unknown mode "%s" (objfpc or delphi)',
         [ProjectFileName, P.Mode]);
-    if not FileExists(P.Root + P.MainFile) then
+    if P.Kind = 'lib' then
+      P.MainFile := SetDirSeparators(Doc.GetString('build.main', ''))
+    else if not FileExists(P.Root + P.MainFile) then
       raise EProjectError.CreateFmt('main file "%s" not found (set [build] main in %s)',
         [P.MainFile, ProjectFileName]);
     Result := P;

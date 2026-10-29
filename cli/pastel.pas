@@ -7,7 +7,8 @@ program pastel;
 uses
   Classes, SysUtils,
   Pastel.Console, Pastel.Toml, Pastel.Project, Pastel.Targets,
-  Pastel.Builder, Pastel.Templates, Pastel.Doctor, Pastel.Inspect, Pastel.TestCmd;
+  Pastel.Builder, Pastel.Templates, Pastel.Doctor, Pastel.Inspect, Pastel.TestCmd,
+  Pastel.Watch, Pastel.FmtCmd;
 
 const
   ExitOk = 0;
@@ -20,7 +21,7 @@ type
     Positional: TStringArray;   { arguments that are not options }
     PassThrough: TStringArray;  { everything after "--" }
     Target: string;
-    Release, Verbose, All, Help: Boolean;
+    Release, Verbose, All, Help, Watch, Check: Boolean;
     Json, Stdin: Boolean;
     Output, Layout: string;
     Width, Height: Integer;
@@ -39,10 +40,11 @@ begin
   WriteLn(Bold('Usage:'), ' pastel <command> [options]');
   WriteLn;
   WriteLn(Bold('Commands:'));
-  WriteLn('  new <kind> <name>    Create a new project (kinds: app, console)');
+  WriteLn('  new <kind> <name>    Create a new project (kinds: console, app, lib)');
   WriteLn('  build                Compile the project');
-  WriteLn('  run [-- args]        Compile and run on this computer');
-  WriteLn('  test [filter]        Run the tests in tests/ (only names matching filter)');
+  WriteLn('  run [-- args]        Compile and run on this computer (--watch: again on every save)');
+  WriteLn('  test [filter]        Run the tests in tests/ (only names matching filter; --watch)');
+  WriteLn('  fmt [files]          Format the code (--check: only report)');
   WriteLn('  clean                Remove the build folder');
   WriteLn('  targets              List the platforms Pastel can build for');
   WriteLn('  doctor               Check your setup');
@@ -62,6 +64,7 @@ begin
   WriteLn('  pastel new console hello');
   WriteLn('  cd hello && pastel run');
   WriteLn('  pastel build --target windows --release');
+  WriteLn('  pastel run --watch');
 end;
 
 function ParseCommandLine(out CL: TCommandLine): Boolean;
@@ -103,6 +106,10 @@ begin
       CL.Verbose := True
     else if A = '--all' then
       CL.All := True
+    else if (A = '-w') or (A = '--watch') then
+      CL.Watch := True
+    else if A = '--check' then
+      CL.Check := True
     else if A = '--json' then
       CL.Json := True
     else if A = '--stdin' then
@@ -259,6 +266,14 @@ begin
   if Project = nil then
     Exit(ExitError);
   try
+    if Project.Kind = 'lib' then
+    begin
+      Fail('a library has no program to run');
+      Hint('"pastel test" runs its tests; other projects use it as a dependency');
+      Exit(ExitUsage);
+    end;
+    if CL.Watch then
+      Exit(WatchRun(Project.Root, CL.Release, CL.Verbose, CL.PassThrough));
     Result := RunProject(Project, CL.Release, CL.Verbose, CL.PassThrough);
   finally
     Project.Free;
@@ -273,6 +288,8 @@ begin
   if Project = nil then
     Exit(ExitError);
   try
+    if CL.Watch then
+      Exit(WatchTests(Project.Root, CL.Positional, CL.Verbose));
     Result := RunProjectTests(Project, CL.Positional, CL.Json, CL.Verbose);
   finally
     Project.Free;
@@ -446,6 +463,7 @@ begin
       'targets': ExitCode := CmdTargets;
       'doctor':  if RunDoctor then ExitCode := ExitOk else ExitCode := ExitError;
       'check':   ExitCode := CmdCheck(CL);
+      'fmt':     ExitCode := RunFormat(CL.Positional, CL.Check, CL.Stdin);
       'preview': ExitCode := CmdPreview(CL);
       'schema':  WriteLn(SchemaJson);
       'version': WriteLn('pastel ', PastelVersion);

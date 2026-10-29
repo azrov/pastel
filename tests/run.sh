@@ -21,6 +21,10 @@ mkdir -p "$WORK/units"
 "$WORK/toml_test"
 "$FPC" -Mobjfpc -Sh -vew -FU"$WORK/units" -Fucli/src -Fuframework/src -o"$WORK/pform_test" tests/pform_test.pas >/dev/null
 "$WORK/pform_test"
+"$FPC" -Mobjfpc -Sh -vew -FU"$WORK/units" -Fucli/src -Fuframework/src -o"$WORK/format_test" tests/format_test.pas >/dev/null
+"$WORK/format_test"
+"$PASTEL" fmt --check cli framework tests >/dev/null || { "$PASTEL" fmt --check cli framework tests; exit 1; }
+echo "fmt: Pastel's own code is formatted"
 
 echo "== framework tests"
 (cd framework/tests && PASTEL_ARGS_TEST_TOKEN=secret FWTEST_SERVER_PORT=9090 FWTEST_FEATURES="a, b" \
@@ -115,6 +119,120 @@ if command -v openssl >/dev/null; then
   kill $server 2>/dev/null || true
 fi
 cd "$WORK/demo-app"
+
+# --- libraries and dependencies ---
+cd "$WORK"
+"$PASTEL" new lib text-tools >/dev/null
+expect "new lib creates a unit"          '[ -f text-tools/src/texttools.pas ] && grep -q "^unit TextTools;" text-tools/src/texttools.pas'
+out="$(cd text-tools && "$PASTEL" build 2>&1)"
+expect "building a library compiles its units" 'echo "$out" | grep -q "1 unit(s) of the library compile"'
+out="$(cd text-tools && "$PASTEL" test 2>&1)"
+expect "library tests pass"              'echo "$out" | grep -q "2 passed"'
+set +e; out="$(cd text-tools && "$PASTEL" run 2>&1)"; code=$?; set -e
+expect "a library cannot be run"         '[ "$code" = 2 ] && echo "$out" | grep -q "a library has no program to run"'
+"$PASTEL" new lib base-tools >/dev/null
+cat > base-tools/src/basetools.pas <<'PAS'
+unit BaseTools;
+{$mode objfpc}{$H+}
+interface
+function Twice(const S: string): string;
+implementation
+function Twice(const S: string): string;
+begin
+  Result := S + S;
+end;
+end.
+PAS
+cat >> text-tools/pastel.toml <<'TOML'
+
+[dependencies]
+base-tools = { path = "../base-tools" }
+TOML
+cat > text-tools/src/texttools.pas <<'PAS'
+unit TextTools;
+{$mode objfpc}{$H+}
+interface
+function Repeated(const S: string; Count: Integer): string;
+function Shout(const S: string): string;
+implementation
+uses SysUtils, BaseTools;
+function Repeated(const S: string; Count: Integer): string;
+var I: Integer;
+begin
+  Result := '';
+  for I := 1 to Count do Result := Result + S;
+end;
+function Shout(const S: string): string;
+begin
+  Result := Twice(UpperCase(S));
+end;
+end.
+PAS
+"$PASTEL" new console use-tools >/dev/null
+cat >> use-tools/pastel.toml <<'TOML'
+
+[dependencies]
+text-tools = { path = "../text-tools" }
+TOML
+cat > use-tools/src/main.pas <<'PAS'
+program use_tools;
+{$mode objfpc}{$H+}
+uses TextTools;
+begin
+  WriteLn(Shout('hey'), ' ', Repeated('ab', 2));
+end.
+PAS
+out="$(cd use-tools && "$PASTEL" run 2>&1)"
+expect "dependencies (and theirs) are found" 'echo "$out" | grep -q "^HEYHEY abab$"'
+sed -i 's/Twice(UpperCase(S))/Twice(UpperCase(S)) + "!"/; s/"!"/'"'"'!'"'"'/' text-tools/src/texttools.pas
+out="$(cd use-tools && "$PASTEL" run 2>&1)"
+expect "changes in a dependency are compiled" 'echo "$out" | grep -q "^HEYHEY! abab$"'
+sed -i 's#path = "../text-tools"#path = "../missing"#' use-tools/pastel.toml
+set +e; out="$(cd use-tools && "$PASTEL" build 2>&1)"; set -e
+expect "a missing dependency is explained" 'echo "$out" | grep -q "dependency \"text-tools\": no pastel.toml in \"../missing\""'
+
+# --- pastel fmt ---
+cd "$WORK/demo-app"
+cat > src/messy.pas <<'PAS'
+unit Messy;
+{$mode objfpc}{$H+}
+interface
+function Sign(X:Integer):Integer;
+implementation
+function Sign(X:Integer):Integer;
+BEGIN
+if X>0 then
+Result:=1
+else if X<0 then
+Result:=-1
+else
+Result:=0;
+END;
+end.
+PAS
+set +e; out="$("$PASTEL" fmt --check 2>&1)"; code=$?; set -e
+expect "fmt --check finds unformatted files" '[ "$code" = 1 ] && echo "$out" | grep -q "src/messy.pas"'
+"$PASTEL" fmt >/dev/null
+expect "fmt indents the code"            'grep -q "^    Result := 1$" src/messy.pas && grep -q "^  else if X<0 then$" src/messy.pas'
+expect "fmt writes keywords in lower case" 'grep -q "^begin$" src/messy.pas'
+expect "fmt --check passes afterwards"   '"$PASTEL" fmt --check >/dev/null'
+out="$(printf 'begin\nX:=1;\nend.\n' | "$PASTEL" fmt --stdin)"
+expect "fmt --stdin formats for editors" '[ "$out" = "$(printf "begin\n  X := 1;\nend.")" ]'
+set +e; out="$(printf 'begin\nif A then begin\nend.\n' | "$PASTEL" fmt --stdin 2>&1)"; code=$?; set -e
+expect "fmt refuses broken code"         '[ "$code" = 1 ] && echo "$out" | grep -q "no matching \"end\""'
+rm src/messy.pas
+
+# --- pastel run --watch ---
+cp src/main.pas main.bak
+NO_COLOR=1 "$PASTEL" run --watch -- Watcher > watch.log 2>&1 &
+watcher=$!
+for i in $(seq 50); do grep -q "Hello, Watcher" watch.log && break; sleep 0.1; done
+sed -i 's/WriteLn(MakeGreeting(Who));/WriteLn(MakeGreeting(Who)); WriteLn('"'"'second build'"'"');/' src/main.pas
+for i in $(seq 80); do grep -q "second build" watch.log && break; sleep 0.1; done
+kill $watcher; wait $watcher 2>/dev/null || true
+expect "watch builds and runs again after a save" 'grep -q "src/main.pas changed" watch.log && grep -q "^second build$" watch.log'
+expect "watch reports the end of the program"     'grep -q "Exited with code 0" watch.log'
+mv main.bak src/main.pas
 
 # --- pastel test ---
 out="$("$PASTEL" test 2>&1)"
