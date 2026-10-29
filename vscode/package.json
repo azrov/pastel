@@ -2,7 +2,7 @@
   "name": "pastel-vscode",
   "displayName": "Pastel",
   "description": "Build cross-platform apps in Object Pascal with Pastel: run, build, live form preview, .pform completion and checks.",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "publisher": "pastel",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -25,7 +25,10 @@
     "workspaceContains:**/pastel.toml",
     "onLanguage:pform",
     "onLanguage:pascal",
-    "onView:pastel.project"
+    "onView:pastel.project",
+    "onDebugResolve:pastel",
+    "onDebugDynamicConfigurations:pastel",
+    "onDebugInitialConfigurations"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -73,6 +76,10 @@
       {
         "language": "pform",
         "path": "./snippets/pform.json"
+      },
+      {
+        "language": "pascal",
+        "path": "./snippets/pascal.json"
       }
     ],
     "commands": [
@@ -363,12 +370,59 @@
         "mac": "cmd+shift+down",
         "when": "config.pastel.delphiShortcuts && editorTextFocus && (editorLangId == pascal || editorLangId == objectpascal)"
       }
+    ],
+    "debuggers": [
+      {
+        "type": "pastel",
+        "label": "Pastel",
+        "languages": [
+          "pascal",
+          "pform"
+        ],
+        "configurationAttributes": {
+          "launch": {
+            "properties": {
+              "args": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Arguments for the program.",
+                "default": []
+              },
+              "project": {
+                "type": "string",
+                "description": "Folder of the project (with pastel.toml), if not the current one."
+              }
+            }
+          }
+        },
+        "initialConfigurations": [
+          {
+            "type": "pastel",
+            "request": "launch",
+            "name": "Debug Pastel program"
+          }
+        ],
+        "configurationSnippets": [
+          {
+            "label": "Pastel: Debug program",
+            "description": "Build and debug the Pastel project",
+            "body": {
+              "type": "pastel",
+              "request": "launch",
+              "name": "Debug Pastel program",
+              "args": []
+            }
+          }
+        ]
+      }
     ]
   },
   "scripts": {
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "test": "node ./out/test/unit.js && node ./out/test/edit.test.js && node ./out/test/designer.test.js && node ./out/test/pascal.test.js",
+    "test": "node ./out/test/unit.js && node ./out/test/edit.test.js && node ./out/test/designer.test.js && node ./out/test/pascal.test.js && node ./out/test/testparse.test.js",
     "package": "vsce package --no-dependencies --allow-missing-repository",
     "test:integration": "node ./out/test/integration.js"
   },

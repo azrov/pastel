@@ -445,15 +445,31 @@ begin
     Result := S;
 end;
 
+{ TGreetingTests.GreetsByName, or the name given to Test() }
+function EntryId(E: TTestEntry): string;
+begin
+  if E.Suite <> nil then
+    Result := E.Suite.ClassName + '.' + E.MethodId
+  else
+    Result := E.TestName;
+end;
+
+{ A filter is part of a name ("greet"), or "=" and an exact id
+  ("=TGreetingTests.GreetsByName", used by editors). }
 function Matches(E: TTestEntry; Filters: TStrings): Boolean;
 var
   F, Full: string;
 begin
   if Filters.Count = 0 then
     Exit(True);
-  Full := LowerCase(E.SuiteName + ' ' + E.TestName + ' ' + E.MethodId);
+  Full := LowerCase(E.SuiteName + ' ' + E.TestName + ' ' + E.MethodId + ' ' + EntryId(E));
   for F in Filters do
-    if Pos(LowerCase(F), Full) > 0 then
+    if (F <> '') and (F[1] = '=') then
+    begin
+      if SameText(Copy(F, 2, MaxInt), EntryId(E)) then
+        Exit(True);
+    end
+    else if Pos(LowerCase(F), Full) > 0 then
       Exit(True);
   Result := False;
 end;
@@ -553,8 +569,8 @@ begin
         if not First then
           Write(',');
         First := False;
-        Write(Format('{"suite":%s,"name":%s,"method":%s,"outcome":%s,"ms":%d,"message":%s,"location":%s}',
-          [JsonStr(E.SuiteName), JsonStr(E.TestName), JsonStr(E.MethodId),
+        Write(Format('{"id":%s,"suite":%s,"name":%s,"method":%s,"outcome":%s,"ms":%d,"message":%s,"location":%s}',
+          [JsonStr(EntryId(E)), JsonStr(E.SuiteName), JsonStr(E.TestName), JsonStr(E.MethodId),
            JsonStr(OutcomeName[Outcome]), Ms, JsonStr(Msg), JsonStr(Location)]));
         Continue;
       end;

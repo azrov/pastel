@@ -8,7 +8,7 @@ uses
   Classes, SysUtils,
   Pastel.Console, Pastel.Toml, Pastel.Project, Pastel.Targets,
   Pastel.Builder, Pastel.Templates, Pastel.Doctor, Pastel.Inspect, Pastel.TestCmd,
-  Pastel.Watch, Pastel.FmtCmd;
+  Pastel.Watch, Pastel.FmtCmd, Pastel.Package;
 
 const
   ExitOk = 0;
@@ -22,7 +22,7 @@ type
     PassThrough: TStringArray;  { everything after "--" }
     Target: string;
     Release, Verbose, All, Help, Watch, Check: Boolean;
-    Json, Stdin: Boolean;
+    Json, Stdin, NoRun: Boolean;
     Output, Layout: string;
     Width, Height: Integer;
   end;
@@ -43,8 +43,9 @@ begin
   WriteLn('  new <kind> <name>    Create a new project (kinds: console, app, lib)');
   WriteLn('  build                Compile the project');
   WriteLn('  run [-- args]        Compile and run on this computer (--watch: again on every save)');
-  WriteLn('  test [filter]        Run the tests in tests/ (only names matching filter; --watch)');
+  WriteLn('  test [filter]        Run the tests in tests/ (only names matching filter; --watch, --json)');
   WriteLn('  fmt [files]          Format the code (--check: only report)');
+  WriteLn('  package              Release build in an archive in dist/ (--target, --all)');
   WriteLn('  clean                Remove the build folder');
   WriteLn('  targets              List the platforms Pastel can build for');
   WriteLn('  doctor               Check your setup');
@@ -108,6 +109,8 @@ begin
       CL.All := True
     else if (A = '-w') or (A = '--watch') then
       CL.Watch := True
+    else if A = '--no-run' then
+      CL.NoRun := True
     else if A = '--check' then
       CL.Check := True
     else if A = '--json' then
@@ -290,7 +293,51 @@ begin
   try
     if CL.Watch then
       Exit(WatchTests(Project.Root, CL.Positional, CL.Verbose));
-    Result := RunProjectTests(Project, CL.Positional, CL.Json, CL.Verbose);
+    Result := RunProjectTests(Project, CL.Positional, CL.Json, CL.Verbose, CL.NoRun);
+  finally
+    Project.Free;
+  end;
+end;
+
+function CmdPackage(const CL: TCommandLine): Integer;
+var
+  Project: TPastelProject;
+  T: TTarget;
+  Name: string;
+  Failed: Integer;
+begin
+  Project := OpenProject;
+  if Project = nil then
+    Exit(ExitError);
+  try
+    if CL.All then
+    begin
+      if Length(Project.Platforms) = 0 then
+      begin
+        Fail('--all needs a list of platforms in ' + ProjectFileName);
+        Hint('add: [targets] platforms = ["linux", "windows"]');
+        Exit(ExitError);
+      end;
+      Failed := 0;
+      for Name in Project.Platforms do
+      begin
+        if not ResolveTarget(Name, T) or (PackageProject(Project, T, CL.Verbose) = '') then
+          Inc(Failed);
+        WriteLn;
+      end;
+      if Failed > 0 then
+      begin
+        Fail(Format('%d of %d platform(s) failed', [Failed, Length(Project.Platforms)]));
+        Exit(ExitError);
+      end;
+      Exit(ExitOk);
+    end;
+    if not ResolveTarget(CL.Target, T) then
+      Exit(ExitUsage);
+    if PackageProject(Project, T, CL.Verbose) <> '' then
+      Result := ExitOk
+    else
+      Result := ExitError;
   finally
     Project.Free;
   end;
@@ -464,6 +511,7 @@ begin
       'doctor':  if RunDoctor then ExitCode := ExitOk else ExitCode := ExitError;
       'check':   ExitCode := CmdCheck(CL);
       'fmt':     ExitCode := RunFormat(CL.Positional, CL.Check, CL.Stdin);
+      'package': ExitCode := CmdPackage(CL);
       'preview': ExitCode := CmdPreview(CL);
       'schema':  WriteLn(SchemaJson);
       'version': WriteLn('pastel ', PastelVersion);

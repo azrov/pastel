@@ -43,11 +43,11 @@ Goal: writing a command-line tool in Pastel is pleasant from the first line to t
 - [x] `pastel test`: finds and runs tests in `tests/`, clear report, exit code for CI
 - [x] `pastel run --watch`: rebuild and restart when a file changes (also `pastel test --watch`)
 - [x] `pastel fmt`: format Pascal code with one standard style (`--check` for CI, `--stdin` for editors)
-- [ ] `pastel package`: a `.tar.gz` (Linux) or `.zip` (Windows) with the program, ready to hand out
+- [x] `pastel package`: a `.tar.gz` (Linux) or `.zip` (Windows) with the program, ready to hand out
 - [x] `pastel new lib`: a library project that other projects can use
 - [x] Use another local Pastel project as a dependency (`[dependencies]` in `pastel.toml`)
 - [x] `pastel.toml`: version shown by the program (`--version`, generated `AppInfo` unit)
-- [ ] `pastel.toml`: build-time defines per profile
+- [x] `pastel.toml`: build-time defines per profile
 
 **Library (`Pastel.Core`, usable without the GUI)**
 - [x] `Pastel.Testing`: test cases, asserts with readable messages
@@ -63,14 +63,14 @@ Goal: writing a command-line tool in Pastel is pleasant from the first line to t
 - [x] `Pastel.Env`: environment variables in UTF-8 (also on Windows)
 
 **VS Code**
-- [ ] Test explorer: run and debug single tests from the editor
-- [ ] Pascal snippets (class, procedure, try/finally, for, case, ...)
-- [ ] F5 debugging without manual setup; readable strings and arrays in the debugger
+- [x] Test explorer: run and debug single tests from the editor
+- [x] Pascal snippets (class, procedure, try/finally, for, case, ...)
+- [x] F5 debugging without manual setup; readable strings and arrays in the debugger
 - [x] Format on save (uses `pastel fmt`)
 
 **Docs**
 - [ ] Getting started guide (install, first project, debug, release)
-- [x] Console programs: `docs/console.md`; testing: `docs/testing.md`; JSON, settings, logging: `docs/data.md`; files, programs, HTTP: `docs/system.md`; watch, format, libraries: `docs/workflow.md`
+- [x] Console programs: `docs/console.md`; testing: `docs/testing.md`; JSON, settings, logging: `docs/data.md`; files, programs, HTTP: `docs/system.md`; watch, format, libraries: `docs/workflow.md`; `pastel.toml` and packages: `docs/project.md`
 - [ ] Guide: writing a command-line tool
 - [ ] Examples: a file tool, a tool that calls a web API
 

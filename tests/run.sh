@@ -222,6 +222,38 @@ set +e; out="$(printf 'begin\nif A then begin\nend.\n' | "$PASTEL" fmt --stdin 2
 expect "fmt refuses broken code"         '[ "$code" = 1 ] && echo "$out" | grep -q "no matching \"end\""'
 rm src/messy.pas
 
+
+# --- profiles and pastel package ---
+cd "$WORK/demo-app"
+cp pastel.toml toml.bak; cp src/main.pas main.bak
+cat >> pastel.toml <<'TOML'
+
+[profile.release]
+defines = ["SHIPPED"]
+
+[package]
+include = ["notes"]
+TOML
+mkdir -p notes && echo "hello" > notes/first.txt
+sed -i 's/WriteLn(MakeGreeting(Who));/WriteLn(MakeGreeting(Who)); {$IFDEF SHIPPED}WriteLn('"'"'release only'"'"');{$ENDIF}/' src/main.pas
+out="$("$PASTEL" run 2>&1)"
+expect "profile defines stay out of debug builds" '! echo "$out" | grep -q "release only"'
+out="$("$PASTEL" package 2>&1)"
+expect "package reports the archive"        'echo "$out" | grep -q "Packaged dist/demo-app-0.1.0-linux.tar.gz"'
+list="$(tar -tvzf dist/demo-app-0.1.0-linux.tar.gz)"
+expect "package holds the program, runnable" 'echo "$list" | grep -q "rwxr-xr-x .* demo-app-0.1.0-linux/demo-app$"'
+expect "package holds README and included files" 'echo "$list" | grep -q "demo-app-0.1.0-linux/README.md" && echo "$list" | grep -q "demo-app-0.1.0-linux/notes/first.txt"'
+expect "package has a correct checksum"     '(cd dist && sha256sum -c demo-app-0.1.0-linux.tar.gz.sha256 >/dev/null)'
+mkdir -p unpacked && tar -xzf dist/demo-app-0.1.0-linux.tar.gz -C unpacked
+expect "packaged program is a release build with its profile" './unpacked/demo-app-0.1.0-linux/demo-app | grep -q "release only"'
+sed -i 's/include = \["notes"\]/include = ["missing.txt"]/' pastel.toml
+set +e; out="$("$PASTEL" package 2>&1)"; code=$?; set -e
+expect "a missing package file is explained" '[ "$code" = 1 ] && echo "$out" | grep -q "include: \"missing.txt\" not found"'
+echo '[profile.fast]' >> pastel.toml
+set +e; out="$("$PASTEL" build 2>&1)"; set -e
+expect "an unknown profile is explained"    'echo "$out" | grep -q "unknown profile \[profile.fast\]"'
+mv toml.bak pastel.toml; mv main.bak src/main.pas; rm -rf notes unpacked dist
+
 # --- pastel run --watch ---
 cp src/main.pas main.bak
 NO_COLOR=1 "$PASTEL" run --watch -- Watcher > watch.log 2>&1 &

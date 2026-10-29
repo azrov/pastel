@@ -57,6 +57,35 @@ class TextEdit {
   constructor(public range: Range, public newText: string) {}
   static replace(r: Range, t: string) { return new TextEdit(r, t); }
 }
+class FakeCollection {
+  map = new Map<string, any>();
+  add(i: any) { this.map.set(i.id, i); }
+  delete(id: string) { this.map.delete(id); }
+  get(id: string) { return this.map.get(id); }
+  replace(items: any[]) { this.map.clear(); items.forEach(i => this.add(i)); }
+  forEach(fn: (i: any) => void) { [...this.map.values()].forEach(fn); }
+  get size() { return this.map.size; }
+}
+class TestMessage { location?: Location; constructor(public message: string) {} }
+const testProfiles: Record<string, (req: any, token: any) => Promise<void>> = {};
+const testResults: Record<string, { state: string; message?: TestMessage }> = {};
+const testController: any = {
+  items: new FakeCollection(),
+  resolveHandler: undefined as any,
+  refreshHandler: undefined as any,
+  createTestItem: (id: string, label: string, uri: Uri) => ({ id, label, uri, children: new FakeCollection(), range: undefined }),
+  createRunProfile: (label: string, _kind: number, handler: any) => { testProfiles[label] = handler; return { dispose() {} }; },
+  createTestRun: () => ({
+    started: (i: any) => { testResults[i.id] = { state: 'started' }; },
+    passed: (i: any) => { testResults[i.id] = { state: 'passed' }; },
+    skipped: (i: any) => { testResults[i.id] = { state: 'skipped' }; },
+    failed: (i: any, m: TestMessage) => { testResults[i.id] = { state: 'failed', message: m }; },
+    errored: (i: any, m: TestMessage) => { testResults[i.id] = { state: 'errored', message: m }; },
+    appendOutput() {},
+    end() {},
+  }),
+  dispose() {},
+};
 class ThemeIcon { constructor(public id: string) {} }
 class TreeItem {
   iconPath?: unknown; description?: string; tooltip?: string; command?: any; resourceUri?: Uri; contextValue?: string;
@@ -106,7 +135,16 @@ const on = (name: string) => (fn: (e: any) => void) => { (listeners[name] ??= []
 
 const vscodeFake = {
   Position, Range, Selection, SnippetString, CompletionItem, MarkdownString, Hover, Location, Diagnostic,
-  CodeAction, DocumentSymbol, Uri, Task, ProcessExecution, TextEdit,
+  CodeAction, DocumentSymbol, Uri, Task, ProcessExecution, TextEdit, TestMessage,
+  TestRunProfileKind: { Run: 1, Debug: 2 },
+  DebugConfigurationProviderTriggerKind: { Initial: 1, Dynamic: 2 },
+  tests: { createTestController: () => testController },
+  debug: {
+    registerDebugConfigurationProvider: (_t: string, p: unknown) => { providers.debug = p; return { dispose() {} }; },
+    onDidTerminateDebugSession: () => ({ dispose() {} }),
+    startDebugging: async () => true,
+  },
+  extensions: { getExtension: (id: string) => (id === 'ms-vscode.cpptools' ? {} : undefined) },
   CompletionItemKind: { Class: 6, Property: 9, Event: 22, EnumMember: 19, Value: 11, Method: 1, Keyword: 13, Color: 15 },
   DiagnosticSeverity: { Error: 0, Warning: 1 },
   SymbolKind: { Module: 1, Class: 4, Method: 5, Property: 6, Field: 7, Interface: 10, Function: 11, Variable: 12,
@@ -244,7 +282,7 @@ async function main() {
   const ext = require('../extension');
   const pform = new FakeDocument(Uri.file(pformPath), 'pform', fs.readFileSync(pformPath, 'utf8'));
   docs.push(pform);
-  ext.activate({ subscriptions: [] });
+  ext.activate({ subscriptions: [], extensionPath: path.resolve(__dirname, '..', '..') });
   vscodeFake.window.activeTextEditor = { document: pform };
   const lines = () => pform.getText().split('\n');
   const lineOf = (re: RegExp) => lines().findIndex(l => re.test(l));
@@ -459,6 +497,47 @@ async function main() {
     assert.deepStrictEqual(((providers.lastTask as Task).execution as ProcessExecution).args, ['run', '--watch']);
     await commands['pastel.formatAll']();
     assert.deepStrictEqual(((providers.lastTask as Task).execution as ProcessExecution).args, ['fmt']);
+  });
+
+  await test('F5 builds and starts the program in gdb', async () => {
+    const config = await providers.debug.resolveDebugConfiguration(undefined, {});
+    assert.strictEqual(config.type, 'cppdbg');
+    assert.ok(config.program.endsWith(path.join('build', 'linux', 'debug', path.basename(projectDir))), config.program);
+    assert.ok(fs.existsSync(config.program));
+    assert.strictEqual(config.cwd, projectDir);
+    const script = config.setupCommands.map((c: { text: string }) => c.text).find((t: string) => t.startsWith('source '));
+    assert.ok(script && fs.existsSync(script.substring(7)), 'gdb script for Pascal strings');
+  });
+
+  await test('Testing view finds, runs and reports tests', async () => {
+    const testFile = path.join(projectDir, 'tests', 'sample_test.pas');
+    fs.mkdirSync(path.dirname(testFile), { recursive: true });
+    fs.writeFileSync(testFile, [
+      'unit Sample_Test;', '{$mode objfpc}{$H+}', 'interface', 'uses Pastel.Testing;', 'type',
+      '  TSampleTests = class(TTestSuite)', '  published', '    procedure AddsUp;', '    procedure GoesWrong;', '  end;',
+      'implementation', 'procedure TSampleTests.AddsUp;', 'begin', '  AssertEquals(4, 2 + 2);', 'end;',
+      'procedure TSampleTests.GoesWrong;', 'begin', '  AssertEquals(5, 2 + 2);', 'end;',
+      'initialization', '  RegisterTests(TSampleTests);', 'end.', ''].join('\n'));
+    try {
+      await testController.resolveHandler(undefined);
+      const fileItem = testController.items.get(testFile);
+      assert.ok(fileItem, 'test file listed');
+      const suite = fileItem.children.get(`${projectDir}::TSampleTests`);
+      assert.strictEqual(suite.label, 'Sample');
+      const ok = suite.children.get(`${projectDir}::TSampleTests.AddsUp`);
+      assert.strictEqual(ok.label, 'adds up');
+      await testProfiles.Run({ include: undefined, exclude: [] }, { isCancellationRequested: false });
+      assert.strictEqual(testResults[`${projectDir}::TSampleTests.AddsUp`].state, 'passed');
+      const bad = testResults[`${projectDir}::TSampleTests.GoesWrong`];
+      assert.strictEqual(bad.state, 'failed');
+      assert.ok(bad.message!.message.includes('expected 5 but got 4'), bad.message!.message);
+      assert.strictEqual((bad.message!.location!.range as unknown as Position).line, 17);
+      delete testResults[`${projectDir}::TSampleTests.AddsUp`];
+      await testProfiles.Run({ include: [ok], exclude: [] }, { isCancellationRequested: false });
+      assert.strictEqual(testResults[`${projectDir}::TSampleTests.AddsUp`].state, 'passed');
+    } finally {
+      fs.rmSync(path.dirname(testFile), { recursive: true, force: true });
+    }
   });
 
   console.log(`integration: ${passed} passed`);

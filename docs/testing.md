@@ -124,3 +124,14 @@ Every assert takes an optional last argument with your own message, shown next t
 - Tests are compiled in debug mode with range and overflow checks, so mistakes like reading past the end of an array show up as errors.
 - The define `PASTEL_TEST` is set while compiling tests: `{$IFDEF PASTEL_TEST} ... {$ENDIF}`.
 - The test program is built in `build/<platform>/test/`; you never need to touch it.
+
+## In VS Code
+
+With the Pastel extension, the **Testing** view (the flask icon) lists every test of the project: files, suites and tests, read from `tests/` as you type. Click ▶ next to a test, a suite, a file or the whole project to run it; a failed test shows its message at the line of the failing assert. The debug icon runs the chosen tests in the debugger, so a breakpoint in the test or in the code it tests stops there.
+
+Behind the scenes this is `pastel test --json`, with exact names to run single tests:
+
+```sh
+pastel test =TGreetingTests.GreetsByName   # exactly this test
+pastel test --no-run                       # only build; prints the test program's path
+```

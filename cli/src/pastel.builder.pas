@@ -641,7 +641,7 @@ begin
     else
     begin
       Args.Add('-dPASTEL_DEBUG');
-      Args.Add('-g');
+      Args.Add('-gw3');   { DWARF 3: gdb shows strings and dynamic arrays as values }
       Args.Add('-gl');
       Args.Add('-O-');
       Args.Add('-Ci');
@@ -651,6 +651,15 @@ begin
     end;
     for D in Project.Defines do
       Args.Add('-d' + D);
+    { [profile.x]; tests are debug builds, so they get the debug settings too }
+    for I := 0 to High(ProfileNames) do
+      if (ProfileNames[I] = Profile) or ((Profile = 'test') and (ProfileNames[I] = 'debug')) then
+      begin
+        for D in Project.ProfileDefines[I] do
+          Args.Add('-d' + D);
+        for D in Project.ProfileOptions[I] do
+          Args.Add(D);
+      end;
     for D in Opts.Defines do
       Args.Add('-d' + D);
 
@@ -690,6 +699,8 @@ begin
       if Opts.Verbose then
       begin
         WriteLn(Line);
+        if Pos('Error:', Line) > 0 then
+          Inc(Errors);
         Continue;
       end;
       if IsNoise(Line) then

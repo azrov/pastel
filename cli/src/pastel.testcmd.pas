@@ -11,12 +11,12 @@ uses
   SysUtils, Pastel.Project;
 
 function RunProjectTests(Project: TPastelProject; const Filters: TStringArray;
-  Json, Verbose: Boolean): Integer;
+  Json, Verbose: Boolean; NoRun: Boolean = False): Integer;
 
 implementation
 
 uses
-  Classes, Process, Pastel.Console, Pastel.Targets, Pastel.Builder;
+  Classes, Process, Pastel.Console, Pastel.Targets, Pastel.Builder, Pastel.Env;
 
 procedure FindTests(const Root, Rel: string; Units, Dirs: TStrings);
 var
@@ -61,7 +61,7 @@ begin
 end;
 
 function RunProjectTests(Project: TPastelProject; const Filters: TStringArray;
-  Json, Verbose: Boolean): Integer;
+  Json, Verbose: Boolean; NoRun: Boolean = False): Integer;
 var
   Units, Dirs: TStringList;
   Opts: TBuildOptions;
@@ -117,6 +117,12 @@ begin
       Status('Compiling', Format('%d test unit(s) of %s', [Units.Count, Project.Name]));
     if not BuildProject(Project, Opts, ExePath) then
       Exit(1);
+    if NoRun then
+    begin
+      { for editors that start the tests in a debugger }
+      WriteLn(Project.Root + ExePath);
+      Exit(0);
+    end;
     if not Json then
       WriteLn;
 
@@ -128,8 +134,8 @@ begin
         Proc.Parameters.Add(F);
       if Json then
         Proc.Parameters.Add('--json');
-      for I := 0 to GetEnvironmentVariableCount - 1 do
-        Proc.Environment.Add(GetEnvironmentString(I));
+      for F in EnvList do
+        Proc.Environment.Add(F);
       if UseColor then
         Proc.Environment.Add('PASTEL_COLOR=1');
       Proc.Options := [poWaitOnExit];

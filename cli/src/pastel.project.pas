@@ -36,16 +36,55 @@ type
     Dependencies: array of TDependency;   // [dependencies] name = { path = "../x" }
     FormatIndent: Integer;      { [format] indent }
     FormatKeywords: string;     { [format] keywords: lower or keep }
+    { [profile.debug], [profile.release], [profile.test]: defines and
+      compiler options for one kind of build }
+    ProfileDefines: array[0..2] of TStringArray;
+    ProfileOptions: array[0..2] of TStringArray;
+    { [package] include, and per platform [package.windows] include }
+    PackageInclude: TStringArray;
+    PackageTargetInclude: array of record Target: string; Files: TStringArray; end;
+    function PackageFilesFor(const Target: string): TStringArray;
     class function FindRoot(const StartDir: string): string;
     class function Load(const Dir: string): TPastelProject;
   end;
 
 function IsValidProjectName(const S: string): Boolean;
 
+const
+  ProfileNames: array[0..2] of string = ('debug', 'release', 'test');
+
+{ 0, 1, 2 for debug, release, test; -1 for other names }
+function ProfileIndex(const Name: string): Integer;
+
 implementation
 
 uses
   Pastel.Toml;
+
+function ProfileIndex(const Name: string): Integer;
+var
+  I: Integer;
+begin
+  for I := 0 to High(ProfileNames) do
+    if ProfileNames[I] = Name then
+      Exit(I);
+  Result := -1;
+end;
+
+function TPastelProject.PackageFilesFor(const Target: string): TStringArray;
+var
+  I: Integer;
+  F: string;
+begin
+  Result := Copy(PackageInclude);
+  for I := 0 to High(PackageTargetInclude) do
+    if PackageTargetInclude[I].Target = Target then
+      for F in PackageTargetInclude[I].Files do
+      begin
+        SetLength(Result, Length(Result) + 1);
+        Result[High(Result)] := F;
+      end;
+end;
 
 function IsValidProjectName(const S: string): Boolean;
 var
@@ -78,8 +117,9 @@ class function TPastelProject.Load(const Dir: string): TPastelProject;
 var
   Doc: TTomlDocument;
   P: TPastelProject;
-  Dep: string;
+  Dep, Opt: string;
   D: TDependency;
+  I: Integer;
 begin
   P := TPastelProject.Create;
   Doc := TTomlDocument.Create;
@@ -97,6 +137,28 @@ begin
       P.Platforms := Doc.GetArray('targets.platforms');
       P.FormatIndent := Doc.GetInt('format.indent', 2);
       P.FormatKeywords := LowerCase(Doc.GetString('format.keywords', 'lower'));
+      for Dep in Doc.Keys('profile') do
+      begin
+        I := ProfileIndex(Dep);
+        if I < 0 then
+          raise EProjectError.CreateFmt('%s: unknown profile [profile.%s] (debug, release or test)',
+            [ProjectFileName, Dep]);
+        P.ProfileDefines[I] := Doc.GetArray('profile.' + Dep + '.defines');
+        P.ProfileOptions[I] := Doc.GetArray('profile.' + Dep + '.options');
+        for Opt in P.ProfileOptions[I] do
+          if (Opt = '') or (Opt[1] <> '-') then
+            raise EProjectError.CreateFmt('%s: [profile.%s] options are compiler options like "-O3", not "%s"',
+              [ProjectFileName, Dep, Opt]);
+      end;
+      P.PackageInclude := Doc.GetArray('package.include');
+      for Dep in Doc.Keys('package') do
+        if Dep <> 'include' then
+        begin
+          SetLength(P.PackageTargetInclude, Length(P.PackageTargetInclude) + 1);
+          P.PackageTargetInclude[High(P.PackageTargetInclude)].Target := Dep;
+          P.PackageTargetInclude[High(P.PackageTargetInclude)].Files :=
+            Doc.GetArray('package.' + Dep + '.include');
+        end;
       for Dep in Doc.Keys('dependencies') do
       begin
         D.Name := Dep;

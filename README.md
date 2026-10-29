@@ -56,6 +56,7 @@ pastel build --all --release      # every platform listed in pastel.toml
 pastel run --watch                # build and run again on every save
 pastel test                       # run the tests in tests/ (see docs/testing.md)
 pastel fmt                        # format the code
+pastel package --target windows   # a .zip to hand out
 pastel doctor                     # what can this computer build?
 ```
 
@@ -72,6 +73,7 @@ Building for another platform needs the Free Pascal cross-compiler for it. `past
 | `pastel run` | Compile and run on this computer (`--watch`: again on every save) |
 | `pastel test [filter]` | Run the tests in `tests/` (`--watch`) |
 | `pastel fmt` | Format the code (`--check` for CI) |
+| `pastel package` | Release build in a `.tar.gz`/`.zip` in `dist/`, with a checksum ([docs/project.md](docs/project.md)) |
 | `pastel clean` | Remove the `build/` folder |
 | `pastel targets` | List platforms and short names (`rpi`, `win`, ...) |
 | `pastel doctor` | Check the compiler and which platforms are ready |
@@ -87,8 +89,11 @@ The `vscode/` folder contains the Pastel extension for Visual Studio Code. Build
 - a Pastel panel in the activity bar, Pascal outline and go to definition (into the framework too)
 - Delphi keys: F9 run, Ctrl+F9 build, F12 form/code, Ctrl+Shift+Up/Down declaration/body
 - Format Document and format on save with `pastel fmt`; Run and Watch
+- **F5** builds and debugs without any setup (gdb through the C/C++ extension), with Pascal strings shown as text
+- the **Testing** view: every test in `tests/`, run or debugged one by one, failures at the line of the assert
+- snippets for Pascal: `class`, `proc`, `func`, `tryf`, `trye`, `for`, `case`, `testsuite`, ...
 
-New projects come with `.vscode` settings: `Ctrl+Shift+B` builds, `F5` debugs with gdb (needs the C/C++ extension).
+New projects come with `.vscode` settings: `Ctrl+Shift+B` builds, `F5` builds and debugs with gdb (through the C/C++ extension; F5 also works without a `launch.json`).
 
 ## How a GUI app looks
 

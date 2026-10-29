@@ -1,0 +1,337 @@
+{
+  "begin end": {
+    "prefix": "begin",
+    "body": [
+      "begin",
+      "\t$0",
+      "end;"
+    ],
+    "description": "begin ... end block"
+  },
+  "if then": {
+    "prefix": "if",
+    "body": [
+      "if ${1:Condition} then",
+      "\t$0"
+    ],
+    "description": "if statement"
+  },
+  "if then begin": {
+    "prefix": "ifb",
+    "body": [
+      "if ${1:Condition} then",
+      "begin",
+      "\t$0",
+      "end;"
+    ],
+    "description": "if with a begin/end block"
+  },
+  "if then else": {
+    "prefix": "ife",
+    "body": [
+      "if ${1:Condition} then",
+      "\t$2",
+      "else",
+      "\t$0;"
+    ],
+    "description": "if ... else"
+  },
+  "if then else blocks": {
+    "prefix": "ifeb",
+    "body": [
+      "if ${1:Condition} then",
+      "begin",
+      "\t$2",
+      "end",
+      "else",
+      "begin",
+      "\t$0",
+      "end;"
+    ],
+    "description": "if ... else with blocks"
+  },
+  "for to": {
+    "prefix": "for",
+    "body": [
+      "for ${1:I} := ${2:0} to ${3:Count - 1} do",
+      "\t$0"
+    ],
+    "description": "for loop"
+  },
+  "for to begin": {
+    "prefix": "forb",
+    "body": [
+      "for ${1:I} := ${2:0} to ${3:Count - 1} do",
+      "begin",
+      "\t$0",
+      "end;"
+    ],
+    "description": "for loop with a block"
+  },
+  "for downto": {
+    "prefix": "ford",
+    "body": [
+      "for ${1:I} := ${2:Count - 1} downto ${3:0} do",
+      "\t$0"
+    ],
+    "description": "for loop counting down"
+  },
+  "for in": {
+    "prefix": "forin",
+    "body": [
+      "for ${1:Item} in ${2:List} do",
+      "\t$0"
+    ],
+    "description": "for ... in loop"
+  },
+  "while": {
+    "prefix": "while",
+    "body": [
+      "while ${1:Condition} do",
+      "begin",
+      "\t$0",
+      "end;"
+    ],
+    "description": "while loop"
+  },
+  "repeat": {
+    "prefix": "repeat",
+    "body": [
+      "repeat",
+      "\t$0",
+      "until ${1:Condition};"
+    ],
+    "description": "repeat ... until loop"
+  },
+  "case": {
+    "prefix": "case",
+    "body": [
+      "case ${1:Value} of",
+      "\t${2:1}: $3;",
+      "else",
+      "\t$0",
+      "end;"
+    ],
+    "description": "case statement"
+  },
+  "try finally": {
+    "prefix": "tryf",
+    "body": [
+      "${1:Obj} := ${2:TObject}.Create;",
+      "try",
+      "\t$0",
+      "finally",
+      "\t$1.Free;",
+      "end;"
+    ],
+    "description": "create, use and always free an object"
+  },
+  "try except": {
+    "prefix": "trye",
+    "body": [
+      "try",
+      "\t$1",
+      "except",
+      "\ton E: ${2:Exception} do",
+      "\t\t$0",
+      "end;"
+    ],
+    "description": "catch an exception"
+  },
+  "raise": {
+    "prefix": "raise",
+    "body": [
+      "raise ${1:Exception}.Create('${2:what went wrong}');"
+    ],
+    "description": "raise an exception"
+  },
+  "procedure": {
+    "prefix": "proc",
+    "body": [
+      "procedure ${1:Name}(${2});",
+      "begin",
+      "\t$0",
+      "end;"
+    ],
+    "description": "procedure"
+  },
+  "function": {
+    "prefix": "func",
+    "body": [
+      "function ${1:Name}(${2}): ${3:Integer};",
+      "begin",
+      "\tResult := $0;",
+      "end;"
+    ],
+    "description": "function"
+  },
+  "method body": {
+    "prefix": "meth",
+    "body": [
+      "procedure ${1:TMyClass}.${2:Name};",
+      "begin",
+      "\t$0",
+      "end;"
+    ],
+    "description": "method implementation"
+  },
+  "var section": {
+    "prefix": "var",
+    "body": [
+      "var",
+      "\t${1:Name}: ${2:Integer};"
+    ],
+    "description": "var section"
+  },
+  "class": {
+    "prefix": "class",
+    "body": [
+      "${1:TMyClass} = class(${2:TObject})",
+      "private",
+      "\t$3",
+      "public",
+      "\tconstructor Create;",
+      "\tdestructor Destroy; override;",
+      "\t$0",
+      "end;"
+    ],
+    "description": "class with constructor and destructor"
+  },
+  "record": {
+    "prefix": "record",
+    "body": [
+      "${1:TMyRecord} = record",
+      "\t${2:Name}: ${3:string};",
+      "\t$0",
+      "end;"
+    ],
+    "description": "record type"
+  },
+  "property": {
+    "prefix": "prop",
+    "body": [
+      "property ${1:Name}: ${2:string} read F$1 write F$1;"
+    ],
+    "description": "property backed by a field"
+  },
+  "constructor body": {
+    "prefix": "ctor",
+    "body": [
+      "constructor ${1:TMyClass}.Create;",
+      "begin",
+      "\tinherited Create;",
+      "\t$0",
+      "end;"
+    ],
+    "description": "constructor implementation"
+  },
+  "destructor body": {
+    "prefix": "dtor",
+    "body": [
+      "destructor ${1:TMyClass}.Destroy;",
+      "begin",
+      "\t$0",
+      "\tinherited Destroy;",
+      "end;"
+    ],
+    "description": "destructor implementation"
+  },
+  "unit": {
+    "prefix": "unit",
+    "body": [
+      "unit ${1:${TM_FILENAME_BASE/(.*)/${1:/capitalize}/}};",
+      "",
+      "{\\$mode objfpc}{\\$H+}",
+      "",
+      "interface",
+      "",
+      "uses",
+      "\tSysUtils;",
+      "",
+      "$0",
+      "",
+      "implementation",
+      "",
+      "end."
+    ],
+    "description": "a new unit"
+  },
+  "program": {
+    "prefix": "program",
+    "body": [
+      "program ${1:${TM_FILENAME_BASE}};",
+      "",
+      "{\\$mode objfpc}{\\$H+}",
+      "",
+      "uses",
+      "\tSysUtils;",
+      "",
+      "begin",
+      "\t$0",
+      "end."
+    ],
+    "description": "a new program"
+  },
+  "test suite": {
+    "prefix": "testsuite",
+    "body": [
+      "unit ${1:${TM_FILENAME_BASE/(.*)/${1:/capitalize}/}};",
+      "",
+      "{\\$mode objfpc}{\\$H+}",
+      "",
+      "interface",
+      "",
+      "uses",
+      "\tPastel.Testing, ${2:UnitToTest};",
+      "",
+      "type",
+      "\t${3:TMyTests} = class(TTestSuite)",
+      "\tpublished",
+      "\t\tprocedure ${4:DoesSomething};",
+      "\tend;",
+      "",
+      "implementation",
+      "",
+      "procedure $3.$4;",
+      "begin",
+      "\tAssertEquals(${5:Expected}, ${6:Actual});$0",
+      "end;",
+      "",
+      "initialization",
+      "\tRegisterTests($3);",
+      "end."
+    ],
+    "description": "Pastel test unit (pastel test runs it)"
+  },
+  "test method": {
+    "prefix": "test",
+    "body": [
+      "procedure ${1:TMyTests}.${2:DoesSomething};",
+      "begin",
+      "\tAssertEquals(${3:Expected}, ${4:Actual});$0",
+      "end;"
+    ],
+    "description": "a test method"
+  },
+  "assert equals": {
+    "prefix": "ae",
+    "body": [
+      "AssertEquals(${1:Expected}, ${2:Actual});"
+    ],
+    "description": "AssertEquals"
+  },
+  "log": {
+    "prefix": "log",
+    "body": [
+      "Log.${1|Info,Warn,Error,Debug|}('${2:message}'${3:, [$4]});"
+    ],
+    "description": "Pastel.Log message"
+  },
+  "writeln format": {
+    "prefix": "wf",
+    "body": [
+      "WriteLn(Format('${1:%s}', [${2:Value}]));"
+    ],
+    "description": "WriteLn with Format"
+  }
+}

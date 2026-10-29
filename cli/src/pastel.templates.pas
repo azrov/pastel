@@ -181,6 +181,7 @@ begin
 
   WriteText(Dir + '.gitignore', Fill([
     'build/',
+    'dist/',
     '*.o',
     '*.ppu',
     '*.g.pas'
@@ -292,6 +293,7 @@ begin
 
   WriteText(Dir + '.gitignore', Fill([
     'build/',
+    'dist/',
     '*.o',
     '*.ppu'
   ], Name, Ident));
@@ -439,6 +441,7 @@ begin
 
   WriteText(Dir + '.gitignore', Fill([
     'build/',
+    'dist/',
     '*.o',
     '*.ppu',
     '*.g.pas'
@@ -526,14 +529,9 @@ begin
       '  "configurations": [',
       '    {',
       '      "name": "Debug {{name}}",',
-      '      "type": "cppdbg",',
+      '      "type": "pastel",',
       '      "request": "launch",',
-      '      "program": "${workspaceFolder}/build/linux/debug/{{name}}",',
-      '      "windows": { "program": "${workspaceFolder}/build/windows/debug/{{name}}.exe" },',
-      '      "cwd": "${workspaceFolder}",',
-      '      "MIMode": "gdb",',
-      '      "externalConsole": false,',
-      '      "preLaunchTask": "pastel: build"',
+      '      "args": []',
       '    }',
       '  ]',
       '}'

@@ -2,6 +2,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { registerFormatter } from './format';
+import { registerDebugging } from './debug';
+import { registerTesting } from './testing';
 import { currentProjectRoot, findProjectRoot, pastelPath, runPastel } from './cli';
 import {
   allObjects, classFor, completionContext, declaredProcedures, enclosingObjects,
@@ -62,6 +64,8 @@ export function activate(context: vscode.ExtensionContext): void {
 
   // commands
   registerFormatter(context);
+  registerDebugging(context);
+  registerTesting(context);
 
   context.subscriptions.push(
     vscode.commands.registerCommand('pastel.run', () => runTask('run')),
