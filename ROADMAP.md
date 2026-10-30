@@ -94,8 +94,9 @@ Goal: a REST API with a database, deployed on a Linux server as a systemd servic
 - [x] Timers and scheduled jobs (every N seconds, daily at a time)
 - [ ] Background worker threads and safe message passing between them
 - [x] HTTP server: routing (`GET /users/:id`), JSON requests and responses, static files
-- [ ] Middleware: logging, CORS, authentication (API keys, JWT), rate limits
-- [ ] Validation of request data with clear error responses (basics done: bad numbers, bad JSON, `EWebError`)
+- [x] Middleware: logging, CORS, authentication (API keys, JWT), rate limits
+- [x] Validation of request data with clear error responses
+- [x] `Pastel.Crypto`: password hashing, random tokens, SHA-256/HMAC; `Pastel.Jwt`
 - [x] Health check endpoint for monitoring
 - [ ] Database access for SQLite, PostgreSQL and MySQL/MariaDB (on top of FPC's SQLDB)
 - [ ] Simple query API with parameters; transactions; connection pool

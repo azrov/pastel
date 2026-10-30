@@ -27,7 +27,16 @@ type
   end;
 
 procedure TNotesService.Routes(Web: TWebServer);
+var
+  Keys: TStringArray;
 begin
+  { at most 120 requests a minute from one address }
+  Web.RateLimit('/api', 120, 60);
+  { with [api] keys = ["..."] in the settings, the API needs one of them
+    (header X-API-Key); make keys with: openssl rand -base64 32 }
+  Keys := Config.GetList('api.keys');
+  if Length(Keys) > 0 then
+    Web.RequireApiKey('/api', Keys);
   Web.Get('/api/notes', @ListNotes);
   Web.Get('/api/notes/:id', @GetNote);
   Web.Post('/api/notes', @CreateNote);
@@ -72,28 +81,27 @@ end;
 
 procedure TNotesService.CreateNote(Req: TWebRequest; Res: TWebResponse);
 var
-  Body: TJSONObject;
+  V: TValidator;
+  Title, Text: string;
 begin
-  Body := Req.JsonObject;
-  try
-    Res.Json(FStore.Add(JStr(Body, 'title'), JStr(Body, 'text')), 201);
-  except
-    on E: ENoteError do
-      raise EWebError.Create(422, E.Message);
-  end;
+  V := Req.Validate;
+  Title := V.Str('title', 1, 200);
+  Text := V.OptStr('text', '', 100000);
+  V.Check;                            { 422 with every problem }
+  Res.Json(FStore.Add(Title, Text), 201);
 end;
 
 procedure TNotesService.UpdateNote(Req: TWebRequest; Res: TWebResponse);
 var
-  Body, Note: TJSONObject;
+  V: TValidator;
+  Title, Text: string;
+  Note: TJSONObject;
 begin
-  Body := Req.JsonObject;
-  try
-    Note := FStore.Update(Req.ParamInt('id'), JStr(Body, 'title'), JStr(Body, 'text'));
-  except
-    on E: ENoteError do
-      raise EWebError.Create(422, E.Message);
-  end;
+  V := Req.Validate;
+  Title := V.Str('title', 1, 200);
+  Text := V.OptStr('text', '', 100000);
+  V.Check;
+  Note := FStore.Update(Req.ParamInt('id'), Title, Text);
   if Note = nil then
     raise EWebError.Create(404, 'no note with this id');
   Res.Json(Note);

@@ -38,8 +38,51 @@ type
   EWebError = class(Exception)
   public
     Status: Integer;
+    { more to tell, sent as "fields": problems per field of a request }
+    Fields: TJSONObject;
     constructor Create(AStatus: Integer; const AMessage: string);
     constructor CreateFmt(AStatus: Integer; const Fmt: string; const Args: array of const);
+    destructor Destroy; override;
+  end;
+
+  // Checks the fields of a JSON request and collects every problem:
+  //
+  //   V := Req.Validate;
+  //   Title := V.Str('title', 1, 200);
+  //   Age := V.OptInt('age', 0, 0, 150);
+  //   V.Check;      // 422 {"error": "...", "fields": {"title": "is required"}}
+  TValidator = class
+  private
+    FData: TJSONObject;
+    FErrors: TJSONObject;
+    function Raw(const Name: string; out V: TJSONData): Boolean;
+    function ReadStr(const Name: string; Required: Boolean; const Default: string;
+      MinLength, MaxLength: Integer): string;
+    function ReadInt(const Name: string; Required: Boolean; Default, Min, Max: Int64): Int64;
+    function ReadFloat(const Name: string; Required: Boolean; Default, Min, Max: Double): Double;
+    function ReadBool(const Name: string; Required, Default: Boolean): Boolean;
+  public
+    { Data is not owned }
+    constructor Create(AData: TJSONObject);
+    destructor Destroy; override;
+    { required text, MinLength..MaxLength characters (after trimming spaces) }
+    function Str(const Name: string; MinLength: Integer = 1; MaxLength: Integer = MaxInt): string;
+    function OptStr(const Name, Default: string; MaxLength: Integer = MaxInt): string;
+    function Int(const Name: string; Min: Int64 = Low(Int64); Max: Int64 = High(Int64)): Int64;
+    function OptInt(const Name: string; Default: Int64; Min: Int64 = Low(Int64); Max: Int64 = High(Int64)): Int64;
+    function Float(const Name: string; Min: Double = -1e308; Max: Double = 1e308): Double;
+    function OptFloat(const Name: string; Default: Double; Min: Double = -1e308; Max: Double = 1e308): Double;
+    function Bool(const Name: string): Boolean;
+    function OptBool(const Name: string; Default: Boolean): Boolean;
+    { required; one of Choices }
+    function Choice(const Name: string; const Choices: array of string): string;
+    { required; a plausible e-mail address }
+    function Email(const Name: string): string;
+    { for your own rules: V.AddError('end', 'must be after start') }
+    procedure AddError(const Name, Message: string);
+    function Ok: Boolean;
+    { 422 with every problem, unless Ok }
+    procedure Check;
   end;
 
   { The server could not start (port in use, no permission, ...). }
@@ -51,14 +94,19 @@ type
     FParams: TStringList;
     FJson: TJSONData;
     FPath, FBody: string;
+    FValues: TStringList;
+    FClaims: TJSONObject;
+    FValidator: TValidator;
+    FTrustProxy: Boolean;
   public
-    constructor Create(AReq: TFPHTTPConnectionRequest; const APath: string);
+    constructor Create(AReq: TFPHTTPConnectionRequest; const APath: string; ATrustProxy: Boolean = False);
     destructor Destroy; override;
     function Method: string;
     { the path without the query: /users/42 }
     property Path: string read FPath;
     { the request body as text }
     property Body: string read FBody;
+    { the client's address; with TrustProxy the first one in X-Forwarded-For }
     function ClientIP: string;
     { a part of the path: Param('id') for the route /users/:id }
     function Param(const Name: string): string;
@@ -75,8 +123,16 @@ type
     function Json: TJSONData;
     // the same, and it must be a JSON object
     function JsonObject: TJSONObject;
+    { checks the JSON body's fields; owned by the request }
+    function Validate: TValidator;
+    { a claim of the JWT checked by RequireJwt: Claim('sub') }
+    function Claim(const Name: string): string;
     { the route's parameters, name=value }
     property Params: TStringList read FParams;
+    { for filters to pass things on to handlers: Req.Values['user'] := ... }
+    property Values: TStringList read FValues;
+    { the claims of the JWT checked by RequireJwt (nil without one) }
+    property Claims: TJSONObject read FClaims write FClaims;
   end;
 
   TWebResponse = class
@@ -132,7 +188,16 @@ type
     FHealthVersion: string;
     FRequests: Int64;
     FLock: TCriticalSection;
+    FFilters: TList;
+    FOwned: TList;
+    FCorsOrigins: TStringList;
+    FCorsCredentials: Boolean;
+    FTrustProxy: Boolean;
     function AddRoute(const Method, Pattern: string): TWebRoute;
+    procedure AddFilter(const Prefix: string; Handler: TWebHandler; Proc: TWebHandlerProc);
+    function RunFilters(Req: TWebRequest; Res: TWebResponse): Boolean;
+    procedure ApplyCors(Req: TWebRequest; Res: TWebResponse);
+    function Preflight(Req: TWebRequest; Res: TWebResponse): Boolean;
     procedure OnRequest(Sender: TObject; var ARequest: TFPHTTPConnectionRequest;
       var AResponse: TFPHTTPConnectionResponse);
     procedure DispatchRequest(Req: TWebRequest; Res: TWebResponse);
@@ -157,6 +222,22 @@ type
     procedure Static(const UrlPrefix, Folder: string);
     // GET Path answers {"status":"ok","version":...,"uptime_seconds":...}
     procedure Health(const Path: string = '/health'; const Version: string = '');
+
+    { Runs Filter before the handler of every route under Prefix ('/api'
+      covers /api and /api/...). A filter stops the request by raising
+      EWebError or by answering (Res.Error, ...). In the order added. }
+    procedure Use(const Prefix: string; Filter: TWebHandler);
+    procedure Use(const Prefix: string; Filter: TWebHandlerProc);
+    { "Authorization: Bearer <key>" or "X-API-Key: <key>" must hold one of Keys }
+    procedure RequireApiKey(const Prefix: string; const Keys: array of string);
+    { "Authorization: Bearer <JWT>" signed with Secret; the claims go to Req.Claims }
+    procedure RequireJwt(const Prefix, Secret: string);
+    { at most Count requests in Seconds from one client address; then 429 }
+    procedure RateLimit(const Prefix: string; Count, Seconds: Integer);
+    { lets web pages from these origins call the API ('https://app.example.com', or '*') }
+    procedure Cors(const Origins: array of string; AllowCredentials: Boolean = False);
+    { behind nginx/Caddy: take the client address from X-Forwarded-For }
+    property TrustProxy: Boolean read FTrustProxy write FTrustProxy;
     { starts listening; EWebServerError when that is not possible }
     procedure Start;
     { stops accepting, lets running requests finish }
@@ -205,7 +286,7 @@ function UrlDecode(const S: string): string;
 implementation
 
 uses
-  DateUtils, ssockets, Pastel.Json, Pastel.Log;
+  DateUtils, ssockets, Pastel.Json, Pastel.Log, Pastel.Crypto, Pastel.Jwt;
 
 type
   { publishes Address, which TFPHttpServer hides in FPC 3.2.2 }
@@ -319,11 +400,237 @@ begin
   Status := AStatus;
 end;
 
-{ ---------------- TWebRequest ---------------- }
+{ ---------------- EWebError details, TValidator ---------------- }
 
-constructor TWebRequest.Create(AReq: TFPHTTPConnectionRequest; const APath: string);
+destructor EWebError.Destroy;
+begin
+  Fields.Free;
+  inherited Destroy;
+end;
+
+constructor TValidator.Create(AData: TJSONObject);
 begin
   inherited Create;
+  FData := AData;
+  FErrors := TJSONObject.Create;
+end;
+
+destructor TValidator.Destroy;
+begin
+  FErrors.Free;
+  inherited Destroy;
+end;
+
+procedure TValidator.AddError(const Name, Message: string);
+begin
+  if FErrors.IndexOfName(Name) < 0 then
+    FErrors.Add(Name, Message);
+end;
+
+function TValidator.Ok: Boolean;
+begin
+  Result := FErrors.Count = 0;
+end;
+
+procedure TValidator.Check;
+var
+  E: EWebError;
+begin
+  if Ok then
+    Exit;
+  if FErrors.Count = 1 then
+    E := EWebError.CreateFmt(422, '%s %s', [FErrors.Names[0], FErrors.Items[0].AsString])
+  else
+    E := EWebError.CreateFmt(422, '%d fields are not right', [FErrors.Count]);
+  E.Fields := TJSONObject(FErrors.Clone);
+  raise E;
+end;
+
+function TValidator.Raw(const Name: string; out V: TJSONData): Boolean;
+begin
+  V := nil;
+  if FData <> nil then
+    V := FData.Find(Name);
+  Result := (V <> nil) and not (V.JSONType = jtNull);
+end;
+
+function TValidator.ReadStr(const Name: string; Required: Boolean; const Default: string;
+  MinLength, MaxLength: Integer): string;
+var
+  V: TJSONData;
+  N: Integer;
+begin
+  Result := Default;
+  if not Raw(Name, V) then
+  begin
+    if Required then
+      AddError(Name, 'is required');
+    Exit;
+  end;
+  if V.JSONType <> jtString then
+  begin
+    AddError(Name, 'must be text');
+    Exit;
+  end;
+  Result := Trim(V.AsString);
+  SetCodePage(RawByteString(Result), CP_UTF8, False);
+  N := Length(UTF8Decode(Result));
+  if Required and (Result = '') then
+    AddError(Name, 'is required')
+  else if (N < MinLength) and (Result <> '') then
+    AddError(Name, Format('must be at least %d characters', [MinLength]))
+  else if N > MaxLength then
+    AddError(Name, Format('must be at most %d characters', [MaxLength]));
+end;
+
+function TValidator.Str(const Name: string; MinLength, MaxLength: Integer): string;
+begin
+  Result := ReadStr(Name, True, '', MinLength, MaxLength);
+end;
+
+function TValidator.OptStr(const Name, Default: string; MaxLength: Integer): string;
+begin
+  Result := ReadStr(Name, False, Default, 0, MaxLength);
+end;
+
+function Between(const Name: string; Min, Max: Int64): string;
+begin
+  if (Min = Low(Int64)) then
+    Result := Format('must be at most %d', [Max])
+  else if (Max = High(Int64)) then
+    Result := Format('must be at least %d', [Min])
+  else
+    Result := Format('must be between %d and %d', [Min, Max]);
+end;
+
+function TValidator.ReadInt(const Name: string; Required: Boolean; Default, Min, Max: Int64): Int64;
+var
+  V: TJSONData;
+begin
+  Result := Default;
+  if not Raw(Name, V) then
+  begin
+    if Required then
+      AddError(Name, 'is required');
+    Exit;
+  end;
+  if not (V.JSONType = jtNumber) or (V is TJSONFloatNumber) and (Frac(V.AsFloat) <> 0) then
+  begin
+    AddError(Name, 'must be a whole number');
+    Exit;
+  end;
+  Result := V.AsInt64;
+  if (Result < Min) or (Result > Max) then
+    AddError(Name, Between(Name, Min, Max));
+end;
+
+function TValidator.Int(const Name: string; Min, Max: Int64): Int64;
+begin
+  Result := ReadInt(Name, True, 0, Min, Max);
+end;
+
+function TValidator.OptInt(const Name: string; Default, Min, Max: Int64): Int64;
+begin
+  Result := ReadInt(Name, False, Default, Min, Max);
+end;
+
+function TValidator.ReadFloat(const Name: string; Required: Boolean; Default, Min, Max: Double): Double;
+var
+  V: TJSONData;
+begin
+  Result := Default;
+  if not Raw(Name, V) then
+  begin
+    if Required then
+      AddError(Name, 'is required');
+    Exit;
+  end;
+  if V.JSONType <> jtNumber then
+  begin
+    AddError(Name, 'must be a number');
+    Exit;
+  end;
+  Result := V.AsFloat;
+  if (Result < Min) or (Result > Max) then
+    AddError(Name, Format('must be between %g and %g', [Min, Max]));
+end;
+
+function TValidator.Float(const Name: string; Min, Max: Double): Double;
+begin
+  Result := ReadFloat(Name, True, 0, Min, Max);
+end;
+
+function TValidator.OptFloat(const Name: string; Default, Min, Max: Double): Double;
+begin
+  Result := ReadFloat(Name, False, Default, Min, Max);
+end;
+
+function TValidator.ReadBool(const Name: string; Required, Default: Boolean): Boolean;
+var
+  V: TJSONData;
+begin
+  Result := Default;
+  if not Raw(Name, V) then
+  begin
+    if Required then
+      AddError(Name, 'is required');
+    Exit;
+  end;
+  if V.JSONType <> jtBoolean then
+    AddError(Name, 'must be true or false')
+  else
+    Result := V.AsBoolean;
+end;
+
+function TValidator.Bool(const Name: string): Boolean;
+begin
+  Result := ReadBool(Name, True, False);
+end;
+
+function TValidator.OptBool(const Name: string; Default: Boolean): Boolean;
+begin
+  Result := ReadBool(Name, False, Default);
+end;
+
+function TValidator.Choice(const Name: string; const Choices: array of string): string;
+var
+  C, List: string;
+begin
+  Result := ReadStr(Name, True, '', 1, MaxInt);
+  if Result = '' then
+    Exit;
+  List := '';
+  for C in Choices do
+  begin
+    if C = Result then
+      Exit;
+    if List <> '' then
+      List := List + ', ';
+    List := List + C;
+  end;
+  AddError(Name, 'must be one of: ' + List);
+end;
+
+function TValidator.Email(const Name: string): string;
+var
+  At: Integer;
+begin
+  Result := ReadStr(Name, True, '', 3, 254);
+  if Result = '' then
+    Exit;
+  At := LastDelimiter('@', Result);
+  if (At < 2) or (Pos('.', Copy(Result, At + 1, MaxInt)) < 2) or (Pos(' ', Result) > 0) or
+     (Result[Length(Result)] = '.') then
+    AddError(Name, 'must be an email address');
+end;
+
+{ ---------------- TWebRequest ---------------- }
+
+constructor TWebRequest.Create(AReq: TFPHTTPConnectionRequest; const APath: string; ATrustProxy: Boolean);
+begin
+  inherited Create;
+  FTrustProxy := ATrustProxy;
+  FValues := TStringList.Create;
   FReq := AReq;
   FPath := APath;
   FBody := AReq.Content;
@@ -335,6 +642,9 @@ destructor TWebRequest.Destroy;
 begin
   FParams.Free;
   FJson.Free;
+  FValues.Free;
+  FClaims.Free;
+  FValidator.Free;
   inherited Destroy;
 end;
 
@@ -344,8 +654,33 @@ begin
 end;
 
 function TWebRequest.ClientIP: string;
+var
+  F: string;
 begin
   Result := FReq.RemoteAddress;
+  if FTrustProxy then
+  begin
+    F := Header('X-Forwarded-For');
+    if Pos(',', F) > 0 then
+      F := Copy(F, 1, Pos(',', F) - 1);
+    if Trim(F) <> '' then
+      Result := Trim(F);
+  end;
+end;
+
+function TWebRequest.Validate: TValidator;
+begin
+  if FValidator = nil then
+    FValidator := TValidator.Create(JsonObject);
+  Result := FValidator;
+end;
+
+function TWebRequest.Claim(const Name: string): string;
+begin
+  if FClaims = nil then
+    Result := ''
+  else
+    Result := FClaims.Get(Name, '');
 end;
 
 function TWebRequest.Param(const Name: string): string;
@@ -541,6 +876,9 @@ begin
   FRoutes := TList.Create;
   FAccessLog := True;
   FLock := TCriticalSection.Create;
+  FFilters := TList.Create;
+  FOwned := TList.Create;
+  FCorsOrigins := TStringList.Create;
 end;
 
 destructor TWebServer.Destroy;
@@ -551,6 +889,13 @@ begin
   for I := 0 to FRoutes.Count - 1 do
     TObject(FRoutes[I]).Free;
   FRoutes.Free;
+  for I := 0 to FFilters.Count - 1 do
+    TObject(FFilters[I]).Free;
+  FFilters.Free;
+  for I := 0 to FOwned.Count - 1 do
+    TObject(FOwned[I]).Free;
+  FOwned.Free;
+  FCorsOrigins.Free;
   FLock.Free;
   inherited Destroy;
 end;
@@ -713,6 +1058,9 @@ var
   Allowed, Method: string;
   Params: TStringList;
 begin
+  ApplyCors(Req, Res);
+  if Preflight(Req, Res) then
+    Exit;
   Parts := SplitPath(Req.Path);
   for I := 0 to High(Parts) do
     Parts[I] := UrlDecode(Parts[I]);
@@ -763,6 +1111,8 @@ begin
     Exit;
   end;
 
+  if not RunFilters(Req, Res) then
+    Exit;
   if Found.StaticFolder <> '' then
     ServeStatic(Found, Req, Res)
   else if Assigned(Found.Proc) then
@@ -787,14 +1137,17 @@ begin
   Path := ARequest.URI;
   if Pos('?', Path) > 0 then
     SetLength(Path, Pos('?', Path) - 1);
-  Req := TWebRequest.Create(ARequest, Path);
+  Req := TWebRequest.Create(ARequest, Path, FTrustProxy);
   Res := TWebResponse.Create(AResponse);
   try
     try
       DispatchRequest(Req, Res);
     except
       on E: EWebError do
-        Res.Error(E.Status, E.Message);
+        if E.Fields <> nil then
+          Res.Json(JObject(['error', E.Message, 'fields', E.Fields.Clone]), E.Status)
+        else
+          Res.Error(E.Status, E.Message);
       on E: EJsonError do
         Res.Error(400, 'the body is not valid JSON: ' + E.Message);
       on E: Exception do
@@ -890,6 +1243,315 @@ begin
     Result := Format('http://%s:%d', [FAddress, FPort]);
 end;
 
+{ ---------------- filters ---------------- }
+
+type
+  TWebFilter = class
+  public
+    Prefix: string;
+    Handler: TWebHandler;
+    Proc: TWebHandlerProc;
+  end;
+
+  TApiKeyFilter = class
+  public
+    Keys: array of RawByteString;
+    procedure Check(Req: TWebRequest; Res: TWebResponse);
+  end;
+
+  TJwtFilter = class
+  public
+    Secret: string;
+    procedure Check(Req: TWebRequest; Res: TWebResponse);
+  end;
+
+  TRateFilter = class
+  public
+    Limit, Seconds: Integer;
+    Lock: TCriticalSection;
+    Counts: TStringList;      // "ip=count" for the current window
+    WindowStart: QWord;
+    constructor Create;
+    destructor Destroy; override;
+    procedure Check(Req: TWebRequest; Res: TWebResponse);
+  end;
+
+function BearerToken(Req: TWebRequest): string;
+var
+  A: string;
+begin
+  A := Trim(Req.Header('Authorization'));
+  if LowerCase(Copy(A, 1, 7)) = 'bearer ' then
+    Result := Trim(Copy(A, 8, MaxInt))
+  else
+    Result := '';
+end;
+
+procedure TApiKeyFilter.Check(Req: TWebRequest; Res: TWebResponse);
+var
+  Given: string;
+  K: RawByteString;
+  Found: Boolean;
+begin
+  Given := Req.Header('X-API-Key');
+  if Given = '' then
+    Given := BearerToken(Req);
+  if Given = '' then
+  begin
+    Res.SetHeader('WWW-Authenticate', 'Bearer');
+    raise EWebError.Create(401, 'an API key is required (header X-API-Key or Authorization: Bearer)');
+  end;
+  Found := False;
+  for K in Keys do
+    if SameSecret(Given, K) then
+      Found := True;       { no early exit: the time tells nothing }
+  if not Found then
+  begin
+    Res.SetHeader('WWW-Authenticate', 'Bearer error="invalid_token"');
+    raise EWebError.Create(401, 'the API key is not valid');
+  end;
+  Req.Values.Values['auth'] := 'api-key';
+end;
+
+procedure TJwtFilter.Check(Req: TWebRequest; Res: TWebResponse);
+var
+  Token: string;
+begin
+  Token := BearerToken(Req);
+  if Token = '' then
+  begin
+    Res.SetHeader('WWW-Authenticate', 'Bearer');
+    raise EWebError.Create(401, 'a token is required (header Authorization: Bearer)');
+  end;
+  try
+    Req.Claims := JwtVerify(Token, Secret);
+  except
+    on E: EJwtError do
+    begin
+      Res.SetHeader('WWW-Authenticate', 'Bearer error="invalid_token"');
+      raise EWebError.Create(401, E.Message);
+    end;
+  end;
+  Req.Values.Values['auth'] := 'jwt';
+end;
+
+constructor TRateFilter.Create;
+begin
+  inherited Create;
+  Lock := TCriticalSection.Create;
+  Counts := TStringList.Create;
+  Counts.Sorted := True;
+  WindowStart := GetTickCount64;
+end;
+
+destructor TRateFilter.Destroy;
+begin
+  Counts.Free;
+  Lock.Free;
+  inherited Destroy;
+end;
+
+{ fixed windows of Seconds: simple, and enough against runaway clients }
+procedure TRateFilter.Check(Req: TWebRequest; Res: TWebResponse);
+var
+  Ip: string;
+  N, I: Integer;
+  Left: Int64;
+begin
+  Ip := Req.ClientIP;
+  Lock.Acquire;
+  try
+    if GetTickCount64 - WindowStart >= QWord(Seconds) * 1000 then
+    begin
+      Counts.Clear;
+      WindowStart := GetTickCount64;
+    end;
+    I := Counts.IndexOfName(Ip);
+    if I < 0 then
+      N := 1
+    else
+    begin
+      N := StrToIntDef(Counts.ValueFromIndex[I], 0) + 1;
+      Counts.Delete(I);
+    end;
+    Counts.Add(Ip + '=' + IntToStr(N));
+    Left := (Int64(Seconds) * 1000 - Int64(GetTickCount64 - WindowStart) + 999) div 1000;
+  finally
+    Lock.Release;
+  end;
+  Res.SetHeader('RateLimit-Limit', IntToStr(Limit));
+  if N <= Limit then
+    Res.SetHeader('RateLimit-Remaining', IntToStr(Limit - N))
+  else
+  begin
+    Res.SetHeader('RateLimit-Remaining', '0');
+    Res.SetHeader('Retry-After', IntToStr(Left));
+    raise EWebError.CreateFmt(429, 'too many requests; try again in %d seconds', [Left]);
+  end;
+end;
+
+procedure TWebServer.AddFilter(const Prefix: string; Handler: TWebHandler; Proc: TWebHandlerProc);
+var
+  F: TWebFilter;
+begin
+  F := TWebFilter.Create;
+  F.Prefix := Prefix;
+  while (Length(F.Prefix) > 1) and (F.Prefix[Length(F.Prefix)] = '/') do
+    SetLength(F.Prefix, Length(F.Prefix) - 1);
+  F.Handler := Handler;
+  F.Proc := Proc;
+  FFilters.Add(F);
+end;
+
+procedure TWebServer.Use(const Prefix: string; Filter: TWebHandler);
+begin
+  AddFilter(Prefix, Filter, nil);
+end;
+
+procedure TWebServer.Use(const Prefix: string; Filter: TWebHandlerProc);
+begin
+  AddFilter(Prefix, nil, Filter);
+end;
+
+function UnderPrefix(const Path, Prefix: string): Boolean;
+begin
+  Result := (Prefix = '/') or (Path = Prefix) or (Copy(Path, 1, Length(Prefix) + 1) = Prefix + '/');
+end;
+
+function TWebServer.RunFilters(Req: TWebRequest; Res: TWebResponse): Boolean;
+var
+  I: Integer;
+  F: TWebFilter;
+begin
+  for I := 0 to FFilters.Count - 1 do
+  begin
+    F := TWebFilter(FFilters[I]);
+    if not UnderPrefix(Req.Path, F.Prefix) then
+      Continue;
+    if Assigned(F.Proc) then
+      F.Proc(Req, Res)
+    else
+      F.Handler(Req, Res);
+    if Res.Sent then
+      Exit(False);
+  end;
+  Result := True;
+end;
+
+procedure TWebServer.RequireApiKey(const Prefix: string; const Keys: array of string);
+var
+  F: TApiKeyFilter;
+  I: Integer;
+begin
+  F := TApiKeyFilter.Create;
+  FOwned.Add(F);
+  SetLength(F.Keys, Length(Keys));
+  for I := 0 to High(Keys) do
+  begin
+    if Length(Keys[I]) < 16 then
+      raise EArgumentException.Create('API keys should be at least 16 characters (RandomToken makes good ones)');
+    F.Keys[I] := Keys[I];
+  end;
+  Use(Prefix, @F.Check);
+end;
+
+procedure TWebServer.RequireJwt(const Prefix, Secret: string);
+var
+  F: TJwtFilter;
+begin
+  if Length(Secret) < 32 then
+    raise EArgumentException.Create('the JWT secret should be at least 32 characters (RandomToken makes a good one)');
+  F := TJwtFilter.Create;
+  FOwned.Add(F);
+  F.Secret := Secret;
+  Use(Prefix, @F.Check);
+end;
+
+procedure TWebServer.RateLimit(const Prefix: string; Count, Seconds: Integer);
+var
+  F: TRateFilter;
+begin
+  if (Count < 1) or (Seconds < 1) then
+    raise EArgumentException.Create('a rate limit needs at least 1 request in at least 1 second');
+  F := TRateFilter.Create;
+  FOwned.Add(F);
+  F.Limit := Count;
+  F.Seconds := Seconds;
+  Use(Prefix, @F.Check);
+end;
+
+procedure TWebServer.Cors(const Origins: array of string; AllowCredentials: Boolean);
+var
+  O: string;
+begin
+  FCorsOrigins.Clear;
+  for O in Origins do
+    FCorsOrigins.Add(ExcludeTrailingPathDelimiter(Trim(O)));
+  FCorsCredentials := AllowCredentials;
+end;
+
+procedure TWebServer.ApplyCors(Req: TWebRequest; Res: TWebResponse);
+var
+  Origin: string;
+begin
+  Origin := Req.Header('Origin');
+  if (FCorsOrigins.Count = 0) or (Origin = '') then
+    Exit;
+  if (FCorsOrigins.IndexOf('*') >= 0) and not FCorsCredentials then
+    Res.SetHeader('Access-Control-Allow-Origin', '*')
+  else if (FCorsOrigins.IndexOf(Origin) >= 0) or (FCorsOrigins.IndexOf('*') >= 0) then
+  begin
+    Res.SetHeader('Access-Control-Allow-Origin', Origin);
+    Res.SetHeader('Vary', 'Origin');
+    if FCorsCredentials then
+      Res.SetHeader('Access-Control-Allow-Credentials', 'true');
+  end;
+end;
+
+{ the browser asks before a cross-origin request: answer for the route }
+function TWebServer.Preflight(Req: TWebRequest; Res: TWebResponse): Boolean;
+var
+  Parts: TStringArray;
+  I: Integer;
+  Methods, Asked: string;
+  Params: TStringList;
+  Route: TWebRoute;
+begin
+  Result := False;
+  if (Req.Method <> 'OPTIONS') or (FCorsOrigins.Count = 0) or
+     (Req.Header('Access-Control-Request-Method') = '') then
+    Exit;
+  Parts := SplitPath(Req.Path);
+  for I := 0 to High(Parts) do
+    Parts[I] := UrlDecode(Parts[I]);
+  Methods := '';
+  Params := TStringList.Create;
+  try
+    for I := 0 to FRoutes.Count - 1 do
+    begin
+      Route := TWebRoute(FRoutes[I]);
+      if Matches(Route, Parts, Params) and (Pos(Route.Method, Methods) = 0) then
+      begin
+        if Methods <> '' then
+          Methods := Methods + ', ';
+        Methods := Methods + Route.Method;
+      end;
+    end;
+  finally
+    Params.Free;
+  end;
+  if Methods = '' then
+    Exit;
+  Asked := Req.Header('Access-Control-Request-Headers');
+  if Asked = '' then
+    Asked := 'Content-Type, Authorization';
+  Res.SetHeader('Access-Control-Allow-Methods', Methods);
+  Res.SetHeader('Access-Control-Allow-Headers', Asked);
+  Res.SetHeader('Access-Control-Max-Age', '600');
+  Res.NoContent;
+  Result := True;
+end;
+
 { ---------------- TWebService ---------------- }
 
 procedure TWebService.Configure(C: TConfig);
@@ -897,6 +1559,7 @@ begin
   inherited Configure(C);
   C.SetDefault('server.port', '8080');
   C.SetDefault('server.address', '');
+  C.SetDefault('server.trust_proxy', 'false');
 end;
 
 procedure TWebService.Routes(Web: TWebServer);
@@ -907,6 +1570,9 @@ procedure TWebService.Started;
 begin
   inherited Started;
   FWeb := TWebServer.Create(Config.GetInt('server.port'), Config.Get('server.address'));
+  FWeb.TrustProxy := Config.GetBool('server.trust_proxy');
+  if Config.Has('server.cors') then
+    FWeb.Cors(Config.GetList('server.cors'));
   Routes(FWeb);
   FWeb.Start;
   Log.Info('listening on %s', [FWeb.Url]);

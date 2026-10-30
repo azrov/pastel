@@ -129,6 +129,132 @@ In debug builds (`pastel run`) the 500 answer also contains the exception's
 message, which helps while developing; release builds never show it to
 clients.
 
+## Filters: code that runs before the handlers
+
+```pascal
+Web.Use('/admin', @OnlyAdmins);        { every route under /admin }
+Web.Use('/', @CountRequests);          { every route }
+
+procedure TApi.OnlyAdmins(Req: TWebRequest; Res: TWebResponse);
+begin
+  if Req.Claim('role') <> 'admin' then
+    raise EWebError.Create(403, 'only for admins');
+end;
+```
+
+Filters run in the order they were added, after the route was found and
+before its handler. A filter stops the request by raising `EWebError` or by
+answering itself (`Res.Error(...)`); otherwise the next filter and then the
+handler run. `Req.Values` passes things on: `Req.Values.Values['user'] := ...`
+in a filter, read in the handler.
+
+## Who is calling: API keys and tokens
+
+**API keys**, for programs that call your API:
+
+```pascal
+Web.RequireApiKey('/api', Config.GetList('api.keys'));
+```
+
+The caller sends `X-API-Key: <key>` or `Authorization: Bearer <key>`;
+without a key or with a wrong one the answer is 401. Keys are compared in
+constant time, and must be at least 16 characters: make them with
+`RandomToken` (Pastel.Crypto) or `openssl rand -base64 32`, and keep them in
+the settings or an environment variable, never in the code.
+
+**JWT**, for users who log in:
+
+```pascal
+Web.Post('/login', @Login);
+Web.RequireJwt('/api', Config.Require('auth.secret'));
+
+procedure TApi.Login(Req: TWebRequest; Res: TWebResponse);
+var
+  V: TValidator;
+  Name, Password: string;
+begin
+  V := Req.Validate;
+  Name := V.Str('name');
+  Password := V.Str('password');
+  V.Check;
+  if not VerifyPassword(Password, StoredHashOf(Name)) then
+    raise EWebError.Create(401, 'wrong name or password');
+  Res.Json(JObject(['token', JwtSign(JObject(['sub', Name, 'role', RoleOf(Name)]),
+    Config.Require('auth.secret'), 3600)]));
+end;
+```
+
+Requests under `/api` then need `Authorization: Bearer <token>`; the
+handlers read `Req.Claim('sub')`, `Req.Claim('role')` or `Req.Claims`. A
+forged, changed or expired token gets 401 with the reason. Only HS256 is
+accepted. Passwords and tokens: [security.md](security.md).
+
+## Rate limits
+
+```pascal
+Web.RateLimit('/api', 120, 60);      { at most 120 requests a minute per client }
+Web.RateLimit('/login', 5, 60);      { slow down password guessing }
+```
+
+Over the limit the answer is **429** with `Retry-After`; every answer
+carries `RateLimit-Limit` and `RateLimit-Remaining`. The count is per client
+address and kept in memory (per running server).
+
+## CORS: calls from web pages elsewhere
+
+A web page on another domain may call your API only if the server allows
+it:
+
+```pascal
+Web.Cors(['https://app.example.com']);       { or ['*'] for anyone }
+```
+
+or in the settings of a `TWebService`: `[server] cors = ["https://app.example.com"]`.
+Pastel answers the browser's preflight (`OPTIONS`) requests and adds the
+`Access-Control-Allow-*` headers.
+
+## Behind a reverse proxy
+
+Behind nginx or Caddy every request comes from the proxy. With
+`Web.TrustProxy := True` (or `[server] trust_proxy = true`), `Req.ClientIP`
+and the rate limits use the address in `X-Forwarded-For` instead. Only turn
+it on behind a proxy: otherwise clients could claim any address.
+
+## Checking the data: `Req.Validate`
+
+```pascal
+procedure TApi.CreateUser(Req: TWebRequest; Res: TWebResponse);
+var
+  V: TValidator;
+  Name, Email, Plan: string;
+  Age: Int64;
+begin
+  V := Req.Validate;
+  Name := V.Str('name', 2, 50);                  { required, 2 to 50 characters }
+  Email := V.Email('email');
+  Age := V.OptInt('age', 0, 0, 150);              { optional, default 0 }
+  Plan := V.Choice('plan', ['free', 'pro']);
+  V.Check;                                        { stops here with 422 if anything is wrong }
+  ...
+end;
+```
+
+Every problem is collected, so the client learns everything at once:
+
+```json
+{"error": "3 fields are not right",
+ "fields": {"name": "must be at least 2 characters", "email": "is required", "plan": "must be one of: free, pro"}}
+```
+
+| | |
+|---|---|
+| `Str(Name, MinLength, MaxLength)`, `OptStr(Name, Default, MaxLength)` | text, trimmed; lengths in characters |
+| `Int`, `OptInt`, `Float`, `OptFloat` | numbers, with a range |
+| `Bool`, `OptBool` | `true` / `false` |
+| `Choice(Name, ['a', 'b'])` | one of the values |
+| `Email(Name)` | looks like an e-mail address |
+| `AddError(Name, Message)` | your own rules, before `Check` |
+
 ## Threads
 
 Requests are answered at the same time, each in its own thread. Anything
@@ -159,4 +285,3 @@ are JSON for log collectors.
 - No HTTPS in the server itself (use a reverse proxy).
 - Every connection is closed after one request (no keep-alive); behind a proxy this does not matter.
 - The whole request body is read into memory: keep uploads small, or limit them in the proxy (`client_max_body_size` in nginx).
-- No middleware yet (authentication, CORS, rate limits): planned for the next part.
