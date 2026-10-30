@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6.0
+
+- Web APIs: **▶ Send** above every route (`Web.Get('/path', @Handler)`) sends a request to the running
+  server and shows the answer; path parameters, a JSON body and the API key from `config.toml` are filled in
+- Pastel panel: routes, jobs (`Every`, `DailyAt`) and database migrations of service and API projects;
+  Run Migrations, Migration Status, New Migration…
+- New Project offers "api": a web API with a database
+- Setting `pastel.serverUrl` for Send Request
+
 ## 0.3.1
 
 - "Pastel: Run Tests" command, task and button in the Pastel panel (runs `pastel test`)

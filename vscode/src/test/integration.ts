@@ -158,6 +158,7 @@ const vscodeFake = {
   TaskScope: { Workspace: 2 },
   TaskRevealKind: { Always: 1 },
   TaskPanelKind: { Dedicated: 2 },
+  CodeLens: class { constructor(public range: unknown, public command: any) {} },
   TextEditorRevealType: { InCenter: 2, InCenterIfOutsideViewport: 3 },
   WorkspaceEdit: class {
     inserts: { uri: Uri; pos: Position; text: string }[] = [];
@@ -183,6 +184,7 @@ const vscodeFake = {
     registerCodeActionsProvider: (_s: unknown, p: unknown) => { providers.actions = p; return { dispose() {} }; },
     registerWorkspaceSymbolProvider: (p: unknown) => { providers.workspaceSymbols = p; return { dispose() {} }; },
     registerDocumentFormattingEditProvider: (_s: unknown, p: unknown) => { providers.formatting = p; return { dispose() {} }; },
+    registerCodeLensProvider: (_s: unknown, p: unknown) => { providers.codeLens = p; return { dispose() {} }; },
   },
   commands: {
     registerCommand: (id: string, fn: (...a: any[]) => any) => { commands[id] = fn; return { dispose() {} }; },
@@ -196,6 +198,9 @@ const vscodeFake = {
     showInformationMessage: async () => undefined,
     showTextDocument: async (d: any) => { providers.lastShown = d; return { selection: undefined, revealRange() {} }; },
     setStatusBarMessage: (m: string) => { providers.status = m; return { dispose() {} }; },
+    showInputBox: async (o: { prompt: string; value?: string }) =>
+      o.prompt.startsWith('URL') ? (o.value ?? '').replace('http://localhost:8080', providers.serverBase) : o.value,
+    createOutputChannel: () => ({ appendLine: (t: string) => { providers.requestLog = (providers.requestLog ?? '') + t; }, show() {} }),
     registerTreeDataProvider: (_id: string, p: unknown) => { providers.tree = p; return { dispose() {} }; },
     onDidChangeActiveTextEditor: on('activeEditor'),
     onDidChangeTextEditorSelection: on('selection'),
@@ -406,6 +411,30 @@ async function main() {
     assert.ok(r.layout.controls.every((c: any) => c.name !== 'Label1'), 'redrawn after delete');
   });
 
+  await test('Send Request lens above a route, and the request', async () => {
+    const apiDoc = new FakeDocument(Uri.file(path.join(projectDir, 'src', 'api.pas')), 'pascal',
+      "procedure TApi.Routes(Web: TWebServer);\nbegin\n  Web.Post('/api/tasks/:id', @Change);\nend;\n");
+    const lenses = providers.codeLens.provideCodeLenses(apiDoc);
+    assert.strictEqual(lenses.length, 1);
+    assert.strictEqual(lenses[0].command.title, '▶ Send POST /api/tasks/:id');
+    const http = await import('http');
+    const server = http.createServer((req, res) => {
+      let body = '';
+      req.on('data', c => body += c);
+      req.on('end', () => { res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ url: req.url, body })); });
+    });
+    await new Promise<void>(r => server.listen(0, '127.0.0.1', r));
+    providers.serverBase = `http://127.0.0.1:${(server.address() as any).port}`;
+    try {
+      await commands['pastel.sendRequest'](...lenses[0].command.arguments);
+    } finally {
+      server.close();
+    }
+    assert.ok(providers.requestLog.includes('HTTP 200'), providers.requestLog);
+    assert.ok(providers.requestLog.includes('"url": "/api/tasks/1"'), providers.requestLog);
+    assert.ok(providers.requestLog.includes('"body": "{}"'), providers.requestLog);
+  });
+
   await test('sidebar shows actions, forms and settings', async () => {
     const top = await providers.tree.getChildren();
     assert.deepStrictEqual(top.map((n: any) => n.label), [path.basename(projectDir), 'Forms', 'Source', 'Project settings']);
@@ -415,6 +444,29 @@ async function main() {
     assert.strictEqual(home.label, 'Home');
     assert.strictEqual(home.command.command, 'pastel.openPreview');
     assert.deepStrictEqual(home.children.map((n: any) => n.label), ['Home.pform', 'Home.pas']);
+  });
+
+  await test('sidebar shows routes, jobs and migrations', async () => {
+    const api = path.join(projectDir, 'src', 'apiroutes.pas');
+    const mig = path.join(projectDir, 'database', 'migrations');
+    fs.writeFileSync(api, "unit ApiRoutes;\n// Web.Get('/no', @No);\nWeb.Get('/api/tasks', @ListTasks);\nWeb.Delete('/api/tasks/:id', @DeleteTask);\nEvery(60, @Cleanup);\n");
+    fs.mkdirSync(mig, { recursive: true });
+    fs.writeFileSync(path.join(mig, '001_create_tasks.sql'), 'create table tasks (id {{id}});\n');
+    try {
+      const top = await providers.tree.getChildren();
+      const names = top.map((n: any) => n.label);
+      assert.deepStrictEqual(names.slice(1, 5), ['Forms', 'Routes', 'Jobs', 'Migrations'], names.join(','));
+      const routes = top[2].children;
+      assert.deepStrictEqual(routes.map((n: any) => `${n.label} ${n.description}`), ['GET /api/tasks ListTasks', 'DELETE /api/tasks/:id DeleteTask']);
+      assert.strictEqual(routes[1].contextValue, 'pastelRoute');
+      assert.strictEqual(routes[1].command.arguments[1].selection.start.line, 3, 'opens at the route');
+      assert.strictEqual(top[3].children[0].description, 'every 60 s');
+      const m = top[4].children.map((n: any) => n.label);
+      assert.deepStrictEqual(m, ['Run Migrations', 'Migration Status', 'New Migration…', '001_create_tasks']);
+    } finally {
+      fs.unlinkSync(api);
+      fs.rmSync(path.join(projectDir, 'database'), { recursive: true });
+    }
   });
 
   const pasDoc = new FakeDocument(Uri.file(pasPath), 'pascal', fs.readFileSync(pasPath, 'utf8'));

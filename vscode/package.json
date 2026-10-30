@@ -2,7 +2,7 @@
   "name": "pastel-vscode",
   "displayName": "Pastel",
   "description": "Build cross-platform apps in Object Pascal with Pastel: run, build, live form preview, .pform completion and checks.",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "publisher": "pastel",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -168,6 +168,27 @@
         "command": "pastel.formatAll",
         "title": "Format All Files",
         "category": "Pastel"
+      },
+      {
+        "command": "pastel.sendRequest",
+        "title": "Send Request",
+        "category": "Pastel",
+        "icon": "$(play)"
+      },
+      {
+        "command": "pastel.migrate",
+        "title": "Run Database Migrations",
+        "category": "Pastel"
+      },
+      {
+        "command": "pastel.migrateStatus",
+        "title": "Database Migration Status",
+        "category": "Pastel"
+      },
+      {
+        "command": "pastel.newMigration",
+        "title": "New Database Migration…",
+        "category": "Pastel"
       }
     ],
     "menus": {
@@ -240,6 +261,13 @@
           "command": "pastel.refreshTree",
           "when": "view == pastel.project",
           "group": "navigation@3"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "pastel.sendRequest",
+          "when": "view == pastel.project && viewItem == pastelRoute",
+          "group": "inline"
         }
       ]
     },
@@ -315,6 +343,11 @@
           "type": "boolean",
           "default": true,
           "markdownDescription": "Delphi-style keys in Pastel projects: **F9** run, **Ctrl+F9** build, **F12** switch between form and code, **Ctrl+Shift+Up/Down** jump between a method's declaration and body. Turn off to keep VS Code's own F9 (breakpoint) and F12 (go to definition)."
+        },
+        "pastel.serverUrl": {
+          "type": "string",
+          "default": "",
+          "description": "Address for Send Request, e.g. http://localhost:8080. Empty: localhost with [server] port from config.toml."
         }
       }
     },
@@ -422,7 +455,7 @@
   "scripts": {
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "test": "node ./out/test/unit.js && node ./out/test/edit.test.js && node ./out/test/designer.test.js && node ./out/test/pascal.test.js && node ./out/test/testparse.test.js",
+    "test": "node ./out/test/unit.js && node ./out/test/edit.test.js && node ./out/test/designer.test.js && node ./out/test/pascal.test.js && node ./out/test/testparse.test.js && node ./out/test/routes.test.js",
     "package": "vsce package --no-dependencies --allow-missing-repository",
     "test:integration": "node ./out/test/integration.js"
   },

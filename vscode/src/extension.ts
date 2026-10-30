@@ -13,6 +13,7 @@ import {
 import { FormPreview } from './preview';
 import { PascalIndex, registerNavigation, toggleDeclarationCommand } from './navigation';
 import { registerSidebar } from './sidebar';
+import { registerRequests } from './requests';
 
 let schema: Schema | undefined;
 let schemaLoading: Promise<Schema | undefined> | undefined;
@@ -36,6 +37,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
   updateProjectContext();
   registerSidebar(context);
+  registerRequests(context);
   registerNavigation(context, pascalIndex);
   loadSchema().then(sch => pascalIndex.build(sch?.frameworkDir));
   updateFormContext(vscode.window.activeTextEditor);

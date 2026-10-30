@@ -326,6 +326,10 @@ expect "bad settings stop the start with a reason" '[ "$code" = 1 ] && echo "$ou
 # --- web API with a database, migrations ---
 cd "$WORK"
 "$PASTEL" new api todo-api >/dev/null
+set +e; out="$("$PASTEL" new service inbox 2>&1)"; code=$?; set -e
+expect "a name that clashes with a unit is refused" '[ "$code" != 0 ] && echo "$out" | grep -q "also the name of a unit" && [ ! -d inbox ]'
+"$PASTEL" new api tasks >/dev/null
+expect "an api called tasks builds"      '(cd tasks && "$PASTEL" build >/dev/null)'
 cd todo-api
 out="$("$PASTEL" test 2>&1)"
 expect "api template tests pass"         'echo "$out" | grep -q "5 passed"'

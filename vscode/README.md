@@ -23,9 +23,11 @@ Build cross-platform apps in Object Pascal with Pastel. This extension connects 
 - `Ctrl+click` on an event handler (`OnClick = SaveClick`) to open its code
 - the outline of the form in the Outline view, and snippets: `button`, `edit`, `label`, `row`, `column`, `card`
 
-**New projects.** *Pastel: New Project…* creates an app or console project and opens it. New projects come with VS Code settings, so `Ctrl+Shift+B` builds and `F5` starts debugging.
+**New projects.** *Pastel: New Project…* creates an app, console, service, API or library project and opens it. New projects come with VS Code settings, so `Ctrl+Shift+B` builds and `F5` starts debugging.
 
 **Pastel panel.** The palette icon in the activity bar opens the Pastel panel: Run and Build buttons, your forms (click one to open the designer; expand it for its `.pform` and `.pas` files), the other source files and the project settings.
+
+**Web APIs and services.** In service and API projects the Pastel panel lists the routes (click one to open its code), the jobs and the database migrations, with *Run Migrations*, *Migration Status* and *New Migration…*. Above every route in the code is **▶ Send**: it sends a request to the running server (start it with F9), asks for path parameters and a JSON body, adds the API key from `config.toml`, and shows the answer in the *Pastel Requests* output. The same is in the panel (the ▶ next to a route) and as *Pastel: Send Request*.
 
 **Pascal code.** `.pas` files get syntax colors, an outline (classes, methods), symbol search across your project and the Pastel framework (`Ctrl+T`), and go to definition: `Ctrl+click` a class or method name, or a unit in a `uses` clause to open that unit.
 
@@ -47,3 +49,4 @@ These replace VS Code's own F9 (toggle breakpoint) and F12 (go to definition) in
 | `pastel.path` | `pastel` | Path to the `pastel` program |
 | `pastel.checkWhileTyping` | `true` | Check `.pform` files while you type |
 | `pastel.delphiShortcuts` | `true` | F9, Ctrl+F9, F12 and Ctrl+Shift+Up/Down as in Delphi |
+| `pastel.serverUrl` | (empty) | Address for Send Request; empty: `localhost` with `[server] port` from `config.toml` |

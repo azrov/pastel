@@ -4,7 +4,7 @@
 
 Write your app once in Object Pascal and run it on desktop, mobile, server and Raspberry Pi. Pastel is built on top of the [Free Pascal](https://www.freepascal.org/) compiler and brings a modern developer experience: a simple command-line tool, clear project conventions, forms with hot reload, and a UI drawn by Pastel itself so it looks the same everywhere.
 
-> ⚠️ **Status: early development (0.2).** Working today: the `pastel` command-line tool and libraries for console programs on Linux, Windows and Raspberry Pi (arguments, files, HTTP, JSON, settings, logging, tests, packaging) and a first version of the UI framework (windows, forms from `.pform` files, buttons, edits, labels, flexbox-style layout, hot reload) on Linux and Windows. Ideas, feedback and contributions are very welcome.
+> ⚠️ **Status: early development (0.3).** Working today: the `pastel` command-line tool and libraries for console programs on Linux, Windows and Raspberry Pi (arguments, files, HTTP, JSON, settings, logging, tests, packaging), Linux services and REST APIs (web server, JWT and API keys, SQLite/PostgreSQL/MySQL with migrations, background workers, `.deb` and Docker packages) and a first version of the UI framework (windows, forms from `.pform` files, buttons, edits, labels, flexbox-style layout, hot reload) on Linux and Windows. Ideas, feedback and contributions are very welcome.
 
 ## Why Pastel?
 
@@ -72,7 +72,7 @@ Building for another platform needs the Free Pascal cross-compiler for it. `past
 | `pastel new console <name>` | Create a console project |
 | `pastel new lib <name>` | Create a library that other projects use ([docs/workflow.md](docs/workflow.md)) |
 | `pastel new service <name>` | Create a program that keeps running, with jobs and a systemd unit ([docs/services.md](docs/services.md)); web APIs: [docs/web.md](docs/web.md) |
-| `pastel new api <name>` | Create a web API with a database: models, controllers, migrations, tests ([docs/web.md](docs/web.md), [docs/database.md](docs/database.md)) |
+| `pastel new api <name>` | Create a web API with a database: models, controllers, migrations, tests ([guide](docs/guide-api.md), [docs/web.md](docs/web.md), [docs/database.md](docs/database.md)) |
 | `pastel migrate` | Run the database migrations; `status`, `new <name>` |
 | `pastel package deb` / `docker` | A Debian package with the systemd unit, or a container image ([docs/deploy.md](docs/deploy.md)) |
 | `pastel build` | Compile (`-t <platform>`, `-r` release, `--all`, `-v` verbose) |

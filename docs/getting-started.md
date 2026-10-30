@@ -160,6 +160,7 @@ switches between form and code. See [forms.md](forms.md).
 | | |
 |---|---|
 | [guide-cli.md](guide-cli.md) | Writing a command-line tool, step by step |
+| [guide-api.md](guide-api.md) | A REST API with a database, from start to a server |
 | [console.md](console.md) | Arguments, colors, tables, questions |
 | [data.md](data.md) | JSON, settings, logging |
 | [system.md](system.md) | Files, other programs, HTTP |

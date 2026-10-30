@@ -1025,7 +1025,7 @@ begin
     '  src/models       the data: SQL and the database',
     '  src/controllers  the HTTP side: routes, checks, JSON answers',
     '  database/migrations  the tables, one change per file }',
-    'program {{ident}};',
+    'program {{ident}}_api;     { not just {{ident}}: a project called "tasks" would clash with the unit Tasks }',
     '',
     '{$mode objfpc}{$H+}',
     '',
@@ -1632,6 +1632,25 @@ begin
   ], Name, Ident));
 end;
 
+{ the name of a unit the template makes, when the program would have that name too }
+function ClashingUnit(const Kind, Ident: string): string;
+var
+  L: string;
+begin
+  Result := '';
+  L := LowerCase(Ident);
+  if (Kind = 'lib') or (Kind = 'api') then
+    Exit;                 { a library has no program; the API's program is <name>_api }
+  if L = 'appinfo' then
+    Result := 'AppInfo'
+  else if (Kind = 'console') and (L = 'greeting') then
+    Result := 'Greeting'
+  else if (Kind = 'service') and (L = 'inbox') then
+    Result := 'Inbox'
+  else if (Kind = 'app') and (L = 'home') then
+    Result := 'Home';
+end;
+
 function CreateProject(const Kind, Name, ParentDir: string): Boolean;
 var
   Dir, Ident: string;
@@ -1651,6 +1670,13 @@ begin
     Exit;
   end;
 
+  if ClashingUnit(Kind, StringReplace(Name, '-', '_', [rfReplaceAll])) <> '' then
+  begin
+    Fail(Format('"%s" is also the name of a unit in the new project (%s), so Pascal cannot tell them apart',
+      [Name, ClashingUnit(Kind, StringReplace(Name, '-', '_', [rfReplaceAll]))]));
+    Hint(Format('choose another name, e.g. my-%s', [Name]));
+    Exit;
+  end;
   Dir := IncludeTrailingPathDelimiter(ParentDir) + Name;
   if DirectoryExists(Dir) and not DirIsEmpty(Dir) then
   begin

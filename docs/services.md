@@ -78,6 +78,55 @@ A job can be a method of the service (`@Service.Sync`) or a plain procedure.
 - The next run is planned from when a job starts, so a slow job does not pile up runs.
 - A long job should check `IsStopping` now and then, and wait with `Wait(Ms)` instead of `Sleep`: `Wait` returns `False` at once when the service is told to stop.
 
+## Background work: `Pastel.Workers`
+
+Work that should not hold up a web request or the jobs (sending mail,
+resizing images, calling a slow service) goes to a pool of worker threads:
+
+```pascal
+uses Pastel.Workers, Pastel.Json, fpjson;
+
+procedure TApi.Started;
+begin
+  FMail := TWorkerPool.Create('mail', 4, @SendMail);    { 4 threads }
+  inherited Started;
+end;
+
+procedure TApi.Stopping;
+begin
+  inherited Stopping;          { the web server first: no new work }
+  FMail.Free;                  { finishes what is queued, then stops }
+end;
+
+procedure TApi.Register(Req: TWebRequest; Res: TWebResponse);
+begin
+  ...
+  FMail.Submit(JObject(['to', Email, 'template', 'welcome']).AsJSON);
+  Res.Json(User, 201);         { answers at once; the mail goes out in the background }
+end;
+
+procedure TApi.SendMail(const Msg: string);    { in a worker thread }
+var
+  D: TJSONData;
+begin
+  D := GetJSON(Msg);
+  try
+    ...
+  finally
+    D.Free;
+  end;
+end;
+```
+
+- Messages are strings (JSON is handy), so threads never share objects by accident.
+- An exception in a handler is logged (`worker mail: ...`) and counted in `Failed`; the worker goes on.
+- `Submit` returns `False` after `Stop`, and when the queue is full: `TWorkerPool.Create('mail', 4, @SendMail, 1000)` keeps at most 1000 waiting.
+- `Pending`, `Processed` and `Failed` tell how it goes (for `/health` or the log); `WaitIdle` waits until everything is done (tests).
+- `Stop` (and `Free`) waits for the queued work; after 30 s it logs a warning and keeps waiting. Give systemd enough time: `TimeoutStopSec=` in the unit.
+- Work in the queue is in memory: it is lost when the program is killed. For work that must survive a crash, store it in the database first and let a job pick it up.
+
+`TMessageQueue` alone passes messages between any threads: `Push`, `Pop(Msg, TimeoutMs)` and `Close`.
+
 ## Stopping, reloading
 
 | | |

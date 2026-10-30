@@ -76,7 +76,7 @@ Goal: writing a command-line tool in Pastel is pleasant from the first line to t
 
 ---
 
-## 0.3 — Linux services (next)
+## 0.3 — Linux services (done)
 
 Goal: a REST API with a database, deployed on a Linux server as a systemd service, built only with Pastel.
 
@@ -92,7 +92,7 @@ Goal: a REST API with a database, deployed on a Linux server as a systemd servic
 - [x] Service life cycle: start, stop on SIGTERM/SIGINT, reload config on SIGHUP; systemd notify and watchdog
 - [x] Logging in a form journald understands; optional JSON logs
 - [x] Timers and scheduled jobs (every N seconds, daily at a time)
-- [ ] Background worker threads and safe message passing between them
+- [x] Background worker threads and safe message passing between them: `Pastel.Workers`
 - [x] HTTP server: routing (`GET /users/:id`), JSON requests and responses, static files
 - [x] Middleware: logging, CORS, authentication (API keys, JWT), rate limits
 - [x] Validation of request data with clear error responses
@@ -104,17 +104,17 @@ Goal: a REST API with a database, deployed on a Linux server as a systemd servic
 - [x] HTTPS (OpenSSL) or a guide for running behind nginx/caddy: `docs/deploy.md`
 
 **VS Code**
-- [ ] Project explorer shows routes, migrations and services for API projects
-- [ ] "Send request" for routes (try an endpoint from the editor)
+- [x] Project explorer shows routes, jobs and migrations for service and API projects
+- [x] "Send request" for routes (try an endpoint from the editor): CodeLens above routes, button in the panel
 
 **Docs**
-- [ ] Guide: build a REST API (with a database)
+- [x] Guide: build a REST API (with a database): `docs/guide-api.md`
 - [x] Guide: deploy to a Linux server (systemd, .deb, Docker, nginx): `docs/deploy.md`
 - [x] Example: a to-do REST API with SQLite and PostgreSQL (what `pastel new api` makes; tested on MariaDB too)
 
 ---
 
-## 0.4 — Code intelligence
+## 0.4 — Code intelligence (next)
 
 Goal: VS Code understands Pascal like Lazarus/Delphi do.
 
