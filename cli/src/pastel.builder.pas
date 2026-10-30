@@ -625,7 +625,7 @@ begin
 
     { threads, UTF-8 strings and console on every platform }
     if Framework <> '' then
-      Args.Add('-FaPastel.Startup');
+      Args.Add('-FaPastel.Startup,Pastel.ErrorExit');
     Args.Add('-dPASTEL');
     if Opts.Release then
     begin

@@ -121,7 +121,7 @@ implementation
 
 uses
   {$IFDEF UNIX}BaseUnix,{$ENDIF}
-  Sockets, DynLibs, ctypes, base64, openssl, fpopenssl, Pastel.Json;
+  Sockets, DynLibs, ctypes, base64, openssl, fpopenssl, Pastel.Json, Pastel.Files;
 
 type
   TPastelSSLHandler = class;
@@ -839,7 +839,7 @@ var
 begin
   Url := MakeUrl(Path, []);
   if ExtractFileDir(ExpandFileName(FileName)) <> '' then
-    ForceDirectories(ExtractFileDir(ExpandFileName(FileName)));
+    EnsureDir(ExtractFileDir(ExpandFileName(FileName)));
   Tmp := FileName + '.part';
   F := TFileStream.Create(Tmp, fmCreate);
   try

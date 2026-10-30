@@ -272,6 +272,7 @@ async function newProject(): Promise<void> {
   const kind = await vscode.window.showQuickPick([
     { label: 'app', description: 'Desktop app with a window and forms' },
     { label: 'console', description: 'Terminal program' },
+    { label: 'service', description: 'Keeps running: jobs, settings, systemd (a server program)' },
     { label: 'lib', description: 'Units for other projects (a library)' },
   ], { placeHolder: 'What kind of project?' });
   if (!kind) {

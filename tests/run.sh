@@ -268,6 +268,45 @@ set +e; out="$("$PASTEL" build 2>&1)"; set -e
 expect "an unknown profile is explained"    'echo "$out" | grep -q "unknown profile \[profile.fast\]"'
 mv toml.bak pastel.toml; mv main.bak src/main.pas; rm -rf notes unpacked dist
 
+# --- services ---
+cd "$WORK"
+"$PASTEL" new service file-watch >/dev/null
+expect "new service writes a systemd unit" 'grep -q "^Type=notify$" file-watch/deploy/file-watch.service && grep -q "FILE_WATCH_CHECK_INTERVAL" file-watch/deploy/file-watch.service'
+out="$(cd file-watch && "$PASTEL" test 2>&1)"
+expect "service template tests pass"     'echo "$out" | grep -q "4 passed"'
+cd file-watch && "$PASTEL" build >/dev/null
+python3 - "$WORK/notify.sock" "$WORK/notify.log" <<'PY' &
+import socket, sys, os
+s = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+s.bind(sys.argv[1])
+s.settimeout(20)
+with open(sys.argv[2], 'w', buffering=1) as out:
+    try:
+        while True:
+            out.write(s.recv(4096).decode().replace('\n', ' ') + '\n')
+    except Exception:
+        pass
+PY
+listener=$!
+for i in $(seq 50); do [ -S "$WORK/notify.sock" ] && break; sleep 0.1; done
+NOTIFY_SOCKET="$WORK/notify.sock" ./build/*/debug/file-watch > service.log 2>&1 &
+svc=$!
+for i in $(seq 50); do grep -q "is running" service.log && break; sleep 0.1; done
+echo hello > inbox/first.txt
+for i in $(seq 50); do grep -q "new file file=first.txt" service.log && break; sleep 0.1; done
+kill -HUP $svc
+for i in $(seq 50); do grep -q "settings reloaded" service.log && break; sleep 0.1; done
+kill -TERM $svc; set +e; wait $svc; code=$?; set -e
+kill $listener 2>/dev/null || true
+expect "service sees new files"          'grep -q "new file file=first.txt size=\"6 B\"" service.log'
+expect "SIGHUP reloads the settings"     'grep -q "settings reloaded" service.log'
+expect "SIGTERM stops it cleanly"        '[ "$code" = 0 ] && grep -q "file-watch stopped" service.log'
+expect "systemd hears ready, reload, stop" 'grep -q "^READY=1" "$WORK/notify.log" && grep -q "^RELOADING=1 MONOTONIC_USEC=" "$WORK/notify.log" && grep -q "^STOPPING=1" "$WORK/notify.log"'
+sed -i 's/interval = 2 /interval = "often" /' config.toml
+set +e; out="$(./build/*/debug/file-watch 2>&1)"; code=$?; set -e
+expect "bad settings stop the start with a reason" '[ "$code" = 1 ] && echo "$out" | grep -q "check.interval"'
+cd "$WORK/demo-app"
+
 # --- pastel run --watch ---
 cp src/main.pas main.bak
 NO_COLOR=1 "$PASTEL" run --watch -- Watcher > watch.log 2>&1 &

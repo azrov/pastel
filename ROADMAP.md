@@ -81,17 +81,17 @@ Goal: writing a command-line tool in Pastel is pleasant from the first line to t
 Goal: a REST API with a database, deployed on a Linux server as a systemd service, built only with Pastel.
 
 **Tool**
-- [ ] `pastel new service`: a long-running program with configuration, logging and clean shutdown
+- [x] `pastel new service`: a long-running program with configuration, logging and clean shutdown (with a systemd unit)
 - [ ] `pastel new api`: a web API project with routes and controllers (Laravel-like structure)
 - [ ] `pastel package deb`: a `.deb` with the program, its config file and a systemd unit
 - [ ] `pastel package docker`: a small container image (static binary, no base OS needed)
 - [ ] `pastel migrate`: run database migrations (`database/migrations/`)
-- [ ] `pastel run` restarts the service on code changes (with `--watch`)
+- [x] `pastel run` restarts the service on code changes (with `--watch`)
 
 **Library (`Pastel.Service`, `Pastel.Web`, `Pastel.Db`)**
-- [ ] Service life cycle: start, stop on SIGTERM/SIGINT, reload config on SIGHUP
+- [x] Service life cycle: start, stop on SIGTERM/SIGINT, reload config on SIGHUP; systemd notify and watchdog
 - [x] Logging in a form journald understands; optional JSON logs
-- [ ] Timers and scheduled jobs (every N seconds, daily at a time)
+- [x] Timers and scheduled jobs (every N seconds, daily at a time)
 - [ ] Background worker threads and safe message passing between them
 - [ ] HTTP server: routing (`GET /users/:id`), JSON requests and responses, static files
 - [ ] Middleware: logging, CORS, authentication (API keys, JWT), rate limits
@@ -108,7 +108,7 @@ Goal: a REST API with a database, deployed on a Linux server as a systemd servic
 
 **Docs**
 - [ ] Guide: build a REST API (with a database)
-- [ ] Guide: deploy to a Linux server (systemd, .deb, Docker, nginx)
+- [ ] Guide: deploy to a Linux server (systemd, .deb, Docker, nginx); services and systemd so far: `docs/services.md`
 - [ ] Example: a to-do REST API with SQLite and PostgreSQL
 
 ---

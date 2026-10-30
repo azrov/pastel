@@ -101,7 +101,7 @@ function LevelName(Level: TLogLevel): string;
 implementation
 
 uses
-  {$IFDEF UNIX}termio,{$ENDIF} DateUtils;
+  {$IFDEF UNIX}termio,{$ENDIF} DateUtils, Pastel.Files;
 
 function LevelName(Level: TLogLevel): string;
 const
@@ -438,7 +438,7 @@ begin
   FFileName := ExpandFileName(FileName);
   FMaxBytes := Int64(MaxMB) * 1024 * 1024;
   FKeep := Keep;
-  ForceDirectories(ExtractFileDir(FFileName));
+  EnsureDir(ExtractFileDir(FFileName));
 end;
 
 initialization

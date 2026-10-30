@@ -7,7 +7,7 @@ unit Pastel.Templates;
 interface
 
 const
-  ProjectKinds: array[0..3] of string = ('console', 'app', 'lib', 'server');
+  ProjectKinds: array[0..4] of string = ('console', 'app', 'lib', 'service', 'server');
 
 function CreateProject(const Kind, Name, ParentDir: string): Boolean;
 
@@ -321,6 +321,415 @@ begin
   WriteText(Dir + 'README.md', StringReplace(Content, '{{unit}}', UnitName, [rfReplaceAll]));
 end;
 
+{ A service: keeps running, settings, jobs, systemd. Generated from
+  template files; see docs/services.md. }
+procedure WriteServiceProject(const Dir, Name, Ident: string);
+
+  function Sub(const S: string): string;
+  begin
+    Result := StringReplace(S, '{{class}}', UnitNameFor(Name), [rfReplaceAll]);
+    Result := StringReplace(Result, '{{ENV}}', UpperCase(StringReplace(Name, '-', '_', [rfReplaceAll])), [rfReplaceAll]);
+  end;
+
+begin
+  WriteText(Dir + 'pastel.toml', Sub(Fill([
+    '# Pastel project file',
+    '',
+    '[project]',
+    'name = "{{name}}"',
+    'version = "0.1.0"',
+    'type = "service"          # a program that keeps running (see docs/services.md)',
+    '',
+    '[build]',
+    'main = "src/main.pas"',
+    'mode = "objfpc"           # objfpc or delphi',
+    'defines = []',
+    '',
+    '[targets]',
+    '# Platforms built by "pastel build --all" and "pastel package --all"',
+    'platforms = ["linux", "linux-arm64"]',
+    '',
+    '[package]',
+    'include = ["config.example.toml", "deploy"]'
+  ], Name, Ident)));
+
+  WriteText(Dir + 'config.toml', Sub(Fill([
+    '# Settings while developing ("pastel run" reads ./config.toml).',
+    '# On a server the service reads /etc/{{name}}/config.toml instead (see',
+    '# config.example.toml), and every setting can come from an environment',
+    '# variable too: check.interval -> {{ENV}}_CHECK_INTERVAL.',
+    '',
+    '[inbox]',
+    'folder = "inbox"        # put files here and watch the log',
+    '',
+    '[check]',
+    'interval = 2            # seconds',
+    '',
+    '[report]',
+    'time = "23:55"          # the daily summary',
+    '',
+    '[log]',
+    'level = "info"          # debug, info, warn, error'
+  ], Name, Ident)));
+
+  WriteText(Dir + 'config.example.toml', Sub(Fill([
+    '# {{name}} settings. Copy to /etc/{{name}}/config.toml on the server;',
+    '# "sudo systemctl reload {{name}}" applies changes without a restart.',
+    '',
+    '[inbox]',
+    'folder = "inbox"        # relative to /var/lib/{{name}}',
+    '',
+    '[check]',
+    'interval = 10           # seconds',
+    '',
+    '[report]',
+    'time = "23:55"',
+    '',
+    '[log]',
+    'level = "info"',
+    '# format = "json"       # one JSON object per line, for log collectors'
+  ], Name, Ident)));
+
+  WriteText(Dir + 'src' + PathDelim + 'main.pas', Sub(Fill([
+    '{ {{name}} - a service: it keeps running, watches the inbox folder and',
+    '  logs every new file, with a summary once a day.',
+    '  "pastel run" starts it; Ctrl+C stops it. On a server it runs under',
+    '  systemd: see deploy/README.md. }',
+    'program {{ident}};',
+    '',
+    '{$mode objfpc}{$H+}',
+    '',
+    'uses',
+    '  SysUtils, Pastel.Service, Pastel.Config, Pastel.Log, Pastel.Files, AppInfo, Inbox;',
+    '',
+    'type',
+    '  T{{class}}Service = class(TService)',
+    '  private',
+    '    FInbox: TInbox;',
+    '    FToday: Integer;',
+    '  protected',
+    '    procedure Configure(C: TConfig); override;',
+    '    procedure Started; override;',
+    '    procedure Stopping; override;',
+    '    procedure Reloaded; override;',
+    '  public',
+    '    procedure CheckInbox;',
+    '    procedure DailyReport;',
+    '  end;',
+    '',
+    '{ defaults, used when config.toml does not say otherwise }',
+    'procedure T{{class}}Service.Configure(C: TConfig);',
+    'begin',
+    '  C.SetDefault(''inbox.folder'', ''inbox'');',
+    '  C.SetDefault(''check.interval'', ''10'');',
+    '  C.SetDefault(''report.time'', ''23:55'');',
+    'end;',
+    '',
+    'procedure T{{class}}Service.Started;',
+    'begin',
+    '  FInbox := TInbox.Create(ExpandFileName(Config.Get(''inbox.folder'')));',
+    '  Log.Info(''watching %s'', [FInbox.Folder]);',
+    'end;',
+    '',
+    'procedure T{{class}}Service.Stopping;',
+    'begin',
+    '  FreeAndNil(FInbox);',
+    'end;',
+    '',
+    '{ "systemctl reload": the settings were read again }',
+    'procedure T{{class}}Service.Reloaded;',
+    'begin',
+    '  if ExpandFileName(Config.Get(''inbox.folder'')) <> FInbox.Folder then',
+    '  begin',
+    '    FInbox.Free;',
+    '    FInbox := TInbox.Create(ExpandFileName(Config.Get(''inbox.folder'')));',
+    '    Log.Info(''now watching %s'', [FInbox.Folder]);',
+    '  end;',
+    'end;',
+    '',
+    'procedure T{{class}}Service.CheckInbox;',
+    'var',
+    '  F: string;',
+    'begin',
+    '  for F in FInbox.NewFiles do',
+    '  begin',
+    '    Log.Fields([''file'', ExtractFileName(F), ''size'', FormatSize(FileSize(F))]).Info(''new file'');',
+    '    Inc(FToday);',
+    '  end;',
+    'end;',
+    '',
+    'procedure T{{class}}Service.DailyReport;',
+    'begin',
+    '  Log.Info(''%d new file(s) today'', [FToday]);',
+    '  FToday := 0;',
+    'end;',
+    '',
+    'var',
+    '  Service: T{{class}}Service;',
+    'begin',
+    '  Service := T{{class}}Service.Create(AppName, AppVersion);',
+    '  try',
+    '    Service.Every(Service.Config.GetFloat(''check.interval''), @Service.CheckInbox, ''check inbox'', True);',
+    '    Service.DailyAt(Service.Config.Get(''report.time''), @Service.DailyReport, ''daily report'');',
+    '    ExitCode := Service.Run;',
+    '  finally',
+    '    Service.Free;',
+    '  end;',
+    'end.'
+  ], Name, Ident)));
+
+  WriteText(Dir + 'src' + PathDelim + 'services' + PathDelim + 'inbox.pas', Sub(Fill([
+    '{ The work of the service, kept apart from the service itself so it can be',
+    '  tested: which files in a folder are new since the last look. }',
+    'unit Inbox;',
+    '',
+    '{$mode objfpc}{$H+}',
+    '',
+    'interface',
+    '',
+    'uses',
+    '  Classes, SysUtils;',
+    '',
+    'type',
+    '  TInbox = class',
+    '  private',
+    '    FFolder: string;',
+    '    FSeen: TStringList;',
+    '  public',
+    '    { Creates the folder when it does not exist. }',
+    '    constructor Create(const AFolder: string);',
+    '    destructor Destroy; override;',
+    '    { Files that appeared since the last call (all of them the first time). }',
+    '    function NewFiles: TStringArray;',
+    '    property Folder: string read FFolder;',
+    '  end;',
+    '',
+    'implementation',
+    '',
+    'uses',
+    '  Pastel.Files;',
+    '',
+    'constructor TInbox.Create(const AFolder: string);',
+    'begin',
+    '  inherited Create;',
+    '  FFolder := ExcludeTrailingPathDelimiter(AFolder);',
+    '  EnsureDir(FFolder);',
+    '  FSeen := TStringList.Create;',
+    '  FSeen.Sorted := True;',
+    'end;',
+    '',
+    'destructor TInbox.Destroy;',
+    'begin',
+    '  FSeen.Free;',
+    '  inherited Destroy;',
+    'end;',
+    '',
+    'function TInbox.NewFiles: TStringArray;',
+    'var',
+    '  Now: TStringArray;',
+    '  F: string;',
+    '  Current: TStringList;',
+    'begin',
+    '  Result := nil;',
+    '  Now := ListFiles(FFolder);',
+    '  Current := TStringList.Create;',
+    '  try',
+    '    Current.Sorted := True;',
+    '    for F in Now do',
+    '    begin',
+    '      Current.Add(F);',
+    '      if FSeen.IndexOf(F) < 0 then',
+    '      begin',
+    '        SetLength(Result, Length(Result) + 1);',
+    '        Result[High(Result)] := F;',
+    '      end;',
+    '    end;',
+    '    { forget deleted files: if one comes back, it is new again }',
+    '    FSeen.Assign(Current);',
+    '  finally',
+    '    Current.Free;',
+    '  end;',
+    'end;',
+    '',
+    'end.'
+  ], Name, Ident)));
+
+  WriteText(Dir + 'tests' + PathDelim + 'inbox_test.pas', Sub(Fill([
+    '{ Tests for src/services/inbox.pas. Run them with: pastel test }',
+    'unit Inbox_Test;',
+    '',
+    '{$mode objfpc}{$H+}',
+    '',
+    'interface',
+    '',
+    'uses',
+    '  SysUtils, Pastel.Testing, Pastel.Files, Inbox;',
+    '',
+    'type',
+    '  TInboxTests = class(TTestSuite)',
+    '  private',
+    '    Dir: string;',
+    '    Box: TInbox;',
+    '  public',
+    '    procedure SetUp; override;',
+    '    procedure TearDown; override;',
+    '  published',
+    '    procedure CreatesTheFolder;',
+    '    procedure FirstLookFindsEverything;',
+    '    procedure OnlyNewFilesAfterThat;',
+    '    procedure DeletedAndBackIsNew;',
+    '  end;',
+    '',
+    'implementation',
+    '',
+    'procedure TInboxTests.SetUp;',
+    'begin',
+    '  Dir := MakeTempDir(''inbox-test'');',
+    '  Box := TInbox.Create(Dir + ''in'');',
+    'end;',
+    '',
+    'procedure TInboxTests.TearDown;',
+    'begin',
+    '  Box.Free;',
+    '  DeleteDir(Dir);',
+    'end;',
+    '',
+    'procedure TInboxTests.CreatesTheFolder;',
+    'begin',
+    '  AssertTrue(DirectoryExists(Dir + ''in''));',
+    'end;',
+    '',
+    'procedure TInboxTests.FirstLookFindsEverything;',
+    'begin',
+    '  WriteText(Dir + ''in/a.txt'', ''a'');',
+    '  WriteText(Dir + ''in/b.txt'', ''b'');',
+    '  AssertEquals(2, Length(Box.NewFiles));',
+    'end;',
+    '',
+    'procedure TInboxTests.OnlyNewFilesAfterThat;',
+    'var',
+    '  New: TStringArray;',
+    'begin',
+    '  WriteText(Dir + ''in/a.txt'', ''a'');',
+    '  Box.NewFiles;',
+    '  AssertEquals(0, Length(Box.NewFiles));',
+    '  WriteText(Dir + ''in/c.txt'', ''c'');',
+    '  New := Box.NewFiles;',
+    '  AssertEquals(1, Length(New));',
+    '  AssertEquals(''c.txt'', ExtractFileName(New[0]));',
+    'end;',
+    '',
+    'procedure TInboxTests.DeletedAndBackIsNew;',
+    'begin',
+    '  WriteText(Dir + ''in/a.txt'', ''a'');',
+    '  Box.NewFiles;',
+    '  DeleteFileIfExists(Dir + ''in/a.txt'');',
+    '  AssertEquals(0, Length(Box.NewFiles));',
+    '  WriteText(Dir + ''in/a.txt'', ''again'');',
+    '  AssertEquals(1, Length(Box.NewFiles));',
+    'end;',
+    '',
+    'initialization',
+    '  RegisterTests(TInboxTests);',
+    'end.'
+  ], Name, Ident)));
+
+  WriteText(Dir + 'deploy' + PathDelim + Name + '.service', Sub(Fill([
+    '# systemd unit for {{name}}. Install: see deploy/README.md',
+    '[Unit]',
+    'Description={{name}}',
+    'After=network-online.target',
+    'Wants=network-online.target',
+    '',
+    '[Service]',
+    '# Pastel services tell systemd when they are ready',
+    'Type=notify',
+    'ExecStart=/opt/{{name}}/{{name}}',
+    'ExecReload=/bin/kill -HUP $MAINPID',
+    '# its own user, created by systemd; files go to /var/lib/{{name}}',
+    'DynamicUser=yes',
+    'StateDirectory={{name}}',
+    'WorkingDirectory=/var/lib/{{name}}',
+    'Restart=on-failure',
+    'RestartSec=2',
+    '# Settings can also be given here instead of /etc/{{name}}/config.toml:',
+    '#Environment={{ENV}}_CHECK_INTERVAL=30',
+    '# Restart it when it hangs (a job that takes longer than this counts as hanging):',
+    '#WatchdogSec=60',
+    'NoNewPrivileges=yes',
+    'ProtectSystem=strict',
+    'ProtectHome=yes',
+    'PrivateTmp=yes',
+    '',
+    '[Install]',
+    'WantedBy=multi-user.target'
+  ], Name, Ident)));
+
+  WriteText(Dir + 'deploy' + PathDelim + 'README.md', Sub(Fill([
+    '# Running {{name}} on a Linux server',
+    '',
+    'On your computer:',
+    '',
+    '```sh',
+    'pastel package                          # dist/{{name}}-0.1.0-linux.tar.gz',
+    'pastel package --target linux-arm64     # for a Raspberry Pi or an ARM server',
+    'scp dist/{{name}}-0.1.0-linux.tar.gz you@server:',
+    '```',
+    '',
+    'On the server:',
+    '',
+    '```sh',
+    'tar -xzf {{name}}-0.1.0-linux.tar.gz',
+    'sudo mv {{name}}-0.1.0-linux /opt/{{name}}',
+    'sudo mkdir -p /etc/{{name}}',
+    'sudo cp /opt/{{name}}/config.example.toml /etc/{{name}}/config.toml',
+    'sudo cp /opt/{{name}}/deploy/{{name}}.service /etc/systemd/system/',
+    'sudo systemctl daemon-reload',
+    'sudo systemctl enable --now {{name}}',
+    '```',
+    '',
+    'Then:',
+    '',
+    '```sh',
+    'systemctl status {{name}}               # is it running?',
+    'journalctl -u {{name}} -f               # its log, live',
+    'journalctl -u {{name}} -p err           # only errors',
+    'sudo systemctl reload {{name}}          # after editing /etc/{{name}}/config.toml',
+    'sudo systemctl restart {{name}}         # after installing a new version',
+    '```',
+    '',
+    'The inbox folder is `/var/lib/{{name}}/inbox`.'
+  ], Name, Ident)));
+
+  WriteText(Dir + 'README.md', Sub(Fill([
+    '# {{name}}',
+    '',
+    'A service made with Pastel: a program that keeps running. It watches a',
+    'folder and logs every new file, with a summary once a day.',
+    '',
+    '```',
+    'pastel run              # runs until Ctrl+C; put files into inbox/ and watch the log',
+    'pastel run --watch      # restarts it whenever you save a file',
+    'pastel test',
+    'pastel package          # for the server; see deploy/README.md',
+    '```',
+    '',
+    '- `src/main.pas`: the service: settings, jobs, start and stop',
+    '- `src/services/inbox.pas`: its work, with tests in `tests/`',
+    '- `config.toml`: settings while developing',
+    '- `deploy/`: the systemd unit and how to install it on a server'
+  ], Name, Ident)));
+
+  WriteText(Dir + '.gitignore', Sub(Fill([
+    'build/',
+    'dist/',
+    'data/',
+    'inbox/',
+    '*.o',
+    '*.ppu'
+  ], Name, Ident)));
+end;
+
 procedure WriteAppProject(const Dir, Name, Ident: string);
 begin
   WriteText(Dir + 'pastel.toml', Fill([
@@ -567,16 +976,16 @@ begin
     Exit;
   end;
 
-  if Kind = 'server' then
+  if (Kind = 'server') or (Kind = 'api') then
   begin
-    Fail('"server" projects are not available yet');
-    Hint('this is coming in a later Pastel version; available now: console, app');
+    Fail(Format('"%s" projects are not available yet', [Kind]));
+    Hint('web APIs come in a later Pastel version; available now: console, app, lib, service');
     Exit;
   end;
-  if (Kind <> 'console') and (Kind <> 'app') and (Kind <> 'lib') then
+  if (Kind <> 'console') and (Kind <> 'app') and (Kind <> 'lib') and (Kind <> 'service') then
   begin
     Fail(Format('unknown project kind "%s"', [Kind]));
-    Hint('available kinds: console, app, lib');
+    Hint('available kinds: console, app, lib, service');
     Exit;
   end;
 
@@ -593,6 +1002,8 @@ begin
     WriteAppProject(Dir, Name, Ident)
   else if Kind = 'lib' then
     WriteLibProject(Dir, Name, Ident)
+  else if Kind = 'service' then
+    WriteServiceProject(Dir, Name, Ident)
   else
     WriteConsoleProject(Dir, Name, Ident);
   WriteVSCodeFiles(Dir, Name, Ident, Kind);

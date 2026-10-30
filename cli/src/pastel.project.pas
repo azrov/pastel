@@ -27,7 +27,7 @@ type
     Root: string;               { project folder, with trailing path delimiter }
     Name: string;
     Version: string;
-    Kind: string;               { console, app, server, lib }
+    Kind: string;               { console, app, service, lib }
     MainFile: string;           { relative to Root }
     Mode: string;               { objfpc or delphi }
     Defines: TStringArray;
@@ -183,8 +183,9 @@ begin
     if not IsValidProjectName(P.Name) then
       raise EProjectError.CreateFmt('%s: invalid project name "%s" (use letters, digits, "-" and "_")',
         [ProjectFileName, P.Name]);
-    if (P.Kind <> 'console') and (P.Kind <> 'app') and (P.Kind <> 'server') and (P.Kind <> 'lib') then
-      raise EProjectError.CreateFmt('%s: unknown project type "%s" (console, app, server or lib)',
+    if (P.Kind <> 'console') and (P.Kind <> 'app') and (P.Kind <> 'server') and (P.Kind <> 'lib') and
+       (P.Kind <> 'service') then
+      raise EProjectError.CreateFmt('%s: unknown project type "%s" (console, app, service or lib)',
         [ProjectFileName, P.Kind]);
     if (P.FormatIndent < 1) or (P.FormatIndent > 8) then
       raise EProjectError.CreateFmt('%s: [format] indent must be between 1 and 8', [ProjectFileName]);

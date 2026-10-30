@@ -289,9 +289,22 @@ begin
   end;
 end;
 
+{ Not ForceDirectories: on Windows it asks about "C:" without a backslash,
+  which means the current folder of drive C:, and fails when that folder
+  was deleted. }
 procedure EnsureDir(const Dir: string);
+var
+  D, Parent: string;
 begin
-  if (Dir <> '') and not DirectoryExists(Dir) and not ForceDirectories(Dir) then
+  if Dir = '' then
+    Exit;
+  D := ExcludeTrailingPathDelimiter(ExpandFileName(Dir));
+  if (D = '') or DirectoryExists(IncludeTrailingPathDelimiter(D)) then
+    Exit;
+  Parent := ExtractFileDir(D);
+  if (Parent <> '') and (Parent <> D) then
+    EnsureDir(Parent);
+  if not CreateDir(D) and not DirectoryExists(IncludeTrailingPathDelimiter(D)) then
     raise EFileError.CreateFmt('cannot create folder "%s"', [Dir]);
 end;
 

@@ -40,7 +40,7 @@ begin
   WriteLn(Bold('Usage:'), ' pastel <command> [options]');
   WriteLn;
   WriteLn(Bold('Commands:'));
-  WriteLn('  new <kind> <name>    Create a new project (kinds: console, app, lib)');
+  WriteLn('  new <kind> <name>    Create a new project (kinds: console, app, lib, service)');
   WriteLn('  build                Compile the project');
   WriteLn('  run [-- args]        Compile and run on this computer (--watch: again on every save)');
   WriteLn('  test [filter]        Run the tests in tests/ (only names matching filter; --watch, --json)');
