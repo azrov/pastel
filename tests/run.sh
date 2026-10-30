@@ -33,7 +33,7 @@ tail -1 "$WORK/framework.log"
 
 
 echo "== examples"
-for ex in dupfinder weather; do
+for ex in dupfinder weather notes-api; do
   rm -rf "$WORK/ex-$ex" && cp -r "examples/$ex" "$WORK/ex-$ex" && rm -rf "$WORK/ex-$ex/build"
   out="$(cd "$WORK/ex-$ex" && "$PASTEL" test 2>&1)" || { echo "$out"; exit 1; }
   echo "$ex: $(echo "$out" | tail -1)"
@@ -45,6 +45,23 @@ out="$(cd "$WORK/ex-dupfinder" && ./build/*/debug/dupfinder --json "$WORK/dups")
 expect "dupfinder writes JSON"           'echo "$out" | grep -q "\"wasted\" : 5"'
 set +e; out="$(cd "$WORK/ex-weather" && "$PASTEL" run 2>&1)"; code=$?; set -e
 expect "weather asks for a place"        '[ "$code" = 2 ] && echo "$out" | grep -q "which place?"'
+port=$((20000 + $$ % 20000))
+(cd "$WORK/ex-notes-api" && "$PASTEL" build >/dev/null && NOTES_API_SERVER_PORT=$port ./build/*/debug/notes-api > "$WORK/notes.log" 2>&1) &
+for i in $(seq 100); do grep -q "is running" "$WORK/notes.log" 2>/dev/null && break; sleep 0.1; done
+out="$(curl -s "localhost:$port/api/notes" -H 'Content-Type: application/json' -d '{"title": "Alışveriş", "text": "süt"}')"
+expect "notes-api creates a note"        'echo "$out" | grep -q "\"id\":1,\"title\":\"Alışveriş\""'
+out="$(curl -s -w ' %{http_code}' "localhost:$port/api/notes/1")"
+expect "notes-api finds it"              'echo "$out" | grep -q "süt.* 200$"'
+out="$(curl -s -w ' %{http_code}' "localhost:$port/api/notes" -d '{}')"
+expect "notes-api validates"             'echo "$out" | grep -q "title is required.* 422$"'
+out="$(curl -s -w ' %{http_code}' "localhost:$port/api/notes/abc")"
+expect "notes-api rejects bad ids"       'echo "$out" | grep -q " 400$"'
+expect "notes-api serves the page"       'curl -s "localhost:$port/" | grep -q "<title>Notes</title>"'
+expect "notes-api reports health"        'curl -s "localhost:$port/health" | grep -q "\"status\":\"ok\""'
+pkill -TERM -x notes-api || true
+for i in $(seq 50); do grep -q "notes-api stopped" "$WORK/notes.log" && break; sleep 0.1; done
+expect "notes-api stops cleanly"         'grep -q "notes-api stopped" "$WORK/notes.log"'
+expect "notes-api keeps the notes"       'grep -q "Alışveriş" "$WORK/ex-notes-api/data/notes.json"'
 echo "== end-to-end tests"
 cd "$WORK"
 

@@ -93,10 +93,10 @@ Goal: a REST API with a database, deployed on a Linux server as a systemd servic
 - [x] Logging in a form journald understands; optional JSON logs
 - [x] Timers and scheduled jobs (every N seconds, daily at a time)
 - [ ] Background worker threads and safe message passing between them
-- [ ] HTTP server: routing (`GET /users/:id`), JSON requests and responses, static files
+- [x] HTTP server: routing (`GET /users/:id`), JSON requests and responses, static files
 - [ ] Middleware: logging, CORS, authentication (API keys, JWT), rate limits
-- [ ] Validation of request data with clear error responses
-- [ ] Health check endpoint for monitoring
+- [ ] Validation of request data with clear error responses (basics done: bad numbers, bad JSON, `EWebError`)
+- [x] Health check endpoint for monitoring
 - [ ] Database access for SQLite, PostgreSQL and MySQL/MariaDB (on top of FPC's SQLDB)
 - [ ] Simple query API with parameters; transactions; connection pool
 - [ ] Migrations with version tracking

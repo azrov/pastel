@@ -71,7 +71,7 @@ Building for another platform needs the Free Pascal cross-compiler for it. `past
 | `pastel new app <name>` | Create a desktop app with a form |
 | `pastel new console <name>` | Create a console project |
 | `pastel new lib <name>` | Create a library that other projects use ([docs/workflow.md](docs/workflow.md)) |
-| `pastel new service <name>` | Create a program that keeps running, with jobs and a systemd unit ([docs/services.md](docs/services.md)) |
+| `pastel new service <name>` | Create a program that keeps running, with jobs and a systemd unit ([docs/services.md](docs/services.md)); web APIs: [docs/web.md](docs/web.md) |
 | `pastel build` | Compile (`-t <platform>`, `-r` release, `--all`, `-v` verbose) |
 | `pastel run` | Compile and run on this computer (`--watch`: again on every save) |
 | `pastel test [filter]` | Run the tests in `tests/` (`--watch`) |

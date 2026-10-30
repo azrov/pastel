@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notes</title>
+<style>
+  body { font: 16px/1.5 system-ui, sans-serif; max-width: 40rem; margin: 2rem auto; padding: 0 1rem; color: #1f2430; }
+  h1 { font-size: 1.6rem; }
+  form { display: grid; gap: .5rem; margin-bottom: 2rem; }
+  input, textarea, button { font: inherit; padding: .5rem .7rem; border: 1px solid #c8ccd6; border-radius: 6px; }
+  button { background: #4f46e5; color: white; border: none; cursor: pointer; justify-self: start; }
+  .note { border: 1px solid #e3e5ea; border-radius: 8px; padding: .8rem 1rem; margin-bottom: .8rem; }
+  .note h2 { font-size: 1.1rem; margin: 0 0 .3rem; }
+  .note p { margin: 0 0 .5rem; white-space: pre-wrap; }
+  .note small { color: #6b7080; }
+  .note button { background: none; color: #b42318; padding: 0; margin-left: 1rem; }
+  .error { color: #b42318; }
+</style>
+</head>
+<body>
+<h1>Notes</h1>
+<form id="add">
+  <input name="title" placeholder="Title" required maxlength="200">
+  <textarea name="text" rows="3" placeholder="Text"></textarea>
+  <button>Add note</button>
+  <div class="error" id="error"></div>
+</form>
+<div id="notes"></div>
+<script>
+const list = document.getElementById('notes');
+const error = document.getElementById('error');
+
+async function load() {
+  const notes = await (await fetch('/api/notes')).json();
+  list.replaceChildren(...notes.map(n => {
+    const div = document.createElement('div');
+    div.className = 'note';
+    const h = document.createElement('h2'); h.textContent = n.title;
+    const p = document.createElement('p'); p.textContent = n.text;
+    const s = document.createElement('small'); s.textContent = new Date(n.created).toLocaleString();
+    const del = document.createElement('button'); del.textContent = 'Delete';
+    del.onclick = async () => { await fetch('/api/notes/' + n.id, { method: 'DELETE' }); load(); };
+    div.append(h, p, s, del);
+    return div;
+  }));
+}
+
+document.getElementById('add').onsubmit = async e => {
+  e.preventDefault();
+  const form = e.target;
+  const r = await fetch('/api/notes', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title: form.title.value, text: form.text.value }),
+  });
+  error.textContent = r.ok ? '' : (await r.json()).error;
+  if (r.ok) { form.reset(); load(); }
+};
+
+load();
+</script>
+</body>
+</html>

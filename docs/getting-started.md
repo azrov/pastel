@@ -166,6 +166,7 @@ switches between form and code. See [forms.md](forms.md).
 | [workflow.md](workflow.md) | Watch, format, libraries, dependencies |
 | [project.md](project.md) | Everything in `pastel.toml`; packages |
 | [services.md](services.md) | Programs that keep running: jobs, systemd |
+| [web.md](web.md) | Web APIs and sites |
 | [testing.md](testing.md) | Tests |
 | [forms.md](forms.md) | Desktop apps: forms and controls |
-| `examples/` | Complete programs: `dupfinder` (files), `weather` (a web API) |
+| `examples/` | Complete programs: `dupfinder` (files), `weather` (calls a web API), `notes-api` (is a web API) |

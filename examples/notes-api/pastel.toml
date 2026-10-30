@@ -1,0 +1,17 @@
+# Example: a small web API with a web page, kept running as a service.
+# Try it: pastel run, then open http://localhost:8080
+
+[project]
+name = "notes-api"
+version = "1.0.0"
+type = "service"
+
+[build]
+main = "src/main.pas"
+mode = "objfpc"
+
+[targets]
+platforms = ["linux", "linux-arm64", "windows"]
+
+[package]
+include = ["public", "README.md"]
