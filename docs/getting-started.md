@@ -166,7 +166,8 @@ switches between form and code. See [forms.md](forms.md).
 | [workflow.md](workflow.md) | Watch, format, libraries, dependencies |
 | [project.md](project.md) | Everything in `pastel.toml`; packages |
 | [services.md](services.md) | Programs that keep running: jobs, systemd |
-| [web.md](web.md) | Web APIs and sites |
+| [web.md](web.md) | Web APIs: routes, JSON, validation, API keys, JWT |
+| [database.md](database.md) | SQLite, PostgreSQL, MySQL; migrations |
 | [security.md](security.md) | Passwords, tokens, JWT |
 | [testing.md](testing.md) | Tests |
 | [forms.md](forms.md) | Desktop apps: forms and controls |

@@ -273,6 +273,7 @@ async function newProject(): Promise<void> {
     { label: 'app', description: 'Desktop app with a window and forms' },
     { label: 'console', description: 'Terminal program' },
     { label: 'service', description: 'Keeps running: jobs, settings, systemd (a server program)' },
+    { label: 'api', description: 'Web API with a database: models, controllers, migrations' },
     { label: 'lib', description: 'Units for other projects (a library)' },
   ], { placeHolder: 'What kind of project?' });
   if (!kind) {

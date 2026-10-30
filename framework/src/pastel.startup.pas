@@ -6,7 +6,11 @@
     without remembering to put cthreads first in the uses clause;
   - makes UTF-8 the code page of all strings, so text like "ayşe" or "Bakı"
     stays intact when libraries convert strings (fpjson, databases, ...);
-  - on Windows switches the console to UTF-8 for WriteLn and ReadLn.
+  - on Windows switches the console to UTF-8 for WriteLn and ReadLn;
+  - on Linux/macOS loads the system's text conversions (cwstring), so
+    converting between string and UnicodeString keeps letters like "ş"
+    (Free Pascal would otherwise treat every byte as one Latin-1 letter;
+    databases are one place where this shows).
   Part of the Pastel project, MIT License. }
 unit Pastel.Startup;
 
@@ -17,7 +21,7 @@ interface
 implementation
 
 uses
-  {$IFDEF UNIX}cthreads{$ENDIF}
+  {$IFDEF UNIX}cthreads, cwstring{$ENDIF}
   {$IFDEF WINDOWS}Windows{$ENDIF};
 
 initialization

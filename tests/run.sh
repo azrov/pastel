@@ -322,6 +322,38 @@ expect "systemd hears ready, reload, stop" 'grep -q "^READY=1" "$WORK/notify.log
 sed -i 's/interval = 2 /interval = "often" /' config.toml
 set +e; out="$(./build/*/debug/file-watch 2>&1)"; code=$?; set -e
 expect "bad settings stop the start with a reason" '[ "$code" = 1 ] && echo "$out" | grep -q "check.interval"'
+
+# --- web API with a database, migrations ---
+cd "$WORK"
+"$PASTEL" new api todo-api >/dev/null
+cd todo-api
+out="$("$PASTEL" test 2>&1)"
+expect "api template tests pass"         'echo "$out" | grep -q "5 passed"'
+out="$(NO_COLOR=1 "$PASTEL" migrate status)"
+expect "migrate status lists pending"    'echo "$out" | grep -q "pending  001_create_tasks"'
+out="$(NO_COLOR=1 "$PASTEL" migrate)"
+expect "migrate applies"                 'echo "$out" | grep -q "Migrated 001_create_tasks"'
+out="$(NO_COLOR=1 "$PASTEL" migrate)"
+expect "migrate twice is up to date"     'echo "$out" | grep -q "up to date"'
+out="$(NO_COLOR=1 "$PASTEL" migrate new "Add priority")"
+expect "migrate new numbers the file"    '[ -f database/migrations/002_add_priority.sql ]'
+echo "alter table tasks add column priority integer not null default 0;" >> database/migrations/002_add_priority.sql
+out="$(NO_COLOR=1 "$PASTEL" migrate --database sqlite:other.db)"
+expect "migrate --database picks the db" 'echo "$out" | grep -q "2 migration(s) on sqlite:other.db"'
+echo "broken sql;" > database/migrations/003_broken.sql
+set +e; out="$(NO_COLOR=1 "$PASTEL" migrate 2>&1)"; code=$?; set -e
+expect "a broken migration fails clearly" '[ "$code" = 1 ] && echo "$out" | grep -q "003_broken.sql"'
+rm database/migrations/003_broken.sql
+"$PASTEL" build >/dev/null
+port=$((20000 + $$ % 20000))
+TODO_API_SERVER_PORT=$port ./build/*/debug/todo-api > api.log 2>&1 &
+api=$!
+for i in $(seq 50); do grep -q "is running" api.log && break; sleep 0.1; done
+out="$(curl -s localhost:$port/api/tasks -H 'Content-Type: application/json' -d '{"title": "Süt al"}')"
+expect "api creates a task"              'echo "$out" | grep -q "\"title\":\"Süt al\",\"done\":false"'
+expect "api lists tasks"                 'curl -s localhost:$port/api/tasks | grep -q "Süt al"'
+expect "api answers 422 for bad data"    '[ "$(curl -s -o /dev/null -w "%{http_code}" localhost:$port/api/tasks -d "{}")" = 422 ]'
+kill $api; wait $api || true
 cd "$WORK/demo-app"
 
 # --- pastel run --watch ---

@@ -8,7 +8,7 @@ uses
   Classes, SysUtils,
   Pastel.Console, Pastel.Toml, Pastel.Project, Pastel.Targets,
   Pastel.Builder, Pastel.Templates, Pastel.Doctor, Pastel.Inspect, Pastel.TestCmd,
-  Pastel.Watch, Pastel.FmtCmd, Pastel.Package;
+  Pastel.Watch, Pastel.FmtCmd, Pastel.Package, Pastel.MigrateCmd;
 
 const
   ExitOk = 0;
@@ -23,7 +23,7 @@ type
     Target: string;
     Release, Verbose, All, Help, Watch, Check: Boolean;
     Json, Stdin, NoRun: Boolean;
-    Output, Layout: string;
+    Output, Layout, Database: string;
     Width, Height: Integer;
   end;
 
@@ -40,12 +40,13 @@ begin
   WriteLn(Bold('Usage:'), ' pastel <command> [options]');
   WriteLn;
   WriteLn(Bold('Commands:'));
-  WriteLn('  new <kind> <name>    Create a new project (kinds: console, app, lib, service)');
+  WriteLn('  new <kind> <name>    Create a new project (kinds: console, app, lib, service, api)');
   WriteLn('  build                Compile the project');
   WriteLn('  run [-- args]        Compile and run on this computer (--watch: again on every save)');
   WriteLn('  test [filter]        Run the tests in tests/ (only names matching filter; --watch, --json)');
   WriteLn('  fmt [files]          Format the code (--check: only report)');
   WriteLn('  package              Release build in an archive in dist/ (--target, --all)');
+  WriteLn('  migrate [status|new]  Database migrations in database/migrations (--database URL)');
   WriteLn('  clean                Remove the build folder');
   WriteLn('  targets              List the platforms Pastel can build for');
   WriteLn('  doctor               Check your setup');
@@ -117,7 +118,8 @@ begin
       CL.Json := True
     else if A = '--stdin' then
       CL.Stdin := True
-    else if (A = '-o') or (A = '--output') or (A = '--width') or (A = '--height') or (A = '--layout') then
+    else if (A = '-o') or (A = '--output') or (A = '--width') or (A = '--height') or (A = '--layout') or
+            (A = '--database') then
     begin
       Inc(I);
       if I > ParamCount then
@@ -129,6 +131,8 @@ begin
         CL.Output := ParamStr(I)
       else if A = '--layout' then
         CL.Layout := ParamStr(I)
+      else if A = '--database' then
+        CL.Database := ParamStr(I)
       else if A = '--width' then
         CL.Width := StrToIntDef(ParamStr(I), 0)
       else
@@ -510,6 +514,7 @@ begin
       'targets': ExitCode := CmdTargets;
       'doctor':  if RunDoctor then ExitCode := ExitOk else ExitCode := ExitError;
       'check':   ExitCode := CmdCheck(CL);
+      'migrate': ExitCode := RunMigrate(CL.Positional, CL.Database);
       'fmt':     ExitCode := RunFormat(CL.Positional, CL.Check, CL.Stdin);
       'package': ExitCode := CmdPackage(CL);
       'preview': ExitCode := CmdPreview(CL);
