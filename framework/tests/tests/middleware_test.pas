@@ -17,6 +17,7 @@ type
     procedure ApiKeyIsRequired;
     procedure WrongApiKeyIsRefused;
     procedure ApiKeyInEitherHeader;
+    procedure ExampleApiKeysAreRefused;
     procedure OtherRoutesStayOpen;
     procedure JwtGivesClaims;
     procedure BadJwtIsRefused;
@@ -167,6 +168,24 @@ procedure TMiddlewareTests.ApiKeyInEitherHeader;
 begin
   AssertEquals('ok api-key', GetWith('/keyed/data', ['X-API-Key: ' + Key]).Body);
   AssertEquals('ok api-key', GetWith('/keyed/data', ['Authorization: Bearer k-second-key-0123456789']).Body);
+end;
+
+procedure TMiddlewareTests.ExampleApiKeysAreRefused;
+var
+  W: TWebServer;
+begin
+  W := TWebServer.Create(1, '127.0.0.1');
+  try
+    try
+      W.RequireApiKey('/api', ['CHANGE-ME-openssl-rand-base64-32']);
+      Fail('the example key was accepted');
+    except
+      on E: EArgumentException do
+        AssertContains('still the example', E.Message);
+    end;
+  finally
+    W.Free;
+  end;
 end;
 
 procedure TMiddlewareTests.OtherRoutesStayOpen;

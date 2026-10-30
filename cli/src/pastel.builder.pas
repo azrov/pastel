@@ -481,7 +481,7 @@ var
   Args, Dirs, Lines: TStringList;
   Code, Errors, Warnings, I: Integer;
   Started: QWord;
-  Host, MissingTarget, HaveBinutils: Boolean;
+  Host, MissingTarget, MissingPackages, HaveBinutils: Boolean;
   BinPrefix, GenDir, Framework, LibMain: string;
   LibCheck: Boolean;
   LibUnits: Integer;
@@ -685,6 +685,7 @@ begin
     Errors := 0;
     Warnings := 0;
     MissingTarget := False;
+    MissingPackages := False;
     Lines.Text := CompilerOut;
     for I := 0 to Lines.Count - 1 do
     begin
@@ -696,6 +697,10 @@ begin
          (Pos('Can''t find unit sysutils', Line) > 0) or
          (Pos('not found, switching to external', Line) > 0) then
         MissingTarget := True;
+      { a cross-compiler with only the RTL: FPC's packages are missing }
+      if (Pos('Can''t find unit fpjson', Line) > 0) or (Pos('Can''t find unit fphttpserver', Line) > 0) or
+         (Pos('Can''t find unit sqldb', Line) > 0) or (Pos('Can''t find unit process', Line) > 0) then
+        MissingPackages := True;
       if Opts.Verbose then
       begin
         WriteLn(Line);
@@ -727,6 +732,9 @@ begin
         Fail(Format('could not compile %s (%d error(s))', [Project.Name, Errors]));
       if not HaveBinutils then
         Hint(BinutilsHint(Opts.Target))
+      else if MissingPackages and not Host then
+        Hint(Format('the compiler for "%s" has only the basic units, not FPC''s packages (fcl-json, fcl-web, fcl-db); ' +
+          'fpcupdeluxe installs a complete cross-compiler', [Opts.Target.Name]))
       else if MissingTarget and not Host then
         Hint(Format('this computer cannot build for "%s" yet; run "pastel doctor" to see what is missing',
           [Opts.Target.Name]));

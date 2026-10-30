@@ -1450,6 +1450,9 @@ begin
   begin
     if Length(Keys[I]) < 16 then
       raise EArgumentException.Create('API keys should be at least 16 characters (RandomToken makes good ones)');
+    if Pos('CHANGE-ME', UpperCase(Keys[I])) > 0 then
+      raise EArgumentException.Create('an API key is still the example "' + Keys[I] +
+        '": put a real one in the settings (openssl rand -base64 32)');
     F.Keys[I] := Keys[I];
   end;
   Use(Prefix, @F.Check);

@@ -83,8 +83,8 @@ Goal: a REST API with a database, deployed on a Linux server as a systemd servic
 **Tool**
 - [x] `pastel new service`: a long-running program with configuration, logging and clean shutdown (with a systemd unit)
 - [x] `pastel new api`: a web API project with models, controllers, migrations and tests
-- [ ] `pastel package deb`: a `.deb` with the program, its config file and a systemd unit
-- [ ] `pastel package docker`: a small container image (static binary, no base OS needed)
+- [x] `pastel package deb`: a `.deb` with the program, its config file and a systemd unit
+- [x] `pastel package docker`: a container image (Debian slim, non-root, health check); a static image without a base OS later
 - [x] `pastel migrate`: run database migrations (`database/migrations/`); `status`, `new`
 - [x] `pastel run` restarts the service on code changes (with `--watch`)
 
@@ -101,7 +101,7 @@ Goal: a REST API with a database, deployed on a Linux server as a systemd servic
 - [x] Database access for SQLite, PostgreSQL and MySQL/MariaDB (on top of FPC's SQLDB): `docs/database.md`
 - [x] Simple query API with parameters; transactions; connection pool
 - [x] Migrations with version tracking
-- [ ] HTTPS (OpenSSL) or a guide for running behind nginx/caddy
+- [x] HTTPS (OpenSSL) or a guide for running behind nginx/caddy: `docs/deploy.md`
 
 **VS Code**
 - [ ] Project explorer shows routes, migrations and services for API projects
@@ -109,7 +109,7 @@ Goal: a REST API with a database, deployed on a Linux server as a systemd servic
 
 **Docs**
 - [ ] Guide: build a REST API (with a database)
-- [ ] Guide: deploy to a Linux server (systemd, .deb, Docker, nginx); services and systemd so far: `docs/services.md`
+- [x] Guide: deploy to a Linux server (systemd, .deb, Docker, nginx): `docs/deploy.md`
 - [x] Example: a to-do REST API with SQLite and PostgreSQL (what `pastel new api` makes; tested on MariaDB too)
 
 ---

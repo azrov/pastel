@@ -43,6 +43,10 @@ type
     { [package] include, and per platform [package.windows] include }
     PackageInclude: TStringArray;
     PackageTargetInclude: array of record Target: string; Files: TStringArray; end;
+    Description: string;        { [project] description }
+    Maintainer: string;         { [package] maintainer = "Name <mail>" }
+    DebDepends: TStringArray;   { [package.deb] depends = ["libsqlite3-0"] }
+    DockerBase: string;         { [package.docker] base = "debian:bookworm-slim" }
     function PackageFilesFor(const Target: string): TStringArray;
     class function FindRoot(const StartDir: string): string;
     class function Load(const Dir: string): TPastelProject;
@@ -151,8 +155,12 @@ begin
               [ProjectFileName, Dep, Opt]);
       end;
       P.PackageInclude := Doc.GetArray('package.include');
+      P.Description := Doc.GetString('project.description', '');
+      P.Maintainer := Doc.GetString('package.maintainer', '');
+      P.DebDepends := Doc.GetArray('package.deb.depends');
+      P.DockerBase := Doc.GetString('package.docker.base', 'debian:bookworm-slim');
       for Dep in Doc.Keys('package') do
-        if Dep <> 'include' then
+        if (Dep <> 'include') and (Dep <> 'maintainer') and (Dep <> 'deb') and (Dep <> 'docker') then
         begin
           SetLength(P.PackageTargetInclude, Length(P.PackageTargetInclude) + 1);
           P.PackageTargetInclude[High(P.PackageTargetInclude)].Target := Dep;

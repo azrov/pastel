@@ -128,7 +128,7 @@ function SplitSql(const Script: string): TStringArray;
 implementation
 
 uses
-  StrUtils, DateUtils, sqlite3conn, pqconnection, mysql57conn, mysql80conn,
+  StrUtils, DateUtils, sqlite3dyn, sqlite3conn, pqconnection, mysql57conn, mysql80conn,
   mysql57dyn, mysql80dyn, Pastel.Json, Pastel.Log, Pastel.Files;
 
 { ---------------- helpers ---------------- }
@@ -1017,6 +1017,11 @@ end;
 
 initialization
   MySqlLock := TCriticalSection.Create;
+  {$IFDEF LINUX}
+  { FPC asks for libsqlite3.so, which only the -dev package installs;
+    servers have the runtime library libsqlite3.so.0 (package libsqlite3-0) }
+  SQLiteDefaultLibrary := 'libsqlite3.so.0';
+  {$ENDIF}
 finalization
   MySqlLock.Free;
 end.

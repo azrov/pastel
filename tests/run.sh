@@ -354,6 +354,29 @@ expect "api creates a task"              'echo "$out" | grep -q "\"title\":\"Sü
 expect "api lists tasks"                 'curl -s localhost:$port/api/tasks | grep -q "Süt al"'
 expect "api answers 422 for bad data"    '[ "$(curl -s -o /dev/null -w "%{http_code}" localhost:$port/api/tasks -d "{}")" = 422 ]'
 kill $api; wait $api || true
+
+# --- .deb and docker ---
+NO_COLOR=1 "$PASTEL" package deb >/dev/null
+expect "package deb writes a .deb"       '[ -f dist/todo-api_0.1.0_amd64.deb ] && [ -f dist/todo-api_0.1.0_amd64.deb.sha256 ]'
+if command -v dpkg-deb >/dev/null; then
+  expect "the .deb is valid"             'dpkg-deb --info dist/todo-api_0.1.0_amd64.deb | grep -q "Depends: libc6, libsqlite3-0"'
+  out="$(dpkg-deb --contents dist/todo-api_0.1.0_amd64.deb)"
+  expect "the .deb has program, unit, config" 'echo "$out" | grep -q "^-rwxr-xr-x root/root .* ./opt/todo-api/todo-api$" && echo "$out" | grep -q "./usr/lib/systemd/system/todo-api.service$" && echo "$out" | grep -q "./etc/todo-api/config.toml$" && echo "$out" | grep -q "./opt/todo-api/database/migrations/001_create_tasks.sql$"'
+  expect "the config is a conffile"      'dpkg-deb --ctrl-tarfile dist/todo-api_0.1.0_amd64.deb | tar -xO ./conffiles | grep -q "^/etc/todo-api/config.toml$"'
+fi
+NO_COLOR=1 "$PASTEL" package docker --no-build >/dev/null
+expect "package docker writes a Dockerfile" 'grep -q "^ENTRYPOINT \[\"/opt/todo-api/todo-api\"\]$" dist/docker-linux/Dockerfile && grep -q "libsqlite3-0" dist/docker-linux/Dockerfile && [ -x dist/docker-linux/app/todo-api ]'
+expect "the image does not run as root"  'grep -q "^USER app$" dist/docker-linux/Dockerfile'
+cd "$WORK"
+"$PASTEL" new console hello-deb >/dev/null
+cd hello-deb
+NO_COLOR=1 "$PASTEL" package deb >/dev/null
+if command -v dpkg-deb >/dev/null; then
+  expect "a console .deb links /usr/bin"  'dpkg-deb --contents dist/hello-deb_0.1.0_amd64.deb | grep -q "./usr/bin/hello-deb -> /opt/hello-deb/hello-deb"'
+fi
+set +e; out="$(NO_COLOR=1 "$PASTEL" package deb --target windows 2>&1)"; code=$?; set -e
+expect "a .deb for windows is refused"   '[ "$code" != 0 ] && echo "$out" | grep -q "not a Linux target"'
+cd "$WORK/todo-api"
 cd "$WORK/demo-app"
 
 # --- pastel run --watch ---

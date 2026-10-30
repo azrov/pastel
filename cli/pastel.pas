@@ -21,7 +21,7 @@ type
     Positional: TStringArray;   { arguments that are not options }
     PassThrough: TStringArray;  { everything after "--" }
     Target: string;
-    Release, Verbose, All, Help, Watch, Check: Boolean;
+    Release, Verbose, All, Help, Watch, Check, NoBuild: Boolean;
     Json, Stdin, NoRun: Boolean;
     Output, Layout, Database: string;
     Width, Height: Integer;
@@ -45,7 +45,7 @@ begin
   WriteLn('  run [-- args]        Compile and run on this computer (--watch: again on every save)');
   WriteLn('  test [filter]        Run the tests in tests/ (only names matching filter; --watch, --json)');
   WriteLn('  fmt [files]          Format the code (--check: only report)');
-  WriteLn('  package              Release build in an archive in dist/ (--target, --all)');
+  WriteLn('  package [deb|docker] Release build in an archive, a .deb or a container image (--target, --all, --no-build)');
   WriteLn('  migrate [status|new]  Database migrations in database/migrations (--database URL)');
   WriteLn('  clean                Remove the build folder');
   WriteLn('  targets              List the platforms Pastel can build for');
@@ -108,6 +108,8 @@ begin
       CL.Verbose := True
     else if A = '--all' then
       CL.All := True
+    else if A = '--no-build' then
+      CL.NoBuild := True
     else if (A = '-w') or (A = '--watch') then
       CL.Watch := True
     else if A = '--no-run' then
@@ -307,9 +309,29 @@ function CmdPackage(const CL: TCommandLine): Integer;
 var
   Project: TPastelProject;
   T: TTarget;
-  Name: string;
+  Name, Kind: string;
   Failed: Integer;
+
+  function PackageOne(const Target: TTarget): Boolean;
+  begin
+    if Kind = 'deb' then
+      Result := PackageDeb(Project, Target, CL.Verbose) <> ''
+    else if Kind = 'docker' then
+      Result := PackageDocker(Project, Target, CL.Verbose, not CL.NoBuild) <> ''
+    else
+      Result := PackageProject(Project, Target, CL.Verbose) <> '';
+  end;
+
 begin
+  Kind := '';
+  if Length(CL.Positional) > 0 then
+    Kind := LowerCase(CL.Positional[0]);
+  if (Kind <> '') and (Kind <> 'deb') and (Kind <> 'docker') then
+  begin
+    Fail(Format('unknown package kind "%s"', [Kind]));
+    Hint('use: pastel package, pastel package deb, pastel package docker');
+    Exit(ExitUsage);
+  end;
   Project := OpenProject;
   if Project = nil then
     Exit(ExitError);
@@ -325,7 +347,10 @@ begin
       Failed := 0;
       for Name in Project.Platforms do
       begin
-        if not ResolveTarget(Name, T) or (PackageProject(Project, T, CL.Verbose) = '') then
+        { a .deb or an image only for the Linux platforms }
+        if (Kind <> '') and (Copy(Name, 1, 5) <> 'linux') then
+          Continue;
+        if not ResolveTarget(Name, T) or not PackageOne(T) then
           Inc(Failed);
         WriteLn;
       end;
@@ -338,7 +363,9 @@ begin
     end;
     if not ResolveTarget(CL.Target, T) then
       Exit(ExitUsage);
-    if PackageProject(Project, T, CL.Verbose) <> '' then
+    if (Kind <> '') and (CL.Target = '') and (T.OS <> 'linux') then
+      ResolveTarget('linux', T);       { a .deb or an image is for Linux, also when made elsewhere }
+    if PackageOne(T) then
       Result := ExitOk
     else
       Result := ExitError;

@@ -82,4 +82,6 @@ A package is a release build in an archive: `.zip` for Windows, `.tar.gz` for th
 
 Next to every archive is a `.sha256` file, so receivers can check it: `sha256sum -c inventory-1.2.0-linux.tar.gz.sha256`.
 
+For servers there are also `pastel package deb` (a Debian/Ubuntu package with the systemd unit) and `pastel package docker` (a container image): [deploy.md](deploy.md).
+
 Desktop apps need SDL2 and FreeType on the computer that runs them. On Linux they come with the system (`sudo apt install libsdl2-2.0-0 libfreetype6`); for Windows, put `SDL2.dll` and `freetype.dll` in the project (for example `libs/windows/`) and list them in `[package.windows] include`.
