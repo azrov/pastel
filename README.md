@@ -4,7 +4,7 @@
 
 Write your app once in Object Pascal and run it on desktop, mobile, server and Raspberry Pi. Pastel is built on top of the [Free Pascal](https://www.freepascal.org/) compiler and brings a modern developer experience: a simple command-line tool, clear project conventions, forms with hot reload, and a UI drawn by Pastel itself so it looks the same everywhere.
 
-> ⚠️ **Status: early development.** Working today: the `pastel` command-line tool (console apps for Linux, Windows and Raspberry Pi) and a first version of the UI framework (windows, forms from `.pform` files, buttons, edits, labels, flexbox-style layout, hot reload) on Linux and Windows. Ideas, feedback and contributions are very welcome.
+> ⚠️ **Status: early development (0.2).** Working today: the `pastel` command-line tool and libraries for console programs on Linux, Windows and Raspberry Pi (arguments, files, HTTP, JSON, settings, logging, tests, packaging) and a first version of the UI framework (windows, forms from `.pform` files, buttons, edits, labels, flexbox-style layout, hot reload) on Linux and Windows. Ideas, feedback and contributions are very welcome.
 
 ## Why Pastel?
 
@@ -25,6 +25,8 @@ Pastel aims to be the missing piece: free, open source, modern, and easy to set 
 - **Familiar for Pascal developers:** components, properties and events, the way Delphi developers already think
 
 ## Try it today
+
+**New here? Start with [docs/getting-started.md](docs/getting-started.md)**: from installing to a packaged program in fifteen minutes. Then [docs/guide-cli.md](docs/guide-cli.md) builds a real tool step by step, and [`examples/`](examples) has complete programs.
 
 You need [Free Pascal](https://www.freepascal.org/) 3.2 or newer (on Linux Mint / Ubuntu: `sudo apt install fpc`). GUI apps also use SDL2 and FreeType, which most Linux desktops already have (`sudo apt install libsdl2-2.0-0 libfreetype6`). On Windows, put `SDL2.dll` and `freetype.dll` next to your program.
 

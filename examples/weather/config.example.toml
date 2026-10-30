@@ -1,0 +1,5 @@
+# Copy to ~/.config/weather/config.toml (Windows: %APPDATA%\weather\config.toml)
+# or set the environment variables WEATHER_CITY, WEATHER_UNITS, WEATHER_LANGUAGE.
+city = "Baku"
+units = "metric"     # or "imperial"
+language = "en"      # for place names: en, tr, az, de, ...

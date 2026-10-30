@@ -8,7 +8,7 @@ Every milestone ends with something you can really use, and with tests and docum
 
 ---
 
-## 0.1 — Foundation (current)
+## 0.1 — Foundation (done)
 
 What exists today.
 
@@ -35,7 +35,7 @@ What exists today.
 
 ---
 
-## 0.2 — Console programs, complete
+## 0.2 — Console programs, complete (done)
 
 Goal: writing a command-line tool in Pastel is pleasant from the first line to the release.
 
@@ -69,14 +69,14 @@ Goal: writing a command-line tool in Pastel is pleasant from the first line to t
 - [x] Format on save (uses `pastel fmt`)
 
 **Docs**
-- [ ] Getting started guide (install, first project, debug, release)
+- [x] Getting started guide (install, first project, debug, release): `docs/getting-started.md`
 - [x] Console programs: `docs/console.md`; testing: `docs/testing.md`; JSON, settings, logging: `docs/data.md`; files, programs, HTTP: `docs/system.md`; watch, format, libraries: `docs/workflow.md`; `pastel.toml` and packages: `docs/project.md`
-- [ ] Guide: writing a command-line tool
-- [ ] Examples: a file tool, a tool that calls a web API
+- [x] Guide: writing a command-line tool: `docs/guide-cli.md`
+- [x] Examples: a file tool, a tool that calls a web API: `examples/dupfinder`, `examples/weather`
 
 ---
 
-## 0.3 — Linux services
+## 0.3 — Linux services (next)
 
 Goal: a REST API with a database, deployed on a Linux server as a systemd service, built only with Pastel.
 
@@ -215,10 +215,9 @@ Goal: typical small business apps (forms, lists, dialogs) on Linux and Windows.
 Things that work differently than one would expect, so they are not surprises:
 
 - Building for Windows/Raspberry Pi needs cross-compilers installed by hand (fpcupdeluxe)
-- Windows programs need `SDL2.dll` and `freetype.dll` copied next to them by hand
-- Code changes need a restart; only `.pform` changes are hot-reloaded, and they reset typed text
+- Windows programs need `SDL2.dll` and `freetype.dll` (desktop apps) or the OpenSSL DLLs (HTTPS) next to them; `[package.windows] include` puts them into the package
+- In desktop apps, code changes restart the app (`pastel run --watch`); only `.pform` changes are hot-reloaded, and they reset typed text
 - One window per app; no dialogs yet
 - No text selection in edits; no multi-line text
 - Pascal completion only knows `.pform` files, not members of Pascal classes
-- Test results show in the terminal; the VS Code test explorer comes later in 0.2
 - macOS and 32-bit Raspberry Pi are not tested yet

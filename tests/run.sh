@@ -23,7 +23,7 @@ mkdir -p "$WORK/units"
 "$WORK/pform_test"
 "$FPC" -Mobjfpc -Sh -vew -FU"$WORK/units" -Fucli/src -Fuframework/src -o"$WORK/format_test" tests/format_test.pas >/dev/null
 "$WORK/format_test"
-"$PASTEL" fmt --check cli framework tests >/dev/null || { "$PASTEL" fmt --check cli framework tests; exit 1; }
+"$PASTEL" fmt --check cli framework tests examples >/dev/null || { "$PASTEL" fmt --check cli framework tests examples; exit 1; }
 echo "fmt: Pastel's own code is formatted"
 
 echo "== framework tests"
@@ -31,6 +31,20 @@ echo "== framework tests"
   "$PASTEL" test >"$WORK/framework.log" 2>&1) || { cat "$WORK/framework.log"; exit 1; }
 tail -1 "$WORK/framework.log"
 
+
+echo "== examples"
+for ex in dupfinder weather; do
+  rm -rf "$WORK/ex-$ex" && cp -r "examples/$ex" "$WORK/ex-$ex" && rm -rf "$WORK/ex-$ex/build"
+  out="$(cd "$WORK/ex-$ex" && "$PASTEL" test 2>&1)" || { echo "$out"; exit 1; }
+  echo "$ex: $(echo "$out" | tail -1)"
+done
+mkdir -p "$WORK/dups/sub" && echo same > "$WORK/dups/a.txt" && echo same > "$WORK/dups/sub/b.txt" && echo other > "$WORK/dups/c.txt"
+out="$(cd "$WORK/ex-dupfinder" && "$PASTEL" run -- "$WORK/dups" 2>&1)"
+expect "dupfinder finds the copy"        'echo "$out" | grep -q "1 group(s) of duplicates"'
+out="$(cd "$WORK/ex-dupfinder" && ./build/*/debug/dupfinder --json "$WORK/dups")"
+expect "dupfinder writes JSON"           'echo "$out" | grep -q "\"wasted\" : 5"'
+set +e; out="$(cd "$WORK/ex-weather" && "$PASTEL" run 2>&1)"; code=$?; set -e
+expect "weather asks for a place"        '[ "$code" = 2 ] && echo "$out" | grep -q "which place?"'
 echo "== end-to-end tests"
 cd "$WORK"
 

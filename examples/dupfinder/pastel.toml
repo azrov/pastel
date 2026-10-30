@@ -1,0 +1,17 @@
+# Example: a command-line tool that works with files.
+# Try it: pastel run -- ~/Pictures
+
+[project]
+name = "dupfinder"
+version = "1.0.0"
+type = "console"
+
+[build]
+main = "src/main.pas"
+mode = "objfpc"
+
+[targets]
+platforms = ["linux", "windows", "rpi"]
+
+[package]
+include = ["README.md"]
