@@ -60,7 +60,7 @@ implementation
 
 uses
   Process, {$IFDEF UNIX}BaseUnix,{$ENDIF}
-  Pastel.Console, Pastel.Codegen, Pastel.Inspect, Pastel.WIcon, Math;
+  Pastel.Console, Pastel.Codegen, Pastel.Inspect, Pastel.WIcon, Pastel.Runtime, Math;
 
 function FrameworkDir: string;
 var
@@ -559,6 +559,136 @@ begin
   end;
 end;
 
+{ ---- Free Pascal packages from their sources ----
+  An FPC install often lacks the units of some packages for a cross target
+  (fcl-image for Windows...). When the compiler cannot find a unit that is
+  in the FPC sources, the package's source folders are added and FPC
+  compiles it into the project's build folder, once. }
+
+const
+  PlatformDirs: array[0..41] of string = ('unix', 'linux', 'darwin', 'bsd', 'freebsd', 'netbsd', 'openbsd',
+    'dragonfly', 'os2', 'emx', 'amiga', 'amicommon', 'aros', 'morphos', 'wince', 'win', 'win16', 'win32',
+    'win64', 'winall', 'windows', 'netware', 'netwlibc', 'go32v2', 'msdos', 'dos', 'beos', 'haiku',
+    'solaris', 'android', 'qnx', 'wasi', 'wasm', 'nativent', 'symbian', 'embedded', 'macos', 'macosx',
+    'atari', 'watcom', 'iphonesim', 'aix');
+
+var
+  UnitIndex: TStringList = nil;
+
+{ unit name -> package folder, from FpcSourceDir/packages/*/src }
+procedure BuildUnitIndex;
+
+  procedure Scan(const Pkg, Dir: string);
+  var
+    SR: TSearchRec;
+    Ext: string;
+  begin
+    if FindFirst(Dir + PathDelim + '*', faAnyFile, SR) = 0 then
+    try
+      repeat
+        if (SR.Name = '.') or (SR.Name = '..') then
+          Continue;
+        if (SR.Attr and faDirectory) <> 0 then
+          Scan(Pkg, Dir + PathDelim + SR.Name)
+        else
+        begin
+          Ext := LowerCase(ExtractFileExt(SR.Name));
+          if ((Ext = '.pp') or (Ext = '.pas')) and (UnitIndex.IndexOfName(LowerCase(ChangeFileExt(SR.Name, ''))) < 0) then
+            UnitIndex.Add(LowerCase(ChangeFileExt(SR.Name, '')) + '=' + Pkg);
+        end;
+      until FindNext(SR) <> 0;
+    finally
+      FindClose(SR);
+    end;
+  end;
+
+var
+  Src: string;
+  SR: TSearchRec;
+begin
+  if UnitIndex <> nil then
+    Exit;
+  UnitIndex := TStringList.Create;
+  Src := FpcSourceDir;
+  if Src = '' then
+    Exit;
+  Src := Src + PathDelim + 'packages';
+  if FindFirst(Src + PathDelim + '*', faDirectory, SR) = 0 then
+  try
+    repeat
+      if (SR.Name <> '.') and (SR.Name <> '..') and ((SR.Attr and faDirectory) <> 0) and
+        DirectoryExists(Src + PathDelim + SR.Name + PathDelim + 'src') then
+        Scan(Src + PathDelim + SR.Name, Src + PathDelim + SR.Name + PathDelim + 'src');
+    until FindNext(SR) <> 0;
+  finally
+    FindClose(SR);
+  end;
+  UnitIndex.Sorted := True;
+end;
+
+{ the unit in "Fatal: Can't find unit X used by Y", '' when there is none }
+function MissingUnit(const CompilerOut: string): string;
+var
+  P, E: Integer;
+begin
+  Result := '';
+  P := Pos('Can''t find unit ', CompilerOut);
+  if P = 0 then
+    Exit;
+  P := P + Length('Can''t find unit ');
+  E := P;
+  while (E <= Length(CompilerOut)) and (CompilerOut[E] in ['A'..'Z', 'a'..'z', '0'..'9', '_', '.']) do
+    Inc(E);
+  Result := Copy(CompilerOut, P, E - P);
+end;
+
+{ the package's source folders that belong to the target OS }
+function PackageDirs(const Pkg, OS: string): TStringArray;
+
+  function Wanted(const Name: string): Boolean;
+  var
+    N, P: string;
+  begin
+    N := LowerCase(Name);
+    if (N = 'examples') or (N = 'tests') or (N = 'test') or (N = 'dummy') then
+      Exit(False);
+    for P in PlatformDirs do
+      if N = P then
+      begin
+        if Copy(OS, 1, 3) = 'win' then
+          Exit((N = 'win') or (N = 'winall') or (N = 'windows') or (N = OS))
+        else if OS = 'darwin' then
+          Exit((N = 'unix') or (N = 'bsd') or (N = 'darwin'))
+        else if (OS = 'linux') or (OS = 'android') then
+          Exit((N = 'unix') or (N = 'linux') or (N = OS))
+        else
+          Exit((N = 'unix') or (N = OS));
+      end;
+    Result := True;
+  end;
+
+  procedure Scan(const Dir: string; var L: TStringArray);
+  var
+    SR: TSearchRec;
+  begin
+    SetLength(L, Length(L) + 1);
+    L[High(L)] := Dir;
+    if FindFirst(Dir + PathDelim + '*', faDirectory, SR) = 0 then
+    try
+      repeat
+        if (SR.Name <> '.') and (SR.Name <> '..') and ((SR.Attr and faDirectory) <> 0) and Wanted(SR.Name) then
+          Scan(Dir + PathDelim + SR.Name, L);
+      until FindNext(SR) <> 0;
+    finally
+      FindClose(SR);
+    end;
+  end;
+
+begin
+  Result := nil;
+  Scan(Pkg + PathDelim + 'src', Result);
+end;
+
 { assets/ -> AppAssets: in release builds the bytes, in debug builds the paths.
   False when the project has no assets. }
 function WriteAppAssets(Project: TPastelProject; const Dir: string; Embed, Windows: Boolean): Boolean;
@@ -686,6 +816,26 @@ var
   LibUnits: Integer;
   Gen: TCodegenResult;
   Issues: TIssues;
+  Missing, Pkg, PkgFile, FpcSrc: string;
+  Pkgs: TStringList;
+  Tries, Pkgs0: Integer;
+
+  procedure AddPackage(const APkg: string);
+  var
+    PD: string;
+    MainArg: string;
+  begin
+    { before the main file, the last argument }
+    MainArg := Args[Args.Count - 1];
+    Args.Delete(Args.Count - 1);
+    for PD in PackageDirs(APkg, Opts.Target.OS) do
+    begin
+      Args.Add('-Fu' + PD);
+      Args.Add('-Fi' + PD);
+    end;
+    Args.Add(MainArg);
+  end;
+
 begin
   Result := False;
   ExePath := '';
@@ -926,10 +1076,50 @@ begin
         LineEnding, ' ', [rfReplaceAll])));
 
     Started := GetTickCount64;
-    Code := RunCapture(Fpc, Args, Project.Root, CompilerOut);
+    { packages compiled from the FPC sources in an earlier build }
+    PkgFile := Project.Root + UnitDir + PathDelim + 'fpc-packages.txt';
+    Pkgs := TStringList.Create;
+    Pkgs0 := 0;
+    try
+      if FileExists(PkgFile) then
+        Pkgs.LoadFromFile(PkgFile);
+      for Pkg in Pkgs do
+        if DirectoryExists(Pkg) then
+          AddPackage(Pkg);
+      Code := RunCapture(Fpc, Args, Project.Root, CompilerOut);
+      Tries := 0;
+      while (Code <> 0) and (Tries < 30) do
+      begin
+        Missing := MissingUnit(CompilerOut);
+        if Missing = '' then
+          Break;
+        BuildUnitIndex;
+        Pkg := UnitIndex.Values[LowerCase(Missing)];
+        if (Pkg = '') or (Pkgs.IndexOf(Pkg) >= 0) then
+          Break;
+        Pkgs.Add(Pkg);
+        if not Opts.Quiet and not Opts.CheckOnly then
+          Status('Compiling', Format('the Free Pascal package %s for %s from its sources (once)',
+            [ExtractFileName(Pkg), Opts.Target.Name]));
+        AddPackage(Pkg);
+        Code := RunCapture(Fpc, Args, Project.Root, CompilerOut);
+        Inc(Tries);
+      end;
+      Pkgs0 := Pkgs.Count;
+      if Pkgs.Count > 0 then
+      begin
+        ForceDirectories(Project.Root + UnitDir);
+        Pkgs.SaveToFile(PkgFile);
+      end;
+    finally
+      Pkgs.Free;
+    end;
 
     Errors := 0;
     Warnings := 0;
+    FpcSrc := '';
+    if Pkgs0 > 0 then
+      FpcSrc := FpcSourceDir;
     MissingTarget := False;
     MissingPackages := False;
     Lines.Text := CompilerOut;
@@ -976,6 +1166,10 @@ begin
       end;
       if IsNoise(Line) then
         Continue;
+      { warnings and notes in FPC's own sources are not the project's }
+      if (FpcSrc <> '') and (Copy(Line, 1, Length(FpcSrc)) = FpcSrc) and
+        (Pos('Error:', Line) = 0) and (Pos('Fatal:', Line) = 0) then
+        Continue;
       if (Pos('Error:', Line) > 0) or (Pos('Fatal:', Line) > 0) then
       begin
         Inc(Errors);
@@ -1021,6 +1215,14 @@ begin
         Status('Checked', Format('%d unit(s) of the library compile', [LibUnits]))
       else
         Status('Output', ExePath);
+    end;
+    { a desktop app for Windows needs SDL2.dll and freetype.dll beside it }
+    if (Project.Kind = 'app') and not LibCheck and (Length(RuntimeFiles(Opts.Target)) > 0) then
+    begin
+      if Length(CopyRuntime(Opts.Target, Project.Root + OutDir)) < Length(RuntimeFiles(Opts.Target)) then
+        if not Opts.Quiet then
+          Hint(Format('the app needs %s next to it on Windows; get them once with: pastel doctor --install %s',
+            [string.Join(' and ', RuntimeFiles(Opts.Target)), Opts.Target.Name]));
     end;
     Result := True;
   finally
@@ -1077,5 +1279,8 @@ begin
   else
     Fail('could not remove everything in build' + PathDelim + ' (is the program still running?)');
 end;
+
+finalization
+  FreeAndNil(UnitIndex);
 
 end.

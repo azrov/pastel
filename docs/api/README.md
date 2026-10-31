@@ -7,6 +7,7 @@ Made from the declarations and comments in `framework/src` (`npm run apidoc` in 
 | [Pastel.App](pastel.app.md) | The application: window, event loop, hot reload. |
 | [Pastel.Args](pastel.args.md) | Command-line arguments. |
 | [Pastel.Assets](pastel.assets.md) | The files of a project's assets/ folder, inside the program. |
+| [Pastel.Binding](pastel.binding.md) | Data binding: fills a form's controls from a record and back. |
 | [Pastel.Config](pastel.config.md) | Settings from files, environment variables and code. |
 | [Pastel.Controls](pastel.controls.md) | More controls: check boxes, radio buttons, switches, lists, |
 | [Pastel.Crypto](pastel.crypto.md) | Hashes, signatures, passwords and random tokens. |
@@ -20,6 +21,7 @@ Made from the declarations and comments in `framework/src` (`npm run apidoc` in 
 | [Pastel.Http](pastel.http.md) | HTTP and HTTPS client. |
 | [Pastel.Json](pastel.json.md) | JSON made easy, on top of Free Pascal's fpjson. |
 | [Pastel.Jwt](pastel.jwt.md) | JSON Web Tokens (JWT) signed with HS256. |
+| [Pastel.Lang](pastel.lang.md) | Translations and the number and date formats of a language. |
 | [Pastel.Log](pastel.log.md) | Logging. |
 | [Pastel.Menus](pastel.menus.md) | Menus: a menu bar, pop-up (right click) menus and keyboard |
 | [Pastel.NativeDialogs](pastel.nativedialogs.md) | The system's own open, save and folder dialogs. |

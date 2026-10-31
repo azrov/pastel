@@ -1,6 +1,6 @@
 object HomeForm: THomeForm
   Title = 'Contacts'
-  Width = 760
+  Width = 860
   Height = 520
   Padding = 0
   Gap = 0
@@ -41,21 +41,34 @@ object HomeForm: THomeForm
     ShortCut = 'Ctrl+D'
     OnExecute = DeleteExecute
   end
+  object ContactData: TDataBinding
+    Fields = ('NameEdit', 'PhoneEdit', 'EmailEdit', 'NotesMemo')
+  end
   object Body: TRow
     Grow = 1
     Align = Stretch
     Padding = 16
     Gap = 16
     object Side: TColumn
-      Width = 260
+      Width = 380
       Gap = 8
       object SearchEdit: TEdit
         Placeholder = 'Search'
         OnChange = SearchChange
       end
-      object ContactList: TListBox
+      object ContactList: TListView
         Grow = 1
+        Sortable = False
         OnChange = ContactListChange
+        object NameColumn: TGridColumn
+          Title = 'Name'
+          Field = 'name'
+        end
+        object PhoneColumn: TGridColumn
+          Title = 'Phone'
+          Field = 'phone'
+          Width = 130
+        end
       end
       object CountLabel: TLabel
         Text = 'no contacts'

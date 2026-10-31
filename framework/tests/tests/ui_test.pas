@@ -50,12 +50,14 @@ type
     procedure GridLoadsJson;
     procedure TreeFromLines;
     procedure ThemeValues;
+    procedure BindingNames;
+    procedure BindingLoadsAndSaves;
   end;
 
 implementation
 
 uses
-  Pastel.PForm, Pastel.Forms, Pastel.Controls, Pastel.Menus, Pastel.Grids, fpjson, Pastel.Json;
+  Pastel.PForm, Pastel.Forms, Pastel.Controls, Pastel.Menus, Pastel.Grids, Pastel.Binding, fpjson, Pastel.Json;
 
 var
   Clip: string;
@@ -750,6 +752,78 @@ begin
     AssertFalse(SetThemeValue('accent', 'green'));
   finally
     UseDarkTheme(False);
+  end;
+end;
+
+type
+  TPerson = class(TPersistent)
+  private
+    FFullName: string;
+    FAge: Integer;
+    FActive: Boolean;
+  published
+    property FullName: string read FFullName write FFullName;
+    property Age: Integer read FAge write FAge;
+    property Active: Boolean read FActive write FActive;
+  end;
+
+procedure TUITests.BindingNames;
+begin
+  AssertEquals('name', FieldFromControlName('NameEdit'));
+  AssertEquals('full_name', FieldFromControlName('FullNameEdit'));
+  AssertEquals('active', FieldFromControlName('ActiveCheckBox'));
+  AssertEquals('city', FieldFromControlName('CityCombo'));
+  AssertEquals('notes', FieldFromControlName('Notes'));
+end;
+
+procedure TUITests.BindingLoadsAndSaves;
+var
+  Root: TPFormNode;
+  F: TForm;
+  B: TDataBinding;
+  O: TJSONObject;
+  P: TPerson;
+begin
+  Root := ParsePForm('object F: TForm'#10 +
+    '  object FullNameEdit: TEdit'#10'  end'#10 +
+    '  object AgeEdit: TEdit'#10'  end'#10 +
+    '  object ActiveCheck: TCheckBox'#10'  end'#10 +
+    '  object CityCombo: TComboBox'#10'    Items = (''Bursa'', ''İzmir'')'#10'  end'#10 +
+    '  object B: TDataBinding'#10'    Fields = (''FullNameEdit'', ''AgeEdit'', ''ActiveCheck'', ''CityCombo=town'')'#10'  end'#10 +
+    'end');
+  F := TForm.Create(nil);
+  O := nil;
+  P := TPerson.Create;
+  try
+    BuildForm(F, Root);
+    B := TDataBinding(F.FindComponent('B'));
+    O := ParseJsonObject('{"full_name": "Ayşe", "age": 34, "active": true, "town": "İzmir", "id": 7}');
+    B.Load(O);
+    AssertEquals('Ayşe', TEdit(F.FindComponent('FullNameEdit')).Text);
+    AssertEquals('34', TEdit(F.FindComponent('AgeEdit')).Text);
+    AssertTrue(TCheckBox(F.FindComponent('ActiveCheck')).Checked);
+    AssertEquals(1, TComboBox(F.FindComponent('CityCombo')).ItemIndex);
+    AssertFalse(B.Modified);
+    TEdit(F.FindComponent('AgeEdit')).Text := '35';
+    AssertTrue(B.Modified);
+    B.Save(O);
+    AssertEquals('{"id":7,"full_name":"Ayşe","age":35,"active":true,"town":"İzmir"}', ToJson(O),
+      'numbers stay numbers, other fields stay');
+    B.Fields.Delete(3);     { TPerson has no town }
+    B.SaveObject(P);
+    AssertEquals('Ayşe', P.FullName);
+    AssertEquals(35, P.Age);
+    AssertTrue(P.Active);
+    B.Clear;
+    AssertEquals('', TEdit(F.FindComponent('FullNameEdit')).Text);
+    P.FullName := 'Ali';
+    B.LoadObject(P);
+    AssertEquals('Ali', TEdit(F.FindComponent('FullNameEdit')).Text);
+  finally
+    P.Free;
+    O.Free;
+    F.Free;
+    Root.Free;
   end;
 end;
 

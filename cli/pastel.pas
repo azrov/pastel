@@ -8,7 +8,7 @@ uses
   Classes, SysUtils,
   Pastel.Console, Pastel.Toml, Pastel.Project, Pastel.Targets,
   Pastel.Builder, Pastel.Templates, Pastel.Doctor, Pastel.Inspect, Pastel.TestCmd,
-  Pastel.Watch, Pastel.FmtCmd, Pastel.Package, Pastel.MigrateCmd, Pastel.UI, RegExpr;
+  Pastel.Watch, Pastel.FmtCmd, Pastel.Package, Pastel.MigrateCmd, Pastel.LangCmd, Pastel.Runtime, Pastel.UI, RegExpr;
 
 const
   ExitOk = 0;
@@ -21,7 +21,7 @@ type
     Positional: TStringArray;   { arguments that are not options }
     PassThrough: TStringArray;  { everything after "--" }
     Target: string;
-    Release, Verbose, All, Help, Watch, Check, NoBuild, Dark: Boolean;
+    Release, Verbose, All, Help, Watch, Check, NoBuild, Dark, Install: Boolean;
     Json, Stdin, NoRun: Boolean;
     Output, Layout, Database: string;
     Width, Height: Integer;
@@ -47,9 +47,11 @@ begin
   WriteLn('  fmt [files]          Format the code (--check: only report)');
   WriteLn('  package [deb|docker] Release build in an archive, a .deb or a container image (--target, --all, --no-build)');
   WriteLn('  migrate [status|new]  Database migrations in database/migrations (--database URL)');
+  WriteLn('  lang [add <code>]     Texts to translate in assets/lang/*.json');
   WriteLn('  clean                Remove the build folder');
   WriteLn('  targets              List the platforms Pastel can build for');
   WriteLn('  doctor               Check your setup');
+  WriteLn('  doctor --install windows  Get SDL2.dll and freetype.dll for Windows apps');
   WriteLn('  check [file]         Check .pform files for mistakes');
   WriteLn('  preview <file>       Draw a .pform file into a PNG (-o out.png)');
   WriteLn('  schema               Controls and properties as JSON (for editors)');
@@ -112,6 +114,8 @@ begin
       CL.NoBuild := True
     else if A = '--dark' then
       CL.Dark := True
+    else if A = '--install' then
+      CL.Install := True
     else if (A = '-w') or (A = '--watch') then
       CL.Watch := True
     else if A = '--no-run' then
@@ -332,6 +336,10 @@ var
       Result := PackageDeb(Project, Target, CL.Verbose) <> ''
     else if Kind = 'docker' then
       Result := PackageDocker(Project, Target, CL.Verbose, not CL.NoBuild) <> ''
+    else if Kind = 'installer' then
+      Result := PackageInstaller(Project, Target, CL.Verbose) <> ''
+    else if Kind = 'appimage' then
+      Result := PackageAppImage(Project, Target, CL.Verbose) <> ''
     else
       Result := PackageProject(Project, Target, CL.Verbose) <> '';
   end;
@@ -340,10 +348,10 @@ begin
   Kind := '';
   if Length(CL.Positional) > 0 then
     Kind := LowerCase(CL.Positional[0]);
-  if (Kind <> '') and (Kind <> 'deb') and (Kind <> 'docker') then
+  if (Kind <> '') and (Kind <> 'deb') and (Kind <> 'docker') and (Kind <> 'installer') and (Kind <> 'appimage') then
   begin
     Fail(Format('unknown package kind "%s"', [Kind]));
-    Hint('use: pastel package, pastel package deb, pastel package docker');
+    Hint('use: pastel package, pastel package deb, docker, appimage, installer --target windows');
     Exit(ExitUsage);
   end;
   Project := OpenProject;
@@ -361,8 +369,10 @@ begin
       Failed := 0;
       for Name in Project.Platforms do
       begin
-        { a .deb or an image only for the Linux platforms }
-        if (Kind <> '') and (Copy(Name, 1, 5) <> 'linux') then
+        { a .deb, an image or an AppImage only for the Linux platforms, an installer for Windows }
+        if (Kind = 'installer') and (Copy(Name, 1, 7) <> 'windows') then
+          Continue;
+        if (Kind <> '') and (Kind <> 'installer') and (Copy(Name, 1, 5) <> 'linux') then
           Continue;
         if not ResolveTarget(Name, T) or not PackageOne(T) then
           Inc(Failed);
@@ -578,6 +588,44 @@ begin
     Result := ExitOk;
 end;
 
+function CmdDoctor(const CL: TCommandLine): Integer;
+var
+  T: TTarget;
+  Name, Err: string;
+begin
+  if not CL.Install then
+  begin
+    if RunDoctor then Exit(ExitOk) else Exit(ExitError);
+  end;
+  if Length(CL.Positional) = 0 then
+  begin
+    Fail('install what? for example: pastel doctor --install windows');
+    Exit(ExitUsage);
+  end;
+  Result := ExitOk;
+  for Name in CL.Positional do
+  begin
+    if not FindTarget(Name, T) then
+    begin
+      Fail(Format('unknown target "%s"; see "pastel targets"', [Name]));
+      Exit(ExitUsage);
+    end;
+    if RuntimeInstalled(T) and (Length(RuntimeFiles(T)) > 0) then
+    begin
+      Status('Ready', Format('%s for %s in %s', [string.Join(', ', RuntimeFiles(T)), T.Name, RuntimeDir(T)]));
+      Continue;
+    end;
+    Err := InstallRuntime(T);
+    if Err <> '' then
+    begin
+      Fail(Err);
+      Result := ExitError;
+    end
+    else
+      Status('Installed', Format('%s for %s in %s', [string.Join(', ', RuntimeFiles(T)), T.Name, RuntimeDir(T)]));
+  end;
+end;
+
 function CmdPreview(const CL: TCommandLine): Integer;
 var
   Text, OutFile, Err: string;
@@ -624,9 +672,10 @@ begin
       'clean':   ExitCode := CmdClean;
       'test':    ExitCode := CmdTest(CL);
       'targets': ExitCode := CmdTargets;
-      'doctor':  if RunDoctor then ExitCode := ExitOk else ExitCode := ExitError;
+      'doctor':  ExitCode := CmdDoctor(CL);
       'check':   ExitCode := CmdCheck(CL);
       'migrate': ExitCode := RunMigrate(CL.Positional, CL.Database);
+      'lang':    ExitCode := RunLang(CL.Positional);
       'fmt':     ExitCode := RunFormat(CL.Positional, CL.Check, CL.Stdin);
       'package': ExitCode := CmdPackage(CL);
       'preview': ExitCode := CmdPreview(CL);

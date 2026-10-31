@@ -91,7 +91,7 @@ implementation
 uses
   Math, TypInfo, Process, {$IFDEF WINDOWS}Registry,{$ENDIF} Pastel.SDL2, Pastel.Assets,
   { linked into every app, so .pform files can use their controls }
-  Pastel.Controls, Pastel.Menus, Pastel.Dialogs, Pastel.Grids, Pastel.Toml;
+  Pastel.Controls, Pastel.Menus, Pastel.Dialogs, Pastel.Grids, Pastel.Binding, Pastel.Toml, Pastel.Lang;
 
 const
   DefaultWidth = 480;
@@ -278,6 +278,8 @@ begin
     Fatal(Err);
   UseAssetFonts;
   UseThemeFile;
+  if not LanguageChosen then
+    UseLanguage(SystemLanguage);
   FHeadless := GetEnv('PASTEL_HEADLESS') = '1';
   FScale := 1;
   FMouseScale := 1;

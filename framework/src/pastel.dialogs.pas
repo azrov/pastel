@@ -60,19 +60,19 @@ function ModalResultCaption(R: Integer): string;
 implementation
 
 uses
-  Math, StrUtils, Pastel.Controls, Pastel.NativeDialogs;
+  Math, StrUtils, Pastel.Controls, Pastel.NativeDialogs, Pastel.Lang;
 
 function ModalResultCaption(R: Integer): string;
 begin
   case R of
-    mrOk: Result := 'OK';
-    mrCancel: Result := 'Cancel';
-    mrAbort: Result := 'Abort';
-    mrRetry: Result := 'Retry';
-    mrIgnore: Result := 'Ignore';
-    mrYes: Result := 'Yes';
-    mrNo: Result := 'No';
-    mrClose: Result := 'Close';
+    mrOk: Result := _('OK');
+    mrCancel: Result := _('Cancel');
+    mrAbort: Result := _('Abort');
+    mrRetry: Result := _('Retry');
+    mrIgnore: Result := _('Ignore');
+    mrYes: Result := _('Yes');
+    mrNo: Result := _('No');
+    mrClose: Result := _('Close');
   else
     Result := IntToStr(R);
   end;
@@ -114,7 +114,7 @@ begin
   begin
     T := TLabel.Create(Result);
     T.Name := 'DialogTitle';
-    T.Text := Title;
+    T.Text := _(Title);
     T.Bold := True;
     T.FontSize := 16;
     T.Parent := Result;
@@ -287,7 +287,7 @@ begin
     Inc(I, 2);
   end;
   if FFilters.Count = 0 then
-    FFilters.Add('All files=*');
+    FFilters.Add(_('All files') + '=*');
 
   FPopup := NewDialog(Title, 560, Content);
   Top := TRow.Create(FPopup);
@@ -296,7 +296,7 @@ begin
   Up := TButton.Create(FPopup);
   Up.Name := 'UpButton';
   Up.Text := '↑';
-  Up.Hint := 'The folder above';
+  Up.Hint := _('The folder above');
   Up.Style := bsSecondary;
   Up.OnClick := @UpClicked;
   Up.Parent := Top;
@@ -318,7 +318,7 @@ begin
   Bottom.Parent := Content;
   FName := TEdit.Create(FPopup);
   FName.Name := 'FileNameEdit';
-  FName.Placeholder := 'File name';
+  FName.Placeholder := _('File name');
   FName.Grow := 1;
   FName.OnSubmit := @NameSubmitted;
   FName.Visible := FKind <> fdFolder;
@@ -338,7 +338,7 @@ begin
   Top.Parent := FPopup;
   CancelBtn := TButton.Create(FPopup);
   CancelBtn.Name := 'CancelButton';
-  CancelBtn.Text := 'Cancel';
+  CancelBtn.Text := _('Cancel');
   CancelBtn.Style := bsSecondary;
   CancelBtn.ModalResult := mrCancel;
   CancelBtn.Cancel := True;
@@ -346,10 +346,10 @@ begin
   OkBtn := TButton.Create(FPopup);
   OkBtn.Name := 'OkButton';
   case FKind of
-    fdOpen: OkBtn.Text := 'Open';
-    fdSave: OkBtn.Text := 'Save';
+    fdOpen: OkBtn.Text := _('Open');
+    fdSave: OkBtn.Text := _('Save');
   else
-    OkBtn.Text := 'Choose';
+    OkBtn.Text := _('Choose');
   end;
   OkBtn.OnClick := @AcceptClicked;
   OkBtn.Parent := Top;
@@ -521,7 +521,7 @@ begin
   begin
     if not FileExists(F) then
     begin
-      MessageDlg(Format('"%s" was not found.', [N]), 'Open', [mrOk]);
+      MessageDlg(Format(_('"%s" was not found.'), [N]), _('Open'), [mrOk]);
       Exit;
     end;
   end
@@ -529,8 +529,8 @@ begin
   begin
     if (ExtractFileExt(F) = '') and (FDefaultExt <> '') then
       F := F + FDefaultExt;
-    if FileExists(F) and (MessageDlg(Format('"%s" exists already. Replace it?', [ExtractFileName(F)]),
-      'Save', [mrYes, mrNo]) <> mrYes) then
+    if FileExists(F) and (MessageDlg(Format(_('"%s" exists already. Replace it?'), [ExtractFileName(F)]),
+      _('Save'), [mrYes, mrNo]) <> mrYes) then
       Exit;
   end;
   FResult := F;

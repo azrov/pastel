@@ -32,6 +32,12 @@ function PackageDeb(Project: TPastelProject; const Target: TTarget; Verbose: Boo
 { "pastel package docker": a folder with a Dockerfile, built into an image
   when docker is installed; the folder or ''. }
 function PackageDocker(Project: TPastelProject; const Target: TTarget; Verbose: Boolean; BuildImage: Boolean = True): string;
+{ A Windows installer (NSIS): installs for the user, a Start menu entry,
+  an uninstaller. Needs makensis (Linux: sudo apt install nsis). }
+function PackageInstaller(Project: TPastelProject; const Target: TTarget; Verbose: Boolean): string;
+{ A Linux AppImage of a desktop app: one file that runs on most Linux
+  systems. appimagetool is downloaded into ~/.pastel/tools the first time. }
+function PackageAppImage(Project: TPastelProject; const Target: TTarget; Verbose: Boolean): string;
 
 { Lower-case hex SHA-256 of a file. }
 function FileSha256(const FileName: string): string;
@@ -41,7 +47,7 @@ implementation
 uses
   Classes, {$IFDEF UNIX}BaseUnix,{$ENDIF}
   DateUtils, libtar, zstream, zipper,
-  Pastel.Console, Pastel.Builder, Pastel.Crypto;
+  Pastel.Console, Pastel.Builder, Pastel.Crypto, Pastel.Runtime, Pastel.WIcon, Pastel.Http, Process;
 
 function FileSha256(const FileName: string): string;
 begin
@@ -270,6 +276,10 @@ begin
   ExeName := ExtractFileName(ExePath);
   try
     AddEntry(Entries, Project.Root + ExePath, ExeName, True);
+    { SDL2.dll and freetype.dll of a Windows app }
+    if Project.Kind = 'app' then
+      for F in CopyRuntime(Target, ExtractFileDir(Project.Root + ExePath)) do
+        AddEntry(Entries, ExtractFilePath(Project.Root + ExePath) + F, F, False);
     AddStandardFiles(Entries, Project.Root);
     for F in Project.PackageFilesFor(Target.Name) do
       AddPattern(Entries, Project.Root, F);
@@ -408,13 +418,28 @@ begin
   end;
 end;
 
+{ the menu entry of a desktop app (freedesktop .desktop file) }
+function DesktopEntry(Project: TPastelProject; const Exec, Icon: string): string;
+begin
+  Result := '[Desktop Entry]' + #10 +
+    'Type=Application' + #10 +
+    'Name=' + Project.Title + #10;
+  if Project.Description <> '' then
+    Result := Result + 'Comment=' + Project.Description + #10;
+  Result := Result +
+    'Exec=' + Exec + #10 +
+    'Icon=' + Icon + #10 +
+    'Terminal=false' + #10 +
+    'Categories=Utility;' + #10;
+end;
+
 function PackageDeb(Project: TPastelProject; const Target: TTarget; Verbose: Boolean): string;
 const
   Normal: TTarPermissions = [tpReadByOwner, tpWriteByOwner, tpReadByGroup, tpReadByOther];
   Exec: TTarPermissions = [tpReadByOwner, tpWriteByOwner, tpExecuteByOwner, tpReadByGroup,
     tpExecuteByGroup, tpReadByOther, tpExecuteByOther];
 var
-  ExeName, Pkg, Arch, Dir, Dist, Archive, UnitFile, ConfigFile, Depends, Desc, Line: string;
+  ExeName, Pkg, Arch, Dir, Dist, Archive, UnitFile, ConfigFile, Depends, Desc, Line, IconPng: string;
   Entries: TEntries;
   E: TEntry;
   Data, Control, DataGz, ControlGz, Deb: TMemoryStream;
@@ -514,6 +539,18 @@ begin
         AddDirs('/usr/bin/x');
         W.AddSymbolicLink('./usr/bin/' + Project.Name, Dir + ExeName, Now);
       end;
+      { a desktop app: in the applications menu, with its icon }
+      if Project.Kind = 'app' then
+      begin
+        W.Permissions := Normal;
+        AddDirs('/usr/share/applications/x');
+        W.AddString(DesktopEntry(Project, Project.Name, Project.Name), './usr/share/applications/' + Project.Name + '.desktop', Now);
+        IconPng := Project.Root + 'build' + PathDelim + 'icon-256.png';
+        if not FileExists(Project.Root + 'assets' + PathDelim + 'icon.png') or
+          (WriteSizedPng(Project.Root + 'assets' + PathDelim + 'icon.png', IconPng, 256) <> '') then
+          WriteDefaultIcon(IconPng);
+        AddFile(IconPng, '/usr/share/icons/hicolor/256x256/apps/' + Project.Name + '.png', False);
+      end;
       W.Finalize;
     finally
       W.Free;
@@ -521,6 +558,8 @@ begin
 
     { what dpkg needs to know }
     Depends := 'libc6';
+    if Project.Kind = 'app' then
+      Depends := Depends + ', libsdl2-2.0-0, libfreetype6';
     for Line in Project.DebDepends do
       Depends := Depends + ', ' + Line;
     Desc := Project.Description;
@@ -744,6 +783,297 @@ begin
     Hint(Format('run: docker run -p 8080:8080 %s', [DebName(Project.Name)]))
   else
     Hint(Format('run: docker run %s', [DebName(Project.Name)]));
+end;
+
+{ ---------------- Windows installer ---------------- }
+
+function FindTool(const Name: string): string;
+begin
+  Result := ExeSearch(Name, GetEnvironmentVariable('PATH'));
+end;
+
+function NsisQuote(const S: string): string;
+begin
+  Result := '"' + StringReplace(StringReplace(S, '$', '$$', [rfReplaceAll]), '"', '$\"', [rfReplaceAll]) + '"';
+end;
+
+function PackageInstaller(Project: TPastelProject; const Target: TTarget; Verbose: Boolean): string;
+var
+  ExeName, Dist, Script, Nsi, Ico, Setup, Dir, LastDir, Key, Out_: string;
+  Entries: TEntries;
+  E: TEntry;
+  Args: TStringList;
+  Code: Integer;
+begin
+  Result := '';
+  if (Target.OS <> 'win64') and (Target.OS <> 'win32') then
+  begin
+    Fail(Format('an installer is for Windows; "%s" is not a Windows target', [Target.Name]));
+    Hint('use: pastel package installer --target windows');
+    Exit;
+  end;
+  if FindTool('makensis') = '' then
+  begin
+    Fail('makensis (NSIS) is needed to make a Windows installer');
+    {$IFDEF LINUX}
+    Hint('install it with: sudo apt install nsis');
+    {$ELSE}
+    Hint('install NSIS from https://nsis.sourceforge.io');
+    {$ENDIF}
+    Exit;
+  end;
+  if not Collect(Project, Target, Verbose, ExeName, Entries) then
+    Exit;
+  Dist := Project.Root + 'dist' + PathDelim;
+  ForceDirectories(Dist);
+  Setup := Dist + Format('%s-%s-%s-setup.exe', [Project.Name, Project.Version, Target.Name]);
+  Ico := '';
+  if FileExists(Project.Root + 'assets' + PathDelim + 'icon.png') then
+  begin
+    Ico := Project.Root + 'build' + PathDelim + 'installer.ico';
+    if WriteIco(Project.Root + 'assets' + PathDelim + 'icon.png', Ico) <> '' then
+      Ico := '';
+  end;
+  Key := 'Software\Microsoft\Windows\CurrentVersion\Uninstall\' + Project.Name;
+  Script := 'Unicode true' + LineEnding +
+    'SetCompressor /SOLID lzma' + LineEnding +
+    'Name ' + NsisQuote(Project.Title) + LineEnding +
+    'OutFile ' + NsisQuote(Setup) + LineEnding +
+    'InstallDir "$LOCALAPPDATA\Programs\' + Project.Name + '"' + LineEnding +
+    'RequestExecutionLevel user' + LineEnding +
+    'BrandingText "Made with Pastel"' + LineEnding;
+  if Ico <> '' then
+    Script := Script + 'Icon ' + NsisQuote(Ico) + LineEnding + 'UninstallIcon ' + NsisQuote(Ico) + LineEnding;
+  Script := Script +
+    'Page directory' + LineEnding + 'Page instfiles' + LineEnding +
+    'UninstPage uninstConfirm' + LineEnding + 'UninstPage instfiles' + LineEnding + LineEnding +
+    'Section' + LineEnding;
+  LastDir := '?';
+  for E in Entries do
+  begin
+    Dir := ExtractFilePath(StringReplace(E.Name, '/', '\', [rfReplaceAll]));
+    if Dir <> LastDir then
+    begin
+      Script := Script + '  SetOutPath ' + NsisQuote('$INSTDIR\' + ExcludeTrailingBackslash(Dir)) + LineEnding;
+      LastDir := Dir;
+    end;
+    Script := Script + '  File ' + NsisQuote(E.Source) + LineEnding;
+  end;
+  Script := Script +
+    '  SetOutPath "$INSTDIR"' + LineEnding +
+    '  WriteUninstaller "$INSTDIR\uninstall.exe"' + LineEnding +
+    '  CreateShortCut ' + NsisQuote('$SMPROGRAMS\' + Project.Title + '.lnk') + ' "$INSTDIR\' + ExeName + '"' + LineEnding +
+    '  WriteRegStr HKCU "' + Key + '" "DisplayName" ' + NsisQuote(Project.Title) + LineEnding +
+    '  WriteRegStr HKCU "' + Key + '" "DisplayVersion" ' + NsisQuote(Project.Version) + LineEnding +
+    '  WriteRegStr HKCU "' + Key + '" "DisplayIcon" "$INSTDIR\' + ExeName + '"' + LineEnding +
+    '  WriteRegStr HKCU "' + Key + '" "UninstallString" "$INSTDIR\uninstall.exe"' + LineEnding +
+    '  WriteRegStr HKCU "' + Key + '" "InstallLocation" "$INSTDIR"' + LineEnding +
+    '  WriteRegDWORD HKCU "' + Key + '" "NoModify" 1' + LineEnding +
+    '  WriteRegDWORD HKCU "' + Key + '" "NoRepair" 1' + LineEnding;
+  if Project.Maintainer <> '' then
+    Script := Script + '  WriteRegStr HKCU "' + Key + '" "Publisher" ' + NsisQuote(Project.Maintainer) + LineEnding;
+  Script := Script + 'SectionEnd' + LineEnding + LineEnding +
+    'Section "Uninstall"' + LineEnding +
+    '  Delete ' + NsisQuote('$SMPROGRAMS\' + Project.Title + '.lnk') + LineEnding +
+    '  RMDir /r "$INSTDIR"' + LineEnding +
+    '  DeleteRegKey HKCU "' + Key + '"' + LineEnding +
+    'SectionEnd' + LineEnding;
+  Nsi := Project.Root + 'build' + PathDelim + 'installer.nsi';
+  with TStringList.Create do
+  try
+    Text := Script;
+    SaveToFile(Nsi);
+  finally
+    Free;
+  end;
+  if FileExists(Setup) then
+    SysUtils.DeleteFile(Setup);
+  Args := TStringList.Create;
+  try
+    Args.Add('-V2');
+    Args.Add(Nsi);
+    Code := RunCapture(FindTool('makensis'), Args, Project.Root, Out_);
+  finally
+    Args.Free;
+  end;
+  if (Code <> 0) or not FileExists(Setup) then
+  begin
+    Fail('makensis could not make the installer:');
+    WriteLn(Out_);
+    Exit;
+  end;
+  WriteChecksum(Setup);
+  Status('Packaged', Format('dist%s%s (%s)', [PathDelim, ExtractFileName(Setup), SizeText(Setup)]));
+  Hint('it installs for the user (no administrator needed), with a Start menu entry and an uninstaller');
+  Result := Setup;
+end;
+
+{ ---------------- AppImage ---------------- }
+
+function ToolsDir: string;
+begin
+  Result := GetEnvironmentVariable('PASTEL_CACHE');
+  if Result = '' then
+    Result := IncludeTrailingPathDelimiter(GetUserDir) + '.pastel';
+  Result := IncludeTrailingPathDelimiter(Result) + 'tools' + PathDelim;
+end;
+
+{ the system's copy of a library ('libSDL2-2.0.so.0'), '' when not found }
+function FindLibrary(const Name: string): string;
+var
+  D: string;
+begin
+  for D in ['/usr/lib/x86_64-linux-gnu/', '/usr/lib/aarch64-linux-gnu/', '/usr/lib64/', '/usr/lib/', '/lib/x86_64-linux-gnu/'] do
+    if FileExists(D + Name) then
+      Exit(D + Name);
+  Result := '';
+end;
+
+function PackageAppImage(Project: TPastelProject; const Target: TTarget; Verbose: Boolean): string;
+var
+  ExeName, Arch, AppDir, Tool, Runtime, Dist, Image, Lib, Out_, Url: string;
+  Entries: TEntries;
+  E: TEntry;
+  Args, Env: TStringList;
+  Code: Integer;
+  P: TProcess;
+begin
+  Result := '';
+  if Target.OS <> 'linux' then
+  begin
+    Fail(Format('an AppImage is for Linux; "%s" is not a Linux target', [Target.Name]));
+    Exit;
+  end;
+  if Project.Kind <> 'app' then
+  begin
+    Fail('an AppImage is for desktop apps; use "pastel package deb" for services and tools');
+    Exit;
+  end;
+  if Target.CPU = 'x86_64' then Arch := 'x86_64' else Arch := 'aarch64';
+  if not Collect(Project, Target, Verbose, ExeName, Entries) then
+    Exit;
+  { the tools, once }
+  ForceDirectories(ToolsDir);
+  Tool := FindTool('appimagetool');
+  try
+    if Tool = '' then
+    begin
+      Tool := ToolsDir + 'appimagetool-x86_64.AppImage';
+      if not FileExists(Tool) then
+      begin
+        Url := 'https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage';
+        Status('Downloading', Url);
+        HttpDownload(Url, Tool + '.part');
+        RenameFile(Tool + '.part', Tool);
+      end;
+      {$IFDEF UNIX}
+      FpChmod(Tool, &755);
+      {$ENDIF}
+    end;
+    Runtime := ToolsDir + 'runtime-' + Arch;
+    if not FileExists(Runtime) then
+    begin
+      Url := 'https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-' + Arch;
+      Status('Downloading', Url);
+      HttpDownload(Url, Runtime + '.part');
+      RenameFile(Runtime + '.part', Runtime);
+    end;
+  except
+    on Ex: Exception do
+    begin
+      Fail('could not download the AppImage tools: ' + Ex.Message);
+      Exit;
+    end;
+  end;
+  { the AppDir: the program in usr/bin, its menu entry and icon at the top }
+  AppDir := Project.Root + 'build' + PathDelim + Project.Name + '.AppDir' + PathDelim;
+  DeleteTree(ExcludeTrailingPathDelimiter(AppDir));
+  ForceDirectories(AppDir + 'usr' + PathDelim + 'bin');
+  for E in Entries do
+  begin
+    ForceDirectories(ExtractFileDir(AppDir + 'usr/bin/' + E.Name));
+    CopyFile(E.Source, AppDir + 'usr/bin/' + E.Name, E.Executable);
+  end;
+  { SDL2 and FreeType go along: not every system has them }
+  if Target.Name = HostTarget.Name then
+  begin
+    ForceDirectories(AppDir + 'usr' + PathDelim + 'lib');
+    for Lib in ['libSDL2-2.0.so.0', 'libfreetype.so.6'] do
+      if FindLibrary(Lib) <> '' then
+        CopyFile(FindLibrary(Lib), AppDir + 'usr/lib/' + Lib, False);
+  end;
+  with TStringList.Create do
+  try
+    Text := '#!/bin/sh' + LineEnding +
+      'HERE="$(dirname "$(readlink -f "$0")")"' + LineEnding +
+      'export LD_LIBRARY_PATH="$HERE/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"' + LineEnding +
+      'exec "$HERE/usr/bin/' + ExeName + '" "$@"' + LineEnding;
+    SaveToFile(AppDir + 'AppRun');
+    Text := DesktopEntry(Project, Project.Name, Project.Name);
+    SaveToFile(AppDir + Project.Name + '.desktop');
+  finally
+    Free;
+  end;
+  {$IFDEF UNIX}
+  FpChmod(AppDir + 'AppRun', &755);
+  {$ENDIF}
+  if FileExists(Project.Root + 'assets' + PathDelim + 'icon.png') then
+    WriteSizedPng(Project.Root + 'assets' + PathDelim + 'icon.png', AppDir + Project.Name + '.png', 256)
+  else
+    WriteDefaultIcon(AppDir + Project.Name + '.png');
+  Dist := Project.Root + 'dist' + PathDelim;
+  ForceDirectories(Dist);
+  Image := Dist + Format('%s-%s-%s.AppImage', [Project.Name, Project.Version, Arch]);
+  if FileExists(Image) then
+    SysUtils.DeleteFile(Image);
+  P := TProcess.Create(nil);
+  Args := TStringList.Create;
+  Env := TStringList.Create;
+  try
+    P.Executable := Tool;
+    P.Parameters.Add('--no-appstream');
+    P.Parameters.Add('--runtime-file');
+    P.Parameters.Add(Runtime);
+    P.Parameters.Add(ExcludeTrailingPathDelimiter(AppDir));
+    P.Parameters.Add(Image);
+    for Code := 0 to GetEnvironmentVariableCount - 1 do
+      P.Environment.Add(GetEnvironmentString(Code));
+    P.Environment.Add('ARCH=' + Arch);
+    P.Environment.Add('APPIMAGE_EXTRACT_AND_RUN=1');
+    P.CurrentDirectory := Project.Root;
+    P.Options := [poUsePipes, poStderrToOutPut];
+    P.Execute;
+    Out_ := '';
+    while P.Running or (P.Output.NumBytesAvailable > 0) do
+    begin
+      if P.Output.NumBytesAvailable > 0 then
+      begin
+        SetLength(Url, P.Output.NumBytesAvailable);
+        SetLength(Url, P.Output.Read(Url[1], Length(Url)));
+        Out_ := Out_ + Url;
+      end
+      else
+        Sleep(20);
+    end;
+    Code := P.ExitStatus;
+  finally
+    P.Free;
+    Args.Free;
+    Env.Free;
+  end;
+  if (Code <> 0) or not FileExists(Image) then
+  begin
+    Fail('appimagetool could not make the AppImage:');
+    WriteLn(Out_);
+    Exit;
+  end;
+  {$IFDEF UNIX}
+  FpChmod(Image, &755);
+  {$ENDIF}
+  WriteChecksum(Image);
+  Status('Packaged', Format('dist%s%s (%s)', [PathDelim, ExtractFileName(Image), SizeText(Image)]));
+  Hint(Format('run it on any Linux: chmod +x %s && ./%s', [ExtractFileName(Image), ExtractFileName(Image)]));
+  Result := Image;
 end;
 
 end.

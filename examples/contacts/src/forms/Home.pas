@@ -5,7 +5,7 @@ unit Home;
 interface
 
 uses
-  SysUtils, Pastel.UI, Pastel.Dialogs, ContactStore, Home.g;
+  SysUtils, fpjson, Pastel.UI, Pastel.Dialogs, ContactStore, Home.g;
 
 type
   THomeForm = class(THomeFormBase)
@@ -19,10 +19,10 @@ type
     procedure SaveClick(Sender: TObject);
   private
     FStore: TContactStore;
-    FShown: TContactArray;
+    FRows: TJSONArray;           { the contacts in the list }
     FCurrent: Int64;
     procedure Reload(SelectId: Int64);
-    procedure ShowContact(const C: TContact);
+    procedure ShowContact(Data: TJSONObject);
   public
     destructor Destroy; override;
   end;
@@ -36,8 +36,8 @@ procedure THomeForm.FormCreate(Sender: TObject);
 begin
   FStore := TContactStore.Create(DefaultDatabaseUrl);
   Reload(0);
-  if Length(FShown) > 0 then
-    ContactList.ItemIndex := 0
+  if ContactList.RowCount > 0 then
+    ContactList.Row := 0
   else
     NewExecute(nil);
 end;
@@ -45,6 +45,7 @@ end;
 destructor THomeForm.Destroy;
 begin
   FStore.Free;
+  FRows.Free;
   inherited Destroy;
 end;
 
@@ -52,19 +53,14 @@ procedure THomeForm.Reload(SelectId: Int64);
 var
   I: Integer;
 begin
-  FShown := FStore.List(SearchEdit.Text);
-  ContactList.Items.BeginUpdate;
-  try
-    ContactList.Items.Clear;
-    for I := 0 to High(FShown) do
-      ContactList.Items.Add(FShown[I].Name);
-  finally
-    ContactList.Items.EndUpdate;
-  end;
-  ContactList.ItemIndex := -1;
-  for I := 0 to High(FShown) do
-    if FShown[I].Id = SelectId then
-      ContactList.ItemIndex := I;
+  FreeAndNil(FRows);
+  FRows := FStore.ListJson(SearchEdit.Text);
+  ContactList.Clear;
+  ContactList.LoadJson(FRows);      { the columns take name and phone }
+  ContactList.Row := -1;
+  for I := 0 to FRows.Count - 1 do
+    if FRows.Objects[I].Get('id', Int64(0)) = SelectId then
+      ContactList.Row := I;
   case FStore.Count of
     0: CountLabel.Text := 'no contacts';
     1: CountLabel.Text := '1 contact';
@@ -73,20 +69,26 @@ begin
   end;
 end;
 
-procedure THomeForm.ShowContact(const C: TContact);
+{ Data nil: a new, empty contact }
+procedure THomeForm.ShowContact(Data: TJSONObject);
 begin
-  FCurrent := C.Id;
-  NameEdit.Text := C.Name;
-  PhoneEdit.Text := C.Phone;
-  EmailEdit.Text := C.Email;
-  NotesMemo.Text := C.Notes;
-  DeleteAction.Enabled := C.Id <> 0;
+  if Data = nil then
+  begin
+    FCurrent := 0;
+    ContactData.Clear;
+  end
+  else
+  begin
+    FCurrent := Data.Get('id', Int64(0));
+    ContactData.Load(Data);         { NameEdit <- name, PhoneEdit <- phone... }
+  end;
+  DeleteAction.Enabled := FCurrent <> 0;
 end;
 
 procedure THomeForm.NewExecute(Sender: TObject);
 begin
-  ContactList.ItemIndex := -1;
-  ShowContact(NewContact('', '', ''));
+  ContactList.Row := -1;
+  ShowContact(nil);
   NameEdit.SetFocus;
 end;
 
@@ -101,19 +103,22 @@ end;
 
 procedure THomeForm.SaveClick(Sender: TObject);
 var
-  C: TContact;
+  Data: TJSONObject;
 begin
-  C := NewContact(NameEdit.Text, PhoneEdit.Text, EmailEdit.Text, NotesMemo.Text);
-  C.Id := FCurrent;
+  Data := ContactData.ToJson;       { name, phone, email, notes }
   try
-    FCurrent := FStore.Save(C);
+    Data.Add('id', FCurrent);
+    FCurrent := FStore.SaveJson(Data);
   except
     on E: EContactInvalid do
     begin
+      Data.Free;
       ShowMessage(E.Message, 'Cannot save');
       Exit;
     end;
   end;
+  Data.Free;
+  ContactData.MarkSaved;
   Reload(FCurrent);
   DeleteAction.Enabled := True;
 end;
@@ -125,8 +130,8 @@ end;
 
 procedure THomeForm.ContactListChange(Sender: TObject);
 begin
-  if (ContactList.ItemIndex >= 0) and (ContactList.ItemIndex <= High(FShown)) then
-    ShowContact(FShown[ContactList.ItemIndex]);
+  if (ContactList.Row >= 0) and (ContactList.Row < FRows.Count) then
+    ShowContact(FRows.Objects[ContactList.Row]);
 end;
 
 procedure THomeForm.QuitClick(Sender: TObject);

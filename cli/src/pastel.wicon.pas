@@ -15,6 +15,12 @@ uses
 
 { '' when it worked, else what went wrong. }
 function WriteIconRes(const PngFile, ResFile: string): string;
+{ The picture as a Size x Size PNG (Linux menus). }
+function WriteSizedPng(const PngFile, OutFile: string; Size: Integer): string;
+{ A plain icon for apps without assets/icon.png: a rounded square. }
+procedure WriteDefaultIcon(const OutFile: string);
+{ The same icon as an .ico file (for installers). }
+function WriteIco(const PngFile, IcoFile: string): string;
 
 implementation
 
@@ -163,6 +169,141 @@ begin
       Pngs[I].Free;
     Group.Free;
     Empty.Free;
+    Writer.Free;
+    Reader.Free;
+    Src.Free;
+  end;
+end;
+
+function WriteSizedPng(const PngFile, OutFile: string; Size: Integer): string;
+var
+  Src, Img: TFPCustomImage;
+  Reader: TFPReaderPNG;
+  Writer: TFPWriterPNG;
+begin
+  Result := '';
+  Src := TFPMemoryImage.Create(0, 0);
+  Reader := TFPReaderPNG.Create;
+  Writer := TFPWriterPNG.Create;
+  Writer.UseAlpha := True;
+  Writer.WordSized := False;
+  try
+    try
+      Src.LoadFromFile(PngFile, Reader);
+    except
+      on E: Exception do
+        Exit(Format('%s is not a PNG picture (%s)', [PngFile, E.Message]));
+    end;
+    Img := Scaled(Src, Size);
+    try
+      ForceDirectories(ExtractFileDir(OutFile));
+      Img.SaveToFile(OutFile, Writer);
+    finally
+      Img.Free;
+    end;
+  finally
+    Writer.Free;
+    Reader.Free;
+    Src.Free;
+  end;
+end;
+
+procedure WriteDefaultIcon(const OutFile: string);
+var
+  Img: TFPMemoryImage;
+  Writer: TFPWriterPNG;
+  X, Y, DX, DY, R: Integer;
+  C: TFPColor;
+begin
+  Img := TFPMemoryImage.Create(256, 256);
+  Writer := TFPWriterPNG.Create;
+  Writer.UseAlpha := True;
+  try
+    Img.UsePalette := False;
+    C.Red := $4F00; C.Green := $4600; C.Blue := $E500; C.Alpha := $FFFF;
+    R := 48;
+    for Y := 0 to 255 do
+      for X := 0 to 255 do
+      begin
+        DX := Math.Max(0, Math.Max(R - X, X - (255 - R)));
+        DY := Math.Max(0, Math.Max(R - Y, Y - (255 - R)));
+        if DX * DX + DY * DY <= R * R then
+          Img.Colors[X, Y] := C
+        else
+          Img.Colors[X, Y] := colTransparent;
+      end;
+    ForceDirectories(ExtractFileDir(OutFile));
+    Img.SaveToFile(OutFile, Writer);
+  finally
+    Writer.Free;
+    Img.Free;
+  end;
+end;
+
+function WriteIco(const PngFile, IcoFile: string): string;
+var
+  Src, Img: TFPCustomImage;
+  Reader: TFPReaderPNG;
+  Writer: TFPWriterPNG;
+  Pngs: array[0..High(Sizes)] of TMemoryStream;
+  Ico: TFileStream;
+  I: Integer;
+  Offset: DWord;
+begin
+  Result := '';
+  Src := TFPMemoryImage.Create(0, 0);
+  Reader := TFPReaderPNG.Create;
+  Writer := TFPWriterPNG.Create;
+  Writer.UseAlpha := True;
+  Writer.WordSized := False;
+  for I := 0 to High(Pngs) do
+    Pngs[I] := TMemoryStream.Create;
+  try
+    try
+      Src.LoadFromFile(PngFile, Reader);
+    except
+      on E: Exception do
+        Exit(Format('%s is not a PNG picture (%s)', [PngFile, E.Message]));
+    end;
+    for I := 0 to High(Sizes) do
+    begin
+      Img := Scaled(Src, Sizes[I]);
+      try
+        Img.SaveToStream(Pngs[I], Writer);
+      finally
+        Img.Free;
+      end;
+    end;
+    ForceDirectories(ExtractFileDir(IcoFile));
+    Ico := TFileStream.Create(IcoFile, fmCreate);
+    try
+      Ico.WriteWord(0);
+      Ico.WriteWord(NtoLE(Word(1)));
+      Ico.WriteWord(NtoLE(Word(Length(Sizes))));
+      Offset := 6 + 16 * Length(Sizes);
+      for I := 0 to High(Sizes) do
+      begin
+        Ico.WriteByte(Sizes[I] mod 256);
+        Ico.WriteByte(Sizes[I] mod 256);
+        Ico.WriteByte(0);
+        Ico.WriteByte(0);
+        Ico.WriteWord(NtoLE(Word(1)));
+        Ico.WriteWord(NtoLE(Word(32)));
+        Ico.WriteDWord(NtoLE(DWord(Pngs[I].Size)));
+        Ico.WriteDWord(NtoLE(Offset));
+        Inc(Offset, Pngs[I].Size);
+      end;
+      for I := 0 to High(Sizes) do
+      begin
+        Pngs[I].Position := 0;
+        Ico.CopyFrom(Pngs[I], Pngs[I].Size);
+      end;
+    finally
+      Ico.Free;
+    end;
+  finally
+    for I := 0 to High(Pngs) do
+      Pngs[I].Free;
     Writer.Free;
     Reader.Free;
     Src.Free;

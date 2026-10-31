@@ -16,7 +16,7 @@ fi
 
 mkdir -p bin build/cli
 
-"$FPC" -Mobjfpc -Sh -O2 -Xs -XX -vewn \
+"$FPC" -Mobjfpc -Sh -O2 -Xs -XX -vewn -FaPastel.Startup \
   -FUbuild/cli -Fucli/src -Fuframework/src -FEbin -opastel \
   cli/pastel.pas
 

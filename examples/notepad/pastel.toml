@@ -4,6 +4,8 @@
 [project]
 name = "notepad"
 version = "1.0.0"
+title = "Notepad"
+description = "A small text editor"
 type = "app"
 
 [build]

@@ -30,7 +30,7 @@ function FormUnitSource(const UnitName, FormSource, FilePath: string): string;
 implementation
 
 uses
-  Pastel.PForm, Pastel.Console, Pastel.UI, Pastel.Controls, Pastel.Menus, Pastel.Grids;
+  Pastel.PForm, Pastel.Console, Pastel.UI, Pastel.Controls, Pastel.Menus, Pastel.Grids, Pastel.Binding;
 
 function PascalString(const S: string): string;
 var

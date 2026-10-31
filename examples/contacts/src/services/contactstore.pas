@@ -30,6 +30,11 @@ type
     { Adds the contact (Id = 0) or updates it; returns its id. }
     function Save(const C: TContact): Int64;
     procedure Delete(Id: Int64);
+    { The same as JSON objects (id, name, phone, email, notes), for a grid
+      and a TDataBinding; the caller frees the result. }
+    function ListJson(const Filter: string = ''): TJSONArray;
+    { Saves a JSON object like those (id 0 or missing: a new contact). }
+    function SaveJson(Data: TJSONObject): Int64;
     function Count: Integer;
   end;
 
@@ -83,16 +88,27 @@ begin
   inherited Destroy;
 end;
 
+function TContactStore.ListJson(const Filter: string): TJSONArray;
+var
+  Like: string;
+begin
+  Like := '%' + LowerCase(Trim(Filter)) + '%';
+  Result := FDb.Query('select * from contacts where lower(name) like ? or phone like ? or lower(email) like ? ' +
+    'order by lower(name), id', [Like, Like, Like]);
+end;
+
+function TContactStore.SaveJson(Data: TJSONObject): Int64;
+begin
+  Result := Save(FromJson(Data));
+end;
+
 function TContactStore.List(const Filter: string): TContactArray;
 var
   Rows: TJSONArray;
   I: Integer;
-  Like: string;
 begin
   Result := nil;
-  Like := '%' + LowerCase(Trim(Filter)) + '%';
-  Rows := FDb.Query('select * from contacts where lower(name) like ? or phone like ? or lower(email) like ? ' +
-    'order by lower(name), id', [Like, Like, Like]);
+  Rows := ListJson(Filter);
   try
     SetLength(Result, Rows.Count);
     for I := 0 to Rows.Count - 1 do

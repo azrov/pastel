@@ -43,7 +43,26 @@ var
 implementation
 
 uses
-  TypInfo, Pastel.Graphics;
+  TypInfo, Pastel.Graphics, Pastel.Lang;
+
+{ texts people read are translated (assets/lang/); names, files and colors not }
+function Shown(const PropName, Value: string): string;
+var
+  Indent: Integer;
+begin
+  case LowerCase(PropName) of
+    'text', 'caption', 'title', 'placeholder', 'hint', 'items':
+      begin
+        { tree lines keep their indentation }
+        Indent := 0;
+        while (Indent < Length(Value)) and (Value[Indent + 1] = ' ') do
+          Inc(Indent);
+        Result := Copy(Value, 1, Indent) + Translate(Copy(Value, Indent + 1, MaxInt));
+      end;
+  else
+    Result := Value;
+  end;
+end;
 
 var
   Sources: TStringList = nil;
@@ -166,7 +185,7 @@ var
   T: PTypeInfo;
   Color: TColor32;
   N: Int64;
-  E: Integer;
+  E, I: Integer;
   F: Double;
   M: TMethod;
   FS: TFormatSettings;
@@ -212,6 +231,8 @@ begin
         L.Text := StringReplace(P.Value, #10, LineEnding, [rfReplaceAll]);
       if (P.Value <> '') and (Copy(P.Value, Length(P.Value), 1) = #10) then
         L.Add('');
+      for I := 0 to L.Count - 1 do
+        L[I] := Shown(PropName, L[I]);
       if GetObjectProp(Instance, PI) <> nil then
         TStrings(GetObjectProp(Instance, PI)).Assign(L)
       else if PI^.SetProc <> nil then
@@ -298,7 +319,7 @@ begin
       begin
         if P.Kind <> pvString then
           Fail(Format('%s expects text in quotes, like ''%s''', [P.Name, P.Value]));
-        SetStrProp(Instance, PI, P.Value);
+        SetStrProp(Instance, PI, Shown(PropName, P.Value));
       end;
     tkUString, tkWString:
       begin

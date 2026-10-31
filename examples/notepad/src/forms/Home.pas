@@ -5,7 +5,7 @@ unit Home;
 interface
 
 uses
-  SysUtils, Pastel.UI, Pastel.Dialogs, Pastel.Files, TextStats, Home.g;
+  SysUtils, Pastel.UI, Pastel.Dialogs, Pastel.Files, Pastel.Lang, TextStats, Home.g;
 
 type
   THomeForm = class(THomeFormBase)
@@ -33,10 +33,12 @@ type
 var
   HomeForm: THomeForm;
 
-const
-  TextFiles = 'Text files|*.txt;*.md|All files|*';
-
 implementation
+
+function TextFiles: string;
+begin
+  Result := _('Text files|*.txt;*.md|All files|*');
+end;
 
 procedure THomeForm.FormCreate(Sender: TObject);
 begin
@@ -50,12 +52,12 @@ var
   S: string;
 begin
   if FFileName = '' then
-    S := 'Untitled'
+    S := _('Untitled')
   else
     S := ExtractFileName(FFileName);
   if FModified then
     S := '*' + S;
-  Title := S + ' - Notepad';
+  Title := Format(_('%s - Notepad'), [S]);
 end;
 
 procedure THomeForm.Load(const AFileName: string);
@@ -63,7 +65,7 @@ begin
   Editor.Text := ReadText(AFileName);
   FFileName := AFileName;
   FModified := False;
-  StatusLabel.Text := 'opened ' + ExtractFileName(AFileName);
+  StatusLabel.Text := Format(_('opened %s'), [ExtractFileName(AFileName)]);
   UpdateTitle;
 end;
 
@@ -74,13 +76,13 @@ begin
   except
     on E: Exception do
     begin
-      ShowMessage(E.Message, 'Cannot save');
+      ShowMessage(E.Message, _('Cannot save'));
       Exit(False);
     end;
   end;
   FFileName := AFileName;
   FModified := False;
-  StatusLabel.Text := 'saved ' + ExtractFileName(AFileName);
+  StatusLabel.Text := Format(_('saved %s'), [ExtractFileName(AFileName)]);
   UpdateTitle;
   Result := True;
 end;
@@ -92,14 +94,14 @@ begin
   if FFileName <> '' then
     Exit(SaveTo(FFileName));
   F := 'untitled.txt';
-  Result := SaveFileDialog(F, TextFiles, 'Save', '.txt') and SaveTo(F);
+  Result := SaveFileDialog(F, TextFiles, _('Save'), '.txt') and SaveTo(F);
 end;
 
 function THomeForm.MayDiscard: Boolean;
 begin
   if not FModified then
     Exit(True);
-  case MessageDlg('Save the changes?', 'Notepad', [mrYes, mrNo, mrCancel]) of
+  case MessageDlg(_('Save the changes?'), _('Notepad'), [mrYes, mrNo, mrCancel]) of
     mrYes: Result := Save;
     mrNo: Result := True;
   else
@@ -119,7 +121,7 @@ begin
   Editor.Text := '';
   FFileName := '';
   FModified := False;
-  StatusLabel.Text := 'new file';
+  StatusLabel.Text := _('new file');
   UpdateTitle;
 end;
 
@@ -144,7 +146,7 @@ begin
   F := FFileName;
   if F = '' then
     F := 'untitled.txt';
-  if SaveFileDialog(F, TextFiles, 'Save as', '.txt') then
+  if SaveFileDialog(F, TextFiles, _('Save as'), '.txt') then
     SaveTo(F);
 end;
 
@@ -170,7 +172,7 @@ end;
 
 procedure THomeForm.EditorChange(Sender: TObject);
 begin
-  CountLabel.Text := Format('%d words, %d lines', [WordCount(Editor.Text), LineCount(Editor.Text)]);
+  CountLabel.Text := Format(_('%d words, %d lines'), [WordCount(Editor.Text), LineCount(Editor.Text)]);
   if not FModified then
   begin
     FModified := True;

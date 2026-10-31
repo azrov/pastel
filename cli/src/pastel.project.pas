@@ -44,6 +44,7 @@ type
     PackageInclude: TStringArray;
     PackageTargetInclude: array of record Target: string; Files: TStringArray; end;
     Description: string;        { [project] description }
+    Title: string;              { [project] title: the name people see; Name when not set }
     Maintainer: string;         { [package] maintainer = "Name <mail>" }
     DebDepends: TStringArray;   { [package.deb] depends = ["libsqlite3-0"] }
     DockerBase: string;         { [package.docker] base = "debian:bookworm-slim" }
@@ -156,6 +157,7 @@ begin
       end;
       P.PackageInclude := Doc.GetArray('package.include');
       P.Description := Doc.GetString('project.description', '');
+      P.Title := Doc.GetString('project.title', P.Name);
       P.Maintainer := Doc.GetString('package.maintainer', '');
       P.DebDepends := Doc.GetArray('package.deb.depends');
       P.DockerBase := Doc.GetString('package.docker.base', 'debian:bookworm-slim');

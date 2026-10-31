@@ -71,13 +71,13 @@ expect "notes-api stops cleanly"         'grep -q "notes-api stopped" "$WORK/not
 expect "notes-api keeps the notes"       'grep -q "Alışveriş" "$WORK/ex-notes-api/data/notes.json"'
 (cd "$WORK/ex-contacts" && "$PASTEL" build >/dev/null)
 rm -f "$WORK/contacts.db"
-set +e; out="$(cd "$WORK/ex-contacts" && CONTACTS_DB="$WORK/contacts.db" PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT=tests/ui.txt ./build/*/debug/contacts 2>&1)"; code=$?; set -e
+set +e; out="$(cd "$WORK/ex-contacts" && PASTEL_LANG=en CONTACTS_DB="$WORK/contacts.db" PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT=tests/ui.txt ./build/*/debug/contacts 2>&1)"; code=$?; set -e
 expect "contacts adds, finds and deletes" '[ "$code" = 0 ] && ! echo "$out" | grep -q FAIL'
 [ "$code" = 0 ] || echo "$out" | grep -v "^ok" | head
 expect "contacts keeps them in SQLite"   '[ -s "$WORK/contacts.db" ]'
 (cd "$WORK/ex-notepad" && "$PASTEL" build >/dev/null)
 rm -rf "$WORK/np" && mkdir "$WORK/np"
-set +e; out="$(cd "$WORK/np" && PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT="$WORK/ex-notepad/tests/ui.txt" "$WORK"/ex-notepad/build/*/debug/notepad 2>&1)"; code=$?; set -e
+set +e; out="$(cd "$WORK/np" && PASTEL_LANG=en PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT="$WORK/ex-notepad/tests/ui.txt" "$WORK"/ex-notepad/build/*/debug/notepad 2>&1)"; code=$?; set -e
 expect "notepad saves, opens, asks"      '[ "$code" = 0 ] && ! echo "$out" | grep -q FAIL'
 [ "$code" = 0 ] || echo "$out" | grep -v "^ok" | head
 expect "notepad wrote the file"          'grep -q "second line" "$WORK/np/hello.txt"'
@@ -86,6 +86,33 @@ mkdir -p "$WORK/ex-notepad/assets" && printf 'accent = "#0E9F6E"\nmystery = "1"\
 set +e; out="$(cd "$WORK/np" && printf 'quit\n' > q.txt && PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT=q.txt "$WORK"/ex-notepad/build/*/debug/notepad 2>&1)"; code=$?; set -e
 expect "assets/theme.toml is read"       '[ "$code" = 0 ] && echo "$out" | grep -q "\"mystery = 1\" is not a theme value"'
 echo "== end-to-end tests"
+# --- desktop packages ---
+(cd "$WORK/ex-notepad" && "$PASTEL" package deb >/dev/null)
+expect "a desktop .deb has a menu entry"  'dpkg-deb --fsys-tarfile "$WORK"/ex-notepad/dist/notepad_1.0.0_amd64.deb | tar -xO ./usr/share/applications/notepad.desktop | grep -q "^Name=Notepad"'
+expect "and an icon"                      'dpkg-deb -c "$WORK"/ex-notepad/dist/notepad_1.0.0_amd64.deb | grep -q "hicolor/256x256/apps/notepad.png"'
+expect "and needs SDL2"                   'dpkg-deb -f "$WORK"/ex-notepad/dist/notepad_1.0.0_amd64.deb Depends | grep -q libsdl2'
+if command -v makensis >/dev/null && "$PASTEL" doctor 2>/dev/null | grep -q "✓ windows "; then
+  (cd "$WORK/ex-notepad" && "$PASTEL" package installer --target windows >/dev/null 2>&1)
+  expect "a Windows installer"            '[ -s "$WORK"/ex-notepad/dist/notepad-1.0.0-windows-setup.exe ]'
+  expect "the app for Windows was built"  '[ -s "$WORK"/ex-notepad/build/windows/release/notepad.exe ]'
+fi
+# --- translations ---
+rm -rf "$WORK/tr-demo" && cp -r "$ROOT/examples/notepad" "$WORK/tr-demo" && rm -rf "$WORK/tr-demo/build" "$WORK/tr-demo/assets/lang"
+cd "$WORK/tr-demo"
+out="$("$PASTEL" lang)"
+expect "lang without languages says how"  'echo "$out" | grep -q "pastel lang add tr"'
+"$PASTEL" lang add tr >/dev/null
+expect "lang add collects the .pform texts" 'grep -q "\"Word wrap\": \"\"" assets/lang/tr.json && grep -q "\"Start typing...\"" assets/lang/tr.json'
+sed -i 's/"File": ""/"File": "Dosya"/; s/"Word wrap": ""/"Word wrap": "Satır kaydır"/' assets/lang/tr.json
+out="$("$PASTEL" lang)"
+expect "lang counts what is missing"      'echo "$out" | grep -q "tr.json: 21 of 23 text(s) not translated"'
+expect "lang keeps translations"          'grep -q "Satır kaydır" assets/lang/tr.json'
+"$PASTEL" build >/dev/null
+printf 'expect FileMenu.Caption Dosya\nexpect WrapItem.Caption Satır kaydır\ntype Editor x\nkey ctrl+n\nexpect NoButton Hayır\nclick NoButton\nquit\n' > tr.txt
+set +e; out="$(PASTEL_LANG=tr PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT=tr.txt ./build/*/debug/notepad 2>&1)"; code=$?; set -e
+expect "the app speaks Turkish"           '[ "$code" = 0 ] && ! echo "$out" | grep -q FAIL'
+[ "$code" = 0 ] || echo "$out" | grep -v "^ok"
+cd "$WORK"
 # --- Windows program icon (when this computer can build for Windows) ---
 if "$PASTEL" doctor 2>/dev/null | grep -q "✓ windows "; then
   rm -rf "$WORK/winicon" && (cd "$WORK" && "$PASTEL" new console winicon >/dev/null)

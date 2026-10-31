@@ -6,7 +6,7 @@ type PhoneEdit 0532 111 22 33
 type EmailEdit ayse@example.com
 click SaveButton
 expect CountLabel 1 contact
-expect ContactList.ItemIndex 0
+expect ContactList.Row 0
 key ctrl+n
 expect NameEdit 
 type NameEdit Ali Can
@@ -18,10 +18,10 @@ click EmailEdit
 key ctrl+a
 type EmailEdit ali@example.com\n
 expect CountLabel 2 contacts
-expect ContactList.ItemIndex 0
+expect ContactList.Row 0
 type SearchEdit ayşe
-expect ContactList.ItemIndex -1
-click ContactList 20 10
+expect ContactList.Row -1
+click ContactList 40 50
 expect NameEdit Ayşe Yılmaz
 expect PhoneEdit 0532 111 22 33
 key ctrl+d
