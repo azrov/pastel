@@ -325,9 +325,9 @@ async function main() {
   });
 
   await test('completion: control types after "object X:"', async () => {
-    const l = lineOf(/object Hint: TLabel/);
-    pform.setText(lines().map((t, i) => (i === l ? '    object Hint: T' : t)).join('\n'));
-    const items = await providers.completion.provideCompletionItems(pform, new Position(l, 18));
+    const l = lineOf(/object HintLabel: TLabel/);
+    pform.setText(lines().map((t, i) => (i === l ? '    object HintLabel: T' : t)).join('\n'));
+    const items = await providers.completion.provideCompletionItems(pform, new Position(l, '    object HintLabel: T'.length));
     assert.ok(items.some((i: CompletionItem) => i.label === 'TButton'));
     pform.setText(fs.readFileSync(pformPath, 'utf8'));
   });

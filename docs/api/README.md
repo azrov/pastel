@@ -7,8 +7,10 @@ Made from the declarations and comments in `framework/src` (`npm run apidoc` in 
 | [Pastel.App](pastel.app.md) | The application: window, event loop, hot reload. |
 | [Pastel.Args](pastel.args.md) | Command-line arguments. |
 | [Pastel.Config](pastel.config.md) | Settings from files, environment variables and code. |
+| [Pastel.Controls](pastel.controls.md) | More controls: check boxes, radio buttons, switches, lists, |
 | [Pastel.Crypto](pastel.crypto.md) | Hashes, signatures, passwords and random tokens. |
 | [Pastel.Db](pastel.db.md) | Databases: SQLite, PostgreSQL, MySQL/MariaDB. |
+| [Pastel.Dialogs](pastel.dialogs.md) | Dialogs: messages, questions, input, choosing files and folders. |
 | [Pastel.Env](pastel.env.md) | Environment variables. |
 | [Pastel.Files](pastel.files.md) | Files, folders and paths. |
 | [Pastel.Forms](pastel.forms.md) | Building forms from .pform data. |
@@ -17,6 +19,7 @@ Made from the declarations and comments in `framework/src` (`npm run apidoc` in 
 | [Pastel.Json](pastel.json.md) | JSON made easy, on top of Free Pascal's fpjson. |
 | [Pastel.Jwt](pastel.jwt.md) | JSON Web Tokens (JWT) signed with HS256. |
 | [Pastel.Log](pastel.log.md) | Logging. |
+| [Pastel.Menus](pastel.menus.md) | Menus: a menu bar, pop-up (right click) menus and keyboard |
 | [Pastel.PForm](pastel.pform.md) | Reader for .pform files. |
 | [Pastel.Process](pastel.process.md) | Running other programs. |
 | [Pastel.Service](pastel.service.md) | Long-running programs (services, daemons). |

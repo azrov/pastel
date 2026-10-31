@@ -41,6 +41,14 @@ type
     FLastGood: string;
     FReloadError: string;
     FLastCheck, FLastBlink: QWord;
+    { test scripts }
+    FScript: TStringList;
+    FScriptFile: string;
+    FScriptPos, FScriptFailures: Integer;
+    function RunScriptStep: Boolean;
+    function FindAnyControl(const AName: string): TControl;
+    procedure Step;
+    procedure WakeUp(Sender: TObject);
     procedure Fatal(const Msg: string);
     procedure LoadForm(Form: TForm);
     procedure CreateWindow;
@@ -56,6 +64,9 @@ type
     procedure DoLayout;
     procedure RunScript(const FileName: string);
   public
+    { One pass of the event loop: events, timers, threads, layout, paint.
+      Long work in an event handler can call it to keep the window alive. }
+    procedure ProcessMessages;
     constructor Create;
     destructor Destroy; override;
     procedure Initialize;
@@ -75,7 +86,9 @@ var
 implementation
 
 uses
-  Math, Pastel.SDL2;
+  Math, TypInfo, Pastel.SDL2,
+  { linked into every app, so .pform files can use their controls }
+  Pastel.Controls, Pastel.Menus, Pastel.Dialogs;
 
 const
   DefaultWidth = 480;
@@ -204,7 +217,10 @@ begin
   Form := AFormClass.Create(nil);
   TForm(AReference) := Form;
   if FMainForm = nil then
+  begin
     FMainForm := Form;
+    Pastel.UI.MainForm := Form;
+  end;
   LoadForm(Form);
 end;
 
@@ -450,17 +466,24 @@ begin
       SDL_MOUSEMOTION:
         FMainForm.HandleMouseMove(Ev.motion.x, Ev.motion.y);
       SDL_MOUSEBUTTONDOWN:
-        if Ev.button.button = SDL_BUTTON_LEFT then
-          FMainForm.HandleMouseDown(Ev.button.x, Ev.button.y);
+        FMainForm.HandleMouseDown(Ev.button.x, Ev.button.y, Ev.button.button, Ev.button.clicks);
       SDL_MOUSEBUTTONUP:
-        if Ev.button.button = SDL_BUTTON_LEFT then
-          FMainForm.HandleMouseUp(Ev.button.x, Ev.button.y);
+        FMainForm.HandleMouseUp(Ev.button.x, Ev.button.y, Ev.button.button);
+      SDL_MOUSEWHEEL:
+        FMainForm.HandleMouseWheel(Ev.wheel.x, Ev.wheel.y);
+      SDL_USEREVENT:
+        ;       { woken up: TThread.Queue/Synchronize has work }
       SDL_KEYDOWN:
         begin
           Mods := Ev.key.keysym.mods;
+          KeyAlt := (Mods and KMOD_ALT) <> 0;
+          FMainForm.ShiftDown := (Mods and KMOD_SHIFT) <> 0;
           FMainForm.HandleKeyDown(Ev.key.keysym.sym, (Mods and KMOD_SHIFT) <> 0,
             (Mods and (KMOD_CTRL or KMOD_GUI)) <> 0);
+          KeyAlt := False;
         end;
+      SDL_KEYUP:
+        FMainForm.ShiftDown := (Ev.key.keysym.mods and KMOD_SHIFT) <> 0;
       SDL_TEXTINPUT:
         FMainForm.HandleTextInput(StrPas(@Ev.text.text[0]));
     end;
@@ -545,12 +568,58 @@ begin
   end;
 end;
 
-procedure TApplication.RunScript(const FileName: string);
+function TApplication.FindAnyControl(const AName: string): TControl;
+
+  function Search(Root: TComponent): TControl;
+  var
+    I: Integer;
+    C: TComponent;
+  begin
+    Result := nil;
+    C := Root.FindComponent(AName);
+    if C is TControl then
+      Exit(TControl(C));
+    for I := 0 to Root.ComponentCount - 1 do
+    begin
+      Result := Search(Root.Components[I]);
+      if Result <> nil then
+        Exit;
+    end;
+  end;
+
 var
-  Lines: TStringList;
-  I, Failures: Integer;
-  Line, Cmd, Arg1, Rest: string;
+  I: Integer;
+begin
+  { dialogs first: they are on top }
+  for I := FMainForm.PopupCount - 1 downto 0 do
+  begin
+    Result := Search(FMainForm.PopupAt(I));
+    if (Result = nil) and SameText(FMainForm.PopupAt(I).Name, AName) then
+      Result := FMainForm.PopupAt(I);
+    if Result <> nil then
+      Exit;
+  end;
+  Result := Search(FMainForm);
+end;
+
+{ Test scripts: one command per line.
+
+    click Name | doubleclick Name | rightclick Name | hover Name
+    type Name text            key enter | key ctrl+a | key shift+down
+    wheel Name -3             wait 500 (timers and threads run)
+    expect Name text          expect Name.Property value
+    shot file.png             resize 800 600
+    reload | close | quit | print Name | sleep ms
+
+  A command that opens a dialog (ShowModal, ShowMessage) waits there; the
+  next commands of the script act on the dialog until it is closed. }
+function TApplication.RunScriptStep: Boolean;
+var
+  Line, Cmd, Arg1, Rest, Prop, Want, Got: string;
   C: TControl;
+  R: TRectI;
+  X, Y, N: Integer;
+  Until_: QWord;
 
   function TakeWord(var S: string): string;
   var
@@ -571,138 +640,348 @@ var
 
   function Ctl(const AName: string): TControl;
   begin
-    Result := FMainForm.FindControl(AName);
+    Result := FindAnyControl(AName);
     if Result = nil then
-      Fatal(Format('%s:%d: no control named "%s"', [FileName, I + 1, AName]));
+      Fatal(Format('%s:%d: no control named "%s"', [FScriptFile, FScriptPos, AName]));
+  end;
+
+  function ValueOf(Ctrl: TControl; const AProp: string): string;
+  var
+    Info: PPropInfo;
+  begin
+    Info := GetPropInfo(Ctrl, AProp);
+    if Info = nil then
+      Fatal(Format('%s:%d: %s has no property "%s"', [FScriptFile, FScriptPos, Ctrl.Name, AProp]));
+    case Info^.PropType^.Kind of
+      tkInteger, tkInt64:
+        Result := IntToStr(GetOrdProp(Ctrl, Info));
+      tkEnumeration, tkBool:
+        Result := GetEnumProp(Ctrl, Info);
+      tkClass:
+        if GetObjectProp(Ctrl, Info) is TStrings then
+          Result := StringReplace(Trim(TStrings(GetObjectProp(Ctrl, Info)).Text), LineEnding, '|', [rfReplaceAll])
+        else
+          Result := '';
+    else
+      Result := GetStrProp(Ctrl, Info);
+    end;
   end;
 
   function TextOf(Ctrl: TControl): string;
   begin
-    if Ctrl is TEdit then Result := TEdit(Ctrl).Text
-    else if Ctrl is TLabel then Result := TLabel(Ctrl).Text
-    else if Ctrl is TButton then Result := TButton(Ctrl).Text
-    else Result := '';
+    if Ctrl is TCustomEdit then
+      Result := StringReplace(TCustomEdit(Ctrl).Text, #10, '|', [rfReplaceAll])
+    else if IsPublishedProp(Ctrl, 'Text') then
+      Result := GetStrProp(Ctrl, 'Text')
+    else
+      Result := '';
   end;
 
-  function KeyCode(const N: string): LongInt;
+  procedure Key(const Spec: string);
+  var
+    Parts: TStringArray;
+    K: string;
+    Code: LongInt;
+    Shift, Ctrl: Boolean;
+    I: Integer;
   begin
-    case LowerCase(N) of
-      'enter': Result := KEY_ENTER;
-      'tab': Result := KEY_TAB;
-      'backspace': Result := KEY_BACKSPACE;
-      'delete': Result := KEY_DELETE;
-      'left': Result := KEY_LEFT;
-      'right': Result := KEY_RIGHT;
-      'home': Result := KEY_HOME;
-      'end': Result := KEY_END;
-      'space': Result := KEY_SPACE;
+    Parts := LowerCase(Spec).Split(['+']);
+    Shift := False;
+    Ctrl := False;
+    KeyAlt := False;
+    for I := 0 to High(Parts) - 1 do
+      case Parts[I] of
+        'shift': Shift := True;
+        'ctrl', 'cmd': Ctrl := True;
+        'alt': KeyAlt := True;
+      end;
+    K := Parts[High(Parts)];
+    case K of
+      'enter': Code := KEY_ENTER;
+      'tab': Code := KEY_TAB;
+      'backspace': Code := KEY_BACKSPACE;
+      'delete': Code := KEY_DELETE;
+      'escape', 'esc': Code := KEY_ESCAPE;
+      'left': Code := KEY_LEFT;
+      'right': Code := KEY_RIGHT;
+      'up': Code := KEY_UP;
+      'down': Code := KEY_DOWN;
+      'home': Code := KEY_HOME;
+      'end': Code := KEY_END;
+      'pageup': Code := KEY_PAGEUP;
+      'pagedown': Code := KEY_PAGEDOWN;
+      'space': Code := KEY_SPACE;
+      'menu': Code := KEY_MENU;
     else
-      Fatal(Format('%s:%d: unknown key "%s"', [FileName, I + 1, N]));
-      Result := 0;
+      if (Length(K) >= 2) and (K[1] = 'f') and TryStrToInt(Copy(K, 2, 2), I) and (I >= 1) and (I <= 12) then
+        Code := KEY_F1 + I - 1
+      else if Length(K) = 1 then
+        Code := Ord(K[1])
+      else
+      begin
+        Fatal(Format('%s:%d: unknown key "%s"', [FScriptFile, FScriptPos, Spec]));
+        Code := 0;
+      end;
     end;
+    FMainForm.ShiftDown := Shift;
+    FMainForm.HandleKeyDown(Code, Shift, Ctrl);
+    FMainForm.ShiftDown := False;
+    KeyAlt := False;
   end;
 
 begin
-  Failures := 0;
-  Lines := TStringList.Create;
-  try
-    Lines.LoadFromFile(FileName);
-    for I := 0 to Lines.Count - 1 do
-    begin
-      Line := Trim(Lines[I]);
-      if (Line = '') or (Line[1] = '#') then
-        Continue;
-      { command, first argument, then the rest of the line as is }
-      Rest := Line;
-      Cmd := LowerCase(TakeWord(Rest));
-      Arg1 := TakeWord(Rest);
-      Refresh;
-      case Cmd of
-        'click':
+  Result := False;
+  while FScriptPos < FScript.Count do
+  begin
+    Line := Trim(FScript[FScriptPos]);
+    Inc(FScriptPos);
+    if (Line = '') or (Line[1] = '#') then
+      Continue;
+    Result := True;
+    Rest := Line;
+    Cmd := LowerCase(TakeWord(Rest));
+    Arg1 := TakeWord(Rest);
+    Refresh;
+    case Cmd of
+      'click', 'doubleclick', 'rightclick':
+        begin
+          C := Ctl(Arg1);
+          R := C.Bounds;
+          { things that are drawn by another control: a page's tab, an item of an open menu }
+          if (C is TTabSheet) and (C.Parent is TTabControl) then
+            R := TTabControl(C.Parent).TabRect(TTabSheet(C))
+          else if (C is TMenuItem) and not (C.Parent is TMenuBar) and not MenuItemRect(TMenuItem(C), R) then
+            Fatal(Format('%s:%d: the menu with "%s" is not open', [FScriptFile, FScriptPos, Arg1]));
+          X := R.X + R.W div 2;
+          Y := R.Y + R.H div 2;
+          if Rest <> '' then     { click Name 10 5: at a point inside the control }
           begin
-            C := Ctl(Arg1);
-            FMainForm.HandleMouseMove(C.Bounds.X + C.Bounds.W div 2, C.Bounds.Y + C.Bounds.H div 2);
-            FMainForm.HandleMouseDown(C.Bounds.X + C.Bounds.W div 2, C.Bounds.Y + C.Bounds.H div 2);
-            FMainForm.HandleMouseUp(C.Bounds.X + C.Bounds.W div 2, C.Bounds.Y + C.Bounds.H div 2);
+            X := R.X + StrToIntDef(TakeWord(Rest), 0);
+            Y := R.Y + StrToIntDef(Rest, R.H div 2);
           end;
-        'hover':
+          FMainForm.HandleMouseMove(X, Y);
+          if Cmd = 'rightclick' then
           begin
-            C := Ctl(Arg1);
-            FMainForm.HandleMouseMove(C.Bounds.X + C.Bounds.W div 2, C.Bounds.Y + C.Bounds.H div 2);
-          end;
-        'type':
+            FMainForm.HandleMouseDown(X, Y, 3, 1);
+            FMainForm.HandleMouseUp(X, Y, 3);
+          end
+          else
           begin
-            C := Ctl(Arg1);
-            C.SetFocus;
-            FMainForm.HandleTextInput(Rest);
-          end;
-        'key':
-          FMainForm.HandleKeyDown(KeyCode(Arg1), False, False);
-        'resize':
-          begin
-            FWidth := StrToIntDef(Arg1, FWidth);
-            FHeight := StrToIntDef(Rest, FHeight);
-            NeedsLayout := True;
-          end;
-        'reload':
-          begin
-            FLastCheck := 0;
-            CheckHotReload;
-          end;
-        'shot':
-          begin
-            Refresh;
-            FCanvas.SaveToPNG(Arg1);
-            WriteLn('saved ', Arg1);
-          end;
-        'expect':
-          begin
-            C := Ctl(Arg1);
-            if TextOf(C) <> Rest then
+            FMainForm.HandleMouseDown(X, Y, 1, 1);
+            FMainForm.HandleMouseUp(X, Y, 1);
+            if Cmd = 'doubleclick' then
             begin
-              Inc(Failures);
-              WriteLn(Format('FAIL line %d: %s is "%s", expected "%s"', [I + 1, Arg1, TextOf(C), Rest]));
-            end
-            else
-              WriteLn(Format('ok: %s = "%s"', [Arg1, Rest]));
-          end;
-        'print':
-          WriteLn(Arg1, ': ', TextOf(Ctl(Arg1)));
-        'sleep':
-          Sleep(StrToIntDef(Arg1, 100));
-        'close':
-          begin
-            TryClose;
-            if FTerminated then
-            begin
-              WriteLn('closed');
-              Break;
+              FMainForm.HandleMouseDown(X, Y, 1, 2);
+              FMainForm.HandleMouseUp(X, Y, 1);
             end;
-            WriteLn('close cancelled');
           end;
-        'quit':
-          Break;
-      else
-        Fatal(Format('%s:%d: unknown command "%s"', [FileName, I + 1, Cmd]));
-      end;
-      Refresh;
-      Present;
+        end;
+      'hover':
+        begin
+          C := Ctl(Arg1);
+          R := C.Bounds;
+          if (C is TMenuItem) and not (C.Parent is TMenuBar) and not MenuItemRect(TMenuItem(C), R) then
+            Fatal(Format('%s:%d: the menu with "%s" is not open', [FScriptFile, FScriptPos, Arg1]));
+          FMainForm.HandleMouseMove(R.X + R.W div 2, R.Y + R.H div 2);
+        end;
+      'wheel':
+        begin
+          C := Ctl(Arg1);
+          FMainForm.HandleMouseMove(C.Bounds.X + C.Bounds.W div 2, C.Bounds.Y + C.Bounds.H div 2);
+          FMainForm.HandleMouseWheel(0, StrToIntDef(Rest, -1));
+        end;
+      'type':
+        begin
+          C := Ctl(Arg1);
+          if FMainForm.Focused <> C then
+            C.SetFocus;
+          FMainForm.HandleTextInput(StringReplace(Rest, '\n', #10, [rfReplaceAll]));
+        end;
+      'key':
+        Key(Arg1);
+      'wait':
+        begin
+          Until_ := GetTickCount64 + QWord(StrToIntDef(Arg1, 100));
+          repeat
+            CheckSynchronize(5);
+            ProcessTimers(GetTickCount64);
+            FMainForm.UpdateTooltip(GetTickCount64);
+          until GetTickCount64 >= Until_;
+        end;
+      'resize':
+        begin
+          FWidth := StrToIntDef(Arg1, FWidth);
+          FHeight := StrToIntDef(Rest, FHeight);
+          NeedsLayout := True;
+        end;
+      'reload':
+        begin
+          FLastCheck := 0;
+          CheckHotReload;
+        end;
+      'shot':
+        begin
+          Refresh;
+          FCanvas.SaveToPNG(Arg1);
+          WriteLn('saved ', Arg1);
+        end;
+      'expect':
+        begin
+          N := Pos('.', Arg1);
+          if N > 0 then
+          begin
+            Prop := Copy(Arg1, N + 1, MaxInt);
+            C := Ctl(Copy(Arg1, 1, N - 1));
+            Got := ValueOf(C, Prop);
+          end
+          else
+          begin
+            C := Ctl(Arg1);
+            Got := TextOf(C);
+          end;
+          Want := Rest;
+          if not SameText(Got, Want) and (Got <> Want) then
+          begin
+            Inc(FScriptFailures);
+            WriteLn(Format('FAIL line %d: %s is "%s", expected "%s"', [FScriptPos, Arg1, Got, Want]));
+          end
+          else
+            WriteLn(Format('ok: %s = "%s"', [Arg1, Want]));
+        end;
+      'print':
+        WriteLn(Arg1, ': ', TextOf(Ctl(Arg1)));
+      'sleep':
+        Sleep(StrToIntDef(Arg1, 100));
+      'close':
+        begin
+          TryClose;
+          if FTerminated then
+          begin
+            WriteLn('closed');
+            FScriptPos := FScript.Count;
+            Exit(False);
+          end;
+          WriteLn('close cancelled');
+        end;
+      'quit':
+        begin
+          FScriptPos := FScript.Count;
+          Exit(False);
+        end;
+    else
+      Fatal(Format('%s:%d: unknown command "%s"', [FScriptFile, FScriptPos, Cmd]));
     end;
-  finally
-    Lines.Free;
+    Refresh;
+    Present;
+    Exit(True);
   end;
-  if Failures > 0 then
+end;
+
+procedure TApplication.RunScript(const FileName: string);
+begin
+  FScript := TStringList.Create;
+  try
+    FScript.LoadFromFile(FileName);
+    FScriptFile := FileName;
+    FScriptPos := 0;
+    FScriptFailures := 0;
+    while RunScriptStep do
+      ;
+  finally
+    FreeAndNil(FScript);
+  end;
+  if FScriptFailures > 0 then
     Halt(1);
+end;
+
+procedure TApplication.Step;
+var
+  Timeout, NextTimer: Integer;
+  NowMs: QWord;
+begin
+  if FScript <> nil then
+  begin
+    { in a test script, a dialog waits for the script's next commands }
+    if not RunScriptStep then
+      Fatal(Format('%s: the script ended while a dialog was open', [FScriptFile]));
+    Exit;
+  end;
+  if FSourcePath <> '' then Timeout := 100 else Timeout := 250;
+  NextTimer := ProcessTimers(GetTickCount64);
+  if (NextTimer >= 0) and (NextTimer < Timeout) then
+    Timeout := NextTimer;
+  if AnimationRequested then
+    Timeout := 16;
+  if (FMainForm.Hovered <> nil) and (FMainForm.Hovered.Hint <> '') then
+    Timeout := Min(Timeout, 100);
+  if FHeadless then
+    Sleep(Min(Timeout, 20))
+  else
+    ProcessEvents(Timeout);
+  if FTerminated then
+    Exit;
+  CheckSynchronize(0);
+  NowMs := GetTickCount64;
+  ProcessTimers(NowMs);
+  CheckHotReload;
+  if CloseRequested then
+  begin
+    TryClose;
+    if FTerminated then
+      Exit;
+  end;
+  if NeedsWindowSync then
+    SyncWindow;
+  if (FMainForm.Focused is TCustomEdit) and (NowMs - FLastBlink >= 530) then
+  begin
+    FLastBlink := NowMs;
+    CaretVisible := not CaretVisible;
+    NeedsRepaint := True;
+  end;
+  FMainForm.UpdateTooltip(NowMs);
+  if NeedsLayout or (FLaidOutW <> FWidth) or (FLaidOutH <> FHeight) then
+    DoLayout;
+  if NeedsRepaint then
+  begin
+    AnimationRequested := False;
+    Paint;
+    Present;
+  end;
+  UpdateCursor;
+end;
+
+procedure TApplication.ProcessMessages;
+begin
+  if FScript = nil then
+    Step;
+end;
+
+procedure AppModalStep;
+begin
+  Application.Step;
+end;
+
+procedure TApplication.WakeUp(Sender: TObject);
+var
+  Ev: TSDL_Event;
+begin
+  if Assigned(SDL_PushEvent) and not FHeadless and (FWindow <> nil) then
+  begin
+    FillChar(Ev, SizeOf(Ev), 0);
+    Ev.type_ := SDL_USEREVENT;
+    SDL_PushEvent(@Ev);
+  end;
 end;
 
 procedure TApplication.Run;
 var
   Script: string;
-  Timeout: Integer;
 begin
   if FMainForm = nil then
     Fatal('Application.Run needs a form: call Application.CreateForm first');
   CreateWindow;
+  ModalStep := @AppModalStep;
+  WakeMainThread := @WakeUp;
   Refresh;
   Present;
 
@@ -715,35 +994,7 @@ begin
 
   FLastBlink := GetTickCount64;
   while not FTerminated do
-  begin
-    if FSourcePath <> '' then Timeout := 100 else Timeout := 250;
-    ProcessEvents(Timeout);
-    if FTerminated then
-      Break;
-    CheckHotReload;
-    if CloseRequested then
-    begin
-      TryClose;
-      if FTerminated then
-        Break;
-    end;
-    if NeedsWindowSync then
-      SyncWindow;
-    if (FMainForm.Focused is TEdit) and (GetTickCount64 - FLastBlink >= 530) then
-    begin
-      FLastBlink := GetTickCount64;
-      CaretVisible := not CaretVisible;
-      NeedsRepaint := True;
-    end;
-    if NeedsLayout or (FLaidOutW <> FWidth) or (FLaidOutH <> FHeight) then
-      DoLayout;
-    if NeedsRepaint then
-    begin
-      Paint;
-      Present;
-    end;
-    UpdateCursor;
-  end;
+    Step;
 end;
 
 initialization

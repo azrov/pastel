@@ -521,7 +521,7 @@ expect "UI script passes"           '[ "$code" = 0 ]'
 expect "screenshot is a PNG"        'head -c 4 shot.png | grep -q PNG'
 
 cp src/forms/Home.pform Home.bak
-sed -i 's/object Hint: TLabel/object Hint: TLable/' src/forms/Home.pform
+sed -i 's/object HintLabel: TLabel/object HintLabel: TLable/' src/forms/Home.pform
 set +e; out="$("$PASTEL" build 2>&1)"; code=$?; set -e
 expect "unknown component fails the build" '[ "$code" = 1 ]'
 expect "pform error has file and line"     'echo "$out" | grep -q "src/forms/Home.pform(13) Error: unknown component type"'
@@ -533,6 +533,19 @@ set +e; out="$("$PASTEL" build 2>&1)"; code=$?; set -e
 expect "missing event handler fails the build" '[ "$code" = 1 ]'
 expect "missing event handler is explained"    'echo "$out" | grep -q "Home.pform(27) Error: event handler \"Missing\" is not declared in Home.pas"'
 mv Home.bak src/forms/Home.pform
+
+# --- all the controls, menus and dialogs (tests/apps/controls) ---
+cd "$WORK"
+"$PASTEL" new app controls-demo >/dev/null
+cp "$ROOT/tests/apps/controls/Home.pform" "$ROOT/tests/apps/controls/Home.pas" controls-demo/src/forms/
+mkdir -p controls-demo/assets && cp "$ROOT/tests/apps/controls/logo.png" controls-demo/assets/
+cd controls-demo
+"$PASTEL" build >/dev/null
+set +e; out="$(PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT="$ROOT/tests/apps/controls/ui.txt" ./build/*/debug/controls-demo 2>&1)"; code=$?; set -e
+expect "controls, menus and dialogs work"  '[ "$code" = 0 ] && ! echo "$out" | grep -q FAIL'
+[ "$code" = 0 ] || echo "$out" | grep -v "^ok" | head -20
+expect "the dialogs answered"           'echo "$out" | grep -q "ok: Status = \"new my note\"" && echo "$out" | grep -q "ok: MessageText"'
+cd "$WORK/gui-demo"
 
 # --- window events ---
 cp src/forms/Home.pform Home.bak

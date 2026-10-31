@@ -56,6 +56,20 @@ type
     property LineHeight: Integer read FLineHeight;
   end;
 
+  { A picture in memory: $AARRGGBB pixels, from PNG, JPEG or BMP files. }
+  TBitmap32 = class
+  private
+    FWidth, FHeight: Integer;
+  public
+    Pixels: array of Cardinal;
+    procedure SetSize(AWidth, AHeight: Integer);
+    procedure LoadFromFile(const FileName: string);
+    procedure LoadFromStream(Stream: TStream);
+    function Empty: Boolean;
+    property Width: Integer read FWidth;
+    property Height: Integer read FHeight;
+  end;
+
   TCanvas32 = class
   private
     FPixels: array of Cardinal;
@@ -73,6 +87,11 @@ type
     procedure StrokeRoundRect(X, Y, W, H: Integer; Radius, Thickness: Single; C: TColor32);
     { Y is the top of the text line; the baseline is Y + Font.Ascent. }
     procedure DrawText(Font: TPastelFont; X, Y: Integer; const S: string; C: TColor32);
+    { An anti-aliased line with round ends. }
+    procedure DrawLine(X1, Y1, X2, Y2, Thickness: Single; C: TColor32);
+    procedure FillCircle(CX, CY, Radius: Single; C: TColor32);
+    { A picture scaled into the rectangle (bilinear when Smooth), with its transparency. }
+    procedure DrawBitmap(B: TBitmap32; X, Y, W, H: Integer; Smooth: Boolean = True; Opacity: Byte = 255);
     function GetPixel(X, Y: Integer): TColor32;
     procedure SaveToPNG(const FileName: string);
     function Data: Pointer;
@@ -104,7 +123,7 @@ procedure DoneFonts;
 implementation
 
 uses
-  Math;
+  Math, FPImage, FPReadPNG, FPReadJPEG, FPReadBMP;
 
 var
   FTLib: PFT_Library = nil;
@@ -451,6 +470,81 @@ end;
 
 { ---- canvas ---- }
 
+{ ---- TBitmap32 ---- }
+
+procedure TBitmap32.SetSize(AWidth, AHeight: Integer);
+begin
+  FWidth := Max(0, AWidth);
+  FHeight := Max(0, AHeight);
+  SetLength(Pixels, FWidth * FHeight);
+end;
+
+function TBitmap32.Empty: Boolean;
+begin
+  Result := (FWidth = 0) or (FHeight = 0);
+end;
+
+procedure TBitmap32.LoadFromStream(Stream: TStream);
+var
+  Img: TFPMemoryImage;
+  Reader: TFPCustomImageReader;
+  Head: array[0..3] of Byte;
+  X, Y: Integer;
+  C: TFPColor;
+  Start: Int64;
+begin
+  Start := Stream.Position;
+  FillChar(Head, SizeOf(Head), 0);
+  Stream.Read(Head, 4);
+  Stream.Position := Start;
+  if (Head[0] = $89) and (Head[1] = Ord('P')) then
+    Reader := TFPReaderPNG.Create
+  else if (Head[0] = $FF) and (Head[1] = $D8) then
+    Reader := TFPReaderJPEG.Create
+  else if (Head[0] = Ord('B')) and (Head[1] = Ord('M')) then
+    Reader := TFPReaderBMP.Create
+  else
+    raise EPastelGraphics.Create('not a PNG, JPEG or BMP picture');
+  Img := TFPMemoryImage.Create(0, 0);
+  try
+    try
+      Img.LoadFromStream(Stream, Reader);
+    except
+      on E: Exception do
+        raise EPastelGraphics.Create('cannot read the picture: ' + E.Message);
+    end;
+    SetSize(Img.Width, Img.Height);
+    for Y := 0 to FHeight - 1 do
+      for X := 0 to FWidth - 1 do
+      begin
+        C := Img.Colors[X, Y];
+        Pixels[Y * FWidth + X] := (Cardinal(C.Alpha shr 8) shl 24) or (Cardinal(C.Red shr 8) shl 16) or
+          (Cardinal(C.Green shr 8) shl 8) or Cardinal(C.Blue shr 8);
+      end;
+  finally
+    Img.Free;
+    Reader.Free;
+  end;
+end;
+
+procedure TBitmap32.LoadFromFile(const FileName: string);
+var
+  F: TFileStream;
+begin
+  try
+    F := TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
+  except
+    raise EPastelGraphics.CreateFmt('cannot open the picture %s', [FileName]);
+  end;
+  try
+    LoadFromStream(F);
+  finally
+    F.Free;
+  end;
+end;
+
+{ ---- TCanvas32 ---- }
+
 procedure TCanvas32.SetSize(AWidth, AHeight: Integer);
 begin
   AWidth := Max(1, AWidth);
@@ -586,6 +680,100 @@ begin
         W - 2 * Thickness, H - 2 * Thickness, Max(IR, 0.01)));
       if Outer > Inner then
         Blend(PY * FWidth + PX, C, Outer - Inner);
+    end;
+end;
+
+procedure TCanvas32.DrawLine(X1, Y1, X2, Y2, Thickness: Single; C: TColor32);
+var
+  R: TRectI;
+  PX, PY: Integer;
+  DX, DY, Len2, T, QX, QY, D, HalfT: Single;
+begin
+  HalfT := Thickness / 2;
+  R := RectI(Floor(Min(X1, X2) - HalfT - 1), Floor(Min(Y1, Y2) - HalfT - 1),
+    Ceil(Abs(X2 - X1) + Thickness + 3), Ceil(Abs(Y2 - Y1) + Thickness + 3)).Intersect(FClip);
+  DX := X2 - X1;
+  DY := Y2 - Y1;
+  Len2 := DX * DX + DY * DY;
+  for PY := R.Y to R.Y + R.H - 1 do
+    for PX := R.X to R.X + R.W - 1 do
+    begin
+      { distance from the pixel center to the segment }
+      if Len2 = 0 then
+        T := 0
+      else
+        T := EnsureRange(((PX + 0.5 - X1) * DX + (PY + 0.5 - Y1) * DY) / Len2, 0, 1);
+      QX := X1 + T * DX - (PX + 0.5);
+      QY := Y1 + T * DY - (PY + 0.5);
+      D := Sqrt(QX * QX + QY * QY) - HalfT;
+      if D < 0.5 then
+        Blend(PY * FWidth + PX, C, CoverageOf(D));
+    end;
+end;
+
+procedure TCanvas32.FillCircle(CX, CY, Radius: Single; C: TColor32);
+var
+  R: TRectI;
+  PX, PY: Integer;
+  DX, DY: Single;
+begin
+  R := RectI(Floor(CX - Radius - 1), Floor(CY - Radius - 1), Ceil(2 * Radius + 3), Ceil(2 * Radius + 3)).Intersect(FClip);
+  for PY := R.Y to R.Y + R.H - 1 do
+    for PX := R.X to R.X + R.W - 1 do
+    begin
+      DX := PX + 0.5 - CX;
+      DY := PY + 0.5 - CY;
+      Blend(PY * FWidth + PX, C, CoverageOf(Sqrt(DX * DX + DY * DY) - Radius));
+    end;
+end;
+
+procedure TCanvas32.DrawBitmap(B: TBitmap32; X, Y, W, H: Integer; Smooth: Boolean; Opacity: Byte);
+var
+  R: TRectI;
+  PX, PY, SX0, SY0, SX1, SY1: Integer;
+  FX, FY, TX, TY: Single;
+  C00, C10, C01, C11, Col: Cardinal;
+  A: Integer;
+
+  function Lerp(P0, P1: Cardinal; T: Single; Shift: Integer): Single; inline;
+  begin
+    Result := ((P0 shr Shift) and $FF) * (1 - T) + ((P1 shr Shift) and $FF) * T;
+  end;
+
+  function Mix4(Shift: Integer): Cardinal; inline;
+  begin
+    Result := EnsureRange(Round(Lerp(C00, C10, TX, Shift) * (1 - TY) + Lerp(C01, C11, TX, Shift) * TY), 0, 255);
+  end;
+
+begin
+  if (B = nil) or B.Empty or (W <= 0) or (H <= 0) then
+    Exit;
+  R := RectI(X, Y, W, H).Intersect(FClip);
+  for PY := R.Y to R.Y + R.H - 1 do
+    for PX := R.X to R.X + R.W - 1 do
+    begin
+      FX := (PX - X + 0.5) * B.Width / W - 0.5;
+      FY := (PY - Y + 0.5) * B.Height / H - 0.5;
+      if Smooth and ((B.Width <> W) or (B.Height <> H)) then
+      begin
+        SX0 := EnsureRange(Floor(FX), 0, B.Width - 1);
+        SY0 := EnsureRange(Floor(FY), 0, B.Height - 1);
+        SX1 := Min(SX0 + 1, B.Width - 1);
+        SY1 := Min(SY0 + 1, B.Height - 1);
+        TX := EnsureRange(FX - Floor(FX), 0, 1);
+        TY := EnsureRange(FY - Floor(FY), 0, 1);
+        C00 := B.Pixels[SY0 * B.Width + SX0];
+        C10 := B.Pixels[SY0 * B.Width + SX1];
+        C01 := B.Pixels[SY1 * B.Width + SX0];
+        C11 := B.Pixels[SY1 * B.Width + SX1];
+        Col := (Mix4(24) shl 24) or (Mix4(16) shl 16) or (Mix4(8) shl 8) or Mix4(0);
+      end
+      else
+        Col := B.Pixels[EnsureRange(Round(FY), 0, B.Height - 1) * B.Width + EnsureRange(Round(FX), 0, B.Width - 1)];
+      A := Col shr 24;
+      if A = 0 then
+        Continue;
+      Blend(PY * FWidth + PX, TColor32(Col or $FF000000), A * Opacity div 255);
     end;
 end;
 

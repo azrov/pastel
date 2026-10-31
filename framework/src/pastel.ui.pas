@@ -24,6 +24,7 @@ type
   TCloseQueryEvent = procedure(Sender: TObject; var CanClose: Boolean) of object;
 
   TForm = class;
+  TPopup = class;
 
   TControl = class(TComponent)
   private
@@ -32,6 +33,10 @@ type
     FWidth, FHeight, FGrow: Integer;
     FVisible, FEnabled: Boolean;
     FBounds: TRectI;
+    FHint: string;
+    FPopupMenu: TControl;
+    FPopupForm: TForm;        { set on the root of a popup: the form it is shown on }
+    procedure SetPopupMenu(AValue: TControl);
     function GetChild(Index: Integer): TControl;
     function GetChildCount: Integer;
     procedure SetParent(AValue: TControl);
@@ -53,10 +58,17 @@ type
     procedure MouseMove(X, Y: Integer); virtual;
     function KeyDown(Key: LongInt; Shift, Ctrl: Boolean): Boolean; virtual;
     procedure TextInput(const S: string); virtual;
+    { The mouse wheel over the control; False lets the parent scroll. }
+    function MouseWheel(DX, DY: Integer): Boolean; virtual;
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     function IsHovered: Boolean;
+    { A child got the focus: scrolling parents bring it into view. }
+    procedure ScrollIntoView(C: TControl); virtual;
     function IsPressed: Boolean;
     function IsFocused: Boolean;
     procedure Changed;          { needs layout and repaint }
+    { Sets Bounds without arranging children (scrolling containers). }
+    procedure SetBoundsOnly(const R: TRectI);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -64,11 +76,14 @@ type
     procedure SetFocus;
     function HitTest(X, Y: Integer): TControl;
     function ParentForm: TForm;
+    { The popup the control is in, or nil. }
+    function ParentPopup: TPopup;
     { Preferred size including explicit Width/Height. }
     procedure GetSize(AvailWidth: Integer; out W, H: Integer);
     property Parent: TControl read FParent write SetParent;
     property Children[Index: Integer]: TControl read GetChild;
     property ChildCount: Integer read GetChildCount;
+    function IndexOfChild(C: TControl): Integer;
     property Bounds: TRectI read FBounds;
   published
     property Width: Integer read FWidth write SetWidth default 0;
@@ -76,9 +91,34 @@ type
     property Grow: Integer read FGrow write SetGrow default 0;
     property Visible: Boolean read FVisible write SetVisible default True;
     property Enabled: Boolean read FEnabled write SetEnabled default True;
+    { Shown in a tooltip when the mouse rests on the control. }
+    property Hint: string read FHint write FHint;
+    { A TPopupMenu shown on a right click (or the menu key). }
+    property PopupMenu: TControl read FPopupMenu write SetPopupMenu;
   end;
 
   TControlClass = class of TControl;
+
+  { A command with a caption and a keyboard shortcut, used by menu items and
+    buttons: one place for what happens, and for Enabled and Checked. }
+  TAction = class(TBasicAction)
+  private
+    FCaption, FShortCut, FHint: string;
+    FEnabled, FChecked: Boolean;
+    procedure SetEnabled(AValue: Boolean);
+    procedure SetChecked(AValue: Boolean);
+  public
+    constructor Create(AOwner: TComponent); override;
+    function Execute: Boolean; override;
+  published
+    property Caption: string read FCaption write FCaption;
+    { Like 'Ctrl+S', 'Ctrl+Shift+Z', 'F5', 'Delete'. }
+    property ShortCut: string read FShortCut write FShortCut;
+    property Hint: string read FHint write FHint;
+    property Enabled: Boolean read FEnabled write SetEnabled default True;
+    property Checked: Boolean read FChecked write SetChecked default False;
+    property OnExecute;
+  end;
 
   { A container that stacks its children vertically or horizontally. }
   TBox = class(TControl)
@@ -101,6 +141,9 @@ type
     procedure Measure(AvailWidth: Integer; out W, H: Integer); override;
     procedure Arrange(const R: TRectI); override;
     procedure Paint(C: TCanvas32); override;
+    { The colors to paint with: Color/BorderColor, or the theme's for 0 in cards and forms. }
+    function PaintColor: TColor32; virtual;
+    function PaintBorderColor: TColor32; virtual;
   public
     { True for TRow: children are placed left to right. }
     property Horizontal: Boolean read FRow;
@@ -122,8 +165,11 @@ type
     constructor Create(AOwner: TComponent); override;
   end;
 
-  { A white rounded panel with a border. }
+  { A white rounded panel with a border (in the theme's colors). }
   TCard = class(TBox)
+  protected
+    function PaintColor: TColor32; override;
+    function PaintBorderColor: TColor32; override;
   public
     constructor Create(AOwner: TComponent); override;
   end;
@@ -141,7 +187,9 @@ type
     FBold: Boolean;
     FColor: TColor32;
     FTextAlign: TTextAlign;
+    FWordWrap: Boolean;
     procedure SetText(const AValue: string);
+    procedure SetWordWrap(AValue: Boolean);
     procedure SetFontSize(AValue: Integer);
     procedure SetBold(AValue: Boolean);
     procedure SetColor(AValue: TColor32);
@@ -152,8 +200,12 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     function Font: TPastelFont;
+    { The lines the text is shown in, at a width (line breaks and wrapping). }
+    function TextLines(AWidth: Integer): TStringArray;
   published
     property Text: string read FText write SetText;
+    { Break long text into lines at the label's width. }
+    property WordWrap: Boolean read FWordWrap write SetWordWrap default False;
     property FontSize: Integer read FFontSize write SetFontSize default 14;
     property Bold: Boolean read FBold write SetBold default False;
     property Color: TColor32 read FColor write SetColor default 0;
@@ -165,8 +217,13 @@ type
     FText: string;
     FStyle: TButtonStyle;
     FOnClick: TNotifyEvent;
+    FModalResult: Integer;
+    FDefault, FCancel: Boolean;
+    FAction: TBasicAction;
     procedure SetText(const AValue: string);
     procedure SetStyle(AValue: TButtonStyle);
+    procedure SetAction(AValue: TBasicAction);
+    function GetText: string;
   protected
     procedure Measure(AvailWidth: Integer; out W, H: Integer); override;
     procedure Paint(C: TCanvas32); override;
@@ -175,41 +232,192 @@ type
     procedure MouseDown(X, Y: Integer); override;
     procedure MouseUp(X, Y: Integer; Inside: Boolean); override;
     function KeyDown(Key: LongInt; Shift, Ctrl: Boolean): Boolean; override;
+    function IsEnabled: Boolean;
   public
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure Click; virtual;
   published
     property Text: string read FText write SetText;
     property Style: TButtonStyle read FStyle write SetStyle default bsPrimary;
+    { A click runs the action (and Text, Enabled come from it when not set). }
+    property Action: TBasicAction read FAction write SetAction;
+    { In a dialog: a click closes it with this result (mrOk, mrCancel...). }
+    property ModalResult: Integer read FModalResult write FModalResult default 0;
+    { Enter in the dialog clicks it. }
+    property Default: Boolean read FDefault write FDefault default False;
+    { Escape in the dialog clicks it. }
+    property Cancel: Boolean read FCancel write FCancel default False;
     property OnClick: TNotifyEvent read FOnClick write FOnClick;
   end;
 
-  TEdit = class(TControl)
+  TEditState = record
+    Text: string;
+    Caret, Anchor: Integer;
+  end;
+  TEditStates = array of TEditState;
+  TVisualLine = record
+    StartPos, EndPos: Integer;     { byte range in Text, without the line break }
+  end;
+
+  { Text editing for TEdit and TMemo: caret, selection with mouse and
+    keyboard, clipboard, undo/redo, scrolling; TMemo adds lines and wrapping. }
+  TCustomEdit = class(TControl)
   private
     FText, FPlaceholder: string;
-    FCaret: Integer;          { byte index in FText where the caret is (1-based) }
-    FScroll: Integer;         { horizontal scroll in pixels }
+    FCaret, FAnchor: Integer;     { byte positions (1-based); the selection is between them }
+    FScrollX, FScrollY: Integer;
+    FDesiredX: Integer;
+    FSelecting, FLastWasTyping, FScrollToCaret: Boolean;
+    FUndo, FRedo: TEditStates;
+    FVisual: array of TVisualLine;
+    FVisualText: string;
+    FVisualWidth: Integer;
+    FLines: TStrings;
     FOnChange, FOnSubmit: TNotifyEvent;
     procedure SetText(const AValue: string);
     procedure SetPlaceholder(const AValue: string);
-    procedure InsertText(const S: string);
+    procedure SetPassword(AValue: Boolean);
+    procedure SetWordWrap(AValue: Boolean);
+    function GetLines: TStrings;
+    procedure SetLines(AValue: TStrings);
+    function GetSelStart: Integer;
+    function GetSelLength: Integer;
+    function GetSelText: string;
+    procedure SetSelStart(AValue: Integer);
+    procedure SetSelLength(AValue: Integer);
+    procedure SetSelText(const AValue: string);
+    function CleanText(const S: string): string;
+    function DisplayText(const S: string): string;
+    function DisplayPos(const S: string; P: Integer): Integer;
+    function SourcePos(const S: string; DP: Integer): Integer;
+    function Padding: Integer;
+    function InnerRect: TRectI;
+    procedure BuildLines(AWidth: Integer);
+    procedure EnsureLines;
+    function LineOf(P: Integer): Integer;
+    function XOf(P: Integer): Integer;
+    function PosAt(X, Y: Integer): Integer;
+    function SelStartPos: Integer;
+    procedure SaveUndo(Typing: Boolean);
+    procedure Restore(var FromStack, ToStack: TEditStates);
+    procedure ReplaceSelection(const S: string; Typing: Boolean);
+    procedure MoveCaret(P: Integer; Extend: Boolean);
+    procedure ScrollToCaret;
+    function WordLeft(P: Integer): Integer;
+    function WordRight(P: Integer): Integer;
+    function VerticalPos(P, Lines: Integer): Integer;
     procedure DoChange;
   protected
+    FMultiLine, FWordWrap, FReadOnly, FPassword: Boolean;
+    FMaxLength: Integer;
     procedure Measure(AvailWidth: Integer; out W, H: Integer); override;
     procedure Paint(C: TCanvas32); override;
     function Focusable: Boolean; override;
     function Cursor: TCursorKind; override;
     procedure MouseDown(X, Y: Integer); override;
+    procedure MouseMove(X, Y: Integer); override;
+    procedure MouseUp(X, Y: Integer; Inside: Boolean); override;
+    function MouseWheel(DX, DY: Integer): Boolean; override;
     function KeyDown(Key: LongInt; Shift, Ctrl: Boolean): Boolean; override;
     procedure TextInput(const S: string); override;
   public
     constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
     function Font: TPastelFont;
+    procedure SelectAll;
+    procedure CopyToClipboard;
+    procedure CutToClipboard;
+    procedure PasteFromClipboard;
+    procedure Undo;
+    procedure Redo;
+    function CanUndo: Boolean;
     property CaretPos: Integer read FCaret;
-  published
+    { The selection: SelStart counts from 0 (bytes), like Delphi. }
+    property SelStart: Integer read GetSelStart write SetSelStart;
+    property SelLength: Integer read GetSelLength write SetSelLength;
+    property SelText: string read GetSelText write SetSelText;
     property Text: string read FText write SetText;
     property Placeholder: string read FPlaceholder write SetPlaceholder;
+    property ReadOnly: Boolean read FReadOnly write FReadOnly default False;
+    { At most this many bytes; 0: no limit. }
+    property MaxLength: Integer read FMaxLength write FMaxLength default 0;
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
+  end;
+
+  { One line of text. }
+  TEdit = class(TCustomEdit)
+  published
+    property Text;
+    property Placeholder;
+    property ReadOnly;
+    property MaxLength;
+    { Shows dots instead of the text. }
+    property Password: Boolean read FPassword write SetPassword default False;
+    property OnChange;
+    { Enter was pressed. }
     property OnSubmit: TNotifyEvent read FOnSubmit write FOnSubmit;
+  end;
+
+  { Text with several lines; scrolls, wraps long lines. }
+  TMemo = class(TCustomEdit)
+  public
+    constructor Create(AOwner: TComponent); override;
+    { The text as lines: Memo.Lines.Add('...'), Memo.Lines[0]. }
+    property Lines: TStrings read GetLines write SetLines;
+  published
+    property Text;
+    property Placeholder;
+    property ReadOnly;
+    property MaxLength;
+    property WordWrap: Boolean read FWordWrap write SetWordWrap default True;
+    property OnChange;
+  end;
+
+  { A panel shown above the form: drop-down lists, menus, dialogs. }
+  TPopup = class(TBox)
+  private
+    FModal, FClosed, FShown: Boolean;
+    FModalResult: Integer;
+    FAnchor: TRectI;
+    FAnchored, FPlaceRight: Boolean;
+    FSavedFocus: TControl;
+    FOnClose: TNotifyEvent;
+  protected
+    function PaintColor: TColor32; override;
+    function PaintBorderColor: TColor32; override;
+    procedure Paint(C: TCanvas32); override;
+  public
+    constructor Create(AOwner: TComponent); override;
+    { Shows it on Form, below (or above) Anchor; centered when not given. }
+    procedure Popup(Form: TForm; const Anchor: TRectI; PlaceRight: Boolean = False);
+    procedure PopupCentered(Form: TForm);
+    { Shows it centered with the form dimmed behind it and waits until it
+      is closed; the result is ModalResult. }
+    function ShowModal(Form: TForm): Integer;
+    procedure Close(AModalResult: Integer = 0);
+    property Modal: Boolean read FModal write FModal;
+    property Closed: Boolean read FClosed;
+    property Shown: Boolean read FShown;
+    property ModalResult: Integer read FModalResult write FModalResult;
+    property OnClose: TNotifyEvent read FOnClose write FOnClose;
+  end;
+
+  { Calls OnTimer every Interval milliseconds while Enabled. }
+  TTimer = class(TComponent)
+  private
+    FInterval: Integer;
+    FEnabled: Boolean;
+    FOnTimer: TNotifyEvent;
+    FNext: QWord;
+    procedure SetEnabled(AValue: Boolean);
+    procedure SetInterval(AValue: Integer);
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+  published
+    property Interval: Integer read FInterval write SetInterval default 1000;
+    property Enabled: Boolean read FEnabled write SetEnabled default True;
+    property OnTimer: TNotifyEvent read FOnTimer write FOnTimer;
   end;
 
   { The root of a window. Owns all controls created from its .pform file. }
@@ -218,6 +426,13 @@ type
     FTitle: string;
     FFocused, FHover, FCaptured: TControl;
     FFocusVisible: Boolean;
+    FPopups: TFPList;
+    FTooltip: TPopup;
+    FTooltipFor: TControl;
+    FHoverSince: QWord;
+    FMouseX, FMouseY, FClickCount, FMouseButton: Integer;
+    FShiftDown: Boolean;
+    FWidthPx, FHeightPx: Integer;
     FOnCreate, FOnClose, FOnResize: TNotifyEvent;
     FOnCloseQuery: TCloseQueryEvent;
     FResizable, FAlwaysOnTop: Boolean;
@@ -230,9 +445,28 @@ type
     procedure SetMinHeight(AValue: Integer);
     procedure SetWindowState(AValue: TWindowState);
     procedure CollectFocusable(C: TControl; List: TFPList);
+    procedure PlacePopup(P: TPopup);
+    function GetModalResult: Integer;
+    procedure SetModalResult(AValue: Integer);
+  protected
+    function PaintColor: TColor32; override;
   public
     constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
+    function HitTest(X, Y: Integer): TControl; reintroduce;
+    { Popups (drop-downs, menus, dialogs), the last one on top. }
+    procedure ShowPopup(P: TPopup);
+    procedure ClosePopup(P: TPopup);
+    function PopupCount: Integer;
+    function PopupAt(Index: Integer): TPopup;
+    function TopPopup: TPopup;
+    { Shows or hides the tooltip; the application calls it while the mouse rests. }
+    function UpdateTooltip(NowMs: QWord): Boolean;
+    procedure HideTooltip;
+    procedure HandleMouseWheel(DX, DY: Integer);
+    { Right button: the control's PopupMenu. }
+    procedure HandleContextMenu(X, Y: Integer);
     { Removes every control created from the .pform (used by hot reload). }
     procedure ClearControls;
     procedure Layout(AWidth, AHeight: Integer);
@@ -240,8 +474,8 @@ type
     procedure FocusControl(C: TControl);
     procedure FocusNext(Backward: Boolean);
     procedure HandleMouseMove(X, Y: Integer);
-    procedure HandleMouseDown(X, Y: Integer);
-    procedure HandleMouseUp(X, Y: Integer);
+    procedure HandleMouseDown(X, Y: Integer; Button: Integer = 1; Clicks: Integer = 1);
+    procedure HandleMouseUp(X, Y: Integer; Button: Integer = 1);
     procedure HandleMouseLeave;
     procedure HandleKeyDown(Key: LongInt; Shift, Ctrl: Boolean);
     procedure HandleTextInput(const S: string);
@@ -252,8 +486,18 @@ type
     procedure BindControls; virtual;
     { Used by BindControls: finds a control and checks its type. }
     function BindControl(const AName: string; AClass: TControlClass): TControl;
+    { The same for components without a place on the form (TTimer...). }
+    function BindComponent(const AName: string; AClass: TComponentClass): TComponent;
     property Focused: TControl read FFocused;
     property Hovered: TControl read FHover;
+    property Captured: TControl read FCaptured;
+    { 2 for a double click, 3 for a triple click (in MouseDown). }
+    property ClickCount: Integer read FClickCount;
+    { 1 left, 2 middle, 3 right (in MouseDown). }
+    property MouseButton: Integer read FMouseButton;
+    property ShiftDown: Boolean read FShiftDown write FShiftDown;
+    property MouseX: Integer read FMouseX;
+    property MouseY: Integer read FMouseY;
     { True when focus came from the keyboard (Tab): buttons show a focus ring. }
     property FocusVisible: Boolean read FFocusVisible;
     { Window commands. They take effect on the next pass of the event loop. }
@@ -263,6 +507,12 @@ type
     procedure Close;
     { Asks OnCloseQuery; True if the window may close. }
     function CloseQuery: Boolean;
+    { Shows this form as a dialog above the main window and waits until it
+      is closed: by a button with a ModalResult, ModalResult := ..., Close
+      (mrCancel) or Escape. Returns the ModalResult. }
+    function ShowModal: Integer;
+    { Setting it in a dialog form closes the dialog with that result. }
+    property ModalResult: Integer read GetModalResult write SetModalResult;
     { Called by the platform layer when the user changed the window state. }
     procedure WindowStateChanged(AState: TWindowState);
   published
@@ -288,11 +538,26 @@ type
     Secondary, SecondaryHover, SecondaryPressed: TColor32;
     Danger, DangerHover, DangerPressed: TColor32;
     Border, BorderHover, FocusRing, Disabled: TColor32;
+    Shadow, Backdrop, Selection, TooltipBack, TooltipText: TColor32;
     Radius, FontSize: Integer;
+    Dark: Boolean;
   end;
 
 var
   Theme: TTheme;
+  { Set by controls that move (spinners...): the application paints again soon. }
+  AnimationRequested: Boolean = False;
+  { Runs one pass of the application's event loop; set by Pastel.App.
+    TPopup.ShowModal calls it until the popup is closed. }
+  ModalStep: procedure = nil;
+  { Set by Pastel.Menus: keyboard shortcuts of menus and actions. }
+  ShortcutHook: function(Form: TForm; Key: LongInt; Shift, Ctrl: Boolean): Boolean = nil;
+  { Set by Pastel.Menus: shows a TPopupMenu at a point. }
+  PopupMenuHook: procedure(Menu: TControl; Form: TForm; X, Y: Integer) = nil;
+  { Alt is held (with KeyDown). }
+  KeyAlt: Boolean = False;
+  { The main window's form; dialogs are shown on it. Set by Pastel.App. }
+  MainForm: TForm = nil;
   { Set by controls when something changed; the application loop reads them. }
   NeedsLayout: Boolean = True;
   NeedsRepaint: Boolean = True;
@@ -319,11 +584,44 @@ const
   KEY_HOME = $4000004A;
   KEY_END = $4000004D;
   KEY_KP_ENTER = $40000058;
+  KEY_UP = $40000052;
+  KEY_DOWN = $40000051;
+  KEY_PAGEUP = $4000004B;
+  KEY_PAGEDOWN = $4000004E;
+  KEY_INSERT = $40000049;
+  KEY_F1 = $4000003A;       { F2 .. F12 follow }
+  KEY_MENU = $40000076;
+  KEY_APPLICATION = $40000065;
+
+  { Results of dialogs (ModalResult) }
+  mrNone = 0;
+  mrOk = 1;
+  mrCancel = 2;
+  mrAbort = 3;
+  mrRetry = 4;
+  mrIgnore = 5;
+  mrYes = 6;
+  mrNo = 7;
+  mrClose = 8;
+
+{ Light or dark colors for every control; repaints. }
+procedure UseDarkTheme(Dark: Boolean);
+{ Asks for another frame soon (animations). }
+procedure RequestAnimation;
+{ Runs the timers that are due; the milliseconds until the next one (-1: none). }
+function ProcessTimers(NowMs: QWord): Integer;
+{ Splits text into lines that fit Width (at spaces; long words are broken). }
+function WrapText(Font: TPastelFont; const S: string; Width: Integer): TStringArray;
 
 procedure RegisterControl(AClass: TControlClass);
 function FindControlClass(const AName: string): TControlClass;
 function ControlClassCount: Integer;
 function ControlClassAt(Index: Integer): TControlClass;
+{ Components without a place on the form (TTimer...) that .pform files can create. }
+procedure RegisterNonVisual(AClass: TComponentClass);
+function FindNonVisualClass(const AName: string): TComponentClass;
+function NonVisualClassCount: Integer;
+function NonVisualClassAt(Index: Integer): TComponentClass;
 
 implementation
 
@@ -350,6 +648,36 @@ begin
     Result := nil;
 end;
 
+var
+  NonVisualClasses: TStringList = nil;
+
+procedure RegisterNonVisual(AClass: TComponentClass);
+begin
+  if NonVisualClasses.IndexOf(AClass.ClassName) < 0 then
+    NonVisualClasses.AddObject(AClass.ClassName, TObject(AClass));
+end;
+
+function FindNonVisualClass(const AName: string): TComponentClass;
+var
+  I: Integer;
+begin
+  I := NonVisualClasses.IndexOf(AName);
+  if I >= 0 then
+    Result := TComponentClass(NonVisualClasses.Objects[I])
+  else
+    Result := nil;
+end;
+
+function NonVisualClassCount: Integer;
+begin
+  Result := NonVisualClasses.Count;
+end;
+
+function NonVisualClassAt(Index: Integer): TComponentClass;
+begin
+  Result := TComponentClass(NonVisualClasses.Objects[Index]);
+end;
+
 function ControlClassCount: Integer;
 begin
   Result := ControlClasses.Count;
@@ -360,7 +688,7 @@ begin
   Result := TControlClass(ControlClasses.Objects[Index]);
 end;
 
-procedure DefaultTheme;
+procedure LightTheme;
 begin
   Theme.Background := RGB($F4, $F5, $F8);
   Theme.Surface := RGB($FF, $FF, $FF);
@@ -381,8 +709,197 @@ begin
   Theme.BorderHover := RGB($B8, $BD, $C9);
   Theme.FocusRing := RGBA($4F, $46, $E5, $55);
   Theme.Disabled := RGB($C4, $C7, $CF);
+  Theme.Shadow := RGBA(0, 0, 0, $28);
+  Theme.Backdrop := RGBA($10, $12, $1A, $66);
+  Theme.Selection := RGBA($4F, $46, $E5, $22);
+  Theme.TooltipBack := RGB($2B, $2E, $38);
+  Theme.TooltipText := RGB($FF, $FF, $FF);
   Theme.Radius := 8;
   Theme.FontSize := 14;
+  Theme.Dark := False;
+end;
+
+procedure DarkTheme;
+begin
+  LightTheme;
+  Theme.Background := RGB($16, $18, $1F);
+  Theme.Surface := RGB($22, $25, $2E);
+  Theme.Text := RGB($E8, $EA, $F0);
+  Theme.TextMuted := RGB($9A, $A0, $B0);
+  Theme.Placeholder := RGB($6F, $75, $85);
+  Theme.Accent := RGB($7C, $74, $F6);
+  Theme.AccentHover := RGB($8E, $87, $F8);
+  Theme.AccentPressed := RGB($6A, $61, $EC);
+  Theme.Secondary := RGB($2E, $32, $3D);
+  Theme.SecondaryHover := RGB($38, $3D, $4A);
+  Theme.SecondaryPressed := RGB($44, $4A, $58);
+  Theme.Danger := RGB($EF, $44, $44);
+  Theme.DangerHover := RGB($F8, $71, $71);
+  Theme.Border := RGB($3A, $3F, $4C);
+  Theme.BorderHover := RGB($55, $5B, $6B);
+  Theme.FocusRing := RGBA($7C, $74, $F6, $66);
+  Theme.Disabled := RGB($55, $5A, $68);
+  Theme.Shadow := RGBA(0, 0, 0, $60);
+  Theme.Backdrop := RGBA(0, 0, 0, $88);
+  Theme.Selection := RGBA($7C, $74, $F6, $33);
+  Theme.TooltipBack := RGB($E8, $EA, $F0);
+  Theme.TooltipText := RGB($16, $18, $1F);
+  Theme.Dark := True;
+end;
+
+procedure UseDarkTheme(Dark: Boolean);
+begin
+  if Dark then DarkTheme else LightTheme;
+  NeedsLayout := True;
+  NeedsRepaint := True;
+end;
+
+procedure RequestAnimation;
+begin
+  AnimationRequested := True;
+  NeedsRepaint := True;
+end;
+
+function WrapText(Font: TPastelFont; const S: string; Width: Integer): TStringArray;
+var
+  Paras: TStringArray;
+  Para, Line, Word: string;
+  I, P, N: Integer;
+
+  procedure Add(const L: string);
+  begin
+    SetLength(Result, N + 1);
+    Result[N] := L;
+    Inc(N);
+  end;
+
+begin
+  Result := nil;
+  N := 0;
+  Paras := StringReplace(S, #13#10, #10, [rfReplaceAll]).Split([#10]);
+  if Length(Paras) = 0 then
+    Add('');
+  for Para in Paras do
+  begin
+    if (Width <= 0) or (Font.TextWidth(Para) <= Width) then
+    begin
+      Add(Para);
+      Continue;
+    end;
+    Line := '';
+    I := 1;
+    while I <= Length(Para) do
+    begin
+      { the next word with the spaces after it }
+      P := I;
+      while (P <= Length(Para)) and (Para[P] <> ' ') do
+        Inc(P);
+      while (P <= Length(Para)) and (Para[P] = ' ') do
+        Inc(P);
+      Word := Copy(Para, I, P - I);
+      I := P;
+      if Font.TextWidth(TrimRight(Line + Word)) <= Width then
+        Line := Line + Word
+      else
+      begin
+        if Line <> '' then
+          Add(TrimRight(Line));
+        Line := '';
+        { a word wider than the line: break it by characters }
+        while Font.TextWidth(TrimRight(Word)) > Width do
+        begin
+          P := 1;
+          while (P <= Length(Word)) do
+          begin
+            N := N;   { keep the counter }
+            NextCodePoint(Word, P);
+            if Font.TextWidth(Copy(Word, 1, P - 1)) > Width then
+            begin
+              P := PrevCharStart(Word, P);
+              Break;
+            end;
+          end;
+          if P <= 1 then
+            NextCodePoint(Word, P);
+          Add(Copy(Word, 1, P - 1));
+          Word := Copy(Word, P, MaxInt);
+        end;
+        Line := Word;
+      end;
+    end;
+    Add(TrimRight(Line));
+  end;
+end;
+
+{ ---- timers ---- }
+
+var
+  Timers: TFPList = nil;
+
+constructor TTimer.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FInterval := 1000;
+  FEnabled := True;
+  FNext := GetTickCount64 + FInterval;
+  Timers.Add(Self);
+end;
+
+destructor TTimer.Destroy;
+begin
+  if Timers <> nil then
+    Timers.Remove(Self);
+  inherited Destroy;
+end;
+
+procedure TTimer.SetEnabled(AValue: Boolean);
+begin
+  if AValue and not FEnabled then
+    FNext := GetTickCount64 + FInterval;
+  FEnabled := AValue;
+end;
+
+procedure TTimer.SetInterval(AValue: Integer);
+begin
+  FInterval := Max(1, AValue);
+  FNext := GetTickCount64 + FInterval;
+end;
+
+function ProcessTimers(NowMs: QWord): Integer;
+var
+  I: Integer;
+  T: TTimer;
+  Due: TFPList;
+begin
+  Result := -1;
+  Due := TFPList.Create;
+  try
+    for I := 0 to Timers.Count - 1 do
+    begin
+      T := TTimer(Timers[I]);
+      if not T.FEnabled or not Assigned(T.FOnTimer) or (csDesigning in T.ComponentState) then
+        Continue;
+      if NowMs >= T.FNext then
+        Due.Add(T);
+    end;
+    for I := 0 to Due.Count - 1 do
+    begin
+      T := TTimer(Due[I]);
+      if Timers.IndexOf(T) < 0 then
+        Continue;        { freed by an earlier timer }
+      T.FNext := NowMs + QWord(T.FInterval);
+      T.FOnTimer(T);
+    end;
+    for I := 0 to Timers.Count - 1 do
+    begin
+      T := TTimer(Timers[I]);
+      if T.FEnabled and Assigned(T.FOnTimer) then
+        if (Result < 0) or (Int64(T.FNext) - Int64(NowMs) < Result) then
+          Result := Max(0, Int64(T.FNext) - Int64(NowMs));
+    end;
+  finally
+    Due.Free;
+  end;
 end;
 
 { ---- TControl ---- }
@@ -406,6 +923,9 @@ begin
     if F.FFocused = Self then F.FFocused := nil;
     if F.FHover = Self then F.FHover := nil;
     if F.FCaptured = Self then F.FCaptured := nil;
+    if F.FTooltipFor = Self then F.FTooltipFor := nil;
+    if F.FPopups <> nil then
+      F.FPopups.Remove(Self);
   end;
   if FParent <> nil then
     FParent.FChildren.Remove(Self);
@@ -419,6 +939,11 @@ end;
 function TControl.GetChild(Index: Integer): TControl;
 begin
   Result := TControl(FChildren[Index]);
+end;
+
+function TControl.IndexOfChild(C: TControl): Integer;
+begin
+  Result := FChildren.IndexOf(C);
 end;
 
 function TControl.GetChildCount: Integer;
@@ -504,6 +1029,11 @@ begin
   FBounds := R;
 end;
 
+procedure TControl.SetBoundsOnly(const R: TRectI);
+begin
+  FBounds := R;
+end;
+
 procedure TControl.Paint(C: TCanvas32);
 begin
   PaintChildren(C);
@@ -559,7 +1089,46 @@ begin
   if C is TForm then
     Result := TForm(C)
   else
-    Result := nil;
+    Result := C.FPopupForm;
+end;
+
+function TControl.ParentPopup: TPopup;
+var
+  C: TControl;
+begin
+  C := Self;
+  while (C <> nil) and not (C is TPopup) do
+    C := C.FParent;
+  Result := TPopup(C);
+end;
+
+procedure TControl.SetPopupMenu(AValue: TControl);
+begin
+  if FPopupMenu = AValue then
+    Exit;
+  if FPopupMenu <> nil then
+    FPopupMenu.RemoveFreeNotification(Self);
+  FPopupMenu := AValue;
+  if FPopupMenu <> nil then
+    FPopupMenu.FreeNotification(Self);
+end;
+
+procedure TControl.Notification(AComponent: TComponent; Operation: TOperation);
+begin
+  inherited Notification(AComponent, Operation);
+  if (Operation = opRemove) and (AComponent = FPopupMenu) then
+    FPopupMenu := nil;
+end;
+
+function TControl.MouseWheel(DX, DY: Integer): Boolean;
+begin
+  Result := False;
+end;
+
+procedure TControl.ScrollIntoView(C: TControl);
+begin
+  if FParent <> nil then
+    FParent.ScrollIntoView(C);
 end;
 
 function TControl.IsHovered: Boolean;
@@ -803,12 +1372,26 @@ begin
   end;
 end;
 
-procedure TBox.Paint(C: TCanvas32);
+function TBox.PaintColor: TColor32;
 begin
-  if (Cardinal(FColor) shr 24) > 0 then
-    C.FillRoundRect(Bounds.X, Bounds.Y, Bounds.W, Bounds.H, FRadius, FColor);
-  if (FBorderWidth > 0) and ((Cardinal(FBorderColor) shr 24) > 0) then
-    C.StrokeRoundRect(Bounds.X, Bounds.Y, Bounds.W, Bounds.H, FRadius, FBorderWidth, FBorderColor);
+  Result := FColor;
+end;
+
+function TBox.PaintBorderColor: TColor32;
+begin
+  Result := FBorderColor;
+end;
+
+procedure TBox.Paint(C: TCanvas32);
+var
+  Col, Bor: TColor32;
+begin
+  Col := PaintColor;
+  Bor := PaintBorderColor;
+  if (Cardinal(Col) shr 24) > 0 then
+    C.FillRoundRect(Bounds.X, Bounds.Y, Bounds.W, Bounds.H, FRadius, Col);
+  if (FBorderWidth > 0) and ((Cardinal(Bor) shr 24) > 0) then
+    C.StrokeRoundRect(Bounds.X, Bounds.Y, Bounds.W, Bounds.H, FRadius, FBorderWidth, Bor);
   { a little extra room so children's focus rings are not cut off }
   C.PushClip(RectI(Bounds.X - 4, Bounds.Y - 4, Bounds.W + 8, Bounds.H + 8));
   PaintChildren(C);
@@ -825,12 +1408,24 @@ end;
 constructor TCard.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  FColor := Theme.Surface;
-  FBorderColor := Theme.Border;
   FBorderWidth := 1;
   FRadius := 12;
   FPadding := 20;
   FGap := 12;
+end;
+
+function TCard.PaintColor: TColor32;
+begin
+  Result := FColor;
+  if Result = 0 then
+    Result := Theme.Surface;
+end;
+
+function TCard.PaintBorderColor: TColor32;
+begin
+  Result := FBorderColor;
+  if Result = 0 then
+    Result := Theme.Border;
 end;
 
 constructor TSpacer.Create(AOwner: TComponent);
@@ -885,34 +1480,96 @@ begin
   Invalidate;
 end;
 
-procedure TLabel.Measure(AvailWidth: Integer; out W, H: Integer);
+procedure TLabel.SetWordWrap(AValue: Boolean);
 begin
-  W := Font.TextWidth(FText);
-  H := Font.LineHeight;
+  if FWordWrap = AValue then Exit;
+  FWordWrap := AValue;
+  Changed;
+end;
+
+function TLabel.TextLines(AWidth: Integer): TStringArray;
+begin
+  if FWordWrap then
+    Result := WrapText(Font, FText, AWidth)
+  else
+    Result := WrapText(Font, FText, 0);
+end;
+
+procedure TLabel.Measure(AvailWidth: Integer; out W, H: Integer);
+var
+  L: TStringArray;
+  S: string;
+begin
+  L := TextLines(AvailWidth);
+  W := 0;
+  for S in L do
+    W := Max(W, Font.TextWidth(S));
+  if FWordWrap and (AvailWidth > 0) then
+    W := Min(W, AvailWidth);
+  H := Font.LineHeight * Max(1, Length(L));
 end;
 
 procedure TLabel.Paint(C: TCanvas32);
 var
   F: TPastelFont;
-  X, TW: Integer;
+  X, Y, TW: Integer;
   Col: TColor32;
+  L: TStringArray;
+  S: string;
 begin
   F := Font;
-  TW := F.TextWidth(FText);
-  case FTextAlign of
-    taCenter: X := Bounds.X + (Bounds.W - TW) div 2;
-    taRight: X := Bounds.X + Bounds.W - TW;
-  else
-    X := Bounds.X;
-  end;
   Col := FColor;
   if Col = 0 then
     Col := Theme.Text;
   if not Enabled then
     Col := Theme.Disabled;
+  L := TextLines(Bounds.W);
+  Y := Bounds.Y + (Bounds.H - F.LineHeight * Length(L)) div 2;
+  if Y < Bounds.Y then
+    Y := Bounds.Y;
   C.PushClip(Bounds);
-  C.DrawText(F, X, Bounds.Y + (Bounds.H - F.LineHeight) div 2, FText, Col);
+  for S in L do
+  begin
+    TW := F.TextWidth(S);
+    case FTextAlign of
+      taCenter: X := Bounds.X + (Bounds.W - TW) div 2;
+      taRight: X := Bounds.X + Bounds.W - TW;
+    else
+      X := Bounds.X;
+    end;
+    C.DrawText(F, X, Y, S, Col);
+    Inc(Y, F.LineHeight);
+  end;
   C.PopClip;
+end;
+
+{ ---- TButton ---- }
+
+{ ---- TAction ---- }
+
+constructor TAction.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FEnabled := True;
+end;
+
+procedure TAction.SetEnabled(AValue: Boolean);
+begin
+  FEnabled := AValue;
+  NeedsRepaint := True;
+end;
+
+procedure TAction.SetChecked(AValue: Boolean);
+begin
+  FChecked := AValue;
+  NeedsRepaint := True;
+end;
+
+function TAction.Execute: Boolean;
+begin
+  Result := FEnabled and Assigned(OnExecute);
+  if Result then
+    OnExecute(Self);
 end;
 
 { ---- TButton ---- }
@@ -922,6 +1579,36 @@ begin
   if FText = AValue then Exit;
   FText := AValue;
   Changed;
+end;
+
+function TButton.GetText: string;
+begin
+  Result := FText;
+  if (Result = '') and (FAction is TAction) then
+    Result := TAction(FAction).Caption;
+end;
+
+procedure TButton.SetAction(AValue: TBasicAction);
+begin
+  if FAction = AValue then Exit;
+  if FAction <> nil then
+    FAction.RemoveFreeNotification(Self);
+  FAction := AValue;
+  if FAction <> nil then
+    FAction.FreeNotification(Self);
+  Changed;
+end;
+
+procedure TButton.Notification(AComponent: TComponent; Operation: TOperation);
+begin
+  inherited Notification(AComponent, Operation);
+  if (Operation = opRemove) and (AComponent = FAction) then
+    FAction := nil;
+end;
+
+function TButton.IsEnabled: Boolean;
+begin
+  Result := Enabled and not ((FAction is TAction) and not TAction(FAction).Enabled);
 end;
 
 procedure TButton.SetStyle(AValue: TButtonStyle);
@@ -935,7 +1622,7 @@ var
   F: TPastelFont;
 begin
   F := GetFont(Theme.FontSize, True);
-  W := F.TextWidth(FText) + 36;
+  W := F.TextWidth(GetText) + 36;
   H := F.LineHeight + 20;
 end;
 
@@ -943,8 +1630,10 @@ procedure TButton.Paint(C: TCanvas32);
 var
   F: TPastelFont;
   Bg, Fg: TColor32;
+  S: string;
 begin
   F := GetFont(Theme.FontSize, True);
+  S := GetText;
   case FStyle of
     bsSecondary:
       begin
@@ -966,7 +1655,7 @@ begin
     else Bg := Theme.Accent;
     Fg := Theme.OnAccent;
   end;
-  if not Enabled then
+  if not IsEnabled then
   begin
     Bg := Theme.Secondary;
     Fg := Theme.Disabled;
@@ -976,8 +1665,8 @@ begin
       Theme.Radius + 3, Theme.FocusRing);
   C.FillRoundRect(Bounds.X, Bounds.Y, Bounds.W, Bounds.H, Theme.Radius, Bg);
   C.PushClip(Bounds);
-  C.DrawText(F, Bounds.X + (Bounds.W - F.TextWidth(FText)) div 2,
-    Bounds.Y + (Bounds.H - F.LineHeight) div 2, FText, Fg);
+  C.DrawText(F, Bounds.X + (Bounds.W - F.TextWidth(S)) div 2,
+    Bounds.Y + (Bounds.H - F.LineHeight) div 2, S, Fg);
   C.PopClip;
 end;
 
@@ -988,7 +1677,7 @@ end;
 
 function TButton.Cursor: TCursorKind;
 begin
-  if Enabled then Result := ckHand else Result := ckArrow;
+  if IsEnabled then Result := ckHand else Result := ckArrow;
 end;
 
 procedure TButton.MouseDown(X, Y: Integer);
@@ -999,214 +1688,357 @@ end;
 procedure TButton.MouseUp(X, Y: Integer; Inside: Boolean);
 begin
   Invalidate;
-  if Inside and Enabled then
+  if Inside and IsEnabled then
     Click;
 end;
 
 function TButton.KeyDown(Key: LongInt; Shift, Ctrl: Boolean): Boolean;
 begin
   Result := (Key = KEY_ENTER) or (Key = KEY_KP_ENTER) or (Key = KEY_SPACE);
-  if Result and Enabled then
+  if Result and IsEnabled then
     Click;
 end;
 
 procedure TButton.Click;
+var
+  P: TPopup;
 begin
-  if Assigned(FOnClick) then
+  if not IsEnabled then
+    Exit;
+  if FAction <> nil then
+    FAction.Execute
+  else if Assigned(FOnClick) then
     FOnClick(Self);
+  if FModalResult <> mrNone then
+  begin
+    P := ParentPopup;
+    if P <> nil then
+      P.Close(FModalResult);
+  end;
 end;
 
-{ ---- TEdit ---- }
+{ ---- TPopup ---- }
 
-const
-  EditPadding = 12;
-
-constructor TEdit.Create(AOwner: TComponent);
+constructor TPopup.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  FCaret := 1;
+  FRadius := 10;
+  FBorderWidth := 1;
+  FPadding := 6;
+  FClosed := True;
 end;
 
-function TEdit.Font: TPastelFont;
+function TPopup.PaintColor: TColor32;
 begin
-  Result := GetFont(Theme.FontSize, False);
+  Result := FColor;
+  if Result = 0 then
+    Result := Theme.Surface;
 end;
 
-procedure TEdit.SetText(const AValue: string);
+function TPopup.PaintBorderColor: TColor32;
 begin
-  if FText = AValue then Exit;
-  FText := AValue;
-  FCaret := Length(FText) + 1;
-  Changed;
-  DoChange;
+  Result := FBorderColor;
+  if Result = 0 then
+    Result := Theme.Border;
 end;
 
-procedure TEdit.SetPlaceholder(const AValue: string);
-begin
-  FPlaceholder := AValue;
-  Invalidate;
-end;
-
-procedure TEdit.DoChange;
-begin
-  if Assigned(FOnChange) then
-    FOnChange(Self);
-end;
-
-procedure TEdit.Measure(AvailWidth: Integer; out W, H: Integer);
-begin
-  W := 200;
-  H := Font.LineHeight + 20;
-end;
-
-procedure TEdit.Paint(C: TCanvas32);
+procedure TPopup.Paint(C: TCanvas32);
 var
-  F: TPastelFont;
-  TextX, TextY, CaretX, InnerW: Integer;
-  Border: TColor32;
-begin
-  F := Font;
-  InnerW := Bounds.W - 2 * EditPadding;
-  { keep the caret visible }
-  CaretX := F.TextWidth(Copy(FText, 1, FCaret - 1));
-  if CaretX - FScroll > InnerW then
-    FScroll := CaretX - InnerW;
-  if CaretX - FScroll < 0 then
-    FScroll := CaretX;
-  if F.TextWidth(FText) - FScroll < InnerW then
-    FScroll := Math.Max(0, F.TextWidth(FText) - InnerW);
-
-  if IsFocused then
-  begin
-    C.FillRoundRect(Bounds.X - 3, Bounds.Y - 3, Bounds.W + 6, Bounds.H + 6,
-      Theme.Radius + 3, Theme.FocusRing);
-    Border := Theme.Accent;
-  end
-  else if IsHovered then
-    Border := Theme.BorderHover
-  else
-    Border := Theme.Border;
-  C.FillRoundRect(Bounds.X, Bounds.Y, Bounds.W, Bounds.H, Theme.Radius, Theme.Surface);
-  C.StrokeRoundRect(Bounds.X, Bounds.Y, Bounds.W, Bounds.H, Theme.Radius, 1, Border);
-
-  TextX := Bounds.X + EditPadding - FScroll;
-  TextY := Bounds.Y + (Bounds.H - F.LineHeight) div 2;
-  C.PushClip(RectI(Bounds.X + EditPadding - 1, Bounds.Y + 1, InnerW + 2, Bounds.H - 2));
-  if FText = '' then
-    C.DrawText(F, Bounds.X + EditPadding, TextY, FPlaceholder, Theme.Placeholder)
-  else
-    C.DrawText(F, TextX, TextY, FText, Theme.Text);
-  if IsFocused and CaretVisible then
-    C.FillRect(TextX + CaretX, TextY, 1, F.LineHeight, Theme.Text);
-  C.PopClip;
-end;
-
-function TEdit.Focusable: Boolean;
-begin
-  Result := Enabled;
-end;
-
-function TEdit.Cursor: TCursorKind;
-begin
-  Result := ckIBeam;
-end;
-
-procedure TEdit.MouseDown(X, Y: Integer);
-begin
-  FCaret := Font.HitTest(FText, X - Bounds.X - EditPadding + FScroll);
-  CaretVisible := True;
-  Invalidate;
-end;
-
-procedure TEdit.InsertText(const S: string);
-var
-  Clean: string;
   I: Integer;
 begin
-  Clean := '';
-  for I := 1 to Length(S) do
-    if S[I] >= ' ' then
-      Clean := Clean + S[I];
-  if Clean = '' then
-    Exit;
-  Insert(Clean, FText, FCaret);
-  Inc(FCaret, Length(Clean));
-  CaretVisible := True;
-  Invalidate;
-  DoChange;
+  { a soft shadow }
+  for I := 3 downto 1 do
+    C.FillRoundRect(Bounds.X - I + 1, Bounds.Y - I + 3, Bounds.W + 2 * I - 2, Bounds.H + 2 * I - 2,
+      FRadius + I, WithAlpha(Theme.Shadow, (Cardinal(Theme.Shadow) shr 24) div (I + 1)));
+  inherited Paint(C);
 end;
 
-procedure TEdit.TextInput(const S: string);
+procedure TPopup.Popup(Form: TForm; const Anchor: TRectI; PlaceRight: Boolean);
 begin
-  InsertText(S);
+  FAnchor := Anchor;
+  FAnchored := True;
+  FPlaceRight := PlaceRight;
+  Form.ShowPopup(Self);
 end;
 
-function TEdit.KeyDown(Key: LongInt; Shift, Ctrl: Boolean): Boolean;
+procedure TPopup.PopupCentered(Form: TForm);
+begin
+  FAnchored := False;
+  Form.ShowPopup(Self);
+end;
+
+function TPopup.ShowModal(Form: TForm): Integer;
+begin
+  if not Assigned(ModalStep) then
+    raise Exception.Create('ShowModal needs a running application (Application.Run)');
+  FModal := True;
+  FModalResult := mrNone;
+  PopupCentered(Form);
+  while not FClosed do
+    ModalStep();
+  Result := FModalResult;
+end;
+
+procedure TPopup.Close(AModalResult: Integer);
 var
-  P: Integer;
+  F: TForm;
 begin
-  Result := True;
-  CaretVisible := True;
-  case Key of
-    KEY_LEFT:
-      if FCaret > 1 then
-        FCaret := PrevCharStart(FText, FCaret);
-    KEY_RIGHT:
-      if FCaret <= Length(FText) then
-      begin
-        P := FCaret;
-        NextCodePoint(FText, P);
-        FCaret := P;
-      end;
-    KEY_HOME: FCaret := 1;
-    KEY_END: FCaret := Length(FText) + 1;
-    KEY_BACKSPACE:
-      if FCaret > 1 then
-      begin
-        P := PrevCharStart(FText, FCaret);
-        Delete(FText, P, FCaret - P);
-        FCaret := P;
-        DoChange;
-      end;
-    KEY_DELETE:
-      if FCaret <= Length(FText) then
-      begin
-        P := FCaret;
-        NextCodePoint(FText, P);
-        Delete(FText, FCaret, P - FCaret);
-        DoChange;
-      end;
-    KEY_ENTER, KEY_KP_ENTER:
-      if Assigned(FOnSubmit) then
-        FOnSubmit(Self);
-  else
-    Result := False;
-    if Ctrl and (Key = Ord('v')) and Assigned(ClipboardGetText) then
-    begin
-      InsertText(ClipboardGetText());
-      Result := True;
-    end
-    else if Ctrl and (Key = Ord('c')) and Assigned(ClipboardSetText) then
-    begin
-      ClipboardSetText(FText);
-      Result := True;
-    end;
-  end;
-  Invalidate;
+  if FClosed then
+    Exit;
+  if AModalResult <> mrNone then
+    FModalResult := AModalResult;
+  F := FPopupForm;
+  if F <> nil then
+    F.ClosePopup(Self);
+  if Assigned(FOnClose) then
+    FOnClose(Self);
 end;
+
+{$I pastel.ui.edit.inc}
 
 { ---- TForm ---- }
 
 constructor TForm.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  FColor := Theme.Background;
+  FPopups := TFPList.Create;
+  FClickCount := 1;
+  FMouseButton := 1;
   FPadding := 24;
   FGap := 12;
   FTitle := 'Pastel';
   FResizable := True;
   FMinWidth := 200;
   FMinHeight := 120;
+end;
+
+destructor TForm.Destroy;
+var
+  I: Integer;
+begin
+  for I := FPopups.Count - 1 downto 0 do
+  begin
+    TPopup(FPopups[I]).FPopupForm := nil;
+    TPopup(FPopups[I]).FClosed := True;
+  end;
+  FreeAndNil(FPopups);
+  FreeAndNil(FTooltip);
+  inherited Destroy;
+end;
+
+function TForm.PaintColor: TColor32;
+begin
+  Result := FColor;
+  if Result = 0 then
+    Result := Theme.Background;
+end;
+
+function TForm.HitTest(X, Y: Integer): TControl;
+var
+  I: Integer;
+  P: TPopup;
+begin
+  for I := FPopups.Count - 1 downto 0 do
+  begin
+    P := TPopup(FPopups[I]);
+    Result := P.HitTest(X, Y);
+    if Result <> nil then
+      Exit;
+    if P.FModal then
+      Exit(nil);       { nothing behind a dialog can be reached }
+  end;
+  Result := inherited HitTest(X, Y);
+end;
+
+procedure TForm.ShowPopup(P: TPopup);
+var
+  List: TFPList;
+begin
+  HideTooltip;
+  if FPopups.IndexOf(P) < 0 then
+    FPopups.Add(P);
+  P.FPopupForm := Self;
+  P.FClosed := False;
+  P.FShown := True;
+  P.FSavedFocus := FFocused;
+  P.FreeNotification(Self);
+  if P.FModal then
+  begin
+    List := TFPList.Create;
+    try
+      CollectFocusable(P, List);
+      if List.Count > 0 then
+        FocusControl(TControl(List[0]))
+      else
+        FocusControl(nil);
+    finally
+      List.Free;
+    end;
+  end;
+  NeedsLayout := True;
+  NeedsRepaint := True;
+end;
+
+function InTree(C, Root: TControl): Boolean;
+begin
+  while (C <> nil) and (C <> Root) do
+    C := C.Parent;
+  Result := C = Root;
+end;
+
+procedure TForm.ClosePopup(P: TPopup);
+begin
+  if FPopups.IndexOf(P) < 0 then
+    Exit;
+  FPopups.Remove(P);
+  P.FClosed := True;
+  P.FShown := False;
+  if InTree(FCaptured, P) then FCaptured := nil;
+  if InTree(FHover, P) then FHover := nil;
+  if (FFocused = nil) or InTree(FFocused, P) then
+  begin
+    FFocused := nil;
+    if (P.FSavedFocus <> nil) and (P.FSavedFocus.ParentForm = Self) then
+      FocusControl(P.FSavedFocus);
+  end;
+  P.FSavedFocus := nil;
+  NeedsLayout := True;
+  NeedsRepaint := True;
+end;
+
+function TForm.PopupCount: Integer;
+begin
+  Result := FPopups.Count;
+end;
+
+function TForm.PopupAt(Index: Integer): TPopup;
+begin
+  Result := TPopup(FPopups[Index]);
+end;
+
+function TForm.TopPopup: TPopup;
+begin
+  if FPopups.Count = 0 then
+    Result := nil
+  else
+    Result := TPopup(FPopups[FPopups.Count - 1]);
+end;
+
+procedure TForm.PlacePopup(P: TPopup);
+var
+  W, H, X, Y, MaxW, MaxH: Integer;
+begin
+  MaxW := Max(80, FWidthPx - 16);
+  MaxH := Max(60, FHeightPx - 16);
+  P.GetSize(MaxW, W, H);
+  W := Min(W, MaxW);
+  H := Min(H, MaxH);
+  if not P.FAnchored then
+  begin
+    X := (FWidthPx - W) div 2;
+    Y := Max(8, (FHeightPx - H) * 2 div 5);
+  end
+  else if P.FPlaceRight then
+  begin
+    X := P.FAnchor.X + P.FAnchor.W;
+    Y := P.FAnchor.Y - P.FPadding;
+    if X + W > FWidthPx - 8 then
+      X := Max(8, P.FAnchor.X - W);
+    if Y + H > FHeightPx - 8 then
+      Y := Max(8, FHeightPx - 8 - H);
+  end
+  else
+  begin
+    X := P.FAnchor.X;
+    Y := P.FAnchor.Y + P.FAnchor.H + 4;
+    if (Y + H > FHeightPx - 8) and (P.FAnchor.Y - H - 4 >= 8) then
+      Y := P.FAnchor.Y - H - 4
+    else if Y + H > FHeightPx - 8 then
+      H := Max(40, FHeightPx - 8 - Y);
+  end;
+  if X + W > FWidthPx - 8 then
+    X := FWidthPx - 8 - W;
+  X := Max(8, X);
+  P.Arrange(RectI(X, Y, W, H));
+end;
+
+procedure TForm.HideTooltip;
+begin
+  if FTooltipFor <> nil then
+  begin
+    FTooltipFor := nil;
+    NeedsRepaint := True;
+  end;
+end;
+
+function TForm.UpdateTooltip(NowMs: QWord): Boolean;
+var
+  L: TLabel;
+  W, H, X, Y: Integer;
+begin
+  Result := False;
+  if (FHover = nil) or (FHover.Hint = '') or (FCaptured <> nil) or (FTooltipFor = FHover) or
+     (NowMs < FHoverSince + 600) then
+    Exit;
+  if FTooltip = nil then
+  begin
+    FTooltip := TPopup.Create(nil);
+    FTooltip.Padding := 6;
+    FTooltip.BorderWidth := 0;
+    FTooltip.Radius := 6;
+    L := TLabel.Create(FTooltip);
+    L.FontSize := 13;
+    L.WordWrap := True;
+    L.Parent := FTooltip;
+  end;
+  FTooltip.Color := Theme.TooltipBack;
+  L := TLabel(FTooltip.Children[0]);
+  L.Text := FHover.Hint;
+  L.Color := Theme.TooltipText;
+  FTooltip.GetSize(320, W, H);
+  W := Min(W, 320);
+  X := EnsureRange(FMouseX, 8, Max(8, FWidthPx - W - 8));
+  Y := FMouseY + 22;
+  if Y + H > FHeightPx - 4 then
+    Y := Max(4, FMouseY - H - 8);
+  FTooltip.Arrange(RectI(X, Y, W, H));
+  FTooltipFor := FHover;
+  NeedsRepaint := True;
+  Result := True;
+end;
+
+procedure TForm.HandleMouseWheel(DX, DY: Integer);
+var
+  C: TControl;
+begin
+  HideTooltip;
+  C := HitTest(FMouseX, FMouseY);
+  while C <> nil do
+  begin
+    if C.Enabled and C.MouseWheel(DX, DY) then
+    begin
+      NeedsRepaint := True;
+      Exit;
+    end;
+    C := C.Parent;
+  end;
+end;
+
+procedure TForm.HandleContextMenu(X, Y: Integer);
+var
+  C: TControl;
+begin
+  C := HitTest(X, Y);
+  while C <> nil do
+  begin
+    if C.FPopupMenu <> nil then
+    begin
+      if Assigned(PopupMenuHook) then
+        PopupMenuHook(C.FPopupMenu, Self, X, Y);
+      Exit;
+    end;
+    C := C.Parent;
+  end;
 end;
 
 procedure TForm.SetResizable(AValue: Boolean);
@@ -1259,8 +2091,76 @@ begin
   SetWindowState(wsNormal);
 end;
 
-procedure TForm.Close;
+type
+  { holds a form shown with ShowModal: its title above it }
+  TFormHost = class(TPopup)
+  public
+    TitleLabel: TLabel;
+  end;
+
+function TForm.ShowModal: Integer;
+var
+  Host: TFormHost;
+  Header: TRow;
 begin
+  if (MainForm = nil) or (MainForm = Self) then
+    raise Exception.Create('ShowModal shows a form above the main window: create the main form first');
+  Host := TFormHost.Create(nil);
+  try
+    Host.Padding := 0;
+    Host.Gap := 0;
+    Header := TRow.Create(Host);
+    Header.Padding := 16;
+    Header.Parent := Host;
+    Host.TitleLabel := TLabel.Create(Host);
+    Host.TitleLabel.Bold := True;
+    Host.TitleLabel.FontSize := 16;
+    Host.TitleLabel.Text := FTitle;
+    Host.TitleLabel.Parent := Header;
+    Header.Visible := FTitle <> '';
+    Parent := Host;
+    FFocused := nil;
+    Result := Host.ShowModal(MainForm);
+  finally
+    Parent := nil;
+    Host.Free;
+  end;
+  if Assigned(FOnClose) then
+    FOnClose(Self);
+end;
+
+function TForm.GetModalResult: Integer;
+var
+  P: TPopup;
+begin
+  P := ParentPopup;
+  if P <> nil then
+    Result := P.ModalResult
+  else
+    Result := mrNone;
+end;
+
+procedure TForm.SetModalResult(AValue: Integer);
+var
+  P: TPopup;
+begin
+  P := ParentPopup;
+  if (P <> nil) and (AValue <> mrNone) then
+    P.Close(AValue);
+end;
+
+procedure TForm.Close;
+var
+  P: TPopup;
+begin
+  P := ParentPopup;
+  if P <> nil then
+  begin
+    { a dialog form: closing it ends ShowModal }
+    if CloseQuery then
+      P.Close(mrCancel);
+    Exit;
+  end;
   CloseRequested := True;
 end;
 
@@ -1278,6 +2178,8 @@ begin
 end;
 
 procedure TForm.Notification(AComponent: TComponent; Operation: TOperation);
+var
+  I: Integer;
 begin
   inherited Notification(AComponent, Operation);
   if Operation = opRemove then
@@ -1285,6 +2187,14 @@ begin
     if AComponent = FFocused then FFocused := nil;
     if AComponent = FHover then FHover := nil;
     if AComponent = FCaptured then FCaptured := nil;
+    if AComponent = FTooltipFor then FTooltipFor := nil;
+    if FPopups <> nil then
+    begin
+      FPopups.Remove(AComponent);
+      for I := 0 to FPopups.Count - 1 do
+        if TPopup(FPopups[I]).FSavedFocus = AComponent then
+          TPopup(FPopups[I]).FSavedFocus := nil;
+    end;
   end;
 end;
 
@@ -1299,16 +2209,34 @@ begin
 end;
 
 procedure TForm.Layout(AWidth, AHeight: Integer);
+var
+  I: Integer;
 begin
+  FWidthPx := AWidth;
+  FHeightPx := AHeight;
   Arrange(RectI(0, 0, AWidth, AHeight));
+  for I := 0 to FPopups.Count - 1 do
+    PlacePopup(TPopup(FPopups[I]));
   NeedsLayout := False;
   NeedsRepaint := True;
 end;
 
 procedure TForm.Render(C: TCanvas32);
+var
+  I: Integer;
+  P: TPopup;
 begin
-  C.Clear(FColor);
+  C.Clear(PaintColor);
   PaintChildren(C);
+  for I := 0 to FPopups.Count - 1 do
+  begin
+    P := TPopup(FPopups[I]);
+    if P.FModal then
+      C.FillRect(0, 0, FWidthPx, FHeightPx, Theme.Backdrop);
+    P.Paint(C);
+  end;
+  if (FTooltipFor <> nil) and (FTooltip <> nil) then
+    FTooltip.Paint(C);
   NeedsRepaint := False;
 end;
 
@@ -1333,6 +2261,8 @@ begin
   FFocused := C;
   CaretVisible := True;
   NeedsRepaint := True;
+  if (C <> nil) and (C.Parent <> nil) then
+    C.Parent.ScrollIntoView(C);
 end;
 
 procedure TForm.FocusNext(Backward: Boolean);
@@ -1342,7 +2272,10 @@ var
 begin
   List := TFPList.Create;
   try
-    CollectFocusable(Self, List);
+    if (TopPopup <> nil) and TopPopup.FModal then
+      CollectFocusable(TopPopup, List)    { Tab stays in the dialog }
+    else
+      CollectFocusable(Self, List);
     if List.Count = 0 then
       Exit;
     I := List.IndexOf(FFocused);
@@ -1365,10 +2298,16 @@ procedure TForm.HandleMouseMove(X, Y: Integer);
 var
   Hit: TControl;
 begin
+  if (Abs(X - FMouseX) > 3) or (Abs(Y - FMouseY) > 3) then
+    HideTooltip;
+  FMouseX := X;
+  FMouseY := Y;
   Hit := HitTest(X, Y);
   if Hit <> FHover then
   begin
     FHover := Hit;
+    FHoverSince := GetTickCount64;
+    HideTooltip;
     NeedsRepaint := True;
   end;
   if FCaptured <> nil then
@@ -1377,15 +2316,40 @@ begin
     Hit.MouseMove(X, Y);
 end;
 
-procedure TForm.HandleMouseDown(X, Y: Integer);
+procedure TForm.HandleMouseDown(X, Y: Integer; Button: Integer; Clicks: Integer);
 var
   Hit, Target: TControl;
+  P: TPopup;
 begin
+  HideTooltip;
+  FMouseX := X;
+  FMouseY := Y;
+  FClickCount := Max(1, Clicks);
+  FMouseButton := Button;
   Hit := HitTest(X, Y);
+  { a click outside a drop-down or menu closes it (and does nothing else) }
+  P := TopPopup;
+  if (P <> nil) and not P.FModal and not InTree(Hit, P) then
+  begin
+    while (TopPopup <> nil) and not TopPopup.FModal and not InTree(Hit, TopPopup) do
+      TopPopup.Close;
+    NeedsRepaint := True;
+    Exit;
+  end;
   FHover := Hit;
   Target := Hit;
   while (Target <> nil) and not Target.Focusable do
     Target := Target.Parent;
+  if Button = 3 then
+  begin
+    if Target <> nil then
+      FocusControl(Target);
+    HandleContextMenu(X, Y);
+    NeedsRepaint := True;
+    Exit;
+  end;
+  if Button <> 1 then
+    Exit;
   FocusControl(Target);
   FFocusVisible := False;
   FCaptured := Hit;
@@ -1394,10 +2358,12 @@ begin
   NeedsRepaint := True;
 end;
 
-procedure TForm.HandleMouseUp(X, Y: Integer);
+procedure TForm.HandleMouseUp(X, Y: Integer; Button: Integer);
 var
   C: TControl;
 begin
+  if Button <> 1 then
+    Exit;
   C := FCaptured;
   FCaptured := nil;
   if C <> nil then
@@ -1414,9 +2380,57 @@ begin
   end;
 end;
 
-procedure TForm.HandleKeyDown(Key: LongInt; Shift, Ctrl: Boolean);
+{ the Default (Enter) or Cancel (Escape) button in a control tree }
+function FindDialogButton(C: TControl; Cancel: Boolean): TButton;
+var
+  I: Integer;
 begin
+  Result := nil;
+  if not C.Visible then
+    Exit;
+  if (C is TButton) and C.Enabled and
+     ((Cancel and TButton(C).Cancel) or (not Cancel and TButton(C).Default)) then
+    Exit(TButton(C));
+  for I := 0 to C.ChildCount - 1 do
+  begin
+    Result := FindDialogButton(C.Children[I], Cancel);
+    if Result <> nil then
+      Exit;
+  end;
+end;
+
+procedure TForm.HandleKeyDown(Key: LongInt; Shift, Ctrl: Boolean);
+var
+  P: TPopup;
+  Root: TControl;
+  B: TButton;
+begin
+  HideTooltip;
+  FShiftDown := Shift;
   if (FFocused <> nil) and FFocused.KeyDown(Key, Shift, Ctrl) then
+    Exit;
+  P := TopPopup;
+  if (P <> nil) and P.FModal then Root := P else Root := Self;
+  if (Key = KEY_ESCAPE) or (Key = KEY_ENTER) or (Key = KEY_KP_ENTER) then
+  begin
+    B := FindDialogButton(Root, Key = KEY_ESCAPE);
+    if B <> nil then
+    begin
+      B.Click;
+      Exit;
+    end;
+    if (Key = KEY_ESCAPE) and (P <> nil) then
+    begin
+      P.Close(mrCancel);
+      Exit;
+    end;
+  end;
+  if ((Key = KEY_MENU) or (Key = KEY_APPLICATION) or ((Key = KEY_F1 + 9) and Shift)) and (FFocused <> nil) then
+  begin
+    HandleContextMenu(FFocused.Bounds.X + 4, FFocused.Bounds.Y + FFocused.Bounds.H - 2);
+    Exit;
+  end;
+  if Assigned(ShortcutHook) and ShortcutHook(Self, Key, Shift, Ctrl) then
     Exit;
   if Key = KEY_TAB then
     FocusNext(Shift);
@@ -1453,6 +2467,14 @@ procedure TForm.BindControls;
 begin
 end;
 
+function TForm.BindComponent(const AName: string; AClass: TComponentClass): TComponent;
+begin
+  Result := FindComponent(AName);
+  if (Result <> nil) and not Result.InheritsFrom(AClass) then
+    raise Exception.CreateFmt('"%s" is a %s in the .pform file but a %s in the code. ' +
+      'Restart the app (pastel run) so the code is regenerated.', [AName, Result.ClassName, AClass.ClassName]);
+end;
+
 function TForm.BindControl(const AName: string; AClass: TControlClass): TControl;
 begin
   Result := FindControl(AName);
@@ -1466,7 +2488,13 @@ initialization
   ControlClasses := TStringList.Create;
   ControlClasses.Sorted := True;
   ControlClasses.CaseSensitive := False;
-  DefaultTheme;
+  LightTheme;
+  Timers := TFPList.Create;
+  NonVisualClasses := TStringList.Create;
+  NonVisualClasses.Sorted := True;
+  NonVisualClasses.CaseSensitive := False;
+  RegisterNonVisual(TTimer);
+  RegisterNonVisual(TAction);
   RegisterControl(TColumn);
   RegisterControl(TRow);
   RegisterControl(TCard);
@@ -1474,8 +2502,11 @@ initialization
   RegisterControl(TLabel);
   RegisterControl(TButton);
   RegisterControl(TEdit);
+  RegisterControl(TMemo);
 
 finalization
   ControlClasses.Free;
+  NonVisualClasses.Free;
+  FreeAndNil(Timers);
 
 end.

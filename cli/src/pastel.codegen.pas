@@ -27,14 +27,10 @@ function GenerateForms(const Root, GenDir: string; FileRefs: Boolean): TCodegenR
 { Builds the unit text for one parsed .pform. Exposed for tests. }
 function FormUnitSource(const UnitName, FormSource, FilePath: string): string;
 
-const
-  KnownControls: array[0..6] of string = (
-    'TColumn', 'TRow', 'TCard', 'TSpacer', 'TLabel', 'TButton', 'TEdit');
-
 implementation
 
 uses
-  Pastel.PForm, Pastel.Console;
+  Pastel.PForm, Pastel.Console, Pastel.UI, Pastel.Controls, Pastel.Menus;
 
 function PascalString(const S: string): string;
 var
@@ -70,30 +66,61 @@ type
     Lines: TStringList;
     Binds: TStringList;
     Errors: TStringList;
+    Units: TStringList;
   end;
   PFieldList = ^TFieldList;
 
-function IsKnownControl(const AName: string): Boolean;
+function AvailableTypes: string;
 var
-  K: string;
+  L: TStringList;
+  I: Integer;
 begin
-  for K in KnownControls do
-    if SameText(K, AName) then
-      Exit(True);
-  Result := False;
+  L := TStringList.Create;
+  try
+    L.Sorted := True;
+    for I := 0 to ControlClassCount - 1 do
+      L.Add(ControlClassAt(I).ClassName);
+    for I := 0 to NonVisualClassCount - 1 do
+      L.Add(NonVisualClassAt(I).ClassName);
+    Result := StringReplace(Trim(L.Text), LineEnding, ', ', [rfReplaceAll]);
+  finally
+    L.Free;
+  end;
 end;
 
 procedure CollectField(Node: TPFormNode; Data: Pointer);
 var
   L: PFieldList;
+  C: TClass;
 begin
   L := PFieldList(Data);
-  if not IsKnownControl(Node.ClassName_) then
+  C := FindControlClass(Node.ClassName_);
+  if C = nil then
+    C := FindNonVisualClass(Node.ClassName_);
+  if C = nil then
+  begin
     L^.Errors.Add(Format('%d'#9'unknown component type "%s" (available: %s)',
-      [Node.Line, Node.ClassName_, string.Join(', ', KnownControls)]));
-  L^.Lines.Add(Format('    %s: %s;', [Node.Name, Node.ClassName_]));
-  L^.Binds.Add(Format('  %s := %s(BindControl(''%s'', %s));',
-    [Node.Name, Node.ClassName_, Node.Name, Node.ClassName_]));
+      [Node.Line, Node.ClassName_, AvailableTypes]));
+    Exit;
+  end;
+  { the generated unit uses the unit of every class in the form }
+  if L^.Units.IndexOf(C.UnitName) < 0 then
+    L^.Units.Add(C.UnitName);
+  L^.Lines.Add(Format('    %s: %s;', [Node.Name, C.ClassName]));
+  if C.InheritsFrom(TControl) then
+    L^.Binds.Add(Format('  %s := %s(BindControl(''%s'', %s));', [Node.Name, C.ClassName, Node.Name, C.ClassName]))
+  else
+    L^.Binds.Add(Format('  %s := %s(BindComponent(''%s'', %s));', [Node.Name, C.ClassName, Node.Name, C.ClassName]));
+end;
+
+function UsesList(Units: TStringList): string;
+var
+  U: string;
+begin
+  Result := '';
+  for U in Units do
+    if not SameText(U, 'Pastel.UI') and not SameText(U, 'Classes') then
+      Result := Result + ', ' + U;
 end;
 
 function FormUnitSource(const UnitName, FormSource, FilePath: string): string;
@@ -106,6 +133,7 @@ begin
   Fields.Lines := TStringList.Create;
   Fields.Binds := TStringList.Create;
   Fields.Errors := TStringList.Create;
+  Fields.Units := TStringList.Create;
   try
     if (Length(Root.ClassName_) < 2) or (UpCase(Root.ClassName_[1]) <> 'T') then
       raise EPFormError.CreateAt(Root.Line,
@@ -125,7 +153,7 @@ begin
       'interface' + LineEnding +
       LineEnding +
       'uses' + LineEnding +
-      '  Pastel.UI, Pastel.Forms;' + LineEnding +
+      '  Classes, Pastel.UI, Pastel.Forms' + UsesList(Fields.Units) + ';' + LineEnding +
       LineEnding +
       'type' + LineEnding +
       '  ' + BaseName + ' = class(TForm)' + LineEnding +
@@ -154,6 +182,7 @@ begin
     Fields.Lines.Free;
     Fields.Binds.Free;
     Fields.Errors.Free;
+    Fields.Units.Free;
     Root.Free;
   end;
 end;

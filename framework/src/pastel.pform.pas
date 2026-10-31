@@ -30,7 +30,8 @@ type
     constructor CreateAt(ALine: Integer; const Msg: string);
   end;
 
-  TPFormValueKind = (pvString, pvNumber, pvIdent);
+  { pvList: ('a', 'b'); Value holds the items, one per line (#10 between) }
+  TPFormValueKind = (pvString, pvNumber, pvIdent, pvList);
 
   TPFormProp = class
   public
@@ -210,7 +211,7 @@ begin
           Inc(L.P);
         until False;
       end;
-    ':', '=', '.':
+    ':', '=', '.', '(', ')', ',':
       begin
         L.Kind := tkSymbol;
         L.Text := C;
@@ -294,6 +295,41 @@ begin
         tkString: Prop.Kind := pvString;
         tkNumber: Prop.Kind := pvNumber;
         tkIdent: Prop.Kind := pvIdent;
+        tkSymbol:
+          if L.Text = '(' then
+          begin
+            { a list: ('one', 'two', 'three'), also over several lines }
+            Prop.Kind := pvList;
+            Prop.Value := '';
+            NextToken(L);
+            while not ((L.Kind = tkSymbol) and (L.Text = ')')) do
+            begin
+              if L.Kind <> tkString then
+              begin
+                Prop.Free;
+                LexError(L, 'a list holds text in quotes: (''one'', ''two'')');
+              end;
+              if Prop.Value <> '' then
+                Prop.Value := Prop.Value + #10;
+              Prop.Value := Prop.Value + L.Text;
+              if Prop.Value = '' then
+                Prop.Value := #0;   { an empty first item }
+              NextToken(L);
+              if (L.Kind = tkSymbol) and (L.Text = ',') then
+                NextToken(L)
+              else if not ((L.Kind = tkSymbol) and (L.Text = ')')) then
+              begin
+                Prop.Free;
+                LexError(L, 'expected "," or ")" in the list of "' + PropName + '"');
+              end;
+            end;
+            Prop.Value := StringReplace(Prop.Value, #0, '', [rfReplaceAll]);
+          end
+          else
+          begin
+            Prop.Free;
+            LexError(L, 'expected a value for "' + PropName + '"');
+          end;
       else
         Prop.Free;
         LexError(L, 'expected a value for "' + PropName + '"');

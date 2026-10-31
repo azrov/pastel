@@ -113,6 +113,48 @@ begin
     Result := GetEnumValue(T, Prefix + Name);
 end;
 
+type
+  TPendingRef = record
+    Instance: TObject;
+    Info: PPropInfo;
+    Name: string;
+    Line: Integer;
+  end;
+
+var
+  PendingRefs: array of TPendingRef;
+
+procedure AddPendingRef(Instance: TObject; Info: PPropInfo; const AName: string; ALine: Integer);
+begin
+  SetLength(PendingRefs, Length(PendingRefs) + 1);
+  PendingRefs[High(PendingRefs)].Instance := Instance;
+  PendingRefs[High(PendingRefs)].Info := Info;
+  PendingRefs[High(PendingRefs)].Name := AName;
+  PendingRefs[High(PendingRefs)].Line := ALine;
+end;
+
+procedure ResolvePendingRefs(Form: TForm);
+var
+  R: TPendingRef;
+  C: TComponent;
+  Want: TClass;
+begin
+  try
+    for R in PendingRefs do
+    begin
+      C := Form.FindComponent(R.Name);
+      Want := GetTypeData(R.Info^.PropType)^.ClassType;
+      if C = nil then
+        raise EPFormError.CreateAt(R.Line, Format('there is no component named "%s" in the form', [R.Name]));
+      if not C.InheritsFrom(Want) then
+        raise EPFormError.CreateAt(R.Line, Format('%s is a %s, not a %s', [R.Name, C.ClassName, Want.ClassName]));
+      SetObjectProp(R.Instance, R.Info, C);
+    end;
+  finally
+    PendingRefs := nil;
+  end;
+end;
+
 procedure SetProp(Instance: TObject; Form: TForm; P: TPFormProp);
 var
   PI: PPropInfo;
@@ -123,6 +165,11 @@ var
   F: Double;
   M: TMethod;
   FS: TFormatSettings;
+  PropName: string;
+  Dot: Integer;
+  Sub: TObject;
+  Ref: TComponent;
+  L: TStringList;
 
   procedure Fail(const Msg: string);
   begin
@@ -130,14 +177,65 @@ var
   end;
 
 begin
-  if Pos('.', P.Name) > 0 then
-    Fail('nested properties like "' + P.Name + '" are not supported yet');
-  PI := GetPropInfo(Instance, P.Name);
+  { Font.Size = 12: a property of an object property }
+  PropName := P.Name;
+  Dot := Pos('.', PropName);
+  while Dot > 0 do
+  begin
+    PI := GetPropInfo(Instance, Copy(PropName, 1, Dot - 1));
+    if (PI = nil) or (PI^.PropType^.Kind <> tkClass) then
+      Fail(Format('%s has no object property "%s"', [Instance.ClassName, Copy(PropName, 1, Dot - 1)]));
+    Sub := GetObjectProp(Instance, PI);
+    if Sub = nil then
+      Fail(Format('"%s" is empty', [Copy(PropName, 1, Dot - 1)]));
+    Instance := Sub;
+    PropName := Copy(PropName, Dot + 1, MaxInt);
+    Dot := Pos('.', PropName);
+  end;
+  PI := GetPropInfo(Instance, PropName);
   if PI = nil then
-    Fail(Format('%s has no property "%s"', [Instance.ClassName, P.Name]));
+    Fail(Format('%s has no property "%s"', [Instance.ClassName, PropName]));
+  T := PI^.PropType;
+  { Items = ('a', 'b'): TStrings properties are filled, not replaced }
+  if (T^.Kind = tkClass) and (GetTypeData(T)^.ClassType.InheritsFrom(TStrings)) then
+  begin
+    if P.Kind <> pvList then
+      Fail(Format('%s expects a list like (''one'', ''two'')', [P.Name]));
+    L := TStringList.Create;
+    try
+      if P.Value <> '' then
+        L.Text := StringReplace(P.Value, #10, LineEnding, [rfReplaceAll]);
+      if (P.Value <> '') and (Copy(P.Value, Length(P.Value), 1) = #10) then
+        L.Add('');
+      if GetObjectProp(Instance, PI) <> nil then
+        TStrings(GetObjectProp(Instance, PI)).Assign(L)
+      else if PI^.SetProc <> nil then
+        SetObjectProp(Instance, PI, L);
+    finally
+      L.Free;
+    end;
+    Exit;
+  end;
+  { PopupMenu = EditMenu: another component of the form, maybe declared later }
+  if (T^.Kind = tkClass) and GetTypeData(T)^.ClassType.InheritsFrom(TComponent) then
+  begin
+    if P.Kind <> pvIdent then
+      Fail(Format('%s expects the name of a component, like %s = EditMenu', [P.Name, P.Name]));
+    Ref := Form.FindComponent(P.Value);
+    if Ref = nil then
+    begin
+      AddPendingRef(Instance, PI, P.Value, P.Line);
+      Exit;
+    end;
+    if not Ref.InheritsFrom(GetTypeData(T)^.ClassType) then
+      Fail(Format('%s is a %s; %s needs a %s', [P.Value, Ref.ClassName, P.Name, GetTypeData(T)^.ClassType.ClassName]));
+    SetObjectProp(Instance, PI, Ref);
+    Exit;
+  end;
   if PI^.SetProc = nil then
     Fail(Format('property "%s" is read-only', [P.Name]));
-  T := PI^.PropType;
+  if (P.Kind = pvList) then
+    Fail(Format('%s expects one value, not a list', [P.Name]));
   case T^.Kind of
     tkInteger, tkInt64, tkQWord:
       begin
@@ -223,18 +321,46 @@ var
   I: Integer;
   ChildNode: TPFormNode;
   Cls: TControlClass;
+  NV: TComponentClass;
   C: TControl;
+  Comp: TComponent;
 begin
   for I := 0 to Node.Children.Count - 1 do
   begin
     ChildNode := Node.Child(I);
     Cls := FindControlClass(ChildNode.ClassName_);
+    NV := nil;
     if Cls = nil then
+      NV := FindNonVisualClass(ChildNode.ClassName_);
+    if (Cls = nil) and (NV = nil) then
       raise EPFormError.CreateAt(ChildNode.Line,
         Format('unknown component type "%s"', [ChildNode.ClassName_]));
+    if NV <> nil then
+    begin
+      { a component without a place on the form: TTimer... }
+      if Form.FindComponent(ChildNode.Name) <> nil then
+        raise EPFormError.CreateAt(ChildNode.Line, Format('the name "%s" is used twice', [ChildNode.Name]));
+      Comp := NV.Create(Form);
+      try
+        Comp.Name := ChildNode.Name;
+      except
+        on E: Exception do
+          raise EPFormError.CreateAt(ChildNode.Line, E.Message);
+      end;
+      SetProps(Comp, Form, ChildNode);
+      if ChildNode.Children.Count > 0 then
+        raise EPFormError.CreateAt(ChildNode.Line, Format('a %s cannot hold other objects', [ChildNode.ClassName_]));
+      Continue;
+    end;
     if Form.FindComponent(ChildNode.Name) <> nil then
       raise EPFormError.CreateAt(ChildNode.Line,
         Format('the name "%s" is used twice', [ChildNode.Name]));
+    { the generated code makes a field of that name in the form class }
+    if (GetPropInfo(TForm, ChildNode.Name) <> nil) or (TForm.MethodAddress(ChildNode.Name) <> nil) or
+       SameText(ChildNode.Name, 'Name') or SameText(ChildNode.Name, 'Tag') then
+      raise EPFormError.CreateAt(ChildNode.Line,
+        Format('"%s" is already the name of a property of every form; call the control e.g. %s%s',
+        [ChildNode.Name, ChildNode.Name, Copy(ChildNode.ClassName_, 2, MaxInt)]));
     C := Cls.Create(Form);
     try
       C.Name := ChildNode.Name;
@@ -250,8 +376,10 @@ end;
 
 procedure BuildForm(Form: TForm; Root: TPFormNode);
 begin
+  PendingRefs := nil;
   SetProps(Form, Form, Root);
   BuildChildren(Form, Form, Root);
+  ResolvePendingRefs(Form);
   try
     Form.BindControls;
   except

@@ -790,7 +790,7 @@ begin
     '      FontSize = 22',
     '      Bold = True',
     '    end',
-    '    object Hint: TLabel',
+    '    object HintLabel: TLabel',
     '      Text = ''Type your name and press Send.''',
     '      Color = ''#6B7080''',
     '    end',

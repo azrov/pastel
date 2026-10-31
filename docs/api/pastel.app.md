@@ -22,6 +22,7 @@ type TApplication = class
 
 | | |
 |---|---|
+| `procedure ProcessMessages` | One pass of the event loop: events, timers, threads, layout, paint. Long work in an event handler can call it to keep the window alive. |
 | `constructor Create` |  |
 | `destructor Destroy` |  |
 | `procedure Initialize` |  |

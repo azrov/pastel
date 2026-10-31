@@ -35,12 +35,15 @@ type EPFormError = class(Exception)
 ### TPFormValueKind
 
 ```pascal
-type TPFormValueKind = (pvString, pvNumber, pvIdent)
+type TPFormValueKind = (pvString, pvNumber, pvIdent, pvList)
 ```
 
-- `pvString`
-- `pvNumber`
-- `pvIdent`
+pvList: ('a', 'b'); Value holds the items, one per line (#10 between)
+
+- `pvString` pvList: ('a', 'b'); Value holds the items, one per line (#10 between)
+- `pvNumber` pvList: ('a', 'b'); Value holds the items, one per line (#10 between)
+- `pvIdent` pvList: ('a', 'b'); Value holds the items, one per line (#10 between)
+- `pvList` pvList: ('a', 'b'); Value holds the items, one per line (#10 between)
 ### TPFormProp
 
 ```pascal

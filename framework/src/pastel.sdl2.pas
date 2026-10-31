@@ -42,6 +42,7 @@ const
   SDL_MOUSEBUTTONDOWN = $401;
   SDL_MOUSEBUTTONUP = $402;
   SDL_MOUSEWHEEL = $403;
+  SDL_USEREVENT = $8000;
 
   { Window events }
   SDL_WINDOWEVENT_EXPOSED = 3;
@@ -54,6 +55,8 @@ const
   SDL_WINDOWEVENT_FOCUS_LOST = 13;
 
   SDL_BUTTON_LEFT = 1;
+  SDL_BUTTON_MIDDLE = 2;
+  SDL_BUTTON_RIGHT = 3;
 
   { Key codes }
   SDLK_BACKSPACE = 8;
@@ -77,6 +80,7 @@ const
   KMOD_SHIFT = $0003;
   KMOD_CTRL = $00C0;
   KMOD_GUI = $0C00;
+  KMOD_ALT = $0300;
 
   SDL_SYSTEM_CURSOR_ARROW = 0;
   SDL_SYSTEM_CURSOR_IBEAM = 1;
@@ -197,6 +201,7 @@ var
   SDL_RenderPresent: procedure(renderer: PSDL_Renderer); cdecl;
 
   SDL_PollEvent: function(event: Pointer): LongInt; cdecl;
+  SDL_PushEvent: function(event: Pointer): LongInt; cdecl;
   SDL_WaitEventTimeout: function(event: Pointer; timeout: LongInt): LongInt; cdecl;
   SDL_StartTextInput: procedure; cdecl;
 
@@ -285,6 +290,7 @@ begin
   Bind(SDL_RenderCopy, 'SDL_RenderCopy');
   Bind(SDL_RenderPresent, 'SDL_RenderPresent');
   Bind(SDL_PollEvent, 'SDL_PollEvent');
+  Bind(SDL_PushEvent, 'SDL_PushEvent');
   Bind(SDL_WaitEventTimeout, 'SDL_WaitEventTimeout');
   Bind(SDL_StartTextInput, 'SDL_StartTextInput');
   Bind(SDL_CreateSystemCursor, 'SDL_CreateSystemCursor');

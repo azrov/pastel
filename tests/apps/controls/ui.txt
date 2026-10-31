@@ -1,0 +1,80 @@
+shot s1.png
+expect Status ready
+click Agree
+expect Status agree yes
+expect Agree.Checked True
+click Large
+expect Small.Checked False
+expect Large.Checked True
+click Size
+key down
+key down
+key enter
+expect Status size Medium
+expect Size.ItemIndex 1
+click Size
+type Size h
+key enter
+expect Status size Huge
+key ctrl+n
+type InputEdit my note
+click OkButton
+expect Status new my note
+key ctrl+n
+key escape
+expect Status new untitled
+click FileMenu
+click HelpMenu
+key f10
+key right
+key enter
+expect DialogTitle About
+key enter
+expect Status about shown
+wait 300
+expect Status ticked
+type Notes line one\nline two
+expect Notes line one|line two
+rightclick Notes
+click ClearItem
+expect Notes 
+click Volume 5 10
+expect Progress.Position 0
+key right
+expect Progress.Position 1
+key end
+expect Progress.Position 100
+click Dark
+shot s2.png
+click Dark
+key ctrl+o
+type FileNameEdit missing.txt
+key enter
+expect MessageText "missing.txt" was not found.
+key enter
+click CancelButton
+expect Status open cancelled
+key ctrl+o
+click FileList 30 15
+key down
+key down
+key enter
+shot s3.png
+type FileNameEdit main.pas
+key enter
+expect Status open main.pas
+click ListPage
+click People 30 15
+key down
+key enter
+expect Status hello Mehmet
+shot s4.png
+click FileMenu
+hover RecentMenu
+click Recent1
+expect Status recent
+key ctrl+q
+click NoButton
+expect Status stay
+key ctrl+q
+click YesButton

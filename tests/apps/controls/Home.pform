@@ -1,0 +1,119 @@
+object HomeForm: THomeForm
+  Title = 'Controls'
+  Width = 720
+  Height = 560
+  Padding = 0
+  Gap = 0
+  object MainMenu: TMenuBar
+    object FileMenu: TMenuItem
+      Caption = 'File'
+      object NewItem: TMenuItem
+        Caption = 'New'
+        ShortCut = 'Ctrl+N'
+        OnClick = NewClick
+      end
+      object OpenItem: TMenuItem
+        Caption = 'Open...'
+        ShortCut = 'Ctrl+O'
+        OnClick = OpenClick
+      end
+      object Sep1: TMenuItem
+        Caption = '-'
+      end
+      object RecentMenu: TMenuItem
+        Caption = 'Recent'
+        object Recent1: TMenuItem
+          Caption = 'notes.txt'
+          OnClick = RecentClick
+        end
+      end
+      object QuitItem: TMenuItem
+        Action = QuitAction
+      end
+    end
+    object HelpMenu: TMenuItem
+      Caption = 'Help'
+      object AboutItem: TMenuItem
+        Caption = 'About'
+        OnClick = AboutClick
+      end
+    end
+  end
+  object QuitAction: TAction
+    Caption = 'Quit'
+    ShortCut = 'Ctrl+Q'
+    OnExecute = QuitExecute
+  end
+  object Ticker: TTimer
+    Interval = 50
+    OnTimer = TickerTimer
+  end
+  object EditMenu: TPopupMenu
+    object ClearItem: TMenuItem
+      Caption = 'Clear'
+      OnClick = ClearClick
+    end
+  end
+  object Tabs: TTabControl
+    Grow = 1
+    object GeneralPage: TTabSheet
+      Caption = 'General'
+      object Row1: TRow
+        Gap = 16
+        object Agree: TCheckBox
+          Text = 'I agree'
+          OnChange = AgreeChange
+        end
+        object Dark: TSwitch
+          Text = 'Dark'
+          OnChange = DarkChange
+        end
+        object Logo: TImage
+          FileName = 'logo.png'
+          Height = 32
+        end
+      end
+      object Row2: TRow
+        Gap = 16
+        object Small: TRadioButton
+          Text = 'Small'
+          Checked = True
+        end
+        object Large: TRadioButton
+          Text = 'Large'
+        end
+      end
+      object Size: TComboBox
+        Items = ('Tiny', 'Medium', 'Huge')
+        Placeholder = 'Choose a size'
+        OnChange = SizeChange
+      end
+      object Volume: TSlider
+        Position = 30
+        OnChange = VolumeChange
+      end
+      object Progress: TProgressBar
+        Position = 30
+      end
+      object Status: TLabel
+        Text = 'ready'
+        Hint = 'What happened last'
+      end
+      object Notes: TMemo
+        Placeholder = 'Notes'
+        PopupMenu = EditMenu
+        Height = 80
+      end
+    end
+    object ListPage: TTabSheet
+      Caption = 'List'
+      object People: TListBox
+        Items = ('Ayşe', 'Mehmet', 'Zeynep')
+        Grow = 1
+        OnDblClick = PeopleDblClick
+      end
+      object Busy: TSpinner
+      end
+    end
+  end
+end

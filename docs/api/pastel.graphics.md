@@ -8,7 +8,7 @@ Software 2D drawing: colors, an anti-aliased canvas and fonts.
 
 `uses Pastel.Graphics;` · source: [framework/src/pastel.graphics.pas](../../framework/src/pastel.graphics.pas)
 
-**Contents:** [TRectI](#trecti) · [TGlyph](#tglyph) · [TPastelFont](#tpastelfont) · [TCanvas32](#tcanvas32) · [EPastelGraphics](#epastelgraphics) · [RGB](#rgb) · [RGBA](#rgba) · [WithAlpha](#withalpha) · [Mix](#mix) · [TryParseColor](#tryparsecolor) · [RectI](#recti) · [NextCodePoint](#nextcodepoint) · [PrevCharStart](#prevcharstart) · [GetFont](#getfont) · [InitFonts](#initfonts) · [DoneFonts](#donefonts)
+**Contents:** [TRectI](#trecti) · [TGlyph](#tglyph) · [TPastelFont](#tpastelfont) · [TBitmap32](#tbitmap32) · [TCanvas32](#tcanvas32) · [EPastelGraphics](#epastelgraphics) · [RGB](#rgb) · [RGBA](#rgba) · [WithAlpha](#withalpha) · [Mix](#mix) · [TryParseColor](#tryparsecolor) · [RectI](#recti) · [NextCodePoint](#nextcodepoint) · [PrevCharStart](#prevcharstart) · [GetFont](#getfont) · [InitFonts](#initfonts) · [DoneFonts](#donefonts)
 
 ## Types
 
@@ -61,6 +61,23 @@ type TPastelFont = class
 | `property Descent: Integer` |  |
 | `property LineHeight: Integer` |  |
 
+### TBitmap32
+
+```pascal
+type TBitmap32 = class
+```
+
+A picture in memory: $AARRGGBB pixels, from PNG, JPEG or BMP files.
+
+| | |
+|---|---|
+| `procedure SetSize(AWidth: Integer; AHeight: Integer)` |  |
+| `procedure LoadFromFile(const FileName: string)` |  |
+| `procedure LoadFromStream(Stream: TStream)` |  |
+| `function Empty: Boolean` |  |
+| `property Width: Integer` |  |
+| `property Height: Integer` |  |
+
 ### TCanvas32
 
 ```pascal
@@ -77,6 +94,9 @@ type TCanvas32 = class
 | `procedure FillRoundRect(X: Integer; Y: Integer; W: Integer; H: Integer; Radius: Single; C: TColor32)` |  |
 | `procedure StrokeRoundRect(X: Integer; Y: Integer; W: Integer; H: Integer; Radius: Single; Thickness: Single; C: TColor32)` |  |
 | `procedure DrawText(Font: TPastelFont; X: Integer; Y: Integer; const S: string; C: TColor32)` | Y is the top of the text line; the baseline is Y + Font.Ascent. |
+| `procedure DrawLine(X1: Single; Y1: Single; X2: Single; Y2: Single; Thickness: Single; C: TColor32)` | An anti-aliased line with round ends. |
+| `procedure FillCircle(CX: Single; CY: Single; Radius: Single; C: TColor32)` |  |
+| `procedure DrawBitmap(B: TBitmap32; X: Integer; Y: Integer; W: Integer; H: Integer; Smooth: Boolean = True; Opacity: Byte = 255)` | A picture scaled into the rectangle (bilinear when Smooth), with its transparency. |
 | `function GetPixel(X: Integer; Y: Integer): TColor32` |  |
 | `procedure SaveToPNG(const FileName: string)` |  |
 | `function Data: Pointer` |  |
