@@ -7,21 +7,109 @@ on:
 jobs:
   linux:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: pastel
+          POSTGRES_PASSWORD: pastel
+          POSTGRES_DB: pastel_test
+        ports: ["5432:5432"]
+        options: --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+      mysql:
+        image: mariadb:11
+        env:
+          MARIADB_USER: pastel
+          MARIADB_PASSWORD: pastel
+          MARIADB_DATABASE: pastel_test
+          MARIADB_ROOT_PASSWORD: root
+        ports: ["3306:3306"]
+        options: --health-cmd "healthcheck.sh --connect" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PASTEL_TEST_POSTGRES_URL: postgres://pastel:pastel@127.0.0.1/pastel_test
+      PASTEL_TEST_MYSQL_URL: mysql://pastel:pastel@127.0.0.1/pastel_test
     steps:
       - uses: actions/checkout@v4
-      - name: Install Free Pascal
-        run: sudo apt-get update && sudo apt-get install -y fpc fp-units-db-3.2.2 libsqlite3-0 libfreetype6 fonts-dejavu-core
-      - name: Build and test pastel
-        run: sh build.sh test
+      - name: Install Free Pascal and the libraries apps use
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fpc fpc-source fp-units-db-3.2.2 libsqlite3-0 libpq5 libmariadb3 \
+            libsdl2-2.0-0 libfreetype6 fonts-dejavu-core nsis
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Build and test the VS Code extension
+      - name: Build the VS Code extension and the website tool (the tests use them)
+        run: |
+          (cd vscode && npm ci && npm run compile)
+          (cd tools/site && npm ci)
+      - name: Set up building for Windows
+        run: |
+          ./build.sh
+          bin/pastel doctor --install windows
+      - name: Build and test pastel, the framework and every example
+        run: sh build.sh test
+      - name: Test the VS Code extension
         working-directory: vscode
         run: |
-          npm ci
-          npm run compile
           npm test
           (cd "$RUNNER_TEMP" && "$GITHUB_WORKSPACE/bin/pastel" new app ci-demo)
           PASTEL_BIN="$GITHUB_WORKSPACE/bin/pastel" npm run test:integration -- "$RUNNER_TEMP/ci-demo"
           npm run package
+      - name: Performance checks
+        run: sh tests/perf.sh | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pastel-vscode
+          path: vscode/*.vsix
+
+  linux-arm64:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Free Pascal
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fpc fpc-source libsqlite3-0 libsdl2-2.0-0 libfreetype6 fonts-dejavu-core
+      - name: Build pastel and run the framework tests and examples
+        run: |
+          ./build.sh
+          (cd framework/tests && ../../bin/pastel test)
+          for ex in dupfinder weather notes-api contacts notepad; do (cd "examples/$ex" && ../../bin/pastel test); done
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Free Pascal
+        shell: pwsh
+        run: |
+          choco install freepascal --version 3.2.2 -y --no-progress
+          $fpc = Get-ChildItem C:\tools\freepascal\bin -Recurse -Filter fpc.exe | Select-Object -First 1
+          Add-Content $env:GITHUB_PATH $fpc.DirectoryName
+      - name: Build pastel
+        shell: cmd
+        run: build.bat
+      - name: Framework tests
+        shell: cmd
+        working-directory: framework/tests
+        run: ..\..\bin\pastel.exe test
+      - name: Examples
+        shell: bash
+        run: |
+          for ex in dupfinder weather notes-api notepad; do (cd "examples/$ex" && ../../bin/pastel.exe test); done
+      - name: A new project of every kind builds
+        shell: bash
+        run: |
+          cd "$RUNNER_TEMP"
+          for kind in console app service api lib; do
+            "$GITHUB_WORKSPACE/bin/pastel.exe" new $kind demo-$kind
+            (cd demo-$kind && "$GITHUB_WORKSPACE/bin/pastel.exe" build)
+          done
+      - name: The desktop app runs without a screen
+        shell: bash
+        run: |
+          cd examples/notepad
+          ../../bin/pastel.exe doctor --install windows
+          ../../bin/pastel.exe build
+          printf 'type Editor Hello\nexpect CountLabel 1 words, 1 lines\nquit\n' > ui.txt
+          PASTEL_LANG=en PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT=ui.txt ./build/windows/debug/notepad.exe

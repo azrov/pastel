@@ -7,8 +7,9 @@ import { lex } from './lexer';
 import { Decl, parseUnit } from './parser';
 import { signature } from './analyzer';
 
+// the id GitHub (and the docs website) give a heading
 function anchor(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  return name.toLowerCase().replace(/[^\p{L}\p{N}\s_-]/gu, '').trim().replace(/\s/g, '-');
 }
 
 function docText(d: Decl): string {

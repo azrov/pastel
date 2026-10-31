@@ -51,3 +51,8 @@ Thumbs.db
 vscode/node_modules/
 vscode/out/
 *.vsix
+
+# Website and releases
+site/
+dist/
+tools/site/node_modules/

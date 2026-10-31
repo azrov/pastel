@@ -1,0 +1,79 @@
+name: Release
+
+# A tag like v0.7.0 makes a GitHub release with ready-made downloads.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: linux-x86_64
+          - os: ubuntu-24.04-arm
+            name: linux-arm64
+          - os: windows-latest
+            name: windows-x86_64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Free Pascal (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y fpc
+      - name: Install Free Pascal (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install freepascal --version 3.2.2 -y --no-progress
+          $fpc = Get-ChildItem C:\tools\freepascal\bin -Recurse -Filter fpc.exe | Select-Object -First 1
+          Add-Content $env:GITHUB_PATH $fpc.DirectoryName
+      - name: Build
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = Windows ]; then cmd //c build.bat; else ./build.sh; fi
+      - name: Pack
+        shell: bash
+        run: sh tools/pack-release.sh "${GITHUB_REF_NAME#v}" "${{ matrix.name }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pastel-${{ matrix.name }}
+          path: dist/*
+
+  vscode:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - working-directory: vscode
+        run: |
+          npm ci
+          npm run package
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pastel-vscode
+          path: vscode/*.vsix
+
+  release:
+    needs: [build, vscode]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          (cd dist && sha256sum * > SHA256SUMS)
+          sed "s|__REPO__|$GITHUB_REPOSITORY|" tools/install.sh > dist/install.sh
+          gh release create "$GITHUB_REF_NAME" dist/* --title "Pastel ${GITHUB_REF_NAME#v}" \
+            --notes "See ROADMAP.md and vscode/CHANGELOG.md. Install: curl -fsSL https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/install.sh | sh"

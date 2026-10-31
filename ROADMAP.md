@@ -184,19 +184,21 @@ Goal: typical small business apps (forms, lists, dialogs) on Linux and Windows.
 
 ---
 
-## 0.7 — Road to 1.0
+## 0.7 — Road to 1.0 (done, except testing on other machines)
 
-- [ ] Review all public APIs and file formats; then freeze them
-- [ ] `pastel.toml` records the Pastel version it was made for; upgrade helper for older projects
-- [ ] Complete documentation website; all examples tested in CI
-- [ ] Tested hosts: Linux x64 and ARM64 (Raspberry Pi), Windows 10/11 (and Windows 7 as far as possible)
-- [ ] CI on Linux and Windows, release builds made automatically
-- [ ] Security review of the web server and the database layer
-- [ ] Performance checks: start-up time, memory, requests per second, drawing speed
+- [x] Review all public APIs and file formats; then freeze them: `docs/api/stable.txt` lists the stable API and the tests fail when a line of it disappears; helpers for Pastel's own use are marked *Internal* ([compatibility.md](docs/compatibility.md))
+- [x] `pastel.toml` records the Pastel version it was made for (`pastel = "0.7"`); `pastel upgrade` for older projects; unknown settings are reported
+- [x] Complete documentation website (`tools/site`, published with GitHub Pages; every link and anchor is checked by the tests); all examples tested in CI
+- [ ] Tested hosts: Linux x64 is tested; the CI jobs for Linux ARM64 (Raspberry Pi class) and Windows are set up but have not run yet
+- [x] CI on Linux, Linux ARM64 and Windows; release builds made automatically for a tag (`.github/workflows/release.yml`, `tools/pack-release.sh`)
+- [x] Security review of the web server and the database layer: request size, header size, timeouts and connection limits, path checks, `X-Forwarded-For` ([security.md](docs/security.md#what-the-web-server-and-the-database-layer-protect-against))
+- [x] Performance checks: start-up time, memory, requests per second, drawing speed (`tests/perf.sh`, [performance.md](docs/performance.md))
+
+---
 
 ## 1.0.0
 
-- [ ] Release on GitHub with ready-made downloads (Linux, Windows) and an install script
+- [ ] Release on GitHub with ready-made downloads (Linux, Windows) and an install script (`tools/install.sh` and the release workflow are ready)
 - [ ] VS Code extension on the Marketplace and Open VSX
 - [ ] Announcement, contributing guide, issue templates
 

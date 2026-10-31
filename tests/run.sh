@@ -32,6 +32,10 @@ if [ -f vscode/out/lang/apidoc.js ] && command -v node >/dev/null; then
   if ! diff -rq -x stable.txt docs/api "$WORK/api" >/dev/null; then
     echo "docs/api is out of date: run \"npm run apidoc\" in vscode/"; diff -r -x stable.txt docs/api "$WORK/api" | head -20; exit 1
   fi
+  if [ -d tools/site/node_modules ]; then
+    echo "== the documentation's links"
+    node tools/site/build.mjs --check || exit 1
+  fi
   echo "== the stable API is still there"
   node vscode/out/lang/apidoc.js --check-stable framework/src docs/api || exit 1
 fi

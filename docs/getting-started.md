@@ -174,5 +174,7 @@ switches between form and code. See [forms.md](forms.md).
 | [api/](api/README.md) | Reference of every framework unit |
 | [security.md](security.md) | Passwords, tokens, JWT |
 | [testing.md](testing.md) | Tests |
+| [performance.md](performance.md) | Start-up time, memory, requests per second, drawing speed |
+| [compatibility.md](compatibility.md) | What stays the same from version to version |
 | [forms.md](forms.md) | Desktop apps: forms and controls |
 | `examples/` | Complete programs: `dupfinder` (files), `weather` (calls a web API), `notes-api` (is a web API), `contacts` (desktop address book with SQLite), `notepad` (desktop text editor) |

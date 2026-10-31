@@ -1124,7 +1124,11 @@ Pastel.Web: TWebServer.procedure Use(const Prefix: string; Filter: TWebHandler)
 Pastel.Web: TWebServer.procedure Use(const Prefix: string; Filter: TWebHandlerProc)
 Pastel.Web: TWebServer.property AccessLog: Boolean
 Pastel.Web: TWebServer.property Address: string
+Pastel.Web: TWebServer.property MaxBodySize: Int64
+Pastel.Web: TWebServer.property MaxConnections: Integer
+Pastel.Web: TWebServer.property MaxHeaderSize: Integer
 Pastel.Web: TWebServer.property Port: Integer
+Pastel.Web: TWebServer.property RequestTimeout: Integer
 Pastel.Web: TWebServer.property Requests: Int64
 Pastel.Web: TWebServer.property TrustProxy: Boolean
 Pastel.Web: TWebServerThread.Error: string

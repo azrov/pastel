@@ -16,7 +16,7 @@ Translations and the number and date formats of a language.
 
 `uses Pastel.Lang;` · source: [framework/src/pastel.lang.pas](../../framework/src/pastel.lang.pas)
 
-**Contents:** [_](#-) · [Translate](#translate) · [UseLanguage](#uselanguage) · [Language](#language) · [LanguageChosen](#languagechosen) · [SystemLanguage](#systemlanguage) · [AvailableLanguages](#availablelanguages) · [FrameworkTexts](#frameworktexts) · [AddTranslation](#addtranslation) · [FormatNumber](#formatnumber) · [FormatDateShort](#formatdateshort) · [FormatDateTimeShort](#formatdatetimeshort) · [TryParseNumber](#tryparsenumber)
+**Contents:** [_](#_) · [Translate](#translate) · [UseLanguage](#uselanguage) · [Language](#language) · [LanguageChosen](#languagechosen) · [SystemLanguage](#systemlanguage) · [AvailableLanguages](#availablelanguages) · [FrameworkTexts](#frameworktexts) · [AddTranslation](#addtranslation) · [FormatNumber](#formatnumber) · [FormatDateShort](#formatdateshort) · [FormatDateTimeShort](#formatdatetimeshort) · [TryParseNumber](#tryparsenumber)
 
 ## Routines
 

@@ -1,0 +1,11 @@
+# Pastel's performance checks: tests/perf.sh builds and runs this.
+
+[project]
+name = "pastel-perf"
+version = "1.0.0"
+pastel = "0.7"
+type = "console"
+
+[build]
+main = "src/main.pas"
+mode = "objfpc"
