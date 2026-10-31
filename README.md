@@ -4,7 +4,7 @@
 
 Write your app once in Object Pascal and run it on desktop, mobile, server and Raspberry Pi. Pastel is built on top of the [Free Pascal](https://www.freepascal.org/) compiler and brings a modern developer experience: a simple command-line tool, clear project conventions, forms with hot reload, and a UI drawn by Pastel itself so it looks the same everywhere.
 
-> ⚠️ **Status: early development (0.5).** Working today: the `pastel` command-line tool and libraries for console programs on Linux, Windows and Raspberry Pi (arguments, files, HTTP, JSON, settings, logging, tests, packaging), Linux services and REST APIs (web server, JWT and API keys, SQLite/PostgreSQL/MySQL with migrations, background workers, `.deb` and Docker packages), and code intelligence in VS Code (completion, hover, parameter hints, references, rename, compiler errors while typing) and desktop apps on Linux and Windows (forms from `.pform` files designed in VS Code, about 25 controls, menus and shortcuts, dialogs, several windows, dark theme, high-DPI, assets compiled in, hot reload, scripted UI tests). Ideas, feedback and contributions are very welcome.
+> ⚠️ **Status: early development (0.6).** Working today: the `pastel` command-line tool and libraries for console programs on Linux, Windows and Raspberry Pi (arguments, files, HTTP, JSON, settings, logging, tests, packaging), Linux services and REST APIs (web server, JWT and API keys, SQLite/PostgreSQL/MySQL with migrations, background workers, `.deb` and Docker packages), and code intelligence in VS Code (completion, hover, parameter hints, references, rename, compiler errors while typing) and desktop apps on Linux and Windows (forms from `.pform` files designed in VS Code, about 30 controls including grids and trees, your own controls in the designer, data binding, menus and shortcuts, dialogs, several windows, translations, themes, high-DPI, hot reload, scripted UI tests; Windows installer, AppImage and `.deb` packages). Ideas, feedback and contributions are very welcome.
 
 ## Why Pastel?
 
@@ -64,7 +64,7 @@ pastel doctor                     # what can this computer build?
 
 Build output goes to `build/<platform>/<debug|release>/`. Compiler errors point to the file and line, relative to your project.
 
-Building for another platform needs the Free Pascal cross-compiler for it. `pastel doctor` tells you what is missing; today [fpcupdeluxe](https://github.com/LongDirtyAnimAlf/fpcupdeluxe) is the easiest way to install cross-compilers. Automatic installation is planned.
+Building for another platform needs Free Pascal's units for it. `pastel doctor` tells you what is missing. For Windows, `pastel doctor --install windows` sets everything up on a 64-bit Linux PC (with `fpc-source` installed); for Raspberry Pi and other CPUs a cross-compiler is needed, and [fpcupdeluxe](https://github.com/LongDirtyAnimAlf/fpcupdeluxe) is the easiest way to install one.
 
 | Command | What it does |
 |---|---|
@@ -74,7 +74,9 @@ Building for another platform needs the Free Pascal cross-compiler for it. `past
 | `pastel new service <name>` | Create a program that keeps running, with jobs and a systemd unit ([docs/services.md](docs/services.md)); web APIs: [docs/web.md](docs/web.md) |
 | `pastel new api <name>` | Create a web API with a database: models, controllers, migrations, tests ([guide](docs/guide-api.md), [docs/web.md](docs/web.md), [docs/database.md](docs/database.md)) |
 | `pastel migrate` | Run the database migrations; `status`, `new <name>` |
-| `pastel package deb` / `docker` | A Debian package with the systemd unit, or a container image ([docs/deploy.md](docs/deploy.md)) |
+| `pastel package deb` / `docker` | A Debian package (with the systemd unit for services, a menu entry for apps), or a container image ([docs/deploy.md](docs/deploy.md)) |
+| `pastel package appimage` / `installer` | A Linux AppImage, or a Windows installer (`--target windows`) of a desktop app ([guide](docs/guide-desktop.md#12-shipping)) |
+| `pastel lang [add <code>]` | Collect the texts to translate into `assets/lang/*.json` |
 | `pastel build` | Compile (`-t <platform>`, `-r` release, `--all`, `-v` verbose) |
 | `pastel run` | Compile and run on this computer (`--watch`: again on every save) |
 | `pastel test [filter]` | Run the tests in `tests/` (`--watch`) |
@@ -82,7 +84,7 @@ Building for another platform needs the Free Pascal cross-compiler for it. `past
 | `pastel package` | Release build in a `.tar.gz`/`.zip` in `dist/`, with a checksum ([docs/project.md](docs/project.md)) |
 | `pastel clean` | Remove the `build/` folder |
 | `pastel targets` | List platforms and short names (`rpi`, `win`, ...) |
-| `pastel doctor` | Check the compiler and which platforms are ready |
+| `pastel doctor` | Check the compiler and which platforms are ready; `--install windows` sets up Windows builds |
 
 ## VS Code
 
@@ -171,7 +173,7 @@ Today Pastel draws everything in software, which is plenty for typical apps. The
 
 ## Roadmap
 
-Pastel grows in this order: console programs (0.2), Linux services with web APIs and databases (0.3), code intelligence in VS Code (0.4), then desktop apps (0.5–0.6), up to a stable 1.0. See [ROADMAP.md](ROADMAP.md) for the full list.
+Pastel grows in this order: console programs (0.2), Linux services with web APIs and databases (0.3), code intelligence in VS Code (0.4), desktop apps (0.5–0.6), then the road to a stable 1.0 (0.7). See [ROADMAP.md](ROADMAP.md) for the full list.
 
 ## Contributing
 

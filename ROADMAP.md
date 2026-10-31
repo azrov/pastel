@@ -167,20 +167,20 @@ Goal: typical small business apps (forms, lists, dialogs) on Linux and Windows.
 
 ---
 
-## 0.6 — Desktop apps, complete and shippable
+## 0.6 — Desktop apps, complete and shippable (done)
 
-- [ ] Grid/table control (sorting, editing, many rows)
-- [ ] TreeView, multi-column ListView
-- [ ] Native open/save dialogs where the system has them (Windows, GTK portals), the drawn ones as fallback
-- [ ] Icon of the Windows `.exe` file from `assets/icon.png`; app-wide styles
-- [ ] Data binding: connect controls to objects or database rows
-- [ ] Translations (`assets/lang/`), right number and date formats
-- [ ] Windows: SDL2/FreeType DLLs copied next to the program automatically; installer (`pastel package windows`)
-- [ ] Linux desktop: AppImage and `.deb` with menu entry and icon
-- [ ] `pastel doctor --install`: download and set up cross-compilers for Windows and Raspberry Pi
-- [ ] Move from SDL2 to SDL3 (when Linux distributions ship it)
-- [ ] Faster drawing: repaint only what changed
-- [ ] Custom controls in your project show up in the designer's toolbox
+- [x] Grid/table control (`TGrid`: sorting, editing, many rows)
+- [x] `TTreeView`, multi-column `TListView`
+- [x] The system's open/save dialogs (Windows; zenity or kdialog on Linux), Pastel's drawn ones as fallback
+- [x] Icon of the Windows `.exe` file from `assets/icon.png`; app-wide styles (`assets/theme.toml`)
+- [x] Data binding: `TDataBinding` connects controls to JSON rows (database), objects or grid rows
+- [x] Translations (`assets/lang/*.json`, `_('...')`, `pastel lang`), number and date formats of the language
+- [x] Windows: SDL2/FreeType DLLs copied next to the program automatically; installer (`pastel package installer`)
+- [x] Linux desktop: AppImage and `.deb` with menu entry and icon
+- [x] `pastel doctor --install windows`: compiles the Windows units from the Free Pascal sources and gets the DLLs (Raspberry Pi still needs a cross-compiler from fpcupdeluxe)
+- [ ] Move from SDL2 to SDL3 (when Linux distributions ship it) — moved to after 1.0
+- [x] Faster drawing: only what changed is repainted (and uploaded to the screen)
+- [x] Custom controls in your project show up in the designer's toolbox (`src/controls/`, `pastel new control`)
 
 ---
 
@@ -204,6 +204,8 @@ Goal: typical small business apps (forms, lists, dialogs) on Linux and Windows.
 
 ## After 1.0
 
+- SDL3 instead of SDL2
+- Cross-compilers for Raspberry Pi installed by `pastel doctor --install`
 - Android and iOS apps
 - macOS (desktop) packages and signing
 - GPU drawing (Skia) for heavy graphics
@@ -217,10 +219,7 @@ Goal: typical small business apps (forms, lists, dialogs) on Linux and Windows.
 
 Things that work differently than one would expect, so they are not surprises:
 
-- Building for Windows/Raspberry Pi needs cross-compilers installed by hand (fpcupdeluxe)
-- Windows programs need `SDL2.dll` and `freetype.dll` (desktop apps) or the OpenSSL DLLs (HTTPS) next to them; `[package.windows] include` puts them into the package
-- In desktop apps, code changes restart the app (`pastel run --watch`); only `.pform` changes are hot-reloaded, and they reset typed text
-- One window per app; no dialogs yet
-- No text selection in edits; no multi-line text
-- Pascal completion only knows `.pform` files, not members of Pascal classes
+- Building for Raspberry Pi needs a cross-compiler installed by hand (fpcupdeluxe); Windows: `pastel doctor --install windows`
+- Windows programs that use HTTPS need the OpenSSL DLLs next to them; `[package.windows] include` puts them into the package
+- In desktop apps, code changes restart the app (`pastel run --watch`); only `.pform` changes are hot-reloaded
 - macOS and 32-bit Raspberry Pi are not tested yet

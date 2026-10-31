@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.0
+
+- The designer and its toolbox know the controls of your project (`src/controls/`, made with
+  `pastel new control`): they come first in the toolbox, with their properties in the panel;
+  saving a control updates the toolbox and the picture
+- New controls in the toolbox and properties: `TGrid`, `TListView`, `TTreeView` (with `TGridColumn`
+  children), `TDataBinding`
+
 ## 0.8.0
 
 - Form designer: undo and redo (Ctrl+Z, Ctrl+Y), copy, cut, paste and duplicate controls

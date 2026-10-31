@@ -98,6 +98,8 @@ With the Pastel extension, open a `.pform` file and press the designer button in
 - `Ctrl+Z` / `Ctrl+Y` undo and redo designer changes (every change is also an ordinary edit of the `.pform` text)
 - the size box shows the form at phone, tablet and desktop sizes; *Dark* shows it in the dark theme
 
+Controls of your own (`pastel new control StarRating`, in `src/controls/`) are in the toolbox too, at the front in italics.
+
 **Pastel: New Form…** (or the *New Form* button in the Pastel sidebar, or `pastel new form Settings` in a terminal) creates `Settings.pform` and `Settings.pas` with OK and Cancel buttons, and adds the form to `main.pas`.
 
 ## Hot reload
@@ -140,6 +142,9 @@ All controls have `Width`, `Height`, `Grow`, `Visible`, `Enabled`, `Hint` (a too
 | `TProgressBar` | `Position`, `Max`, `Indeterminate` | |
 | `TSlider` | `Position`, `Min`, `Max`, `Step` | `OnChange` |
 | `TSpinner` | `Active` | |
+| `TGrid`, `TListView` | A table: `TGridColumn` children (`Title`, `Field`, `Width`), `Editable`, `Sortable`; `LoadJson` from code | `OnChange`, `OnDblClick`, `OnCellEdit` |
+| `TTreeView` | A tree: `Items = ('Documents', '  Letters')` | `OnChange`, `OnDblClick` |
+| `TDataBinding` | Fills edits from a record and back: `Fields = ('NameEdit', 'EmailEdit')` | |
 | `TMenuBar`, `TMenuItem`, `TPopupMenu` | Menus: `Caption` (`'-'` is a line), `ShortCut = 'Ctrl+S'`, `Checked`, `Action`; items inside items are submenus | `OnClick` |
 | `TAction` | One command for a menu item and a button: `Caption`, `ShortCut`, `Enabled`, `Checked` | `OnExecute` |
 | `TTimer` | `Interval` (ms), `Enabled` | `OnTimer` |
