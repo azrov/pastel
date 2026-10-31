@@ -93,15 +93,18 @@ With the Pastel extension, open a `.pform` file and press the designer button in
 - change properties in the panel on the right; the → button next to an event opens its code, or creates the handler if it does not exist yet
 - drag controls to move them: the orange line shows where the control will go (between other controls, or into a row, column or card)
 - drag new controls in from the toolbox, or click one to add it after the selected control
-- `Delete` removes the selected control
+- `Delete` removes the selected control; `Ctrl+C`, `Ctrl+X`, `Ctrl+V` and `Ctrl+D` (duplicate) copy controls, with new names when a name is taken
+- `F2` or the name at the top of the properties panel renames a control, and the form's `.pas` code is renamed with it
+- `Ctrl+Z` / `Ctrl+Y` undo and redo designer changes (every change is also an ordinary edit of the `.pform` text)
+- the size box shows the form at phone, tablet and desktop sizes; *Dark* shows it in the dark theme
 
-Every change is an ordinary edit of the `.pform` text, so `Ctrl+Z` in the editor undoes it.
+**Pastel: New Form…** (or the *New Form* button in the Pastel sidebar, or `pastel new form Settings` in a terminal) creates `Settings.pform` and `Settings.pas` with OK and Cancel buttons, and adds the form to `main.pas`.
 
 ## Hot reload
 
-`pastel run` builds a debug version that reads the `.pform` file from disk. While the app is running, save the `.pform` file and the window updates right away. If the file has a mistake, a red bar explains it and the last working layout stays visible.
+`pastel run` builds a debug version that reads the `.pform` file from disk. While the app is running, save the `.pform` file and the window updates right away. If the file has a mistake, a red bar explains it and the last working layout stays visible. Text typed into edits, checked boxes, selected items, slider positions and the open tab are kept across a reload.
 
-What needs a restart: changes to `.pas` code, and new event handlers. Note that controls are recreated on reload, so text typed into them is reset.
+What needs a restart: changes to `.pas` code, and new event handlers.
 
 ## Layout
 
@@ -116,19 +119,32 @@ Containers place their children one after another:
 
 ## Controls
 
-All controls have `Width`, `Height`, `Grow`, `Visible` and `Enabled`.
+All controls have `Width`, `Height`, `Grow`, `Visible`, `Enabled`, `Hint` (a tooltip) and `PopupMenu` (a right-click menu). The full list, with every property, is in the [desktop app guide](guide-desktop.md#controls).
 
 | Control | Properties | Events |
 |---|---|---|
-| `TForm` | `Title`, window properties (see above), `Padding` (24), `Gap` (12), `Color` and the column properties | `OnCreate`, `OnCloseQuery`, `OnClose`, `OnResize` |
+| `TForm` | `Title`, window properties (see above), `Padding` (24), `Gap` (12), `Color`, `Appearance` (`Light`, `Dark`, `System`) and the column properties | `OnCreate`, `OnCloseQuery`, `OnClose`, `OnResize` |
 | `TColumn`, `TRow` | `Gap`, `Padding`, `Align`, `Justify`, `Color`, `Radius`, `BorderColor`, `BorderWidth` | |
-| `TCard` | Like `TColumn`, with a white background, border, rounded corners and padding | |
+| `TCard` | Like `TColumn`, with a background, border, rounded corners and padding | |
+| `TScrollBox` | A column that scrolls when its content is taller than it | |
+| `TTabControl`, `TTabSheet` | Pages with tabs: `TabIndex`; a sheet has a `Caption` | `OnChange` |
 | `TSpacer` | Empty space with `Grow = 1` | |
-| `TLabel` | `Text`, `FontSize` (14), `Bold`, `Color`, `TextAlign` (`Left`, `Center`, `Right`) | |
-| `TButton` | `Text`, `Style` (`Primary`, `Secondary`, `Danger`) | `OnClick` |
-| `TEdit` | `Text`, `Placeholder` | `OnChange`, `OnSubmit` (Enter key) |
+| `TLabel` | `Text`, `FontSize` (14), `Bold`, `Color`, `TextAlign` (`Left`, `Center`, `Right`), `WordWrap` | |
+| `TButton` | `Text`, `Style` (`Primary`, `Secondary`, `Danger`), `Action`, `ModalResult`, `Default`, `Cancel` | `OnClick` |
+| `TEdit` | `Text`, `Placeholder`, `Password`, `ReadOnly`, `MaxLength` | `OnChange`, `OnSubmit` (Enter key) |
+| `TMemo` | Several lines: `Text`, `Lines`, `WordWrap`, `Placeholder`, `ReadOnly` | `OnChange` |
+| `TCheckBox`, `TSwitch`, `TRadioButton` | `Text`, `Checked`; radio buttons with the same parent are one group | `OnChange` |
+| `TComboBox` | A drop-down list: `Items = ('A', 'B')`, `ItemIndex`, `Text`, `Placeholder` | `OnChange` |
+| `TListBox` | `Items`, `ItemIndex`, `ItemHeight`; only the visible rows are drawn, so long lists stay fast | `OnChange`, `OnDblClick` |
+| `TImage` | `FileName` (from `assets/`), `Fit` (`Contain`, `Cover`, `Stretch`, `Center`) | |
+| `TProgressBar` | `Position`, `Max`, `Indeterminate` | |
+| `TSlider` | `Position`, `Min`, `Max`, `Step` | `OnChange` |
+| `TSpinner` | `Active` | |
+| `TMenuBar`, `TMenuItem`, `TPopupMenu` | Menus: `Caption` (`'-'` is a line), `ShortCut = 'Ctrl+S'`, `Checked`, `Action`; items inside items are submenus | `OnClick` |
+| `TAction` | One command for a menu item and a button: `Caption`, `ShortCut`, `Enabled`, `Checked` | `OnExecute` |
+| `TTimer` | `Interval` (ms), `Enabled` | `OnTimer` |
 
-Keyboard: `Tab` / `Shift+Tab` move between buttons and edits, `Enter` or `Space` presses a focused button, `Ctrl+C` / `Ctrl+V` copy and paste in an edit.
+Keyboard: `Tab` / `Shift+Tab` move the focus, `Enter` or `Space` presses a focused button, `Enter` in a dialog presses its `Default` button and `Escape` its `Cancel` button, `F10` or `Alt` opens the menu bar, the `Menu` key or `Shift+F10` opens a control's popup menu. In edits: selection with the mouse and `Shift`, `Ctrl+A`, `Ctrl+C`/`X`/`V`, `Ctrl+Z`/`Y`, word moves with `Ctrl`.
 
 ## Testing a form without a window
 
@@ -145,4 +161,12 @@ shot screenshot.png
 PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT=ui.txt ./build/linux/debug/myapp
 ```
 
-Commands: `click <name>`, `hover <name>`, `type <name> <text>`, `key enter|tab|backspace|delete|left|right|home|end|space`, `expect <name> <text>`, `print <name>`, `resize <w> <h>`, `close`, `shot <file.png>`, `sleep <ms>`, `quit`. The exit code is 1 if an `expect` fails. `PASTEL_HEADLESS=1` draws into memory without opening a window, so no display is needed.
+Commands:
+
+- `click <name> [x y]`, `doubleclick`, `rightclick`, `hover <name>`, `wheel <name> <dy>` – menu items and tab sheets can be clicked by name too
+- `type <name> <text>` – `\n` presses Enter
+- `key ctrl+a`, `key shift+down`, `key f10`, `key enter|tab|escape|backspace|delete|up|down|left|right|home|end|space`
+- `expect <name> <text>` checks the text; `expect <name>.<property> <value>` any property (`expect Agree.Checked True`, `expect HomeForm.Title Notes`)
+- `wait <ms>` (lets timers and threads run), `print <name>`, `resize <w> <h>`, `shot <file.png>`, `reload`, `close`, `quit`
+
+Dialogs are scripted like everything else: the lines after the one that opened a dialog act on it (`click YesButton`, `type FileNameEdit notes.txt\n`). The exit code is 1 if an `expect` fails. `PASTEL_HEADLESS=1` draws into memory without opening a window, so no display is needed; `PASTEL_SCALE=2` draws at double size and `PASTEL_THEME=dark` in the dark theme.

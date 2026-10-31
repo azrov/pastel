@@ -70,6 +70,16 @@ key enter
 expect Status hello Mehmet
 shot s4.png
 click FileMenu
+click SettingsItem
+expect MessageLabel Settings
+shot modal.png
+click OkButton
+expect Status settings ok
+click FileMenu
+click SettingsItem
+key escape
+expect Status settings cancelled
+click FileMenu
 hover RecentMenu
 click Recent1
 expect Status recent

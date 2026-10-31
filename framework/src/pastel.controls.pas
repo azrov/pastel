@@ -158,6 +158,7 @@ type
     FError: string;
     procedure SetFileName(const AValue: string);
     procedure SetFit(AValue: TImageFit);
+    procedure LoadPicture;
   protected
     procedure Measure(AvailWidth: Integer; out W, H: Integer); override;
     procedure Paint(C: TCanvas32); override;
@@ -167,9 +168,9 @@ type
     { Loads a picture from a stream (e.g. a resource or a download). }
     procedure LoadFromStream(Stream: TStream);
     property Picture: TBitmap32 read FPicture;
+  published
     { Why the picture could not be loaded, '' when it was. }
     property LoadError: string read FError;
-  published
     { A file next to the program, in assets/ or a full path. }
     property FileName: string read FFileName write SetFileName;
     { Contain: all of it fits; Cover: fills, cut at the edges; Stretch; Center: real size. }
@@ -309,7 +310,7 @@ function FindAppFile(const FileName: string): string;
 implementation
 
 uses
-  Math, StrUtils;
+  Math, StrUtils, Pastel.Assets;
 
 function FindAppFile(const FileName: string): string;
 var
@@ -1119,12 +1120,27 @@ begin
   FPicture.SetSize(0, 0);
   if AValue <> '' then
   try
-    FPicture.LoadFromFile(FindAppFile(AValue));
+    if not FileExists(AValue) and AssetExists(AValue) then
+      LoadPicture
+    else
+      FPicture.LoadFromFile(FindAppFile(AValue));
   except
     on E: Exception do
       FError := E.Message;
   end;
   Changed;
+end;
+
+procedure TImage.LoadPicture;
+var
+  S: TStream;
+begin
+  S := OpenAsset(FFileName);
+  try
+    FPicture.LoadFromStream(S);
+  finally
+    S.Free;
+  end;
 end;
 
 procedure TImage.LoadFromStream(Stream: TStream);

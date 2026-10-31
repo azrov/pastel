@@ -4,7 +4,7 @@
 
 Write your app once in Object Pascal and run it on desktop, mobile, server and Raspberry Pi. Pastel is built on top of the [Free Pascal](https://www.freepascal.org/) compiler and brings a modern developer experience: a simple command-line tool, clear project conventions, forms with hot reload, and a UI drawn by Pastel itself so it looks the same everywhere.
 
-> ⚠️ **Status: early development (0.4).** Working today: the `pastel` command-line tool and libraries for console programs on Linux, Windows and Raspberry Pi (arguments, files, HTTP, JSON, settings, logging, tests, packaging), Linux services and REST APIs (web server, JWT and API keys, SQLite/PostgreSQL/MySQL with migrations, background workers, `.deb` and Docker packages), and code intelligence in VS Code (completion, hover, parameter hints, references, rename, compiler errors while typing) and a first version of the UI framework (windows, forms from `.pform` files, buttons, edits, labels, flexbox-style layout, hot reload) on Linux and Windows. Ideas, feedback and contributions are very welcome.
+> ⚠️ **Status: early development (0.5).** Working today: the `pastel` command-line tool and libraries for console programs on Linux, Windows and Raspberry Pi (arguments, files, HTTP, JSON, settings, logging, tests, packaging), Linux services and REST APIs (web server, JWT and API keys, SQLite/PostgreSQL/MySQL with migrations, background workers, `.deb` and Docker packages), and code intelligence in VS Code (completion, hover, parameter hints, references, rename, compiler errors while typing) and desktop apps on Linux and Windows (forms from `.pform` files designed in VS Code, about 25 controls, menus and shortcuts, dialogs, several windows, dark theme, high-DPI, assets compiled in, hot reload, scripted UI tests). Ideas, feedback and contributions are very welcome.
 
 ## Why Pastel?
 
@@ -68,7 +68,7 @@ Building for another platform needs the Free Pascal cross-compiler for it. `past
 
 | Command | What it does |
 |---|---|
-| `pastel new app <name>` | Create a desktop app with a form |
+| `pastel new app <name>` | Create a desktop app with a form ([guide](docs/guide-desktop.md)); `pastel new form <Name>` adds a window |
 | `pastel new console <name>` | Create a console project |
 | `pastel new lib <name>` | Create a library that other projects use ([docs/workflow.md](docs/workflow.md)) |
 | `pastel new service <name>` | Create a program that keeps running, with jobs and a systemd unit ([docs/services.md](docs/services.md)); web APIs: [docs/web.md](docs/web.md) |
@@ -111,7 +111,7 @@ pastel build android
 pastel build rpi
 ```
 
-A form is described in a readable `.pform` file (see [docs/forms.md](docs/forms.md) for all controls and properties):
+A form is described in a readable `.pform` file (see [docs/forms.md](docs/forms.md) for all controls and properties, and the [desktop app guide](docs/guide-desktop.md)):
 
 ```
 object HomeForm: THomeForm

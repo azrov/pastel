@@ -1,0 +1,17 @@
+# Example: a desktop text editor with menus, file dialogs and a status bar.
+# Try it: pastel run -- some-file.txt
+
+[project]
+name = "notepad"
+version = "1.0.0"
+type = "app"
+
+[build]
+main = "src/main.pas"
+mode = "objfpc"
+
+[targets]
+platforms = ["linux", "windows"]
+
+[package]
+include = ["README.md"]

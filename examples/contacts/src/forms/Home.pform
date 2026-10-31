@@ -1,0 +1,110 @@
+object HomeForm: THomeForm
+  Title = 'Contacts'
+  Width = 760
+  Height = 520
+  Padding = 0
+  Gap = 0
+  OnCreate = FormCreate
+  object MainMenu: TMenuBar
+    object FileMenu: TMenuItem
+      Caption = 'File'
+      object NewItem: TMenuItem
+        Action = NewAction
+      end
+      object DeleteItem: TMenuItem
+        Action = DeleteAction
+      end
+      object Sep1: TMenuItem
+        Caption = '-'
+      end
+      object QuitItem: TMenuItem
+        Caption = 'Quit'
+        ShortCut = 'Ctrl+Q'
+        OnClick = QuitClick
+      end
+    end
+    object HelpMenu: TMenuItem
+      Caption = 'Help'
+      object AboutItem: TMenuItem
+        Caption = 'About'
+        OnClick = AboutClick
+      end
+    end
+  end
+  object NewAction: TAction
+    Caption = 'New contact'
+    ShortCut = 'Ctrl+N'
+    OnExecute = NewExecute
+  end
+  object DeleteAction: TAction
+    Caption = 'Delete'
+    ShortCut = 'Ctrl+D'
+    OnExecute = DeleteExecute
+  end
+  object Body: TRow
+    Grow = 1
+    Align = Stretch
+    Padding = 16
+    Gap = 16
+    object Side: TColumn
+      Width = 260
+      Gap = 8
+      object SearchEdit: TEdit
+        Placeholder = 'Search'
+        OnChange = SearchChange
+      end
+      object ContactList: TListBox
+        Grow = 1
+        OnChange = ContactListChange
+      end
+      object CountLabel: TLabel
+        Text = 'no contacts'
+        FontSize = 12
+      end
+    end
+    object Details: TColumn
+      Grow = 1
+      Gap = 8
+      object NameLabel: TLabel
+        Text = 'Name'
+      end
+      object NameEdit: TEdit
+        Placeholder = 'Ayşe Yılmaz'
+      end
+      object PhoneLabel: TLabel
+        Text = 'Phone'
+      end
+      object PhoneEdit: TEdit
+      end
+      object EmailLabel: TLabel
+        Text = 'E-mail'
+      end
+      object EmailEdit: TEdit
+        OnSubmit = SaveClick
+      end
+      object NotesLabel: TLabel
+        Text = 'Notes'
+      end
+      object NotesMemo: TMemo
+        Grow = 1
+      end
+      object Buttons: TRow
+        Gap = 8
+        Justify = End
+        object DeleteButton: TButton
+          Action = DeleteAction
+          Style = Danger
+        end
+        object NewButton: TButton
+          Action = NewAction
+          Style = Secondary
+        end
+        object SaveButton: TButton
+          Text = 'Save'
+          Default = True
+          OnClick = SaveClick
+        end
+      end
+    end
+  end
+end

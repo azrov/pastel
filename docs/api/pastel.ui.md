@@ -9,7 +9,7 @@ Controls, layout and input handling.
 
 `uses Pastel.UI;` · source: [framework/src/pastel.ui.pas](../../framework/src/pastel.ui.pas)
 
-**Contents:** [TAlignItems](#talignitems) · [TJustify](#tjustify) · [TTextAlign](#ttextalign) · [TButtonStyle](#tbuttonstyle) · [TCursorKind](#tcursorkind) · [TWindowState](#twindowstate) · [TControl](#tcontrol) · [TAction](#taction) · [TBox](#tbox) · [TColumn](#tcolumn) · [TRow](#trow) · [TCard](#tcard) · [TSpacer](#tspacer) · [TLabel](#tlabel) · [TButton](#tbutton) · [TEditState](#teditstate) · [TVisualLine](#tvisualline) · [TCustomEdit](#tcustomedit) · [TEdit](#tedit) · [TMemo](#tmemo) · [TPopup](#tpopup) · [TTimer](#ttimer) · [TForm](#tform) · [TTheme](#ttheme) · [UseDarkTheme](#usedarktheme) · [RequestAnimation](#requestanimation) · [ProcessTimers](#processtimers) · [WrapText](#wraptext) · [RegisterControl](#registercontrol) · [FindControlClass](#findcontrolclass) · [ControlClassCount](#controlclasscount) · [ControlClassAt](#controlclassat) · [RegisterNonVisual](#registernonvisual) · [FindNonVisualClass](#findnonvisualclass) · [NonVisualClassCount](#nonvisualclasscount) · [NonVisualClassAt](#nonvisualclassat)
+**Contents:** [TAlignItems](#talignitems) · [TJustify](#tjustify) · [TTextAlign](#ttextalign) · [TButtonStyle](#tbuttonstyle) · [TCursorKind](#tcursorkind) · [TWindowState](#twindowstate) · [TThemeMode](#tthememode) · [TControl](#tcontrol) · [TAction](#taction) · [TBox](#tbox) · [TColumn](#tcolumn) · [TRow](#trow) · [TCard](#tcard) · [TSpacer](#tspacer) · [TLabel](#tlabel) · [TButton](#tbutton) · [TEditState](#teditstate) · [TVisualLine](#tvisualline) · [TCustomEdit](#tcustomedit) · [TEdit](#tedit) · [TMemo](#tmemo) · [TPopup](#tpopup) · [TTimer](#ttimer) · [TForm](#tform) · [TTheme](#ttheme) · [UseDarkTheme](#usedarktheme) · [RequestAnimation](#requestanimation) · [ProcessTimers](#processtimers) · [WrapText](#wraptext) · [RegisterControl](#registercontrol) · [FindControlClass](#findcontrolclass) · [ControlClassCount](#controlclasscount) · [ControlClassAt](#controlclassat) · [RegisterNonVisual](#registernonvisual) · [FindNonVisualClass](#findnonvisualclass) · [NonVisualClassCount](#nonvisualclasscount) · [NonVisualClassAt](#nonvisualclassat)
 
 ## Types
 
@@ -70,6 +70,17 @@ type TWindowState = (wsNormal, wsMaximized, wsMinimized, wsFullScreen)
 - `wsMaximized`
 - `wsMinimized`
 - `wsFullScreen`
+### TThemeMode
+
+```pascal
+type TThemeMode = (tmLight, tmDark, tmSystem)
+```
+
+Light, dark, or what the computer is set to.
+
+- `tmLight` Light, dark, or what the computer is set to.
+- `tmDark` Light, dark, or what the computer is set to.
+- `tmSystem` Light, dark, or what the computer is set to.
 ### TControl
 
 ```pascal
@@ -325,6 +336,7 @@ A panel shown above the form: drop-down lists, menus, dialogs.
 | `property Closed: Boolean` |  |
 | `property Shown: Boolean` |  |
 | `property ModalResult: Integer` |  |
+| `property ActiveControl: TControl` | Gets the focus when a modal popup opens; the first focusable control when nil. |
 | `property OnClose: TNotifyEvent` |  |
 
 ### TTimer
@@ -405,6 +417,7 @@ The root of a window. Owns all controls created from its .pform file.
 | `property MinHeight: Integer` |  |
 | `property WindowState: TWindowState` |  |
 | `property AlwaysOnTop: Boolean` |  |
+| `property Appearance: TThemeMode` | The colors of the app: Light, Dark or System (as the computer is set). |
 | `property OnCreate: TNotifyEvent` |  |
 | `property OnCloseQuery: TCloseQueryEvent` | Set CanClose to False to keep the window open, e.g. to ask about unsaved work. |
 | `property OnClose: TNotifyEvent` |  |
@@ -547,6 +560,7 @@ function NonVisualClassAt(Index: Integer): TComponentClass
 | `var AnimationRequested: Boolean` | Set by controls that move (spinners...): the application paints again soon. |
 | `var ModalStep: procedure` | Runs one pass of the application's event loop; set by Pastel.App. TPopup.ShowModal calls it until the popup is closed. |
 | `var ShortcutHook: function (Form : TForm ; Key : LongInt ; Shift, Ctrl : Boolean) : Boolean` | Set by Pastel.Menus: keyboard shortcuts of menus and actions. |
+| `var SystemDarkHook: function : Boolean` | Whether the computer is set to dark mode (set by the application). |
 | `var PopupMenuHook: procedure (Menu : TControl ; Form : TForm ; X, Y : Integer)` | Set by Pastel.Menus: shows a TPopupMenu at a point. |
 | `var KeyAlt: Boolean` | Alt is held (with KeyDown). |
 | `var MainForm: TForm` | The main window's form; dialogs are shown on it. Set by Pastel.App. |

@@ -21,6 +21,8 @@ type
   TButtonStyle = (bsPrimary, bsSecondary, bsDanger);
   TCursorKind = (ckArrow, ckIBeam, ckHand);
   TWindowState = (wsNormal, wsMaximized, wsMinimized, wsFullScreen);
+  { Light, dark, or what the computer is set to. }
+  TThemeMode = (tmLight, tmDark, tmSystem);
   TCloseQueryEvent = procedure(Sender: TObject; var CanClose: Boolean) of object;
 
   TForm = class;
@@ -380,7 +382,7 @@ type
     FModalResult: Integer;
     FAnchor: TRectI;
     FAnchored, FPlaceRight: Boolean;
-    FSavedFocus: TControl;
+    FSavedFocus, FActiveControl: TControl;
     FOnClose: TNotifyEvent;
   protected
     function PaintColor: TColor32; override;
@@ -399,6 +401,8 @@ type
     property Closed: Boolean read FClosed;
     property Shown: Boolean read FShown;
     property ModalResult: Integer read FModalResult write FModalResult;
+    { Gets the focus when a modal popup opens; the first focusable control when nil. }
+    property ActiveControl: TControl read FActiveControl write FActiveControl;
     property OnClose: TNotifyEvent read FOnClose write FOnClose;
   end;
 
@@ -438,6 +442,8 @@ type
     FResizable, FAlwaysOnTop: Boolean;
     FMinWidth, FMinHeight: Integer;
     FWindowState: TWindowState;
+    FThemeMode: TThemeMode;
+    procedure SetAppearance(AValue: TThemeMode);
     procedure SetTitle(const AValue: string);
     procedure SetResizable(AValue: Boolean);
     procedure SetAlwaysOnTop(AValue: Boolean);
@@ -523,6 +529,8 @@ type
     property MinHeight: Integer read FMinHeight write SetMinHeight default 120;
     property WindowState: TWindowState read FWindowState write SetWindowState default wsNormal;
     property AlwaysOnTop: Boolean read FAlwaysOnTop write SetAlwaysOnTop default False;
+    { The colors of the app: Light, Dark or System (as the computer is set). }
+    property Appearance: TThemeMode read FThemeMode write SetAppearance default tmLight;
     property OnCreate: TNotifyEvent read FOnCreate write FOnCreate;
     { Set CanClose to False to keep the window open, e.g. to ask about unsaved work. }
     property OnCloseQuery: TCloseQueryEvent read FOnCloseQuery write FOnCloseQuery;
@@ -552,6 +560,8 @@ var
   ModalStep: procedure = nil;
   { Set by Pastel.Menus: keyboard shortcuts of menus and actions. }
   ShortcutHook: function(Form: TForm; Key: LongInt; Shift, Ctrl: Boolean): Boolean = nil;
+  { Whether the computer is set to dark mode (set by the application). }
+  SystemDarkHook: function: Boolean = nil;
   { Set by Pastel.Menus: shows a TPopupMenu at a point. }
   PopupMenuHook: procedure(Menu: TControl; Form: TForm; X, Y: Integer) = nil;
   { Alt is held (with KeyDown). }
@@ -1867,7 +1877,9 @@ begin
     List := TFPList.Create;
     try
       CollectFocusable(P, List);
-      if List.Count > 0 then
+      if (P.FActiveControl <> nil) and (List.IndexOf(P.FActiveControl) >= 0) then
+        FocusControl(P.FActiveControl)
+      else if List.Count > 0 then
         FocusControl(TControl(List[0]))
       else
         FocusControl(nil);
@@ -2250,6 +2262,18 @@ begin
     List.Add(C);
   for I := 0 to C.ChildCount - 1 do
     CollectFocusable(C.Children[I], List);
+end;
+
+procedure TForm.SetAppearance(AValue: TThemeMode);
+begin
+  FThemeMode := AValue;
+  if csLoading in ComponentState then
+    Exit;
+  case AValue of
+    tmLight: UseDarkTheme(False);
+    tmDark: UseDarkTheme(True);
+    tmSystem: UseDarkTheme(Assigned(SystemDarkHook) and SystemDarkHook());
+  end;
 end;
 
 procedure TForm.FocusControl(C: TControl);

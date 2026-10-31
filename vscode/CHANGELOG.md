@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.8.0
+
+- Form designer: undo and redo (Ctrl+Z, Ctrl+Y), copy, cut, paste and duplicate controls
+  (Ctrl+C/X/V/D; pasted controls get free names), rename a control with F2 or in the
+  properties panel, and the form's `.pas` code is renamed with it
+- Preview at phone, tablet and desktop sizes, and in the dark theme
+- **Pastel: New Form…** (also in the Pastel panel): a dialog form with OK and Cancel, added to `main.pas`
+- The toolbox and properties know the new controls: check boxes, switches, radio buttons, combo boxes,
+  list boxes, memos, images, tabs, scroll boxes, progress bars, sliders, spinners, menus, actions, timers
+
 ## 0.7.0
 
 - Pascal code intelligence from the project, the Pastel framework and the Free Pascal sources:

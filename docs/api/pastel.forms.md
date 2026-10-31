@@ -34,6 +34,21 @@ function FindFormSource(Form: TForm): TFormSource
 
 The registered source for a form, searching its class hierarchy.
 
+### CaptureState
+
+```pascal
+function CaptureState(Form: TForm): TStringList
+```
+
+What the user changed in the controls (typed text, checked boxes, chosen
+items, the page of tabs), by control name; hot reload puts it back.
+
+### RestoreState
+
+```pascal
+procedure RestoreState(Form: TForm; State: TStringList)
+```
+
 ### BuildForm
 
 ```pascal

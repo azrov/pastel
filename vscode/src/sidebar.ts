@@ -173,6 +173,9 @@ export class ProjectTree implements vscode.TreeDataProvider<ProjectNode> {
       ];
       forms.children.push(form);
     }
+    if (pforms.length > 0) {
+      forms.children.push(action('New Form…', 'pastel.newForm', 'add'));
+    }
     const service = serviceGroups(root, files);
     if (pforms.length === 0 && service.length === 0) {
       const none = new ProjectNode('No forms yet', 'group');

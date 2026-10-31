@@ -127,50 +127,52 @@ Goal: VS Code understands Pascal like Lazarus/Delphi do.
 
 ---
 
-## 0.5 — Desktop apps, essentials (next)
+## 0.5 — Desktop apps, essentials (done)
 
 Goal: typical small business apps (forms, lists, dialogs) on Linux and Windows.
 
 **Controls**
-- [ ] CheckBox, RadioButton/RadioGroup, Switch
-- [ ] ComboBox (drop-down list)
-- [ ] Memo (multi-line text, scrolling, word wrap)
-- [ ] ListBox / ListView with many items (only visible rows are drawn)
-- [ ] Image (PNG, JPEG), icons
-- [ ] ScrollBox (scrolling area), TabControl (pages)
-- [ ] ProgressBar, Slider, Spinner
-- [ ] Menu bar, context menus, keyboard shortcuts (actions)
-- [ ] Tooltips
+- [x] CheckBox, RadioButton (grouped by parent), Switch
+- [x] ComboBox (drop-down list)
+- [x] Memo (multi-line text, scrolling, word wrap)
+- [x] ListBox with many items (only visible rows are drawn); a multi-column ListView moves to 0.6
+- [x] Image (PNG, JPEG), icons
+- [x] ScrollBox (scrolling area), TabControl (pages)
+- [x] ProgressBar, Slider, Spinner
+- [x] Menu bar, context menus, keyboard shortcuts (actions)
+- [x] Tooltips
 
 **Framework**
-- [ ] Text editing: selection with mouse and Shift, cut/copy/paste of selection, undo
-- [ ] Label word wrap and multi-line text
-- [ ] More than one form; modal dialogs (`ShowModal`)
-- [ ] Dialogs: `ShowMessage`, confirm, input; open/save file dialogs
-- [ ] `TTimer`; running work in a thread and updating the UI safely
-- [ ] `.pform`: nested properties (`Font.Size`) and lists (`Items = ('A', 'B')`)
-- [ ] High-DPI screens (scaling)
-- [ ] Dark theme and theme switching; app-wide styles
-- [ ] Fonts and images from `assets/`, bundled into the program
-- [ ] App icon (window and file)
-- [ ] Hot reload keeps typed text and state where possible
+- [x] Text editing: selection with mouse and Shift, cut/copy/paste of selection, undo
+- [x] Label word wrap and multi-line text
+- [x] More than one form; modal dialogs (`ShowModal`)
+- [x] Dialogs: `ShowMessage`, confirm, input; open/save file dialogs (drawn by Pastel inside the window; native dialogs move to 0.6)
+- [x] `TTimer`; running work in a thread and updating the UI safely
+- [x] `.pform`: nested properties (`Font.Size`) and lists (`Items = ('A', 'B')`)
+- [x] High-DPI screens (scaling)
+- [x] Dark theme and theme switching (`Appearance`: light, dark, system)
+- [x] Fonts and images from `assets/`, bundled into the program
+- [x] App icon: window icon from `assets/icon.png` (the icon of the Windows .exe file moves to 0.6)
+- [x] Hot reload keeps typed text and state where possible
 
 **VS Code designer**
-- [ ] Undo/redo inside the designer, copy/paste of controls
-- [ ] Rename a control (updates the `.pas` code too)
-- [ ] "New Form" command
-- [ ] Preview at different window sizes and in dark theme
+- [x] Undo/redo inside the designer, copy/paste of controls
+- [x] Rename a control (updates the `.pas` code too)
+- [x] "New Form" command
+- [x] Preview at different window sizes and in dark theme
 
 **Docs**
-- [ ] Guide: building a desktop app; reference of all controls
-- [ ] Example: a notes app, an address book with SQLite
+- [x] Guide: building a desktop app (`docs/guide-desktop.md`); reference of all controls
+- [x] Examples: `notepad` (text editor), `contacts` (address book with SQLite), both with UI test scripts
 
 ---
 
 ## 0.6 — Desktop apps, complete and shippable
 
 - [ ] Grid/table control (sorting, editing, many rows)
-- [ ] TreeView
+- [ ] TreeView, multi-column ListView
+- [ ] Native open/save dialogs where the system has them (Windows, GTK portals), the drawn ones as fallback
+- [ ] Icon of the Windows `.exe` file from `assets/icon.png`; app-wide styles
 - [ ] Data binding: connect controls to objects or database rows
 - [ ] Translations (`assets/lang/`), right number and date formats
 - [ ] Windows: SDL2/FreeType DLLs copied next to the program automatically; installer (`pastel package windows`)

@@ -25,7 +25,9 @@ type
     FHeadless: Boolean;
     FWindow, FRenderer, FTexture: Pointer;
     FCanvas: TCanvas32;
-    FWidth, FHeight: Integer;
+    FWidth, FHeight: Integer;     { in layout units }
+    FScale: Single;               { pixels per layout unit }
+    FMouseScale: Single;          { window coordinates per layout unit }
     FTextureW, FTextureH: Integer;
     FCursors: array[TCursorKind] of Pointer;
     FCursorShown: TCursorKind;
@@ -52,6 +54,7 @@ type
     procedure Fatal(const Msg: string);
     procedure LoadForm(Form: TForm);
     procedure CreateWindow;
+    procedure SetWindowIcon;
     procedure ProcessEvents(Timeout: Integer);
     procedure CheckHotReload;
     procedure Reload(const NewSource: string);
@@ -86,7 +89,7 @@ var
 implementation
 
 uses
-  Math, TypInfo, Pastel.SDL2,
+  Math, TypInfo, Process, {$IFDEF WINDOWS}Registry,{$ENDIF} Pastel.SDL2, Pastel.Assets,
   { linked into every app, so .pform files can use their controls }
   Pastel.Controls, Pastel.Menus, Pastel.Dialogs;
 
@@ -149,6 +152,73 @@ begin
   Halt(1);
 end;
 
+{ assets/font.ttf (and font-bold.ttf) instead of the system font }
+procedure UseAssetFonts;
+
+  function Extract(const Name: string): string;
+  var
+    S: TStream;
+    F: TFileStream;
+  begin
+    S := OpenAsset(Name);
+    try
+      if S is TFileStream then
+        Exit(TFileStream(S).FileName);
+      Result := IncludeTrailingPathDelimiter(GetTempDir) + 'pastel-' + IntToStr(GetProcessID) + '-' +
+        StringReplace(Name, '/', '-', [rfReplaceAll]);
+      F := TFileStream.Create(Result, fmCreate);
+      try
+        F.CopyFrom(S, 0);
+      finally
+        F.Free;
+      end;
+    finally
+      S.Free;
+    end;
+  end;
+
+var
+  R, B: string;
+begin
+  if not AssetExists('font.ttf') then
+    Exit;
+  R := Extract('font.ttf');
+  B := '';
+  if AssetExists('font-bold.ttf') then
+    B := Extract('font-bold.ttf');
+  SetFontFiles(R, B);
+end;
+
+{ Is the computer set to dark colors? }
+function SystemPrefersDark: Boolean;
+var
+  Out_: string;
+begin
+  Result := False;
+  if GetEnv('PASTEL_THEME') <> '' then
+    Exit(SameText(GetEnv('PASTEL_THEME'), 'dark'));
+  {$IF defined(WINDOWS)}
+  with TRegistry.Create(KEY_READ) do
+  try
+    RootKey := HKEY_CURRENT_USER;
+    if OpenKeyReadOnly('Software\Microsoft\Windows\CurrentVersion\Themes\Personalize') and
+       ValueExists('AppsUseLightTheme') then
+      Result := ReadInteger('AppsUseLightTheme') = 0;
+  finally
+    Free;
+  end;
+  {$ELSEIF defined(DARWIN)}
+  if RunCommand('defaults', ['read', '-g', 'AppleInterfaceStyle'], Out_, [poNoConsole]) then
+    Result := Pos('dark', LowerCase(Out_)) > 0;
+  {$ELSE}
+  if RunCommand('gsettings', ['get', 'org.gnome.desktop.interface', 'color-scheme'], Out_, [poNoConsole]) and
+     (Pos('dark', LowerCase(Out_)) > 0) then
+    Exit(True);
+  if RunCommand('gsettings', ['get', 'org.gnome.desktop.interface', 'gtk-theme'], Out_, [poNoConsole]) then
+    Result := Pos('dark', LowerCase(Out_)) > 0;
+  {$ENDIF}
+end;
+
 procedure TApplication.Initialize;
 var
   Err: string;
@@ -159,7 +229,10 @@ begin
   Err := InitFonts;
   if Err <> '' then
     Fatal(Err);
+  UseAssetFonts;
   FHeadless := GetEnv('PASTEL_HEADLESS') = '1';
+  FScale := 1;
+  FMouseScale := 1;
 end;
 
 procedure TApplication.LoadForm(Form: TForm);
@@ -202,6 +275,10 @@ begin
   end;
   if Form = FMainForm then
   begin
+    case Form.Appearance of
+      tmDark: UseDarkTheme(True);
+      tmSystem: UseDarkTheme(SystemPrefersDark);
+    end;
     FSourcePath := Src.FilePath;
     FSeenText := Text;
     FLastGood := Text;
@@ -229,11 +306,42 @@ begin
   FTerminated := True;
 end;
 
+procedure TApplication.SetWindowIcon;
+var
+  B: TBitmap32;
+  S: TStream;
+  Surface: Pointer;
+begin
+  if not AssetExists('icon.png') then
+    Exit;
+  B := TBitmap32.Create;
+  try
+    S := OpenAsset('icon.png');
+    try
+      B.LoadFromStream(S);
+    finally
+      S.Free;
+    end;
+    Surface := SDL_CreateRGBSurfaceFrom(@B.Pixels[0], B.Width, B.Height, 32, B.Width * 4,
+      $00FF0000, $0000FF00, $000000FF, $FF000000);
+    if Surface <> nil then
+    begin
+      SDL_SetWindowIcon(FWindow, Surface);
+      SDL_FreeSurface(Surface);
+    end;
+  except
+    on E: Exception do
+      WriteLn(StdErr, 'assets/icon.png: ', E.Message);
+  end;
+  B.Free;
+end;
+
 procedure TApplication.CreateWindow;
 var
   Err: string;
-  W, H: Integer;
+  W, H, WW, WH, PW, PH: Integer;
   Flags: LongWord;
+  Dpi, ForcedScale: Single;
 begin
   W := FMainForm.Width;
   H := FMainForm.Height;
@@ -241,17 +349,23 @@ begin
   if H <= 0 then H := DefaultHeight;
   FWidth := W;
   FHeight := H;
+  ForcedScale := StrToFloatDef(GetEnv('PASTEL_SCALE'), 0, DefaultFormatSettings);
   if FHeadless then
+  begin
+    if ForcedScale > 0 then
+      FScale := ForcedScale;
     Exit;
+  end;
 
   Err := LoadSDL2;
   if Err <> '' then
     Fatal(Err);
   SDL_SetHint('SDL_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR', '0');
+  SDL_SetHint('SDL_WINDOWS_DPI_AWARENESS', 'permonitorv2');
   if SDL_Init(SDL_INIT_VIDEO) <> 0 then
     Fatal('could not open a window: ' + StrPas(SDL_GetError()));
   FWindowTitle := FMainForm.Title;
-  Flags := SDL_WINDOW_SHOWN;
+  Flags := SDL_WINDOW_SHOWN or SDL_WINDOW_ALLOW_HIGHDPI;
   if FMainForm.Resizable then
     Flags := Flags or SDL_WINDOW_RESIZABLE;
   if FMainForm.AlwaysOnTop then
@@ -277,6 +391,34 @@ begin
     FRenderer := SDL_CreateRenderer(FWindow, -1, SDL_RENDERER_SOFTWARE);
   if FRenderer = nil then
     Fatal('could not create a renderer: ' + StrPas(SDL_GetError()));
+  { sharp on high-density screens: either the system gives more pixels than
+    window points (macOS, Wayland), or Pastel sizes the window by the DPI }
+  SDL_GetWindowSize(FWindow, @WW, @WH);
+  SDL_GetRendererOutputSize(FRenderer, @PW, @PH);
+  if (WW > 0) and (PW > WW) then
+  begin
+    FScale := PW / WW;
+    FMouseScale := 1;
+  end
+  else
+  begin
+    Dpi := 96;
+    if Assigned(SDL_GetDisplayDPI) then
+      SDL_GetDisplayDPI(0, @Dpi, nil, nil);
+    if ForcedScale > 0 then
+      FScale := ForcedScale
+    else
+      FScale := Round(Dpi / 96 * 4) / 4;
+    if FScale < 1.2 then
+      FScale := 1;
+    FMouseScale := FScale;
+    if FScale > 1 then
+    begin
+      SDL_SetWindowSize(FWindow, Round(W * FScale), Round(H * FScale));
+      SDL_SetWindowMinimumSize(FWindow, Round(FMainForm.MinWidth * FScale), Round(FMainForm.MinHeight * FScale));
+    end;
+  end;
+  SetWindowIcon;
   FCursors[ckArrow] := SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
   FCursors[ckIBeam] := SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_IBEAM);
   FCursors[ckHand] := SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND);
@@ -332,7 +474,7 @@ begin
   end;
   if (FMainForm.MinWidth <> FAppliedMinW) or (FMainForm.MinHeight <> FAppliedMinH) then
   begin
-    SDL_SetWindowMinimumSize(FWindow, FMainForm.MinWidth, FMainForm.MinHeight);
+    SDL_SetWindowMinimumSize(FWindow, Round(FMainForm.MinWidth * FMouseScale), Round(FMainForm.MinHeight * FMouseScale));
     FAppliedMinW := FMainForm.MinWidth;
     FAppliedMinH := FMainForm.MinHeight;
   end;
@@ -353,6 +495,7 @@ end;
 
 procedure TApplication.Paint;
 begin
+  FCanvas.Scale := FScale;
   FCanvas.SetSize(FWidth, FHeight);
   FMainForm.Render(FCanvas);
   PaintOverlay;
@@ -387,16 +530,16 @@ procedure TApplication.Present;
 begin
   if FHeadless then
     Exit;
-  if (FTexture = nil) or (FTextureW <> FWidth) or (FTextureH <> FHeight) then
+  if (FTexture = nil) or (FTextureW <> FCanvas.PixelWidth) or (FTextureH <> FCanvas.PixelHeight) then
   begin
     if FTexture <> nil then
       SDL_DestroyTexture(FTexture);
     FTexture := SDL_CreateTexture(FRenderer, SDL_PIXELFORMAT_ARGB8888,
-      SDL_TEXTUREACCESS_STREAMING, FWidth, FHeight);
-    FTextureW := FWidth;
-    FTextureH := FHeight;
+      SDL_TEXTUREACCESS_STREAMING, FCanvas.PixelWidth, FCanvas.PixelHeight);
+    FTextureW := FCanvas.PixelWidth;
+    FTextureH := FCanvas.PixelHeight;
   end;
-  SDL_UpdateTexture(FTexture, nil, FCanvas.Data, FWidth * 4);
+  SDL_UpdateTexture(FTexture, nil, FCanvas.Data, FCanvas.PixelWidth * 4);
   SDL_RenderClear(FRenderer);
   SDL_RenderCopy(FRenderer, FTexture, nil, nil);
   SDL_RenderPresent(FRenderer);
@@ -454,8 +597,8 @@ begin
             end;
           SDL_WINDOWEVENT_RESIZED, SDL_WINDOWEVENT_SIZE_CHANGED:
             begin
-              FWidth := Max(1, Ev.window.data1);
-              FHeight := Max(1, Ev.window.data2);
+              FWidth := Max(1, Round(Ev.window.data1 / FMouseScale));
+              FHeight := Max(1, Round(Ev.window.data2 / FMouseScale));
               NeedsLayout := True;
             end;
           SDL_WINDOWEVENT_EXPOSED:
@@ -464,11 +607,13 @@ begin
             FMainForm.HandleMouseLeave;
         end;
       SDL_MOUSEMOTION:
-        FMainForm.HandleMouseMove(Ev.motion.x, Ev.motion.y);
+        FMainForm.HandleMouseMove(Round(Ev.motion.x / FMouseScale), Round(Ev.motion.y / FMouseScale));
       SDL_MOUSEBUTTONDOWN:
-        FMainForm.HandleMouseDown(Ev.button.x, Ev.button.y, Ev.button.button, Ev.button.clicks);
+        FMainForm.HandleMouseDown(Round(Ev.button.x / FMouseScale), Round(Ev.button.y / FMouseScale),
+          Ev.button.button, Ev.button.clicks);
       SDL_MOUSEBUTTONUP:
-        FMainForm.HandleMouseUp(Ev.button.x, Ev.button.y, Ev.button.button);
+        FMainForm.HandleMouseUp(Round(Ev.button.x / FMouseScale), Round(Ev.button.y / FMouseScale),
+          Ev.button.button);
       SDL_MOUSEWHEEL:
         FMainForm.HandleMouseWheel(Ev.wheel.x, Ev.wheel.y);
       SDL_USEREVENT:
@@ -495,6 +640,7 @@ procedure TApplication.Reload(const NewSource: string);
 var
   Root: TPFormNode;
   Err: string;
+  State: TStringList;
 begin
   Err := '';
   Root := nil;
@@ -504,11 +650,14 @@ begin
     on E: EPFormError do
       Err := E.Message;
   end;
+  State := nil;
   if Root <> nil then
   try
+    State := CaptureState(FMainForm);
     FMainForm.ClearControls;
     try
       BuildForm(FMainForm, Root);
+      RestoreState(FMainForm, State);
       FLastGood := NewSource;
       if Assigned(FMainForm.OnCreate) then
         FMainForm.OnCreate(FMainForm);
@@ -521,10 +670,12 @@ begin
         Root.Free;
         Root := ParsePForm(FLastGood);
         BuildForm(FMainForm, Root);
+        RestoreState(FMainForm, State);
       end;
     end;
   finally
     Root.Free;
+    State.Free;
   end;
   if Err <> '' then
   begin
@@ -576,12 +727,38 @@ function TApplication.FindAnyControl(const AName: string): TControl;
     C: TComponent;
   begin
     Result := nil;
+    if SameText(Root.Name, AName) and (Root is TControl) then
+      Exit(TControl(Root));
     C := Root.FindComponent(AName);
     if C is TControl then
       Exit(TControl(C));
     for I := 0 to Root.ComponentCount - 1 do
     begin
       Result := Search(Root.Components[I]);
+      if Result <> nil then
+        Exit;
+    end;
+    { a form shown in a dialog is a child, not owned }
+    if Root is TControl then
+      for I := 0 to TControl(Root).ChildCount - 1 do
+        if TControl(Root).Children[I] is TForm then
+        begin
+          Result := Search(TControl(Root).Children[I]);
+          if Result <> nil then
+            Exit;
+        end;
+  end;
+
+  function SearchTree(C: TControl): TControl;
+  var
+    I: Integer;
+  begin
+    Result := nil;
+    if C is TForm then
+      Exit(Search(C));
+    for I := 0 to C.ChildCount - 1 do
+    begin
+      Result := SearchTree(C.Children[I]);
       if Result <> nil then
         Exit;
     end;
@@ -594,8 +771,8 @@ begin
   for I := FMainForm.PopupCount - 1 downto 0 do
   begin
     Result := Search(FMainForm.PopupAt(I));
-    if (Result = nil) and SameText(FMainForm.PopupAt(I).Name, AName) then
-      Result := FMainForm.PopupAt(I);
+    if Result = nil then
+      Result := SearchTree(FMainForm.PopupAt(I));
     if Result <> nil then
       Exit;
   end;
@@ -618,7 +795,8 @@ var
   Line, Cmd, Arg1, Rest, Prop, Want, Got: string;
   C: TControl;
   R: TRectI;
-  X, Y, N: Integer;
+  X, Y, N, I: Integer;
+  Parts: TStringArray;
   Until_: QWord;
 
   function TakeWord(var S: string): string;
@@ -795,7 +973,15 @@ begin
           C := Ctl(Arg1);
           if FMainForm.Focused <> C then
             C.SetFocus;
-          FMainForm.HandleTextInput(StringReplace(Rest, '\n', #10, [rfReplaceAll]));
+          { \n presses Enter: a new line in a memo, OnSubmit or the default button elsewhere }
+          Parts := Rest.Split(['\n']);
+          for I := 0 to High(Parts) do
+          begin
+            if I > 0 then
+              Key('enter');
+            if Parts[I] <> '' then
+              FMainForm.HandleTextInput(Parts[I]);
+          end;
         end;
       'key':
         Key(Arg1);
@@ -999,6 +1185,7 @@ end;
 
 initialization
   Application := TApplication.Create;
+  SystemDarkHook := @SystemPrefersDark;
 
 finalization
   FreeAndNil(Application);

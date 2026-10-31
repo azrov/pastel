@@ -39,6 +39,7 @@ type
   private
     FFace: PFT_Face;
     FSize: Integer;
+    FBold: Boolean;
     FAscent, FDescent, FLineHeight: Integer;
     FHasKerning: Boolean;
     FPages: array[0..$10FF] of PGlyphPage;
@@ -51,6 +52,7 @@ type
     { Byte index in S whose left edge is closest to pixel offset X. }
     function HitTest(const S: string; X: Integer): Integer;
     property Size: Integer read FSize;
+    property Bold: Boolean read FBold;
     property Ascent: Integer read FAscent;
     property Descent: Integer read FDescent;
     property LineHeight: Integer read FLineHeight;
@@ -73,11 +75,24 @@ type
   TCanvas32 = class
   private
     FPixels: array of Cardinal;
-    FWidth, FHeight: Integer;
+    FWidth, FHeight: Integer;         { in pixels }
+    FLogW, FLogH: Integer;            { in layout units }
+    FScale: Single;
     FClip: TRectI;
     FClipStack: array of TRectI;
     procedure Blend(Index: Integer; C: TColor32; Coverage: Integer); inline;
+    function Sc: Single; inline;
+    function ToPixels(const R: TRectI): TRectI;
+    procedure FillRectRaw(X, Y, W, H: Integer; C: TColor32);
+    procedure FillRoundRectRaw(X, Y, W, H: Integer; Radius: Single; C: TColor32);
+    procedure StrokeRoundRectRaw(X, Y, W, H: Integer; Radius, Thickness: Single; C: TColor32);
+    procedure DrawTextRaw(Font: TPastelFont; X, Y: Integer; const S: string; C: TColor32);
+    procedure DrawLineRaw(X1, Y1, X2, Y2, Thickness: Single; C: TColor32);
+    procedure FillCircleRaw(CX, CY, Radius: Single; C: TColor32);
+    procedure DrawBitmapRaw(B: TBitmap32; X, Y, W, H: Integer; Smooth: Boolean; Opacity: Byte);
+    procedure SetScale(AValue: Single);
   public
+    { Width and height in layout units; with Scale 2 the pixels are twice as many. }
     procedure SetSize(AWidth, AHeight: Integer);
     procedure Clear(C: TColor32);
     procedure PushClip(const R: TRectI);
@@ -95,8 +110,14 @@ type
     function GetPixel(X, Y: Integer): TColor32;
     procedure SaveToPNG(const FileName: string);
     function Data: Pointer;
-    property Width: Integer read FWidth;
-    property Height: Integer read FHeight;
+    property Width: Integer read FLogW;
+    property Height: Integer read FLogH;
+    { The size in pixels (Width * Scale). }
+    property PixelWidth: Integer read FWidth;
+    property PixelHeight: Integer read FHeight;
+    { Pixels per layout unit: 2 on a "retina" or 200% screen. Text is drawn
+      with a font of the scaled size, so it stays sharp. }
+    property Scale: Single read FScale write SetScale;
   end;
 
   EPastelGraphics = class(Exception);
@@ -116,6 +137,8 @@ function PrevCharStart(const S: string; I: Integer): Integer;
 
 { Fonts are shared and cached by size and weight. }
 function GetFont(Size: Integer; Bold: Boolean = False): TPastelFont;
+{ Use these .ttf files instead of the system font (after InitFonts). }
+procedure SetFontFiles(const Regular, Bold: string);
 { Initializes FreeType and finds a system font. Returns '' or an error. }
 function InitFonts: string;
 procedure DoneFonts;
@@ -445,6 +468,17 @@ begin
   FontCache.OwnsObjects := True;
 end;
 
+procedure SetFontFiles(const Regular, Bold: string);
+begin
+  RegularFontFile := Regular;
+  if Bold <> '' then
+    BoldFontFile := Bold
+  else
+    BoldFontFile := Regular;
+  if FontCache <> nil then
+    FontCache.Clear;
+end;
+
 procedure DoneFonts;
 begin
   FreeAndNil(FontCache);
@@ -465,6 +499,7 @@ begin
     Result := TPastelFont.Create(BoldFontFile, Size)
   else
     Result := TPastelFont.Create(RegularFontFile, Size);
+  Result.FBold := Bold;
   FontCache.AddObject(Key, Result);
 end;
 
@@ -545,10 +580,50 @@ end;
 
 { ---- TCanvas32 ---- }
 
+function TCanvas32.Sc: Single;
+begin
+  if FScale <= 0 then
+    Result := 1
+  else
+    Result := FScale;
+end;
+
+procedure TCanvas32.SetScale(AValue: Single);
+begin
+  if AValue <= 0 then
+    AValue := 1;
+  if AValue = FScale then
+    Exit;
+  FScale := AValue;
+  if FLogW > 0 then
+  begin
+    FWidth := 0;      { make SetSize allocate again }
+    SetSize(FLogW, FLogH);
+  end;
+end;
+
+function TCanvas32.ToPixels(const R: TRectI): TRectI;
+var
+  X2, Y2: Integer;
+begin
+  if Sc = 1 then
+    Exit(R);
+  X2 := Round((R.X + R.W) * Sc);
+  Y2 := Round((R.Y + R.H) * Sc);
+  Result.X := Round(R.X * Sc);
+  Result.Y := Round(R.Y * Sc);
+  Result.W := X2 - Result.X;
+  Result.H := Y2 - Result.Y;
+end;
+
 procedure TCanvas32.SetSize(AWidth, AHeight: Integer);
 begin
   AWidth := Max(1, AWidth);
   AHeight := Max(1, AHeight);
+  FLogW := AWidth;
+  FLogH := AHeight;
+  AWidth := Max(1, Ceil(AWidth * Sc));
+  AHeight := Max(1, Ceil(AHeight * Sc));
   if (AWidth = FWidth) and (AHeight = FHeight) then
     Exit;
   FWidth := AWidth;
@@ -575,7 +650,62 @@ procedure TCanvas32.PushClip(const R: TRectI);
 begin
   SetLength(FClipStack, Length(FClipStack) + 1);
   FClipStack[High(FClipStack)] := FClip;
-  FClip := FClip.Intersect(R);
+  FClip := FClip.Intersect(ToPixels(R));
+end;
+
+{ ---- drawing in layout units ---- }
+
+procedure TCanvas32.FillRect(X, Y, W, H: Integer; C: TColor32);
+var
+  R: TRectI;
+begin
+  R := ToPixels(RectI(X, Y, W, H));
+  FillRectRaw(R.X, R.Y, R.W, R.H, C);
+end;
+
+procedure TCanvas32.FillRoundRect(X, Y, W, H: Integer; Radius: Single; C: TColor32);
+var
+  R: TRectI;
+begin
+  R := ToPixels(RectI(X, Y, W, H));
+  FillRoundRectRaw(R.X, R.Y, R.W, R.H, Radius * Sc, C);
+end;
+
+procedure TCanvas32.StrokeRoundRect(X, Y, W, H: Integer; Radius, Thickness: Single; C: TColor32);
+var
+  R: TRectI;
+begin
+  R := ToPixels(RectI(X, Y, W, H));
+  StrokeRoundRectRaw(R.X, R.Y, R.W, R.H, Radius * Sc, Thickness * Sc, C);
+end;
+
+procedure TCanvas32.DrawText(Font: TPastelFont; X, Y: Integer; const S: string; C: TColor32);
+var
+  K: Single;
+begin
+  K := Sc;
+  if K = 1 then
+    DrawTextRaw(Font, X, Y, S, C)
+  else
+    DrawTextRaw(GetFont(Max(1, Round(Font.Size * K)), Font.Bold), Round(X * K), Round(Y * K), S, C);
+end;
+
+procedure TCanvas32.DrawLine(X1, Y1, X2, Y2, Thickness: Single; C: TColor32);
+begin
+  DrawLineRaw(X1 * Sc, Y1 * Sc, X2 * Sc, Y2 * Sc, Thickness * Sc, C);
+end;
+
+procedure TCanvas32.FillCircle(CX, CY, Radius: Single; C: TColor32);
+begin
+  FillCircleRaw(CX * Sc, CY * Sc, Radius * Sc, C);
+end;
+
+procedure TCanvas32.DrawBitmap(B: TBitmap32; X, Y, W, H: Integer; Smooth: Boolean; Opacity: Byte);
+var
+  R: TRectI;
+begin
+  R := ToPixels(RectI(X, Y, W, H));
+  DrawBitmapRaw(B, R.X, R.Y, R.W, R.H, Smooth, Opacity);
 end;
 
 procedure TCanvas32.PopClip;
@@ -607,7 +737,7 @@ begin
     ((((Cardinal(C) and $FF) * A + (D and $FF) * IA) div 255));
 end;
 
-procedure TCanvas32.FillRect(X, Y, W, H: Integer; C: TColor32);
+procedure TCanvas32.FillRectRaw(X, Y, W, H: Integer; C: TColor32);
 var
   R: TRectI;
   PX, PY: Integer;
@@ -641,7 +771,7 @@ begin
     Result := Round((0.5 - D) * 255);
 end;
 
-procedure TCanvas32.FillRoundRect(X, Y, W, H: Integer; Radius: Single; C: TColor32);
+procedure TCanvas32.FillRoundRectRaw(X, Y, W, H: Integer; Radius: Single; C: TColor32);
 var
   R: TRectI;
   PX, PY: Integer;
@@ -651,7 +781,7 @@ begin
   Radius := Min(Radius, Min(W, H) / 2);
   if Radius <= 0 then
   begin
-    FillRect(X, Y, W, H, C);
+    FillRectRaw(X, Y, W, H, C);
     Exit;
   end;
   R := RectI(X, Y, W, H).Intersect(FClip);
@@ -661,7 +791,7 @@ begin
         CoverageOf(RoundRectDistance(PX + 0.5, PY + 0.5, X, Y, W, H, Radius)));
 end;
 
-procedure TCanvas32.StrokeRoundRect(X, Y, W, H: Integer; Radius, Thickness: Single; C: TColor32);
+procedure TCanvas32.StrokeRoundRectRaw(X, Y, W, H: Integer; Radius, Thickness: Single; C: TColor32);
 var
   R: TRectI;
   PX, PY, Outer, Inner: Integer;
@@ -683,7 +813,7 @@ begin
     end;
 end;
 
-procedure TCanvas32.DrawLine(X1, Y1, X2, Y2, Thickness: Single; C: TColor32);
+procedure TCanvas32.DrawLineRaw(X1, Y1, X2, Y2, Thickness: Single; C: TColor32);
 var
   R: TRectI;
   PX, PY: Integer;
@@ -711,7 +841,7 @@ begin
     end;
 end;
 
-procedure TCanvas32.FillCircle(CX, CY, Radius: Single; C: TColor32);
+procedure TCanvas32.FillCircleRaw(CX, CY, Radius: Single; C: TColor32);
 var
   R: TRectI;
   PX, PY: Integer;
@@ -727,7 +857,7 @@ begin
     end;
 end;
 
-procedure TCanvas32.DrawBitmap(B: TBitmap32; X, Y, W, H: Integer; Smooth: Boolean; Opacity: Byte);
+procedure TCanvas32.DrawBitmapRaw(B: TBitmap32; X, Y, W, H: Integer; Smooth: Boolean; Opacity: Byte);
 var
   R: TRectI;
   PX, PY, SX0, SY0, SX1, SY1: Integer;
@@ -777,7 +907,7 @@ begin
     end;
 end;
 
-procedure TCanvas32.DrawText(Font: TPastelFont; X, Y: Integer; const S: string; C: TColor32);
+procedure TCanvas32.DrawTextRaw(Font: TPastelFont; X, Y: Integer; const S: string; C: TColor32);
 var
   I, PenX, Baseline, GX, GY, Row, Col, DX, DY: Integer;
   G: PGlyph;
@@ -814,6 +944,8 @@ end;
 
 function TCanvas32.GetPixel(X, Y: Integer): TColor32;
 begin
+  X := Round(X * Sc);
+  Y := Round(Y * Sc);
   if (X < 0) or (Y < 0) or (X >= FWidth) or (Y >= FHeight) then
     Exit(0);
   Result := TColor32(FPixels[Y * FWidth + X]);

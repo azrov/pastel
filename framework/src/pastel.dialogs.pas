@@ -549,9 +549,12 @@ end;
 function TFileDialog.Execute(out FileName: string): Boolean;
 begin
   if FKind = fdFolder then
-    FList.SetFocus
+    FPopup.ActiveControl := FList
   else
-    FName.SetFocus;
+  begin
+    FPopup.ActiveControl := FName;
+    FName.SelectAll;         { typing replaces the suggested name }
+  end;
   Result := FPopup.ShowModal(CheckForm) = mrOk;
   if Result then
     FileName := FResult;

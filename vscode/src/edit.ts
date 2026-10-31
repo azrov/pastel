@@ -1,6 +1,7 @@
 // Text edits on .pform files for the visual designer: set a property, add,
 // move and delete controls. Pure functions on text, unit tested.
 import { stripComment } from './model';
+import { lex } from './lang/lexer';
 
 export interface PropLine {
   name: string;
@@ -215,6 +216,79 @@ export function moveObject(text: string, name: string, parentName: string, index
   return lines2.join(eol(text));
 }
 
+/** The text of a control with its children, without the indentation of its place (for copying). */
+export function extractObject(text: string, name: string): string | undefined {
+  const root = parseBlocks(text);
+  const block = root && findBlock(root, name);
+  if (!root || !block || block === root) {
+    return undefined;
+  }
+  const lines = splitLines(text).slice(block.start, block.end + 1);
+  return lines.map(l => l.substring(Math.min(block.indent, l.length - l.trimStart().length))).join('\n');
+}
+
+/** True for text that is one or more .pform objects (from the clipboard). */
+export function isObjectText(clip: string): boolean {
+  const wrapped = `object X__: TForm\n${clip}\nend`;
+  const root = parseBlocks(wrapped);
+  return !!root && root.children.length > 0 && /^\s*object\s/i.test(clip);
+}
+
+/**
+ * Pastes copied objects as children of `parentName` at `index`. Names that
+ * are taken get a free number (Button1 -> Button2). Returns the new text
+ * and the name of the first pasted control.
+ */
+export function pasteObjects(text: string, clip: string, parentName: string, index: number):
+  { text: string; name: string } | undefined {
+  const root = parseBlocks(text);
+  const parent = root && findBlock(root, parentName);
+  if (!root || !parent || !isObjectText(clip)) {
+    return undefined;
+  }
+  const used = new Set(allBlocks(root).map(b => b.name.toLowerCase()));
+  let first = '';
+  const renamed = clip.split(/\r?\n/).map(line => {
+    const m = /^(\s*object\s+)([A-Za-z_]\w*)(\s*:.*)$/i.exec(line);
+    if (!m) {
+      return line;
+    }
+    let name = m[2];
+    if (used.has(name.toLowerCase())) {
+      const base = name.replace(/\d+$/, '');
+      for (let n = 1; ; n++) {
+        if (!used.has((base + n).toLowerCase())) {
+          name = base + n;
+          break;
+        }
+      }
+    }
+    used.add(name.toLowerCase());
+    first ||= name;
+    return m[1] + name + m[3];
+  });
+  const pad = ' '.repeat(parent.indent + indentUnit(root));
+  const lines = splitLines(text);
+  lines.splice(insertionLine(parent, Math.min(index, parent.children.length)), 0,
+    ...renamed.map(l => (l.trim() === '' ? l : pad + l)));
+  return { text: lines.join(eol(text)), name: first };
+}
+
+/** Renames a control in the .pform; undefined when the name is not usable. */
+export function renameObject(text: string, oldName: string, newName: string): string | undefined {
+  const root = parseBlocks(text);
+  const block = root && findBlock(root, oldName);
+  if (!root || !block || !/^[A-Za-z_]\w*$/.test(newName)) {
+    return undefined;
+  }
+  if (newName.toLowerCase() !== oldName.toLowerCase() && findBlock(root, newName)) {
+    return undefined;
+  }
+  const lines = splitLines(text);
+  lines[block.start] = lines[block.start].replace(new RegExp(`(object\\s+)${oldName}\\b`, 'i'), `$1${newName}`);
+  return lines.join(eol(text));
+}
+
 export function deleteObject(text: string, name: string): string {
   const root = parseBlocks(text);
   const block = root && findBlock(root, name);
@@ -250,4 +324,15 @@ export function parseValue(raw: string): string {
     return t.substring(1, t.length - 1).replace(/''/g, "'");
   }
   return t;
+}
+
+/** Renames an identifier in Pascal code (not in strings or comments). */
+export function renameIdentifier(pas: string, oldName: string, newName: string): string {
+  const lines = pas.split('\n');
+  const hits = lex(pas).tokens.filter(t => t.kind === 'ident' && !t.file && t.lower === oldName.toLowerCase());
+  for (const t of hits.reverse()) {
+    const l = lines[t.line];
+    lines[t.line] = l.substring(0, t.col) + newName + l.substring(t.col + t.text.length);
+  }
+  return lines.join('\n');
 }

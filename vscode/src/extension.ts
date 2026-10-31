@@ -85,6 +85,7 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('pastel.clean', () => runTask('clean')),
     vscode.commands.registerCommand('pastel.doctor', doctor),
     vscode.commands.registerCommand('pastel.newProject', newProject),
+    vscode.commands.registerCommand('pastel.newForm', newForm),
     vscode.commands.registerCommand('pastel.openPreview', openPreview),
     vscode.commands.registerCommand('pastel.refreshSchema', async () => {
       schema = undefined;
@@ -250,6 +251,33 @@ async function runTask(command: string, opts: { target?: string; release?: boole
     }
   }
   await vscode.tasks.executeTask(makeTask(command, root, opts));
+}
+
+async function newForm(): Promise<void> {
+  const root = await currentProjectRoot();
+  if (!root) {
+    vscode.window.showWarningMessage('Pastel: open a Pastel app first.');
+    return;
+  }
+  const name = await vscode.window.showInputBox({
+    prompt: 'Name of the new form (it is shown with Form.ShowModal or as a dialog)',
+    placeHolder: 'Settings',
+    validateInput: v => (/^[A-Za-z][A-Za-z0-9_]*$/.test(v.trim()) ? undefined : 'Letters and digits, like Settings'),
+  });
+  if (!name) {
+    return;
+  }
+  const r = await runPastel(['new', 'form', name.trim()], root);
+  if (r.code !== 0) {
+    vscode.window.showErrorMessage('Pastel: ' + (r.stderr || r.stdout).replace(/\x1b\[[0-9;]*m/g, '').trim());
+    return;
+  }
+  const base = name.trim().replace(/form$/i, '');
+  const file = path.join(root, 'src', 'forms', base.charAt(0).toUpperCase() + base.slice(1) + '.pform');
+  const doc = await vscode.workspace.openTextDocument(file);
+  await vscode.window.showTextDocument(doc, vscode.ViewColumn.One);
+  vscode.commands.executeCommand('pastel.openPreview', doc.uri);
+  vscode.commands.executeCommand('pastel.refreshTree');
 }
 
 async function buildForPlatform(): Promise<void> {

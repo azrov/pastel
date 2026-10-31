@@ -10,6 +10,8 @@ const
   ProjectKinds: array[0..4] of string = ('console', 'app', 'lib', 'service', 'api');
 
 function CreateProject(const Kind, Name, ParentDir: string): Boolean;
+{ "pastel new form Settings": src/forms/Settings.pform and .pas, created in main.pas. }
+function CreateFormFiles(const Root, Name: string): Boolean;
 
 implementation
 
@@ -1710,6 +1712,107 @@ begin
   else
     WriteLn('    pastel run');
   WriteLn;
+  Result := True;
+end;
+
+function CreateFormFiles(const Root, Name: string): Boolean;
+var
+  Dir, Base, Cls, Main, Src: string;
+  L: TStringList;
+  I, LastCreate, UsesEnd: Integer;
+begin
+  Result := False;
+  Base := Name;
+  if LowerCase(Copy(Base, Length(Base) - 3, 4)) = 'form' then
+    Base := Copy(Base, 1, Length(Base) - 4);
+  if (Base = '') or not IsValidProjectName(Base) or (Pos('-', Base) > 0) then
+  begin
+    Fail(Format('"%s" is not a good form name', [Name]));
+    Hint('use letters and digits, like Settings or OrderDetails');
+    Exit;
+  end;
+  Base := UpCase(Base[1]) + Copy(Base, 2, MaxInt);
+  Cls := 'T' + Base + 'Form';
+  Dir := IncludeTrailingPathDelimiter(Root) + 'src' + PathDelim + 'forms' + PathDelim;
+  if FileExists(Dir + Base + '.pform') or FileExists(Dir + Base + '.pas') then
+  begin
+    Fail(Format('src/forms/%s.pform exists already', [Base]));
+    Exit;
+  end;
+  WriteText(Dir + Base + '.pform',
+    'object ' + Base + 'Form: ' + Cls + LineEnding +
+    '  Title = ''' + Base + '''' + LineEnding +
+    '  Width = 420' + LineEnding +
+    '  Height = 240' + LineEnding +
+    '  object MessageLabel: TLabel' + LineEnding +
+    '    Text = ''' + Base + '''' + LineEnding +
+    '    WordWrap = True' + LineEnding +
+    '  end' + LineEnding +
+    '  object Space: TSpacer' + LineEnding +
+    '  end' + LineEnding +
+    '  object Buttons: TRow' + LineEnding +
+    '    Gap = 8' + LineEnding +
+    '    Justify = End' + LineEnding +
+    '    object CancelButton: TButton' + LineEnding +
+    '      Text = ''Cancel''' + LineEnding +
+    '      Style = Secondary' + LineEnding +
+    '      ModalResult = mrCancel' + LineEnding +
+    '      Cancel = True' + LineEnding +
+    '    end' + LineEnding +
+    '    object OkButton: TButton' + LineEnding +
+    '      Text = ''OK''' + LineEnding +
+    '      ModalResult = mrOk' + LineEnding +
+    '      Default = True' + LineEnding +
+    '    end' + LineEnding +
+    '  end' + LineEnding +
+    'end' + LineEnding);
+  WriteText(Dir + Base + '.pas',
+    '{ The code of the ' + Base + ' form. Show it as a dialog:' + LineEnding + LineEnding +
+    '    if ' + Base + 'Form.ShowModal = mrOk then ...' + LineEnding + LineEnding +
+    '  The buttons close it with their ModalResult. }' + LineEnding +
+    'unit ' + Base + ';' + LineEnding + LineEnding +
+    '{$mode objfpc}{$H+}' + LineEnding + LineEnding +
+    'interface' + LineEnding + LineEnding +
+    'uses' + LineEnding +
+    '  SysUtils, Pastel.UI, ' + Base + '.g;' + LineEnding + LineEnding +
+    'type' + LineEnding +
+    '  ' + Cls + ' = class(' + Cls + 'Base)' + LineEnding +
+    '  end;' + LineEnding + LineEnding +
+    'var' + LineEnding +
+    '  ' + Base + 'Form: ' + Cls + ';' + LineEnding + LineEnding +
+    'implementation' + LineEnding + LineEnding +
+    'end.' + LineEnding);
+  Status('Created', Format('src/forms/%s.pform and %s.pas', [Base, Base]));
+
+  { create it at the start, after the other forms }
+  Main := IncludeTrailingPathDelimiter(Root) + 'src' + PathDelim + 'main.pas';
+  if not FileExists(Main) then
+    Exit(True);
+  L := TStringList.Create;
+  try
+    L.LoadFromFile(Main);
+    LastCreate := -1;
+    UsesEnd := -1;
+    for I := 0 to L.Count - 1 do
+    begin
+      if Pos('application.createform(', LowerCase(L[I])) > 0 then
+        LastCreate := I;
+      if (UsesEnd < 0) and (I > 0) and (Pos(';', L[I]) > 0) and (Pos('uses', LowerCase(Trim(L[I - 1]))) = 1) then
+        UsesEnd := I;
+    end;
+    if (LastCreate < 0) or (UsesEnd < 0) then
+    begin
+      Hint(Format('add to main.pas: uses %s; and Application.CreateForm(%s, %sForm);', [Base, Cls, Base]));
+      Exit(True);
+    end;
+    L.Insert(LastCreate + 1, Format('  Application.CreateForm(%s, %sForm);', [Cls, Base]));
+    Src := L[UsesEnd];
+    L[UsesEnd] := StringReplace(Src, ';', ', ' + Base + ';', []);
+    L.SaveToFile(Main);
+    Status('Updated', 'src/main.pas creates it');
+  finally
+    L.Free;
+  end;
   Result := True;
 end;
 

@@ -1,7 +1,8 @@
 // Unit tests for the designer's .pform edits. Run: npm test
 import * as assert from 'assert';
 import {
-  deleteObject, findBlock, formatValue, insertObject, moveObject, parseBlocks, parseValue, setProperty,
+  deleteObject, extractObject, findBlock, formatValue, insertObject, isObjectText, moveObject, parseBlocks,
+  parseValue, pasteObjects, renameIdentifier, renameObject, setProperty,
 } from '../edit';
 
 let passed = 0;
@@ -134,6 +135,38 @@ test('format and parse values', () => {
   assert.strictEqual(formatValue('enum', 'Center'), 'Center');
   assert.strictEqual(parseValue("'It''s' // c"), "It's");
   assert.strictEqual(parseValue('True'), 'True');
+});
+
+test('copy a control with its children', () => {
+  const t = extractObject(form, 'Buttons')!;
+  assert.strictEqual(t, "object Buttons: TRow\n  object Ok: TButton\n    Text = 'OK'\n  end\nend");
+  assert.ok(isObjectText(t));
+  assert.ok(!isObjectText('hello'));
+  assert.strictEqual(extractObject(form, 'HomeForm'), undefined, 'not the form');
+});
+
+test('paste gives free names and the right indentation', () => {
+  const t = extractObject(form, 'Buttons')!;
+  const r = pasteObjects(form, t, 'HomeForm', 99)!;
+  assert.strictEqual(r.name, 'Buttons1');
+  const root = parseBlocks(r.text)!;
+  assert.ok(findBlock(root, 'Ok1'), 'children renamed too');
+  assert.strictEqual(findBlock(root, 'Buttons1')!.parent!.name, 'HomeForm');
+  assert.ok(r.text.includes("\n  object Buttons1: TRow\n    object Ok1: TButton\n      Text = 'OK'\n    end\n  end\nend"), r.text);
+  assert.strictEqual(pasteObjects(form, 'not an object', 'HomeForm', 0), undefined);
+});
+
+test('rename a control', () => {
+  const t = renameObject(form, 'Ok', 'SaveButton')!;
+  assert.ok(t.includes('object SaveButton: TButton'));
+  assert.strictEqual(renameObject(form, 'Ok', 'Info'), undefined, 'the name is taken');
+  assert.strictEqual(renameObject(form, 'Ok', '1x'), undefined, 'not a Pascal name');
+});
+
+test('rename an identifier in code, not in strings or comments', () => {
+  const pas = "procedure THomeForm.X;\nbegin\n  Ok.Text := 'Ok'; // Ok\n  ok.SetFocus; { Ok }\n  OkDone := True;\nend;";
+  assert.strictEqual(renameIdentifier(pas, 'Ok', 'SaveButton'),
+    "procedure THomeForm.X;\nbegin\n  SaveButton.Text := 'Ok'; // Ok\n  SaveButton.SetFocus; { Ok }\n  OkDone := True;\nend;");
 });
 
 console.log(`edit: ${passed} passed`);

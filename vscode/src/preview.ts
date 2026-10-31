@@ -5,7 +5,8 @@ import * as vscode from 'vscode';
 import { findProjectRoot, runPastel } from './cli';
 import { designerHtml } from './designerHtml';
 import {
-  deleteObject, findBlock, formatValue, insertObject, moveObject, parseBlocks, parseValue, setProperty,
+  deleteObject, extractObject, findBlock, formatValue, insertObject, isObjectText, moveObject, parseBlocks,
+  parseValue, pasteObjects, renameIdentifier, renameObject, setProperty,
 } from './edit';
 import { declaredProcedures, enclosingObjects, findProcedure, Schema, SchemaClass } from './model';
 
@@ -32,6 +33,12 @@ export class FormPreview {
   private readonly imageFile: string;
   private readonly layoutFile: string;
   private readonly disposables: vscode.Disposable[] = [];
+  // the designer's own undo: texts before each change made in the designer
+  private undoStack: string[] = [];
+  private redoStack: string[] = [];
+  private lastApplied: string | undefined;
+  // how the preview is drawn
+  private view: { width: number; height: number; dark: boolean } = { width: 0, height: 0, dark: false };
 
   /** The .pform shown in the designer, if the designer is the active tab. */
   static get activeDocument(): vscode.TextDocument | undefined {
@@ -106,9 +113,14 @@ export class FormPreview {
       const cwd = findProjectRoot(file) ?? path.dirname(file);
       const rel = path.relative(cwd, file);
       this.panel.title = `Design: ${path.basename(file)}`;
-      const result = await runPastel(
-        ['preview', rel, '--stdin', '-o', this.imageFile, '--layout', this.layoutFile, '--json'],
-        cwd, this.document.getText());
+      const args = ['preview', rel, '--stdin', '-o', this.imageFile, '--layout', this.layoutFile, '--json'];
+      if (this.view.width > 0) {
+        args.push('--width', String(this.view.width), '--height', String(this.view.height));
+      }
+      if (this.view.dark) {
+        args.push('--dark');
+      }
+      const result = await runPastel(args, cwd, this.document.getText());
       if (result.code === 0 && fs.existsSync(this.imageFile)) {
         const data = fs.readFileSync(this.imageFile).toString('base64');
         let layout: unknown = undefined;
@@ -164,11 +176,23 @@ export class FormPreview {
     return fs.existsSync(pas) ? fs.readFileSync(pas, 'utf8') : undefined;
   }
 
-  private async applyText(text: string): Promise<void> {
+  private async applyText(text: string, history = true): Promise<void> {
     const old = this.document.getText();
     if (text === old) {
       return;
     }
+    if (history) {
+      // edits typed in the editor since our last change end the designer's history
+      if (this.lastApplied !== undefined && this.lastApplied !== old) {
+        this.undoStack = [];
+      }
+      this.undoStack.push(old);
+      if (this.undoStack.length > 100) {
+        this.undoStack.shift();
+      }
+      this.redoStack = [];
+    }
+    this.lastApplied = text;
     const edit = new vscode.WorkspaceEdit();
     const end = this.document.positionAt(old.length);
     edit.replace(this.document.uri, new vscode.Range(new vscode.Position(0, 0), end), text);
@@ -227,6 +251,96 @@ export class FormPreview {
       case 'move':
         await this.applyText(moveObject(text, m.name, m.parent, m.index));
         this.selected = m.name;
+        break;
+      case 'undo':
+      case 'redo': {
+        const from = m.type === 'undo' ? this.undoStack : this.redoStack;
+        const to = m.type === 'undo' ? this.redoStack : this.undoStack;
+        if (this.lastApplied !== undefined && this.lastApplied !== text) {
+          // changed in the editor meanwhile: the editor's own undo knows best
+          this.undoStack = [];
+          this.redoStack = [];
+          vscode.window.setStatusBarMessage('Pastel: the .pform was edited in the editor; use Undo there', 4000);
+          break;
+        }
+        const prev = from.pop();
+        if (prev === undefined) {
+          break;
+        }
+        to.push(text);
+        await this.applyText(prev, false);
+        break;
+      }
+      case 'copy':
+      case 'cut': {
+        const obj = m.name ? extractObject(text, m.name) : undefined;
+        if (obj) {
+          await vscode.env.clipboard.writeText(obj);
+          if (m.type === 'cut') {
+            const root = parseBlocks(text);
+            this.selected = (root && findBlock(root, m.name))?.parent?.name;
+            await this.applyText(deleteObject(text, m.name));
+          }
+        }
+        break;
+      }
+      case 'paste':
+      case 'duplicate': {
+        const clip = m.type === 'duplicate' ? (m.name ? extractObject(text, m.name) : undefined)
+          : await vscode.env.clipboard.readText();
+        if (!clip || !isObjectText(clip)) {
+          break;
+        }
+        const root = parseBlocks(text);
+        const sel = root && (m.name ? findBlock(root, m.name) : root);
+        if (!root || !sel) {
+          break;
+        }
+        // into a selected container (paste), else after the selected control
+        const info = (await this.services.loadSchema())?.controls.find(c => c.name.toLowerCase() === sel.className.toLowerCase());
+        const intoSel = sel === root || (m.type === 'paste' && info?.container);
+        const parent = intoSel ? sel : sel.parent!;
+        const index = intoSel ? parent.children.length : parent.children.indexOf(sel) + 1;
+        const r = pasteObjects(text, clip, parent.name, index);
+        if (r) {
+          this.selected = r.name;
+          await this.applyText(r.text);
+        }
+        break;
+      }
+      case 'rename': {
+        let newName: string | undefined = m.newName;
+        if (newName === undefined) {
+          newName = await vscode.window.showInputBox({ prompt: `New name for ${m.name}`, value: m.name });
+        }
+        if (!newName || newName === m.name) {
+          break;
+        }
+        const renamed = renameObject(text, m.name, newName);
+        if (!renamed) {
+          vscode.window.showErrorMessage(`Pastel: "${newName}" cannot be used: it is not a Pascal name or the form has it already.`);
+          await this.sendSelection();
+          break;
+        }
+        await this.applyText(renamed);
+        this.selected = newName;
+        // the form's code uses the control by name too
+        const pasPath = this.document.uri.fsPath.replace(/\.pform$/i, '.pas');
+        const pas = this.formUnitText();
+        if (pas) {
+          const newPas = renameIdentifier(pas, m.name, newName);
+          if (newPas !== pas) {
+            const doc = await vscode.workspace.openTextDocument(pasPath);
+            const edit = new vscode.WorkspaceEdit();
+            edit.replace(doc.uri, new vscode.Range(new vscode.Position(0, 0), doc.positionAt(doc.getText().length)), newPas);
+            await vscode.workspace.applyEdit(edit);
+          }
+        }
+        break;
+      }
+      case 'view':
+        this.view = { width: Number(m.width) || 0, height: Number(m.height) || 0, dark: !!m.dark };
+        this.schedule(0);
         break;
       case 'delete': {
         const root = parseBlocks(text);

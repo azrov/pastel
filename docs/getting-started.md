@@ -161,6 +161,7 @@ switches between form and code. See [forms.md](forms.md).
 |---|---|
 | [guide-cli.md](guide-cli.md) | Writing a command-line tool, step by step |
 | [guide-api.md](guide-api.md) | A REST API with a database, from start to a server |
+| [guide-desktop.md](guide-desktop.md) | A desktop app: menus, dialogs, windows, SQLite; all controls |
 | [console.md](console.md) | Arguments, colors, tables, questions |
 | [data.md](data.md) | JSON, settings, logging |
 | [system.md](system.md) | Files, other programs, HTTP |
@@ -174,4 +175,4 @@ switches between form and code. See [forms.md](forms.md).
 | [security.md](security.md) | Passwords, tokens, JWT |
 | [testing.md](testing.md) | Tests |
 | [forms.md](forms.md) | Desktop apps: forms and controls |
-| `examples/` | Complete programs: `dupfinder` (files), `weather` (calls a web API), `notes-api` (is a web API) |
+| `examples/` | Complete programs: `dupfinder` (files), `weather` (calls a web API), `notes-api` (is a web API), `contacts` (desktop address book with SQLite), `notepad` (desktop text editor) |

@@ -26,6 +26,11 @@ procedure RegisterFormSource(const AFormClassName, ASource, AFilePath: string);
 { The registered source for a form, searching its class hierarchy. }
 function FindFormSource(Form: TForm): TFormSource;
 
+{ What the user changed in the controls (typed text, checked boxes, chosen
+  items, the page of tabs), by control name; hot reload puts it back. }
+function CaptureState(Form: TForm): TStringList;
+procedure RestoreState(Form: TForm; State: TStringList);
+
 { Creates the controls described by Root on Form, then binds fields.
   Raises EPFormError on problems (unknown type, property or event). }
 procedure BuildForm(Form: TForm; Root: TPFormNode);
@@ -247,7 +252,26 @@ begin
         end
         else
         begin
-          if (P.Kind <> pvNumber) or not TryStrToInt64(P.Value, N) then
+          { ModalResult = mrOk }
+          if (P.Kind = pvIdent) and SameText(Copy(P.Value, 1, 2), 'mr') then
+          begin
+            N := -1;
+            case LowerCase(P.Value) of
+              'mrnone': N := 0;
+              'mrok': N := 1;
+              'mrcancel': N := 2;
+              'mrabort': N := 3;
+              'mrretry': N := 4;
+              'mrignore': N := 5;
+              'mryes': N := 6;
+              'mrno': N := 7;
+              'mrclose': N := 8;
+            end;
+            if N < 0 then
+              Fail(Format('%s: "%s" is not one of mrOk, mrCancel, mrYes, mrNo, mrAbort, mrRetry, mrIgnore, mrClose',
+                [P.Name, P.Value]));
+          end
+          else if (P.Kind <> pvNumber) or not TryStrToInt64(P.Value, N) then
             Fail(Format('%s expects a whole number', [P.Name]));
           SetOrdProp(Instance, PI, N);
         end;
@@ -374,9 +398,71 @@ begin
   end;
 end;
 
+const
+  StateProps: array[0..5] of string = ('Text', 'Checked', 'ItemIndex', 'Position', 'TabIndex', 'SelStart');
+
+function KeepsState(C: TComponent; const Prop: string): Boolean;
+begin
+  { text the user typed, not texts the .pform sets (labels, buttons) }
+  if Prop = 'Text' then
+    Result := C is TCustomEdit
+  else if Prop = 'SelStart' then
+    Result := False
+  else
+    Result := IsPublishedProp(C, Prop);
+end;
+
+function CaptureState(Form: TForm): TStringList;
+var
+  I: Integer;
+  C: TComponent;
+  P: string;
+begin
+  Result := TStringList.Create;
+  for I := 0 to Form.ComponentCount - 1 do
+  begin
+    C := Form.Components[I];
+    if (C.Name = '') or not (C is TControl) then
+      Continue;
+    for P in StateProps do
+      if KeepsState(C, P) then
+        Result.Values[C.Name + '.' + C.ClassName + '.' + P] := GetPropValue(C, P, True);
+  end;
+end;
+
+procedure RestoreState(Form: TForm; State: TStringList);
+var
+  I: Integer;
+  Parts: TStringArray;
+  C: TComponent;
+begin
+  for I := 0 to State.Count - 1 do
+  begin
+    Parts := State.Names[I].Split(['.']);
+    if Length(Parts) <> 3 then
+      Continue;
+    C := Form.FindComponent(Parts[0]);
+    { only the same kind of control gets its state back }
+    if (C = nil) or (C.ClassName <> Parts[1]) or not IsPublishedProp(C, Parts[2]) then
+      Continue;
+    try
+      SetPropValue(C, Parts[2], State.ValueFromIndex[I]);
+    except
+      { a value that does not fit any more (an item index out of range...) }
+    end;
+  end;
+end;
+
 procedure BuildForm(Form: TForm; Root: TPFormNode);
 begin
   PendingRefs := nil;
+  { scripts and FindComponent know the form by its .pform name }
+  if (Form.Name = '') and IsValidIdent(Root.Name) then
+  try
+    Form.Name := Root.Name;
+  except
+    on EComponentError do ;
+  end;
   SetProps(Form, Form, Root);
   BuildChildren(Form, Form, Root);
   ResolvePendingRefs(Form);

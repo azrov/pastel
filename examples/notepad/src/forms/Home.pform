@@ -1,0 +1,74 @@
+object HomeForm: THomeForm
+  Title = 'Untitled - Notepad'
+  Width = 720
+  Height = 480
+  Padding = 0
+  Gap = 0
+  OnCreate = FormCreate
+  OnCloseQuery = FormCloseQuery
+  object MainMenu: TMenuBar
+    object FileMenu: TMenuItem
+      Caption = 'File'
+      object NewItem: TMenuItem
+        Caption = 'New'
+        ShortCut = 'Ctrl+N'
+        OnClick = NewClick
+      end
+      object OpenItem: TMenuItem
+        Caption = 'Open...'
+        ShortCut = 'Ctrl+O'
+        OnClick = OpenClick
+      end
+      object SaveItem: TMenuItem
+        Caption = 'Save'
+        ShortCut = 'Ctrl+S'
+        OnClick = SaveClick
+      end
+      object SaveAsItem: TMenuItem
+        Caption = 'Save as...'
+        ShortCut = 'Ctrl+Shift+S'
+        OnClick = SaveAsClick
+      end
+      object Sep1: TMenuItem
+        Caption = '-'
+      end
+      object QuitItem: TMenuItem
+        Caption = 'Quit'
+        ShortCut = 'Ctrl+Q'
+        OnClick = QuitClick
+      end
+    end
+    object ViewMenu: TMenuItem
+      Caption = 'View'
+      object WrapItem: TMenuItem
+        Caption = 'Word wrap'
+        Checked = True
+        OnClick = WrapClick
+      end
+      object DarkItem: TMenuItem
+        Caption = 'Dark'
+        OnClick = DarkClick
+      end
+    end
+  end
+  object Editor: TMemo
+    Grow = 1
+    WordWrap = True
+    Placeholder = 'Start typing...'
+    OnChange = EditorChange
+  end
+  object StatusBar: TRow
+    Padding = 6
+    Gap = 16
+    object StatusLabel: TLabel
+      Text = 'new file'
+      FontSize = 12
+    end
+    object Spacer: TSpacer
+    end
+    object CountLabel: TLabel
+      Text = '0 words, 1 lines'
+      FontSize = 12
+    end
+  end
+end

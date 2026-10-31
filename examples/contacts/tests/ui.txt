@@ -1,0 +1,31 @@
+# The address book, driven like a user would (run by tests/run.sh):
+#   CONTACTS_DB=/tmp/c.db PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT=tests/ui.txt ./build/linux/debug/contacts
+expect CountLabel no contacts
+type NameEdit Ayşe Yılmaz
+type PhoneEdit 0532 111 22 33
+type EmailEdit ayse@example.com
+click SaveButton
+expect CountLabel 1 contact
+expect ContactList.ItemIndex 0
+key ctrl+n
+expect NameEdit 
+type NameEdit Ali Can
+type EmailEdit not-an-address
+click SaveButton
+expect MessageText "not-an-address" is not an e-mail address
+click OkButton
+click EmailEdit
+key ctrl+a
+type EmailEdit ali@example.com\n
+expect CountLabel 2 contacts
+expect ContactList.ItemIndex 0
+type SearchEdit ayşe
+expect ContactList.ItemIndex -1
+click ContactList 20 10
+expect NameEdit Ayşe Yılmaz
+expect PhoneEdit 0532 111 22 33
+key ctrl+d
+expect MessageText Delete Ayşe Yılmaz?
+click YesButton
+expect CountLabel 1 contact
+quit

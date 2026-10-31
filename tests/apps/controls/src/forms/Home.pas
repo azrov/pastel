@@ -5,7 +5,7 @@ unit Home;
 interface
 
 uses
-  SysUtils, Pastel.UI, Pastel.Dialogs, Home.g;
+  SysUtils, Pastel.UI, Pastel.Dialogs, Settings, Home.g;
 
 type
   THomeForm = class(THomeFormBase)
@@ -21,6 +21,7 @@ type
     procedure SizeChange(Sender: TObject);
     procedure VolumeChange(Sender: TObject);
     procedure PeopleDblClick(Sender: TObject);
+    procedure SettingsClick(Sender: TObject);
   private
     FTicks: Integer;
   end;
@@ -98,6 +99,14 @@ end;
 procedure THomeForm.VolumeChange(Sender: TObject);
 begin
   Progress.Position := Volume.Position;
+end;
+
+procedure THomeForm.SettingsClick(Sender: TObject);
+begin
+  if SettingsForm.ShowModal = mrOk then
+    Status.Text := 'settings ok'
+  else
+    Status.Text := 'settings cancelled';
 end;
 
 procedure THomeForm.PeopleDblClick(Sender: TObject);

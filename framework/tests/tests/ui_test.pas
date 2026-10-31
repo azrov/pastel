@@ -43,12 +43,15 @@ type
     procedure RightClickAsksForTheMenu;
     procedure DarkTheme;
     procedure ControlNamesMustNotHideFormProperties;
+    procedure HotReloadKeepsWhatTheUserDid;
+    procedure ListsAndReferencesInPForms;
+    procedure CanvasScales;
   end;
 
 implementation
 
 uses
-  Pastel.PForm, Pastel.Forms;
+  Pastel.PForm, Pastel.Forms, Pastel.Controls, Pastel.Menus;
 
 var
   Clip: string;
@@ -557,6 +560,83 @@ begin
   finally
     F.Free;
     Root.Free;
+  end;
+end;
+
+procedure TUITests.HotReloadKeepsWhatTheUserDid;
+const
+  V1 = 'object F: TForm'#10'  object Name: TEdit'#10'  end'#10'  object Agree: TCheckBox'#10'  end'#10 +
+    '  object Size: TComboBox'#10'    Items = (''S'', ''M'', ''L'')'#10'  end'#10'  object Caption1: TLabel'#10 +
+    '    Text = ''old'''#10'  end'#10'end';
+  V2 = 'object F: TForm'#10'  object Name: TCheckBox'#10'  end'#10'  object Agree: TCheckBox'#10'    Text = ''I agree'''#10 +
+    '  end'#10'  object Size: TComboBox'#10'    Items = (''S'', ''M'', ''L'')'#10'  end'#10'  object Caption1: TLabel'#10 +
+    '    Text = ''new'''#10'  end'#10'end';
+var
+  Root: TPFormNode;
+  F: TForm;
+  State: TStringList;
+begin
+  F := TForm.Create(nil);
+  State := nil;
+  try
+    Root := ParsePForm(StringReplace(V1, 'object Name:', 'object NameEdit:', []));
+    BuildForm(F, Root);
+    Root.Free;
+    TEdit(F.FindComponent('NameEdit')).Text := 'typed';
+    TCheckBox(F.FindComponent('Agree')).Checked := True;
+    TComboBox(F.FindComponent('Size')).ItemIndex := 2;
+    State := CaptureState(F);
+    F.ClearControls;
+    Root := ParsePForm(StringReplace(V2, 'object Name:', 'object NameEdit:', []));
+    BuildForm(F, Root);
+    Root.Free;
+    RestoreState(F, State);
+    AssertTrue(TCheckBox(F.FindComponent('Agree')).Checked, 'checked stays');
+    AssertEquals(2, TComboBox(F.FindComponent('Size')).ItemIndex, 'the choice stays');
+    AssertEquals('new', TLabel(F.FindComponent('Caption1')).Text, 'texts from the .pform change');
+    AssertFalse(TCheckBox(F.FindComponent('NameEdit')).Checked, 'another kind of control starts fresh');
+  finally
+    State.Free;
+    F.Free;
+  end;
+end;
+
+procedure TUITests.ListsAndReferencesInPForms;
+var
+  Root: TPFormNode;
+  F: TForm;
+begin
+  Root := ParsePForm('object F: TForm'#10'  object L: TListBox'#10'    Items = ('#10'      ''a'','#10'      ''b c'')'#10 +
+    '    PopupMenu = M'#10'  end'#10'  object M: TPopupMenu'#10'  end'#10'  object T: TTimer'#10'    Interval = 250'#10'  end'#10'end');
+  F := TForm.Create(nil);
+  try
+    BuildForm(F, Root);
+    AssertEquals(2, TListBox(F.FindComponent('L')).Items.Count);
+    AssertEquals('b c', TListBox(F.FindComponent('L')).Items[1]);
+    AssertTrue(TListBox(F.FindComponent('L')).PopupMenu = F.FindComponent('M'), 'a reference to a later component');
+    AssertEquals(250, TTimer(F.FindComponent('T')).Interval, 'a non-visual component');
+  finally
+    F.Free;
+    Root.Free;
+  end;
+end;
+
+procedure TUITests.CanvasScales;
+var
+  C: TCanvas32;
+begin
+  C := TCanvas32.Create;
+  try
+    C.Scale := 2;
+    C.SetSize(50, 40);
+    AssertEquals(100, C.PixelWidth);
+    AssertEquals(50, C.Width, 'layout units stay');
+    C.Clear(RGB(255, 255, 255));
+    C.FillRect(10, 10, 5, 5, RGB(255, 0, 0));
+    AssertEquals(Cardinal(RGB(255, 0, 0)), Cardinal(C.GetPixel(12, 12)));
+    AssertEquals(Cardinal(RGB(255, 255, 255)), Cardinal(C.GetPixel(16, 12)), 'right of it');
+  finally
+    C.Free;
   end;
 end;
 

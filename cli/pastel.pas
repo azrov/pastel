@@ -8,7 +8,7 @@ uses
   Classes, SysUtils,
   Pastel.Console, Pastel.Toml, Pastel.Project, Pastel.Targets,
   Pastel.Builder, Pastel.Templates, Pastel.Doctor, Pastel.Inspect, Pastel.TestCmd,
-  Pastel.Watch, Pastel.FmtCmd, Pastel.Package, Pastel.MigrateCmd, RegExpr;
+  Pastel.Watch, Pastel.FmtCmd, Pastel.Package, Pastel.MigrateCmd, Pastel.UI, RegExpr;
 
 const
   ExitOk = 0;
@@ -21,7 +21,7 @@ type
     Positional: TStringArray;   { arguments that are not options }
     PassThrough: TStringArray;  { everything after "--" }
     Target: string;
-    Release, Verbose, All, Help, Watch, Check, NoBuild: Boolean;
+    Release, Verbose, All, Help, Watch, Check, NoBuild, Dark: Boolean;
     Json, Stdin, NoRun: Boolean;
     Output, Layout, Database: string;
     Width, Height: Integer;
@@ -110,6 +110,8 @@ begin
       CL.All := True
     else if A = '--no-build' then
       CL.NoBuild := True
+    else if A = '--dark' then
+      CL.Dark := True
     else if (A = '-w') or (A = '--watch') then
       CL.Watch := True
     else if A = '--no-run' then
@@ -180,7 +182,19 @@ begin
 end;
 
 function CmdNew(const CL: TCommandLine): Integer;
+var
+  Root: string;
 begin
+  if (Length(CL.Positional) = 2) and SameText(CL.Positional[0], 'form') then
+  begin
+    Root := TPastelProject.FindRoot(GetCurrentDir);
+    if Root = '' then
+    begin
+      Fail('"pastel new form" adds a form to an app: run it in the app''s folder');
+      Exit(ExitError);
+    end;
+    if CreateFormFiles(Root, CL.Positional[1]) then Exit(ExitOk) else Exit(ExitError);
+  end;
   case Length(CL.Positional) of
     1: if CreateProject('console', CL.Positional[0], GetCurrentDir) then Exit(ExitOk);
     2: if CreateProject(LowerCase(CL.Positional[0]), CL.Positional[1], GetCurrentDir) then Exit(ExitOk);
@@ -578,6 +592,8 @@ begin
   OutFile := CL.Output;
   if OutFile = '' then
     OutFile := ChangeFileExt(ExtractFileName(CL.Positional[0]), '.png');
+  if CL.Dark then
+    UseDarkTheme(True);
   Err := PreviewForm(CL.Positional[0], Text, OutFile, CL.Layout, CL.Width, CL.Height);
   if Err <> '' then
   begin

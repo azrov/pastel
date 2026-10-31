@@ -1,0 +1,26 @@
+object SettingsForm: TSettingsForm
+  Title = 'Settings'
+  Width = 420
+  Height = 240
+  object MessageLabel: TLabel
+    Text = 'Settings'
+    WordWrap = True
+  end
+  object Space: TSpacer
+  end
+  object Buttons: TRow
+    Gap = 8
+    Justify = End
+    object CancelButton: TButton
+      Text = 'Cancel'
+      Style = Secondary
+      ModalResult = mrCancel
+      Cancel = True
+    end
+    object OkButton: TButton
+      Text = 'OK'
+      ModalResult = mrOk
+      Default = True
+    end
+  end
+end

@@ -40,7 +40,7 @@ tail -1 "$WORK/framework.log"
 
 
 echo "== examples"
-for ex in dupfinder weather notes-api; do
+for ex in dupfinder weather notes-api contacts notepad; do
   rm -rf "$WORK/ex-$ex" && cp -r "examples/$ex" "$WORK/ex-$ex" && rm -rf "$WORK/ex-$ex/build"
   out="$(cd "$WORK/ex-$ex" && "$PASTEL" test 2>&1)" || { echo "$out"; exit 1; }
   echo "$ex: $(echo "$out" | tail -1)"
@@ -69,6 +69,18 @@ pkill -TERM -x notes-api || true
 for i in $(seq 50); do grep -q "notes-api stopped" "$WORK/notes.log" && break; sleep 0.1; done
 expect "notes-api stops cleanly"         'grep -q "notes-api stopped" "$WORK/notes.log"'
 expect "notes-api keeps the notes"       'grep -q "Alışveriş" "$WORK/ex-notes-api/data/notes.json"'
+(cd "$WORK/ex-contacts" && "$PASTEL" build >/dev/null)
+rm -f "$WORK/contacts.db"
+set +e; out="$(cd "$WORK/ex-contacts" && CONTACTS_DB="$WORK/contacts.db" PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT=tests/ui.txt ./build/*/debug/contacts 2>&1)"; code=$?; set -e
+expect "contacts adds, finds and deletes" '[ "$code" = 0 ] && ! echo "$out" | grep -q FAIL'
+[ "$code" = 0 ] || echo "$out" | grep -v "^ok" | head
+expect "contacts keeps them in SQLite"   '[ -s "$WORK/contacts.db" ]'
+(cd "$WORK/ex-notepad" && "$PASTEL" build >/dev/null)
+rm -rf "$WORK/np" && mkdir "$WORK/np"
+set +e; out="$(cd "$WORK/np" && PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT="$WORK/ex-notepad/tests/ui.txt" "$WORK"/ex-notepad/build/*/debug/notepad 2>&1)"; code=$?; set -e
+expect "notepad saves, opens, asks"      '[ "$code" = 0 ] && ! echo "$out" | grep -q FAIL'
+[ "$code" = 0 ] || echo "$out" | grep -v "^ok" | head
+expect "notepad wrote the file"          'grep -q "second line" "$WORK/np/hello.txt"'
 echo "== end-to-end tests"
 cd "$WORK"
 
@@ -537,14 +549,18 @@ mv Home.bak src/forms/Home.pform
 # --- all the controls, menus and dialogs (tests/apps/controls) ---
 cd "$WORK"
 "$PASTEL" new app controls-demo >/dev/null
-cp "$ROOT/tests/apps/controls/Home.pform" "$ROOT/tests/apps/controls/Home.pas" controls-demo/src/forms/
-mkdir -p controls-demo/assets && cp "$ROOT/tests/apps/controls/logo.png" controls-demo/assets/
+cp -r "$ROOT/tests/apps/controls/src" "$ROOT/tests/apps/controls/assets" controls-demo/
 cd controls-demo
 "$PASTEL" build >/dev/null
 set +e; out="$(PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT="$ROOT/tests/apps/controls/ui.txt" ./build/*/debug/controls-demo 2>&1)"; code=$?; set -e
 expect "controls, menus and dialogs work"  '[ "$code" = 0 ] && ! echo "$out" | grep -q FAIL'
 [ "$code" = 0 ] || echo "$out" | grep -v "^ok" | head -20
 expect "the dialogs answered"           'echo "$out" | grep -q "ok: Status = \"new my note\"" && echo "$out" | grep -q "ok: MessageText"'
+"$PASTEL" build --release >/dev/null
+printf 'expect Logo.LoadError \nexpect Logo.Fit ifContain\n' > "$WORK/asset.txt"
+set +e; out="$(cd "$WORK" && PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT="$WORK/asset.txt" "$WORK/controls-demo/build/linux/release/controls-demo" 2>&1)"; code=$?; set -e
+expect "a release build carries its assets"  '[ "$code" = 0 ] && echo "$out" | grep -q "ok: Logo.LoadError"'
+expect "assets are compiled in"         'grep -q "RegisterAsset(.logo.png., @Asset0" build/linux/release/gen/appassets.pas'
 cd "$WORK/gui-demo"
 
 # --- window events ---

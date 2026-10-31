@@ -24,6 +24,7 @@ const
   SDL_WINDOW_MAXIMIZED = $00000080;
   SDL_WINDOW_FULLSCREEN_DESKTOP = $00001001;
   SDL_WINDOW_ALWAYS_ON_TOP = $00008000;
+  SDL_WINDOW_ALLOW_HIGHDPI = $00002000;
 
   SDL_RENDERER_SOFTWARE = $00000001;
   SDL_RENDERER_ACCELERATED = $00000002;
@@ -180,6 +181,13 @@ var
   SDL_DestroyWindow: procedure(window: PSDL_Window); cdecl;
   SDL_SetWindowTitle: procedure(window: PSDL_Window; title: PChar); cdecl;
   SDL_GetWindowSize: procedure(window: PSDL_Window; w, h: PLongInt); cdecl;
+  SDL_SetWindowSize: procedure(window: PSDL_Window; w, h: LongInt); cdecl;
+  SDL_SetWindowIcon: procedure(window: PSDL_Window; icon: Pointer); cdecl;
+  SDL_CreateRGBSurfaceFrom: function(pixels: Pointer; width, height, depth, pitch: LongInt;
+    Rmask, Gmask, Bmask, Amask: LongWord): Pointer; cdecl;
+  SDL_FreeSurface: procedure(surface: Pointer); cdecl;
+  { optional }
+  SDL_GetDisplayDPI: function(displayIndex: LongInt; ddpi, hdpi, vdpi: PSingle): LongInt; cdecl;
   SDL_SetWindowMinimumSize: procedure(window: PSDL_Window; w, h: LongInt); cdecl;
   SDL_GetWindowFlags: function(window: PSDL_Window): LongWord; cdecl;
   SDL_MaximizeWindow: procedure(window: PSDL_Window); cdecl;
@@ -272,6 +280,11 @@ begin
   Bind(SDL_DestroyWindow, 'SDL_DestroyWindow');
   Bind(SDL_SetWindowTitle, 'SDL_SetWindowTitle');
   Bind(SDL_GetWindowSize, 'SDL_GetWindowSize');
+  Bind(SDL_SetWindowSize, 'SDL_SetWindowSize');
+  Bind(SDL_SetWindowIcon, 'SDL_SetWindowIcon');
+  Bind(SDL_CreateRGBSurfaceFrom, 'SDL_CreateRGBSurfaceFrom');
+  Bind(SDL_FreeSurface, 'SDL_FreeSurface');
+  Pointer(SDL_GetDisplayDPI) := GetProcedureAddress(LibHandle, 'SDL_GetDisplayDPI');
   Bind(SDL_SetWindowMinimumSize, 'SDL_SetWindowMinimumSize');
   Bind(SDL_GetWindowFlags, 'SDL_GetWindowFlags');
   Bind(SDL_MaximizeWindow, 'SDL_MaximizeWindow');

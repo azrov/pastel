@@ -40,6 +40,9 @@ export function designerHtml(nonce: string): string {
   button { background: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; padding: 4px 10px; cursor: pointer; font: inherit; }
   button.secondary { background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); }
   button.small { padding: 2px 6px; }
+  h3 input.name { font: inherit; font-weight: 600; width: 100%; box-sizing: border-box; background: transparent;
+    color: inherit; border: 1px solid transparent; padding: 2px 4px; }
+  h3 input.name:hover, h3 input.name:focus { border-color: var(--vscode-input-border, #888); background: var(--vscode-input-background); }
   .section { margin: 12px 0 6px; font-size: 11px; text-transform: uppercase; opacity: .7; }
   .empty { opacity: .7; }
   .error { display: none; margin: 0 16px 16px; padding: 10px 12px; border-radius: 6px; white-space: pre-wrap;
@@ -51,7 +54,17 @@ export function designerHtml(nonce: string): string {
 </head>
 <body>
   <div class="toolbar" id="toolbox"><span class="hint">Drag a control onto the form</span>
-    <label><input type="checkbox" id="actual"> Actual size</label></div>
+    <select id="size" title="Preview size">
+      <option value="0x0">Form size</option>
+      <option value="360x640">Phone 360 × 640</option>
+      <option value="768x1024">Tablet 768 × 1024</option>
+      <option value="1280x800">Laptop 1280 × 800</option>
+      <option value="1920x1080">Full HD 1920 × 1080</option>
+    </select>
+    <label><input type="checkbox" id="dark"> Dark</label>
+    <label><input type="checkbox" id="actual"> Actual size</label>
+    <button class="secondary small" id="undo" title="Undo (Ctrl+Z)">↶</button>
+    <button class="secondary small" id="redo" title="Redo (Ctrl+Y)">↷</button></div>
   <div class="error" id="error"></div>
   <div class="main">
     <div class="stage" id="stage"><img id="img" alt="" draggable="false"></div>
@@ -66,6 +79,14 @@ export function designerHtml(nonce: string): string {
   let layout = null, selected = null, selection = null, hoverName = null, drag = null;
   let controlsInfo = [];
 
+  function sendView() {
+    const [w, h] = document.getElementById('size').value.split('x').map(Number);
+    vscode.postMessage({ type: 'view', width: w, height: h, dark: document.getElementById('dark').checked });
+  }
+  document.getElementById('size').addEventListener('change', sendView);
+  document.getElementById('dark').addEventListener('change', sendView);
+  document.getElementById('undo').addEventListener('click', () => vscode.postMessage({ type: 'undo' }));
+  document.getElementById('redo').addEventListener('click', () => vscode.postMessage({ type: 'redo' }));
   document.getElementById('actual').addEventListener('change', e => {
     document.body.classList.toggle('actual', e.target.checked);
     drawBoxes();
@@ -184,10 +205,27 @@ export function designerHtml(nonce: string): string {
     drawBoxes();
   });
   window.addEventListener('keydown', e => {
-    if ((e.key === 'Delete' || e.key === 'Backspace') && selected && document.activeElement.tagName !== 'INPUT'
-        && document.activeElement.tagName !== 'SELECT') {
+    const typing = document.activeElement && ['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName);
+    if ((e.key === 'Delete' || e.key === 'Backspace') && selected && !typing) {
       const c = byName(selected);
       if (c && c.parent) vscode.postMessage({ type: 'delete', name: selected });
+    }
+    const mod = e.ctrlKey || e.metaKey;
+    if (mod && !typing) {
+      const k = e.key.toLowerCase();
+      const cmd = k === 'z' ? (e.shiftKey ? 'redo' : 'undo') : k === 'y' ? 'redo' : k === 'c' ? 'copy' :
+        k === 'x' ? 'cut' : k === 'v' ? 'paste' : k === 'd' ? 'duplicate' : null;
+      if (cmd) {
+        e.preventDefault();
+        const c = selected && byName(selected);
+        // copying and cutting the form itself makes no sense
+        if ((cmd === 'copy' || cmd === 'cut' || cmd === 'duplicate') && !(c && c.parent)) return;
+        vscode.postMessage({ type: cmd, name: selected });
+      }
+    }
+    if (e.key === 'F2' && selected && !typing) {
+      const c = byName(selected);
+      if (c && c.parent) vscode.postMessage({ type: 'rename', name: selected });
     }
     if (e.key === 'Escape') { drag = null; drawBoxes(); }
   });
@@ -293,7 +331,16 @@ export function designerHtml(nonce: string): string {
     }
     propsEl.innerHTML = '';
     if (!sel) { propsEl.innerHTML = '<div class="empty">Click a control to edit it.</div>'; return; }
-    const h = document.createElement('h3'); h.textContent = sel.name;
+    const h = document.createElement('h3');
+    if (sel.isRoot) {
+      h.textContent = sel.name;
+    } else {
+      // the name can be changed here: the form's code follows
+      const nm = document.createElement('input'); nm.value = sel.name; nm.className = 'name'; nm.title = 'Rename (F2): the code in the .pas file is updated too';
+      nm.addEventListener('change', () => vscode.postMessage({ type: 'rename', name: sel.name, newName: nm.value.trim() }));
+      nm.addEventListener('keydown', e => { if (e.key === 'Enter') nm.blur(); if (e.key === 'Escape') { nm.value = sel.name; nm.blur(); } });
+      h.appendChild(nm);
+    }
     const cls = document.createElement('div'); cls.className = 'cls'; cls.textContent = sel.className;
     propsEl.append(h, cls);
     const dl = document.createElement('datalist'); dl.id = 'handlers';

@@ -148,7 +148,9 @@ const webviewMessages: any[] = [];
 const listeners: Record<string, ((e: any) => void)[]> = {};
 const on = (name: string) => (fn: (e: any) => void) => { (listeners[name] ??= []).push(fn); return { dispose() {} }; };
 
+let clip = '';
 const vscodeFake = {
+  env: { clipboard: { writeText: async (t: string) => { clip = t; }, readText: async () => clip } },
   Position, Range, Selection, SnippetString, CompletionItem, MarkdownString, Hover, Location, Diagnostic,
   CompletionList, SignatureHelp, SignatureInformation, ParameterInformation,
   CodeAction, DocumentSymbol, Uri, Task, ProcessExecution, TextEdit, TestMessage,
@@ -263,7 +265,8 @@ const vscodeFake = {
     onDidSaveTextDocument: on('save'),
     onDidChangeTextDocument: on('change'),
     onDidCloseTextDocument: on('close'),
-    openTextDocument: async (uri: Uri) => {
+    openTextDocument: async (u: Uri | string) => {
+      const uri = typeof u === 'string' ? Uri.file(u) : u;
       let d = docs.find(x => x.uri.fsPath === uri.fsPath);
       if (!d) { d = new FakeDocument(uri, uri.fsPath.endsWith('.pform') ? 'pform' : 'pascal', fs.readFileSync(uri.fsPath, 'utf8')); docs.push(d); }
       return d;
@@ -470,6 +473,28 @@ async function main() {
     assert.strictEqual(home.label, 'Home');
     assert.strictEqual(home.command.command, 'pastel.openPreview');
     assert.deepStrictEqual(home.children.map((n: any) => n.label), ['Home.pform', 'Home.pas']);
+  });
+
+  await test('designer: copy, paste, duplicate, rename with code, undo', async () => {
+    const before = pform.getText();
+    const pasBefore = fs.readFileSync(pasPath, 'utf8');
+    await send({ type: 'copy', name: 'SendButton' });
+    assert.ok(/^object SendButton: TButton/.test(clip), clip);
+    await send({ type: 'duplicate', name: 'SendButton' });
+    assert.ok(/object SendButton1: TButton/.test(pform.getText()), pform.getText());
+    await send({ type: 'undo' });
+    assert.strictEqual(pform.getText(), before, 'undo takes the copy away');
+    await send({ type: 'redo' });
+    assert.ok(/object SendButton1: TButton/.test(pform.getText()), 'redo');
+    await send({ type: 'undo' });
+    await send({ type: 'rename', name: 'NameEdit', newName: 'FullNameEdit' });
+    assert.ok(pform.getText().includes('object FullNameEdit: TEdit'));
+    const pasDoc2 = docs.find(x => x.uri.fsPath === pasPath)!;
+    assert.ok(/FullNameEdit\.Text/.test(pasDoc2.getText()) && !/\bNameEdit\.Text/.test(pasDoc2.getText()),
+      'the code follows: ' + pasDoc2.getText());
+    pform.setText(before);
+    pasDoc2.setText(pasBefore);
+    fs.writeFileSync(pasPath, pasBefore);
   });
 
   await test('sidebar shows routes, jobs and migrations', async () => {

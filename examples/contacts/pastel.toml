@@ -1,0 +1,17 @@
+# Example: a desktop address book that keeps its contacts in SQLite.
+# Try it: pastel run
+
+[project]
+name = "contacts"
+version = "1.0.0"
+type = "app"
+
+[build]
+main = "src/main.pas"
+mode = "objfpc"
+
+[targets]
+platforms = ["linux", "windows"]
+
+[package]
+include = ["README.md"]

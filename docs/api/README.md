@@ -6,6 +6,7 @@ Made from the declarations and comments in `framework/src` (`npm run apidoc` in 
 |---|---|
 | [Pastel.App](pastel.app.md) | The application: window, event loop, hot reload. |
 | [Pastel.Args](pastel.args.md) | Command-line arguments. |
+| [Pastel.Assets](pastel.assets.md) | The files of a project's assets/ folder, inside the program. |
 | [Pastel.Config](pastel.config.md) | Settings from files, environment variables and code. |
 | [Pastel.Controls](pastel.controls.md) | More controls: check boxes, radio buttons, switches, lists, |
 | [Pastel.Crypto](pastel.crypto.md) | Hashes, signatures, passwords and random tokens. |

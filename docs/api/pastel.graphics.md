@@ -8,7 +8,7 @@ Software 2D drawing: colors, an anti-aliased canvas and fonts.
 
 `uses Pastel.Graphics;` · source: [framework/src/pastel.graphics.pas](../../framework/src/pastel.graphics.pas)
 
-**Contents:** [TRectI](#trecti) · [TGlyph](#tglyph) · [TPastelFont](#tpastelfont) · [TBitmap32](#tbitmap32) · [TCanvas32](#tcanvas32) · [EPastelGraphics](#epastelgraphics) · [RGB](#rgb) · [RGBA](#rgba) · [WithAlpha](#withalpha) · [Mix](#mix) · [TryParseColor](#tryparsecolor) · [RectI](#recti) · [NextCodePoint](#nextcodepoint) · [PrevCharStart](#prevcharstart) · [GetFont](#getfont) · [InitFonts](#initfonts) · [DoneFonts](#donefonts)
+**Contents:** [TRectI](#trecti) · [TGlyph](#tglyph) · [TPastelFont](#tpastelfont) · [TBitmap32](#tbitmap32) · [TCanvas32](#tcanvas32) · [EPastelGraphics](#epastelgraphics) · [RGB](#rgb) · [RGBA](#rgba) · [WithAlpha](#withalpha) · [Mix](#mix) · [TryParseColor](#tryparsecolor) · [RectI](#recti) · [NextCodePoint](#nextcodepoint) · [PrevCharStart](#prevcharstart) · [GetFont](#getfont) · [SetFontFiles](#setfontfiles) · [InitFonts](#initfonts) · [DoneFonts](#donefonts)
 
 ## Types
 
@@ -57,6 +57,7 @@ type TPastelFont = class
 | `function TextWidth(const S: string): Integer` |  |
 | `function HitTest(const S: string; X: Integer): Integer` | Byte index in S whose left edge is closest to pixel offset X. |
 | `property Size: Integer` |  |
+| `property Bold: Boolean` |  |
 | `property Ascent: Integer` |  |
 | `property Descent: Integer` |  |
 | `property LineHeight: Integer` |  |
@@ -86,7 +87,7 @@ type TCanvas32 = class
 
 | | |
 |---|---|
-| `procedure SetSize(AWidth: Integer; AHeight: Integer)` |  |
+| `procedure SetSize(AWidth: Integer; AHeight: Integer)` | Width and height in layout units; with Scale 2 the pixels are twice as many. |
 | `procedure Clear(C: TColor32)` |  |
 | `procedure PushClip(const R: TRectI)` |  |
 | `procedure PopClip` |  |
@@ -102,6 +103,9 @@ type TCanvas32 = class
 | `function Data: Pointer` |  |
 | `property Width: Integer` |  |
 | `property Height: Integer` |  |
+| `property PixelWidth: Integer` | The size in pixels (Width * Scale). |
+| `property PixelHeight: Integer` |  |
+| `property Scale: Single` | Pixels per layout unit: 2 on a "retina" or 200% screen. Text is drawn with a font of the scaled size, so it stays sharp. |
 
 ### EPastelGraphics
 
@@ -180,6 +184,14 @@ function GetFont(Size: Integer; Bold: Boolean = False): TPastelFont
 ```
 
 Fonts are shared and cached by size and weight.
+
+### SetFontFiles
+
+```pascal
+procedure SetFontFiles(const Regular: string; const Bold: string)
+```
+
+Use these .ttf files instead of the system font (after InitFonts).
 
 ### InitFonts
 

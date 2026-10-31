@@ -1,0 +1,30 @@
+# The editor, driven like a user would (run by tests/run.sh in an empty folder):
+#   PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT=tests/ui.txt ./build/linux/debug/notepad
+expect HomeForm.Title Untitled - Notepad
+type Editor Hello Pastel\nsecond line
+expect CountLabel 4 words, 2 lines
+expect HomeForm.Title *Untitled - Notepad
+key ctrl+s
+expect FileNameEdit untitled.txt
+type FileNameEdit hello.txt\n
+expect StatusLabel saved hello.txt
+expect HomeForm.Title hello.txt - Notepad
+type Editor !
+key ctrl+n
+expect MessageText Save the changes?
+click NoButton
+expect Editor 
+expect HomeForm.Title Untitled - Notepad
+key ctrl+o
+type FileNameEdit hello.txt\n
+expect StatusLabel opened hello.txt
+expect CountLabel 4 words, 2 lines
+click ViewMenu
+click WrapItem
+expect Editor.WordWrap False
+type Editor x
+close
+expect MessageText Save the changes?
+click CancelButton
+expect HomeForm.Title *hello.txt - Notepad
+quit
