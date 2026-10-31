@@ -198,9 +198,13 @@ Goal: typical small business apps (forms, lists, dialogs) on Linux and Windows.
 
 ## 1.0.0
 
-- [ ] Release on GitHub with ready-made downloads (Linux, Windows) and an install script (`tools/install.sh` and the release workflow are ready)
-- [ ] VS Code extension on the Marketplace and Open VSX
-- [ ] Announcement, contributing guide, issue templates
+Everything for 1.0 is in the repository; what is left needs the public repository and accounts (see *Releasing* in [CONTRIBUTING.md](CONTRIBUTING.md#releasing)).
+
+- [x] Release workflow with ready-made downloads (Linux x64 and ARM64, Windows), release notes from [CHANGELOG.md](CHANGELOG.md) and an install script
+- [x] Workflow that publishes the VS Code extension to the Marketplace and Open VSX
+- [x] Announcement draft ([docs/announcing-1.0.md](docs/announcing-1.0.md)), contributing guide, security policy, code of conduct, issue and pull request forms
+- [ ] First CI run on GitHub green on Linux, ARM64 and Windows; then the tag `v1.0.0`
+- [ ] Extension published (needs the `pastel` publisher and its tokens)
 
 ---
 

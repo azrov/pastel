@@ -1,0 +1,16 @@
+name: Idea
+description: Something Pastel should do
+labels: [idea]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: What do you want to build?
+      description: The program or the situation, not only the feature. It helps to find the best way.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would help
+      description: How you imagine it (code, a .pform snippet, a command).

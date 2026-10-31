@@ -1,0 +1,37 @@
+name: Publish the VS Code extension
+
+# For a tag of a final version (v1.2.3, not v1.2.3-rc.1): the extension goes to
+# the Visual Studio Marketplace and to Open VSX (VSCodium, Gitpod, ...).
+# Needs the repository secrets VSCE_PAT (Azure DevOps token of the "pastel"
+# publisher) and OVSX_PAT (open-vsx.org token).
+on:
+  push:
+    tags: ["v[0-9]+.[0-9]+.[0-9]+"]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      VSCE_PAT: ${{ secrets.VSCE_PAT }}
+      OVSX_PAT: ${{ secrets.OVSX_PAT }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Package
+        working-directory: vscode
+        run: |
+          npm ci
+          npm pkg set repository.type=git repository.url="https://github.com/$GITHUB_REPOSITORY" \
+            bugs.url="https://github.com/$GITHUB_REPOSITORY/issues" homepage="https://github.com/$GITHUB_REPOSITORY"
+          npm run package
+      - name: Visual Studio Marketplace
+        if: env.VSCE_PAT != ''
+        working-directory: vscode
+        run: npx --yes @vscode/vsce publish --packagePath *.vsix
+      - name: Open VSX
+        if: env.OVSX_PAT != ''
+        working-directory: vscode
+        run: npx --yes ovsx publish *.vsix

@@ -75,5 +75,9 @@ jobs:
         run: |
           (cd dist && sha256sum * > SHA256SUMS)
           sed "s|__REPO__|$GITHUB_REPOSITORY|" tools/install.sh > dist/install.sh
-          gh release create "$GITHUB_REF_NAME" dist/* --title "Pastel ${GITHUB_REF_NAME#v}" \
-            --notes "See ROADMAP.md and vscode/CHANGELOG.md. Install: curl -fsSL https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/install.sh | sh"
+          # the notes: this version's part of CHANGELOG.md, and how to install
+          awk -v v="## ${GITHUB_REF_NAME#v}" '$0 == v || index($0, v " ") == 1 { on = 1; next } /^## / { on = 0 } on' CHANGELOG.md > notes.md
+          printf '\n**Install (Linux):** `curl -fsSL https://github.com/%s/releases/latest/download/install.sh | sh`\n' "$GITHUB_REPOSITORY" >> notes.md
+          printf '**Windows:** unpack the .zip and add its bin folder to PATH. **VS Code:** the .vsix, or "Pastel" in the Marketplace.\n' >> notes.md
+          PRE=""; case "$GITHUB_REF_NAME" in *-*) PRE="--prerelease" ;; esac
+          gh release create "$GITHUB_REF_NAME" dist/* $PRE --title "Pastel ${GITHUB_REF_NAME#v}" --notes-file notes.md

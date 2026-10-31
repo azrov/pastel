@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.0
+
+- Ready for the Marketplace and Open VSX; works with Pastel 1.0 (`pastel = "1.0"` projects)
+- The form designer, Pascal code intelligence, tests, routes and tasks as in 0.9, now with a stable `pastel` tool behind them
+
 ## 0.9.0
 
 - The designer and its toolbox know the controls of your project (`src/controls/`, made with

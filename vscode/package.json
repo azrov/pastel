@@ -2,7 +2,7 @@
   "name": "pastel-vscode",
   "displayName": "Pastel",
   "description": "Build cross-platform apps in Object Pascal with Pastel: run, build, live form preview, .pform completion and checks.",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "publisher": "pastel",
   "license": "MIT",
   "icon": "media/icon.png",

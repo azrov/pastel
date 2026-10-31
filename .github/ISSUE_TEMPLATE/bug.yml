@@ -1,0 +1,32 @@
+name: Bug
+description: Something does not work as described
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to see it
+      description: The smallest project or steps that show the problem (a .pform file, a few lines of code, a command).
+      render: text
+  - type: textarea
+    id: versions
+    attributes:
+      label: pastel version and pastel doctor
+      description: The output of `pastel version` and `pastel doctor`, and the version of the VS Code extension if it is about the editor.
+      render: text
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options: [Linux x64, Linux ARM64 (Raspberry Pi), Windows, macOS, other]
+    validations:
+      required: true

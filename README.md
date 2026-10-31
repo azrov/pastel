@@ -4,7 +4,7 @@
 
 Write your app once in Object Pascal and run it on desktop, mobile, server and Raspberry Pi. Pastel is built on top of the [Free Pascal](https://www.freepascal.org/) compiler and brings a modern developer experience: a simple command-line tool, clear project conventions, forms with hot reload, and a UI drawn by Pastel itself so it looks the same everywhere.
 
-> ⚠️ **Status: early development (0.7), heading for 1.0.** Working today: the `pastel` command-line tool and libraries for console programs on Linux, Windows and Raspberry Pi (arguments, files, HTTP, JSON, settings, logging, tests, packaging), Linux services and REST APIs (web server, JWT and API keys, SQLite/PostgreSQL/MySQL with migrations, background workers, `.deb` and Docker packages), and code intelligence in VS Code (completion, hover, parameter hints, references, rename, compiler errors while typing) and desktop apps on Linux and Windows (forms from `.pform` files designed in VS Code, about 30 controls including grids and trees, your own controls in the designer, data binding, menus and shortcuts, dialogs, several windows, translations, themes, high-DPI, hot reload, scripted UI tests; Windows installer, AppImage and `.deb` packages). Ideas, feedback and contributions are very welcome.
+> **Status: 1.0 release candidate.** Working today: the `pastel` command-line tool and libraries for console programs on Linux, Windows and Raspberry Pi (arguments, files, HTTP, JSON, settings, logging, tests, packaging), Linux services and REST APIs (web server, JWT and API keys, SQLite/PostgreSQL/MySQL with migrations, background workers, `.deb` and Docker packages), and code intelligence in VS Code (completion, hover, parameter hints, references, rename, compiler errors while typing) and desktop apps on Linux and Windows (forms from `.pform` files designed in VS Code, about 30 controls including grids and trees, your own controls in the designer, data binding, menus and shortcuts, dialogs, several windows, translations, themes, high-DPI, hot reload, scripted UI tests; Windows installer, AppImage and `.deb` packages). Ideas, feedback and contributions are very welcome.
 
 ## Why Pastel?
 
@@ -28,10 +28,14 @@ Pastel aims to be the missing piece: free, open source, modern, and easy to set 
 
 **New here? Start with [docs/getting-started.md](docs/getting-started.md)**: from installing to a packaged program in fifteen minutes. Then [docs/guide-cli.md](docs/guide-cli.md) builds a real tool step by step, and [`examples/`](examples) has complete programs.
 
-You need [Free Pascal](https://www.freepascal.org/) 3.2 or newer (on Linux Mint / Ubuntu: `sudo apt install fpc`). GUI apps also use SDL2 and FreeType, which most Linux desktops already have (`sudo apt install libsdl2-2.0-0 libfreetype6`). On Windows, put `SDL2.dll` and `freetype.dll` next to your program.
+You need [Free Pascal](https://www.freepascal.org/) 3.2 or newer (on Linux Mint / Ubuntu: `sudo apt install fpc fpc-source`). GUI apps also use SDL2 and FreeType, which most Linux desktops already have (`sudo apt install libsdl2-2.0-0 libfreetype6`); Windows programs get `SDL2.dll` and `freetype.dll` next to them automatically.
+
+**Install** a release (Linux): download it from the *Releases* page and run its `install.sh`, or unpack the archive and put its `bin/` on your `PATH`. On Windows, unpack the `.zip`. In VS Code, install the **Pastel** extension.
+
+**Or build it** from the sources:
 
 ```sh
-git clone https://github.com/<you>/pastel.git
+git clone <this repository> pastel
 cd pastel
 ./build.sh            # Windows: build.bat
 ```
@@ -105,6 +109,8 @@ New projects come with `.vscode` settings: `Ctrl+Shift+B` builds, `F5` builds an
 
 ## How a GUI app looks
 
+![The contacts example: a list of contacts with a search box, and the selected contact's details](docs/images/contacts.png)
+
 ```
 pastel new app myapp
 cd myapp
@@ -173,13 +179,11 @@ Today Pastel draws everything in software, which is plenty for typical apps. The
 
 ## Roadmap
 
-Pastel grows in this order: console programs (0.2), Linux services with web APIs and databases (0.3), code intelligence in VS Code (0.4), desktop apps (0.5–0.6), then the road to a stable 1.0 (0.7). See [ROADMAP.md](ROADMAP.md) for the full list.
+Pastel grew in this order: console programs (0.2), Linux services with web APIs and databases (0.3), code intelligence in VS Code (0.4), desktop apps (0.5–0.6), the road to a stable 1.0 (0.7). What changed in each version is in [CHANGELOG.md](CHANGELOG.md); what comes next in [ROADMAP.md](ROADMAP.md).
 
 ## Contributing
 
-Pastel is in its earliest stage, which is the best time to shape it. Open an issue to share ideas, report problems or discuss the design.
-
-The `pastel` tool itself is written in Object Pascal (`cli/`). Run the tests with `./build.sh test`.
+Ideas, bug reports and pull requests are very welcome. [CONTRIBUTING.md](CONTRIBUTING.md) explains how to build and test Pastel and how the repository is organized; security problems go through [SECURITY.md](SECURITY.md). Everyone is expected to follow the [code of conduct](CODE_OF_CONDUCT.md).
 
 ## License
 
