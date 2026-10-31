@@ -60,7 +60,7 @@ implementation
 
 uses
   Process, {$IFDEF UNIX}BaseUnix,{$ENDIF}
-  Pastel.Console, Pastel.Codegen, Pastel.Inspect, Pastel.WIcon, Pastel.Runtime, Math;
+  Pastel.Console, Pastel.Codegen, Pastel.Inspect, Pastel.WIcon, Pastel.Runtime, Pastel.CustomCtl, Math;
 
 function FrameworkDir: string;
 var
@@ -652,6 +652,9 @@ function PackageDirs(const Pkg, OS: string): TStringArray;
     N := LowerCase(Name);
     if (N = 'examples') or (N = 'tests') or (N = 'test') or (N = 'dummy') then
       Exit(False);
+    { rtl-objpas: common/ is for the OSes without their own version (not Windows) }
+    if (N = 'common') and (Copy(OS, 1, 3) = 'win') then
+      Exit(False);
     for P in PlatformDirs do
       if N = P then
       begin
@@ -819,6 +822,8 @@ var
   Missing, Pkg, PkgFile, FpcSrc: string;
   Pkgs: TStringList;
   Tries, Pkgs0: Integer;
+  DesignerHost, HostErr, HostOut: string;
+  HostArgs: TStringList;
 
   procedure AddPackage(const APkg: string);
   var
@@ -885,6 +890,29 @@ begin
   { check .pform files first: the compiler cannot see mistakes in them }
   if Opts.CheckOnly then
     Issues := nil
+  else if HasProjectControls(Project.Root) and not IsDesignerHost then
+  begin
+    { the project's own controls: checked by a pastel that knows them }
+    Issues := nil;
+    DesignerHost := EnsureDesignerHost(Project.Root, HostErr);
+    if DesignerHost = '' then
+    begin
+      Fail(HostErr);
+      Exit;
+    end;
+    HostArgs := TStringList.Create;
+    try
+      HostArgs.Add('check');
+      if RunCapture(DesignerHost, HostArgs, Project.Root, HostOut) <> 0 then
+      begin
+        Write(HostOut);
+        Fail(Format('could not compile %s (errors in .pform files)', [Project.Name]));
+        Exit;
+      end;
+    finally
+      HostArgs.Free;
+    end;
+  end
   else
     Issues := CheckProject(Project.Root);
   if Length(Issues) > 0 then
@@ -942,6 +970,10 @@ begin
     Args.Add('-T' + Opts.Target.OS);
     for Opt in SplitOptions(Opts.Target.Options) do
       Args.Add(Opt);
+    { the RTL "pastel doctor --install" compiled for this target }
+    D := UserRtlDir(Fpc, Opts.Target);
+    if (D <> '') and FileExists(D + 'system.ppu') then
+      Args.Add('-Fu' + D);
     BinPrefix := FindBinutilsPrefix(Opts.Target, HaveBinutils);
     if BinPrefix <> '' then
       Args.Add('-XP' + BinPrefix);
@@ -1196,8 +1228,12 @@ begin
         Hint(Format('the compiler for "%s" has only the basic units, not FPC''s packages (fcl-json, fcl-web, fcl-db); ' +
           'fpcupdeluxe installs a complete cross-compiler', [Opts.Target.Name]))
       else if MissingTarget and not Host then
-        Hint(Format('this computer cannot build for "%s" yet; run "pastel doctor" to see what is missing',
-          [Opts.Target.Name]));
+        if CanBuildRtl(Opts.Target) then
+          Hint(Format('this computer cannot build for "%s" yet; "pastel doctor --install %s" sets it up',
+            [Opts.Target.Name, Opts.Target.Name]))
+        else
+          Hint(Format('this computer cannot build for "%s" yet; run "pastel doctor" to see what is missing',
+            [Opts.Target.Name]));
       Exit;
     end;
 

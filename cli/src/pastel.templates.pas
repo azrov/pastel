@@ -12,6 +12,8 @@ const
 function CreateProject(const Kind, Name, ParentDir: string): Boolean;
 { "pastel new form Settings": src/forms/Settings.pform and .pas, created in main.pas. }
 function CreateFormFiles(const Root, Name: string): Boolean;
+{ src/controls/<name>.pas: a control of the project, for .pform files and the designer. }
+function CreateControlFile(const Root, Name: string): Boolean;
 
 implementation
 
@@ -1813,6 +1815,95 @@ begin
   finally
     L.Free;
   end;
+  Result := True;
+end;
+
+function CreateControlFile(const Root, Name: string): Boolean;
+var
+  Base, Cls, FileName: string;
+begin
+  Result := False;
+  Base := Name;
+  if (Length(Base) > 1) and (Base[1] = 'T') and (Base[2] in ['A'..'Z']) then
+    Delete(Base, 1, 1);
+  if (Base = '') or not IsValidProjectName(Base) or (Pos('-', Base) > 0) then
+  begin
+    Fail(Format('"%s" is not a good control name', [Name]));
+    Hint('use letters and digits, like StarRating or ColorPicker');
+    Exit;
+  end;
+  Base := UpCase(Base[1]) + Copy(Base, 2, MaxInt);
+  Cls := 'T' + Base;
+  FileName := IncludeTrailingPathDelimiter(Root) + 'src' + PathDelim + 'controls' + PathDelim + LowerCase(Base) + '.pas';
+  if FileExists(FileName) then
+  begin
+    Fail(Format('src/controls/%s.pas exists already', [LowerCase(Base)]));
+    Exit;
+  end;
+  WriteText(FileName, Fill([
+    '{ {{name}} - a control of this project. Use it in .pform files like the',
+    '  built-in ones (object Rating: {{ident}}); the designer shows it in its toolbox. }',
+    'unit {{name}};',
+    '',
+    '{$mode objfpc}{$H+}',
+    '',
+    'interface',
+    '',
+    'uses',
+    '  Classes, SysUtils, Pastel.Graphics, Pastel.UI;',
+    '',
+    'type',
+    '  {{ident}} = class(TControl)',
+    '  private',
+    '    FText: string;',
+    '    FOnClick: TNotifyEvent;',
+    '    procedure SetText(const AValue: string);',
+    '  protected',
+    '    { the size the control wants }',
+    '    procedure Measure(AvailWidth: Integer; out W, H: Integer); override;',
+    '    procedure Paint(C: TCanvas32); override;',
+    '    procedure MouseDown(X, Y: Integer); override;',
+    '  published',
+    '    { published properties can be set in .pform files and the designer }',
+    '    property Text: string read FText write SetText;',
+    '    property OnClick: TNotifyEvent read FOnClick write FOnClick;',
+    '  end;',
+    '',
+    'implementation',
+    '',
+    'procedure {{ident}}.SetText(const AValue: string);',
+    'begin',
+    '  FText := AValue;',
+    '  Changed;          { the size may change: layout and paint again }',
+    'end;',
+    '',
+    'procedure {{ident}}.Measure(AvailWidth: Integer; out W, H: Integer);',
+    'begin',
+    '  W := 160;',
+    '  H := 40;',
+    'end;',
+    '',
+    'procedure {{ident}}.Paint(C: TCanvas32);',
+    'var',
+    '  F: TPastelFont;',
+    'begin',
+    '  F := GetFont(Theme.FontSize);',
+    '  C.FillRoundRect(Bounds.X, Bounds.Y, Bounds.W, Bounds.H, Theme.Radius, Theme.Surface);',
+    '  C.StrokeRoundRect(Bounds.X, Bounds.Y, Bounds.W, Bounds.H, Theme.Radius, 1, Theme.Border);',
+    '  C.DrawText(F, Bounds.X + (Bounds.W - F.TextWidth(FText)) div 2,',
+    '    Bounds.Y + (Bounds.H - F.LineHeight) div 2, FText, Theme.Text);',
+    'end;',
+    '',
+    'procedure {{ident}}.MouseDown(X, Y: Integer);',
+    'begin',
+    '  if Assigned(FOnClick) then',
+    '    FOnClick(Self);',
+    'end;',
+    '',
+    'initialization',
+    '  RegisterControl({{ident}});',
+    'end.'], Base, Cls));
+  Status('Created', Format('src/controls/%s.pas: use it in a form as "object My%s: %s"', [LowerCase(Base), Base, Cls]));
   Result := True;
 end;
 

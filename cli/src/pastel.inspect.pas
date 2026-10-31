@@ -426,9 +426,11 @@ begin
     Names.Free;
     FreeMem(Props);
   end;
-  Result := Format('{"name":%s,"container":%s,"form":%s,"properties":[%s]}',
+  Result := Format('{"name":%s,"container":%s,"form":%s,"project":%s,"properties":[%s]}',
     [JsonStr(Cls.ClassName), BoolToStr(Cls.InheritsFrom(TBox), 'true', 'false'),
-     BoolToStr(IsForm, 'true', 'false'), Items]);
+     BoolToStr(IsForm, 'true', 'false'),
+     { a control of the project (src/controls/), not of the framework }
+     BoolToStr(not SameText(Copy(Cls.UnitName, 1, 7), 'Pastel.'), 'true', 'false'), Items]);
 end;
 
 function SchemaJson: string;

@@ -22,6 +22,9 @@ type
     X, Y, W, H: Integer;
     function Contains(PX, PY: Integer): Boolean;
     function Intersect(const R: TRectI): TRectI;
+    { The smallest rectangle around both (an empty one is ignored). }
+    function Union(const R: TRectI): TRectI;
+    function Inflate(D: Integer): TRectI;
   end;
 
   PGlyph = ^TGlyph;
@@ -109,6 +112,8 @@ type
     procedure DrawBitmap(B: TBitmap32; X, Y, W, H: Integer; Smooth: Boolean = True; Opacity: Byte = 255);
     function GetPixel(X, Y: Integer): TColor32;
     procedure SaveToPNG(const FileName: string);
+    { A rectangle in layout units, in pixels. }
+    function PixelRect(const R: TRectI): TRectI;
     function Data: Pointer;
     property Width: Integer read FLogW;
     property Height: Integer read FLogH;
@@ -229,6 +234,30 @@ begin
   Y2 := Min(Y + H, R.Y + R.H);
   Result.W := Max(0, X2 - Result.X);
   Result.H := Max(0, Y2 - Result.Y);
+end;
+
+function TRectI.Union(const R: TRectI): TRectI;
+var
+  X2, Y2: Integer;
+begin
+  if (R.W <= 0) or (R.H <= 0) then
+    Exit(Self);
+  if (W <= 0) or (H <= 0) then
+    Exit(R);
+  Result.X := Min(X, R.X);
+  Result.Y := Min(Y, R.Y);
+  X2 := Max(X + W, R.X + R.W);
+  Y2 := Max(Y + H, R.Y + R.H);
+  Result.W := X2 - Result.X;
+  Result.H := Y2 - Result.Y;
+end;
+
+function TRectI.Inflate(D: Integer): TRectI;
+begin
+  Result.X := X - D;
+  Result.Y := Y - D;
+  Result.W := W + 2 * D;
+  Result.H := H + 2 * D;
 end;
 
 { ---- UTF-8 ---- }
@@ -633,6 +662,11 @@ begin
   FClipStack := nil;
 end;
 
+function TCanvas32.PixelRect(const R: TRectI): TRectI;
+begin
+  Result := ToPixels(R);
+end;
+
 function TCanvas32.Data: Pointer;
 begin
   Result := @FPixels[0];
@@ -640,10 +674,18 @@ end;
 
 procedure TCanvas32.Clear(C: TColor32);
 var
-  I: Integer;
+  I, Y: Integer;
 begin
-  for I := 0 to High(FPixels) do
-    FPixels[I] := C;
+  if (FClip.X = 0) and (FClip.Y = 0) and (FClip.W = FWidth) and (FClip.H = FHeight) then
+  begin
+    for I := 0 to High(FPixels) do
+      FPixels[I] := C;
+    Exit;
+  end;
+  { only inside the clip rectangle (a partial repaint) }
+  for Y := FClip.Y to FClip.Y + FClip.H - 1 do
+    for I := Y * FWidth + FClip.X to Y * FWidth + FClip.X + FClip.W - 1 do
+      FPixels[I] := C;
 end;
 
 procedure TCanvas32.PushClip(const R: TRectI);

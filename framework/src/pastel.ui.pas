@@ -479,6 +479,8 @@ type
     procedure ClearControls;
     procedure Layout(AWidth, AHeight: Integer);
     procedure Render(C: TCanvas32);
+    { Paints only Area (layout units): what changed since the last Render. }
+    procedure RenderArea(C: TCanvas32; const Area: TRectI);
     procedure FocusControl(C: TControl);
     procedure FocusNext(Backward: Boolean);
     procedure HandleMouseMove(X, Y: Integer);
@@ -576,6 +578,12 @@ var
   { Set by controls when something changed; the application loop reads them. }
   NeedsLayout: Boolean = True;
   NeedsRepaint: Boolean = True;
+  { Only DirtyArea needs painting (when NeedsRepaint is False): a control
+    called Invalidate. Set PartialRepaint to False to always paint everything. }
+  NeedsPartialRepaint: Boolean = False;
+  DirtyArea: TRectI;
+  PartialRepaint: Boolean = True;
+  FrozenTime: QWord = 0;
   { Caret blink phase, toggled by the application loop. }
   CaretVisible: Boolean = True;
   { Set when window properties changed; the platform layer applies them. }
@@ -626,8 +634,14 @@ procedure UseDarkTheme(Dark: Boolean);
   ('#0EA5E9'); 'radius' and 'font_size' numbers. Hover and pressed shades
   follow the color. False for an unknown name or a bad value. }
 function SetThemeValue(const Name, Value: string): Boolean;
-{ Asks for another frame soon (animations). }
-procedure RequestAnimation;
+{ Asks for a repaint of a part of the window (layout units). }
+procedure InvalidateArea(const R: TRectI);
+{ Asks for another frame soon (animations): of the whole window, or only
+  of the control that moves. }
+procedure RequestAnimation; overload;
+{ The clock animations are drawn by (milliseconds); FrozenTime <> 0 stops it. }
+function AnimationTime: QWord;
+procedure RequestAnimation(Control: TControl); overload;
 { Runs the timers that are due; the milliseconds until the next one (-1: none). }
 function ProcessTimers(NowMs: QWord): Integer;
 { Splits text into lines that fit Width (at spaces; long words are broken). }
@@ -844,6 +858,20 @@ procedure RequestAnimation;
 begin
   AnimationRequested := True;
   NeedsRepaint := True;
+end;
+
+function AnimationTime: QWord;
+begin
+  if FrozenTime <> 0 then
+    Result := FrozenTime
+  else
+    Result := GetTickCount64;
+end;
+
+procedure RequestAnimation(Control: TControl);
+begin
+  AnimationRequested := True;
+  Control.Invalidate;
 end;
 
 function WrapText(Font: TPastelFont; const S: string; Width: Integer): TStringArray;
@@ -1092,7 +1120,23 @@ end;
 
 procedure TControl.Invalidate;
 begin
-  NeedsRepaint := True;
+  InvalidateArea(FBounds.Inflate(8));     { with focus rings and shadows }
+end;
+
+procedure InvalidateArea(const R: TRectI);
+begin
+  if NeedsRepaint then
+    Exit;
+  if not PartialRepaint or (R.W <= 0) or (R.H <= 0) then
+  begin
+    NeedsRepaint := True;      { not laid out yet: everything }
+    Exit;
+  end;
+  if NeedsPartialRepaint then
+    DirtyArea := DirtyArea.Union(R)
+  else
+    DirtyArea := R;
+  NeedsPartialRepaint := True;
 end;
 
 procedure TControl.Measure(AvailWidth: Integer; out W, H: Integer);
@@ -2318,6 +2362,9 @@ var
   I: Integer;
   P: TPopup;
 begin
+  { first: what is invalidated while painting (animations) is for the next frame }
+  NeedsRepaint := False;
+  NeedsPartialRepaint := False;
   C.Clear(PaintColor);
   PaintChildren(C);
   for I := 0 to FPopups.Count - 1 do
@@ -2329,7 +2376,16 @@ begin
   end;
   if (FTooltipFor <> nil) and (FTooltip <> nil) then
     FTooltip.Paint(C);
-  NeedsRepaint := False;
+end;
+
+procedure TForm.RenderArea(C: TCanvas32; const Area: TRectI);
+begin
+  C.PushClip(Area);
+  try
+    Render(C);
+  finally
+    C.PopClip;
+  end;
 end;
 
 procedure TForm.CollectFocusable(C: TControl; List: TFPList);
@@ -2368,8 +2424,12 @@ begin
   FFocused := C;
   CaretVisible := True;
   if Old <> nil then
+  begin
     Old.FocusLost;
-  NeedsRepaint := True;
+    Old.Invalidate;
+  end;
+  if C <> nil then
+    C.Invalidate;
   if (C <> nil) and (C.Parent <> nil) then
     C.Parent.ScrollIntoView(C);
 end;
@@ -2414,10 +2474,13 @@ begin
   Hit := HitTest(X, Y);
   if Hit <> FHover then
   begin
+    if FHover <> nil then
+      FHover.Invalidate;
     FHover := Hit;
     FHoverSince := GetTickCount64;
     HideTooltip;
-    NeedsRepaint := True;
+    if Hit <> nil then
+      Hit.Invalidate;
   end;
   if FCaptured <> nil then
     FCaptured.MouseMove(X, Y)

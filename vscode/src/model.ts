@@ -12,6 +12,8 @@ export interface SchemaClass {
   name: string;
   container: boolean;
   form: boolean;
+  /** A control of the project (src/controls/), not of Pastel. */
+  project?: boolean;
   properties: SchemaProperty[];
 }
 

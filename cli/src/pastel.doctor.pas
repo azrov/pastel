@@ -12,7 +12,7 @@ function CanBuildTarget(const Fpc: string; Index: Integer): Boolean;
 implementation
 
 uses
-  Classes, SysUtils, dynlibs, Pastel.Console, Pastel.Project, Pastel.Targets, Pastel.Builder;
+  Classes, SysUtils, dynlibs, Pastel.Console, Pastel.Project, Pastel.Targets, Pastel.Builder, Pastel.Runtime;
 
 function CanLoad(const Names: array of string): Boolean;
 var
@@ -135,6 +135,9 @@ begin
     Args.Add('-T' + T.OS);
     for Opt in SplitOptions(T.Options) do
       Args.Add(Opt);
+    Opt := UserRtlDir(Fpc, T);
+    if (Opt <> '') and FileExists(Opt + 'system.ppu') then
+      Args.Add('-Fu' + Opt);
     Prefix := FindBinutilsPrefix(T, HaveBinutils);
     if Prefix <> '' then
       Args.Add('-XP' + Prefix);

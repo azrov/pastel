@@ -173,7 +173,8 @@ begin
   FAnchor := FCaret;
   FUndo := nil;
   FRedo := nil;
-  Changed;
+  { the size does not depend on the text; a memo lays out its lines again }
+  if FMultiLine then Changed else Invalidate;
   DoChange;
 end;
 

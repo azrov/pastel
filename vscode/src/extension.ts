@@ -54,7 +54,16 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
   );
   context.subscriptions.push(
-    vscode.workspace.onDidChangeWorkspaceFolders(() => updateProjectContext()));
+    vscode.workspace.onDidChangeWorkspaceFolders(() => updateProjectContext()),
+    // a control of the project (src/controls/) was saved: the toolbox and the designer follow
+    vscode.workspace.onDidSaveTextDocument(async d => {
+      if (/[\\/]src[\\/]controls[\\/][^\\/]+\.pas$/i.test(d.uri.fsPath)) {
+        schema = undefined;
+        schemaLoading = undefined;
+        await loadSchema();
+        await FormPreview.controlsChanged();
+      }
+    }));
 
   // status bar: run button
   const runItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 50);

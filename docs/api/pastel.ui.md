@@ -9,7 +9,7 @@ Controls, layout and input handling.
 
 `uses Pastel.UI;` · source: [framework/src/pastel.ui.pas](../../framework/src/pastel.ui.pas)
 
-**Contents:** [TAlignItems](#talignitems) · [TJustify](#tjustify) · [TTextAlign](#ttextalign) · [TButtonStyle](#tbuttonstyle) · [TCursorKind](#tcursorkind) · [TWindowState](#twindowstate) · [TThemeMode](#tthememode) · [TControl](#tcontrol) · [TAction](#taction) · [TBox](#tbox) · [TColumn](#tcolumn) · [TRow](#trow) · [TCard](#tcard) · [TSpacer](#tspacer) · [TLabel](#tlabel) · [TButton](#tbutton) · [TEditState](#teditstate) · [TVisualLine](#tvisualline) · [TCustomEdit](#tcustomedit) · [TEdit](#tedit) · [TMemo](#tmemo) · [TPopup](#tpopup) · [TTimer](#ttimer) · [TForm](#tform) · [TTheme](#ttheme) · [UseDarkTheme](#usedarktheme) · [SetThemeValue](#setthemevalue) · [RequestAnimation](#requestanimation) · [ProcessTimers](#processtimers) · [WrapText](#wraptext) · [RegisterControl](#registercontrol) · [FindControlClass](#findcontrolclass) · [ControlClassCount](#controlclasscount) · [ControlClassAt](#controlclassat) · [RegisterNonVisual](#registernonvisual) · [FindNonVisualClass](#findnonvisualclass) · [NonVisualClassCount](#nonvisualclasscount) · [NonVisualClassAt](#nonvisualclassat)
+**Contents:** [TAlignItems](#talignitems) · [TJustify](#tjustify) · [TTextAlign](#ttextalign) · [TButtonStyle](#tbuttonstyle) · [TCursorKind](#tcursorkind) · [TWindowState](#twindowstate) · [TThemeMode](#tthememode) · [TControl](#tcontrol) · [TAction](#taction) · [TBox](#tbox) · [TColumn](#tcolumn) · [TRow](#trow) · [TCard](#tcard) · [TSpacer](#tspacer) · [TLabel](#tlabel) · [TButton](#tbutton) · [TEditState](#teditstate) · [TVisualLine](#tvisualline) · [TCustomEdit](#tcustomedit) · [TEdit](#tedit) · [TMemo](#tmemo) · [TPopup](#tpopup) · [TTimer](#ttimer) · [TForm](#tform) · [TTheme](#ttheme) · [UseDarkTheme](#usedarktheme) · [SetThemeValue](#setthemevalue) · [InvalidateArea](#invalidatearea) · [RequestAnimation](#requestanimation) · [AnimationTime](#animationtime) · [RequestAnimation](#requestanimation) · [ProcessTimers](#processtimers) · [WrapText](#wraptext) · [RegisterControl](#registercontrol) · [FindControlClass](#findcontrolclass) · [ControlClassCount](#controlclasscount) · [ControlClassAt](#controlclassat) · [RegisterNonVisual](#registernonvisual) · [FindNonVisualClass](#findnonvisualclass) · [NonVisualClassCount](#nonvisualclasscount) · [NonVisualClassAt](#nonvisualclassat)
 
 ## Types
 
@@ -381,6 +381,7 @@ The root of a window. Owns all controls created from its .pform file.
 | `procedure ClearControls` | Removes every control created from the .pform (used by hot reload). |
 | `procedure Layout(AWidth: Integer; AHeight: Integer)` |  |
 | `procedure Render(C: TCanvas32)` |  |
+| `procedure RenderArea(C: TCanvas32; const Area: TRectI)` | Paints only Area (layout units): what changed since the last Render. |
 | `procedure FocusControl(C: TControl)` |  |
 | `procedure FocusNext(Backward: Boolean)` |  |
 | `procedure HandleMouseMove(X: Integer; Y: Integer)` |  |
@@ -489,13 +490,36 @@ Changes one theme value by its name in assets/theme.toml: 'accent',
 ('#0EA5E9'); 'radius' and 'font_size' numbers. Hover and pressed shades
 follow the color. False for an unknown name or a bad value.
 
+### InvalidateArea
+
+```pascal
+procedure InvalidateArea(const R: TRectI)
+```
+
+Asks for a repaint of a part of the window (layout units).
+
 ### RequestAnimation
 
 ```pascal
 procedure RequestAnimation
 ```
 
-Asks for another frame soon (animations).
+Asks for another frame soon (animations): of the whole window, or only
+of the control that moves.
+
+### AnimationTime
+
+```pascal
+function AnimationTime: QWord
+```
+
+The clock animations are drawn by (milliseconds); FrozenTime <> 0 stops it.
+
+### RequestAnimation
+
+```pascal
+procedure RequestAnimation(Control: TControl)
+```
 
 ### ProcessTimers
 
@@ -578,6 +602,10 @@ function NonVisualClassAt(Index: Integer): TComponentClass
 | `var MainForm: TForm` | The main window's form; dialogs are shown on it. Set by Pastel.App. |
 | `var NeedsLayout: Boolean` | Set by controls when something changed; the application loop reads them. |
 | `var NeedsRepaint: Boolean` |  |
+| `var NeedsPartialRepaint: Boolean` | Only DirtyArea needs painting (when NeedsRepaint is False): a control called Invalidate. Set PartialRepaint to False to always paint everything. |
+| `var DirtyArea: TRectI` |  |
+| `var PartialRepaint: Boolean` |  |
+| `var FrozenTime: QWord` |  |
 | `var CaretVisible: Boolean` | Caret blink phase, toggled by the application loop. |
 | `var NeedsWindowSync: Boolean` | Set when window properties changed; the platform layer applies them. |
 | `var CloseRequested: Boolean` | Set by TForm.Close; the application loop handles it. |

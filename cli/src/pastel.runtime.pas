@@ -29,10 +29,21 @@ function InstallRuntime(const Target: TTarget): string;
 { Copies them next to the program (when newer); the names copied or there. }
 function CopyRuntime(const Target: TTarget; const ExeDir: string): TStringArray;
 
+{ Where "pastel doctor --install" puts Free Pascal's basic units (the RTL)
+  for a target: ~/.pastel/fpc/<version>/units/<cpu>-<os>/rtl/ ('' when the
+  home folder is unknown). Builds use it when it exists. }
+function UserRtlDir(const Fpc: string; const Target: TTarget): string;
+{ The compiler can make programs for the target without a cross-compiler
+  (only its units are missing): x86_64 Linux for 64-bit Windows. }
+function CanBuildRtl(const Target: TTarget): Boolean;
+{ Compiles the RTL for the target from the Free Pascal sources (fpc-source)
+  into UserRtlDir; '' when it worked, else what went wrong. }
+function BuildRtl(const Fpc: string; const Target: TTarget): string;
+
 implementation
 
 uses
-  Classes, zipper, Pastel.Http, Pastel.Console;
+  Classes, zipper, Pastel.Http, Pastel.Console, Pastel.Builder;
 
 function IsWindows(const Target: TTarget): Boolean;
 begin
@@ -153,6 +164,93 @@ begin
       Result[High(Result)] := F;
     end;
   end;
+end;
+
+function PastelHome: string;
+begin
+  Result := GetEnvironmentVariable('PASTEL_CACHE');
+  if Result = '' then
+  begin
+    Result := GetUserDir;
+    if Result = '' then
+      Exit('');
+    Result := IncludeTrailingPathDelimiter(Result) + '.pastel';
+  end;
+  Result := IncludeTrailingPathDelimiter(Result);
+end;
+
+function UserRtlDir(const Fpc: string; const Target: TTarget): string;
+begin
+  if PastelHome = '' then
+    Exit('');
+  Result := PastelHome + 'fpc' + PathDelim + FpcVersion(Fpc) + PathDelim + 'units' + PathDelim +
+    Target.CPU + '-' + Target.OS + PathDelim + 'rtl' + PathDelim;
+end;
+
+function CanBuildRtl(const Target: TTarget): Boolean;
+begin
+  {$IFDEF CPUX86_64}
+  Result := (Target.CPU = 'x86_64') and (Target.OS = 'win64');
+  {$ELSE}
+  Result := False;
+  {$ENDIF}
+end;
+
+function BuildRtl(const Fpc: string; const Target: TTarget): string;
+var
+  Src, Rtl, OsDir, Out_, Output: string;
+  Base: TStringArray;
+
+  { one compiler run in the target's RTL folder; False (and Result set) on errors }
+  function Compile(const Extra: array of string): Boolean;
+  var
+    Args: TStringList;
+    A: string;
+  begin
+    Args := TStringList.Create;
+    try
+      for A in Base do
+        Args.Add(A);
+      for A in Extra do
+        Args.Add(A);
+      Result := RunCapture(Fpc, Args, OsDir, Output) = 0;
+      if not Result then
+        BuildRtl := 'the RTL for ' + Target.Name + ' did not compile:' + LineEnding + Trim(Output);
+    finally
+      Args.Free;
+    end;
+  end;
+
+begin
+  Result := '';
+  if not CanBuildRtl(Target) then
+    Exit(Format('the compiler of this computer cannot make programs for %s; a cross-compiler is needed ' +
+      '(fpcupdeluxe installs one)', [Target.Name]));
+  Src := FpcSourceDir;
+  if Src = '' then
+    Exit('the Free Pascal sources are needed: sudo apt install fpc-source');
+  Rtl := IncludeTrailingPathDelimiter(Src) + 'rtl' + PathDelim;
+  OsDir := Rtl + Target.OS;
+  if not DirectoryExists(OsDir) then
+    Exit('the Free Pascal sources have no RTL for ' + Target.OS);
+  Out_ := UserRtlDir(Fpc, Target);
+  if Out_ = '' then
+    Exit('the home folder is not known (set PASTEL_CACHE)');
+  ForceDirectories(Out_);
+  Status('Compiling', Format('Free Pascal''s RTL for %s into %s', [Target.Name, Out_]));
+  Base := ['-T' + Target.OS, '-P' + Target.CPU, '-n', '-O2', '-Ur', '-Xs', '-vew', '-FU' + Out_, '-Fu' + Out_,
+    '-Fi../inc', '-Fi../' + Target.CPU, '-Fu../inc', '-Fu../' + Target.CPU, '-Fu../common'];
+  { the steps of the RTL's Makefile.fpc for Windows }
+  if not Compile(['-Us', '-Sg', 'system.pp', '-Fi../win']) then Exit;
+  if not Compile(['../inc/uuchar.pp']) then Exit;
+  if not Compile(['-I../objpas', '../objpas/objpas.pp']) then Exit;
+  if not Compile(['-Fi../objpas/sysutils', '-Fi../objpas/classes', '-I../win', '-I../objpas', '-I../win/wininc',
+    '-Fu../win/wininc', '-Fu../win', '-I../inc', '-Fu../objpas', 'buildrtl.pp']) then Exit;
+  if not Compile(['../inc/macpas.pp']) then Exit;
+  if not Compile(['../inc/iso7185.pp']) then Exit;
+  if not Compile(['-Fi../charmaps', '../charmaps/cpall.pas']) then Exit;
+  if not Compile(['../inc/lineinfo.pp']) then Exit;
+  if not Compile(['../inc/lnfodwrf.pp']) then Exit;
 end;
 
 end.

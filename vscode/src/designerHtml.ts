@@ -14,6 +14,7 @@ export function designerHtml(nonce: string): string {
   .chip { padding: 3px 10px; border-radius: 12px; border: 1px solid var(--vscode-button-border, var(--vscode-panel-border));
     background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); cursor: grab; user-select: none; }
   .chip:hover { background: var(--vscode-button-secondaryHoverBackground); }
+  .chip.project { border-style: dashed; font-style: italic; }
   .toolbar .hint { opacity: .7; margin-left: auto; font-size: 12px; }
   .main { display: flex; flex-wrap: wrap; gap: 16px; padding: 16px; align-items: flex-start; }
   .stage { position: relative; display: inline-block; box-shadow: 0 2px 12px rgba(0,0,0,.25); border-radius: 6px; line-height: 0; user-select: none; }
@@ -234,12 +235,15 @@ export function designerHtml(nonce: string): string {
   function buildToolbox() {
     toolbox.querySelectorAll('.chip').forEach(e => e.remove());
     const hint = toolbox.querySelector('.hint');
-    for (const c of controlsInfo) {
+    // the project's own controls first
+    const ordered = controlsInfo.filter(c => c.project).concat(controlsInfo.filter(c => !c.project));
+    for (const c of ordered) {
       const chip = document.createElement('span');
-      chip.className = 'chip';
+      chip.className = c.project ? 'chip project' : 'chip';
       chip.textContent = c.name.replace(/^T/, '');
       chip.draggable = true;
-      chip.title = 'Drag onto the form, or click to add after the selected control';
+      chip.title = (c.project ? 'A control of this project (src/controls). ' : '') +
+        'Drag onto the form, or click to add after the selected control';
       chip.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', c.name); e.dataTransfer.effectAllowed = 'copy'; });
       chip.addEventListener('click', () => addNear(c.name));
       toolbox.insertBefore(chip, hint);

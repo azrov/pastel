@@ -8,7 +8,7 @@ uses
   Classes, SysUtils,
   Pastel.Console, Pastel.Toml, Pastel.Project, Pastel.Targets,
   Pastel.Builder, Pastel.Templates, Pastel.Doctor, Pastel.Inspect, Pastel.TestCmd,
-  Pastel.Watch, Pastel.FmtCmd, Pastel.Package, Pastel.MigrateCmd, Pastel.LangCmd, Pastel.Runtime, Pastel.UI, RegExpr;
+  Pastel.Watch, Pastel.FmtCmd, Pastel.Package, Pastel.MigrateCmd, Pastel.LangCmd, Pastel.Runtime, Pastel.CustomCtl, Pastel.UI, RegExpr;
 
 const
   ExitOk = 0;
@@ -41,6 +41,7 @@ begin
   WriteLn;
   WriteLn(Bold('Commands:'));
   WriteLn('  new <kind> <name>    Create a new project (kinds: console, app, lib, service, api)');
+  WriteLn('  new form <Name>       Add a window to an app; new control <Name>: a control of your own');
   WriteLn('  build                Compile the project');
   WriteLn('  run [-- args]        Compile and run on this computer (--watch: again on every save)');
   WriteLn('  test [filter]        Run the tests in tests/ (only names matching filter; --watch, --json)');
@@ -198,6 +199,16 @@ begin
       Exit(ExitError);
     end;
     if CreateFormFiles(Root, CL.Positional[1]) then Exit(ExitOk) else Exit(ExitError);
+  end;
+  if (Length(CL.Positional) = 2) and SameText(CL.Positional[0], 'control') then
+  begin
+    Root := TPastelProject.FindRoot(GetCurrentDir);
+    if Root = '' then
+    begin
+      Fail('"pastel new control" adds a control to an app: run it in the app''s folder');
+      Exit(ExitError);
+    end;
+    if CreateControlFile(Root, CL.Positional[1]) then Exit(ExitOk) else Exit(ExitError);
   end;
   case Length(CL.Positional) of
     1: if CreateProject('console', CL.Positional[0], GetCurrentDir) then Exit(ExitOk);
@@ -591,7 +602,8 @@ end;
 function CmdDoctor(const CL: TCommandLine): Integer;
 var
   T: TTarget;
-  Name, Err: string;
+  Name, Err, Fpc: string;
+  I, Index: Integer;
 begin
   if not CL.Install then
   begin
@@ -610,7 +622,29 @@ begin
       Fail(Format('unknown target "%s"; see "pastel targets"', [Name]));
       Exit(ExitUsage);
     end;
-    if RuntimeInstalled(T) and (Length(RuntimeFiles(T)) > 0) then
+    { the compiler's units for the target, when this compiler can make them }
+    Fpc := FindFpc;
+    Index := -1;
+    for I := Low(KnownTargets) to High(KnownTargets) do
+      if KnownTargets[I].Name = T.Name then
+        Index := I;
+    if (Fpc <> '') and (Index >= 0) and not CanBuildTarget(Fpc, Index) then
+    begin
+      Err := BuildRtl(Fpc, T);
+      if Err = '' then
+        Err := BoolToStr(CanBuildTarget(Fpc, Index), '',
+          'the RTL was compiled, but a test program for ' + T.Name + ' still does not build');
+      if Err <> '' then
+      begin
+        Fail(Err);
+        Result := ExitError;
+        Continue;
+      end;
+      Status('Ready', 'the compiler can build for ' + T.Name);
+    end;
+    if Length(RuntimeFiles(T)) = 0 then
+      Continue;
+    if RuntimeInstalled(T) then
     begin
       Status('Ready', Format('%s for %s in %s', [string.Join(', ', RuntimeFiles(T)), T.Name, RuntimeDir(T)]));
       Continue;
@@ -655,6 +689,7 @@ end;
 
 var
   CL: TCommandLine;
+  HostCode: Integer;
 begin
   InitConsole;
   if not ParseCommandLine(CL) then
@@ -665,6 +700,11 @@ begin
     Halt(ExitOk);
   end;
   try
+    { the project's own controls: a pastel built with them answers }
+    if ((CL.Command = 'schema') or (CL.Command = 'preview') or ((CL.Command = 'check') and
+      ((Length(CL.Positional) = 0) or SameText(ExtractFileExt(CL.Positional[0]), '.pform')))) and
+      RunInDesignerHost('', HostCode) then
+      Halt(HostCode);
     case CL.Command of
       'new':     ExitCode := CmdNew(CL);
       'build':   ExitCode := CmdBuild(CL);

@@ -46,6 +46,7 @@ type
     procedure HotReloadKeepsWhatTheUserDid;
     procedure ListsAndReferencesInPForms;
     procedure CanvasScales;
+    procedure OnlyWhatChangedIsRepainted;
     procedure GridRowsAndSorting;
     procedure GridLoadsJson;
     procedure TreeFromLines;
@@ -644,6 +645,44 @@ begin
   finally
     C.Free;
   end;
+end;
+
+procedure TUITests.OnlyWhatChangedIsRepainted;
+var
+  E: TEdit;
+  B: TButton;
+  Full: TCanvas32;
+  X, Y: Integer;
+begin
+  E := TEdit.Create(Form);
+  E.Parent := Form;
+  B := TButton.Create(Form);
+  B.Parent := Form;
+  B.Text := 'Go';
+  Render;
+  AssertFalse(NeedsRepaint or NeedsPartialRepaint, 'all painted');
+  E.SetFocus;
+  E.Text := 'hello';
+  AssertFalse(NeedsRepaint, 'typing does not repaint the window');
+  AssertTrue(NeedsPartialRepaint, 'only the edit');
+  AssertTrue((DirtyArea.Y < E.Bounds.Y) and (DirtyArea.Y + DirtyArea.H < B.Bounds.Y + B.Bounds.H),
+    'the edit, not the button');
+  Form.RenderArea(Canvas, DirtyArea);
+  Full := TCanvas32.Create;
+  try
+    Full.SetSize(400, 300);
+    Form.Render(Full);
+    for Y := 0 to 299 do
+      for X := 0 to 399 do
+        if Canvas.GetPixel(X, Y) <> Full.GetPixel(X, Y) then
+          Fail(Format('pixel %d,%d differs from a full repaint', [X, Y]));
+  finally
+    Full.Free;
+  end;
+  InvalidateArea(RectI(0, 0, 10, 10));
+  InvalidateArea(RectI(50, 60, 10, 10));
+  AssertEquals(60, DirtyArea.W, 'both areas');
+  AssertEquals(70, DirtyArea.H);
 end;
 
 procedure TUITests.GridRowsAndSorting;

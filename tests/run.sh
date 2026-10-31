@@ -71,7 +71,7 @@ expect "notes-api stops cleanly"         'grep -q "notes-api stopped" "$WORK/not
 expect "notes-api keeps the notes"       'grep -q "Alışveriş" "$WORK/ex-notes-api/data/notes.json"'
 (cd "$WORK/ex-contacts" && "$PASTEL" build >/dev/null)
 rm -f "$WORK/contacts.db"
-set +e; out="$(cd "$WORK/ex-contacts" && PASTEL_LANG=en CONTACTS_DB="$WORK/contacts.db" PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT=tests/ui.txt ./build/*/debug/contacts 2>&1)"; code=$?; set -e
+set +e; out="$(cd "$WORK/ex-contacts" && PASTEL_CHECK_REPAINT=1 PASTEL_LANG=en CONTACTS_DB="$WORK/contacts.db" PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT=tests/ui.txt ./build/*/debug/contacts 2>&1)"; code=$?; set -e
 expect "contacts adds, finds and deletes" '[ "$code" = 0 ] && ! echo "$out" | grep -q FAIL'
 [ "$code" = 0 ] || echo "$out" | grep -v "^ok" | head
 expect "contacts keeps them in SQLite"   '[ -s "$WORK/contacts.db" ]'
@@ -590,8 +590,9 @@ cd "$WORK"
 cp -r "$ROOT/tests/apps/controls/src" "$ROOT/tests/apps/controls/assets" controls-demo/
 cd controls-demo
 "$PASTEL" build >/dev/null
-set +e; out="$(PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT="$ROOT/tests/apps/controls/ui.txt" ./build/*/debug/controls-demo 2>&1)"; code=$?; set -e
+set +e; out="$(PASTEL_CHECK_REPAINT=1 PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT="$ROOT/tests/apps/controls/ui.txt" ./build/*/debug/controls-demo 2>&1)"; code=$?; set -e
 expect "controls, menus and dialogs work"  '[ "$code" = 0 ] && ! echo "$out" | grep -q FAIL'
+expect "only what changed is repainted"  'echo "$out" | grep -qE "partial repaints: [1-9][0-9]* checked, 0 wrong"'
 [ "$code" = 0 ] || echo "$out" | grep -v "^ok" | head -20
 expect "the dialogs answered"           'echo "$out" | grep -q "ok: Status = \"new my note\"" && echo "$out" | grep -q "ok: MessageText"'
 "$PASTEL" build --release >/dev/null
@@ -599,6 +600,27 @@ printf 'expect Logo.LoadError \nexpect Logo.Fit ifContain\n' > "$WORK/asset.txt"
 set +e; out="$(cd "$WORK" && PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT="$WORK/asset.txt" "$WORK/controls-demo/build/linux/release/controls-demo" 2>&1)"; code=$?; set -e
 expect "a release build carries its assets"  '[ "$code" = 0 ] && echo "$out" | grep -q "ok: Logo.LoadError"'
 expect "assets are compiled in"         'grep -q "RegisterAsset(.logo.png., @Asset0" build/linux/release/gen/appassets.pas'
+cd "$WORK/gui-demo"
+
+# --- the project's own controls (src/controls/) ---
+cd "$WORK"
+rm -rf own-controls && "$PASTEL" new app own-controls >/dev/null && cd own-controls
+"$PASTEL" new control Badge >/dev/null
+expect "new control writes a unit"        'grep -q "RegisterControl(TBadge)" src/controls/badge.pas'
+sed -i "s/^  object Card: TCard$/  object NewBadge: TBadge\n    Text = 'New'\n    OnClick = BadgeClick\n  end\n  object Card: TCard/" src/forms/Home.pform
+sed -i 's/^    procedure SendClick(Sender: TObject);/    procedure SendClick(Sender: TObject);\n    procedure BadgeClick(Sender: TObject);/' src/forms/Home.pas
+printf '\nprocedure THomeForm.BadgeClick(Sender: TObject);\nbegin\n  Greeting.Text := NewBadge.Text + '"'"' clicked'"'"';\nend;\n' > extra.inc
+sed -i '/^implementation$/r extra.inc' src/forms/Home.pas
+"$PASTEL" build >/dev/null 2>&1
+expect "an app uses its own control"      '[ -x build/linux/debug/own-controls ]'
+printf 'click NewBadge\nexpect Greeting New clicked\nquit\n' > ui.txt
+set +e; out="$(PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT=ui.txt ./build/linux/debug/own-controls 2>&1)"; set -e
+expect "and it works"                     'echo "$out" | grep -q "ok: Greeting = \"New clicked\""'
+expect "schema lists it for the designer" '"$PASTEL" schema 2>/dev/null | grep -q "\"name\":\"TBadge\",\"container\":false,\"form\":false,\"project\":true"'
+out="$(sed "s/Text = 'New'/Txt = 'New'/" src/forms/Home.pform | "$PASTEL" check src/forms/Home.pform --stdin --json 2>/dev/null || true)"
+expect "check knows its properties"       'echo "$out" | grep -q "TBadge has no property"'
+"$PASTEL" preview src/forms/Home.pform -o badge.png >/dev/null 2>&1
+expect "preview draws it"                 'head -c 4 badge.png | grep -q PNG'
 cd "$WORK/gui-demo"
 
 # --- window events ---

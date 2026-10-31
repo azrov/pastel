@@ -26,6 +26,8 @@ type TRectI = record
 | `H: Integer` |  |
 | `function Contains(PX: Integer; PY: Integer): Boolean` |  |
 | `function Intersect(const R: TRectI): TRectI` |  |
+| `function Union(const R: TRectI): TRectI` | The smallest rectangle around both (an empty one is ignored). |
+| `function Inflate(D: Integer): TRectI` |  |
 
 ### TGlyph
 
@@ -100,6 +102,7 @@ type TCanvas32 = class
 | `procedure DrawBitmap(B: TBitmap32; X: Integer; Y: Integer; W: Integer; H: Integer; Smooth: Boolean = True; Opacity: Byte = 255)` | A picture scaled into the rectangle (bilinear when Smooth), with its transparency. |
 | `function GetPixel(X: Integer; Y: Integer): TColor32` |  |
 | `procedure SaveToPNG(const FileName: string)` |  |
+| `function PixelRect(const R: TRectI): TRectI` | A rectangle in layout units, in pixels. |
 | `function Data: Pointer` |  |
 | `property Width: Integer` |  |
 | `property Height: Integer` |  |

@@ -85,12 +85,21 @@ export class FormPreview {
     this.schedule(0);
   }
 
+  /** The project's own controls changed: new toolbox and a new picture. */
+  static async controlsChanged(): Promise<void> {
+    const p = FormPreview.current;
+    if (p) {
+      await p.sendSchema();
+      p.schedule(0);
+    }
+  }
+
   private async sendSchema(): Promise<void> {
     const schema = await this.services.loadSchema();
     if (schema) {
       this.panel.webview.postMessage({
         type: 'schema',
-        controls: schema.controls.map(c => ({ name: c.name, container: c.container })),
+        controls: schema.controls.map(c => ({ name: c.name, container: c.container, project: !!c.project })),
       });
     }
   }

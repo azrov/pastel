@@ -23,12 +23,16 @@ type
     FMainForm: TForm;
     FTerminated: Boolean;
     FHeadless: Boolean;
+    FCheckRepaint: Boolean;   { PASTEL_CHECK_REPAINT=1: compare partial repaints with full ones }
+    FRepaintMismatches, FRepaintsChecked: Integer;
     FWindow, FRenderer, FTexture: Pointer;
     FCanvas: TCanvas32;
     FWidth, FHeight: Integer;     { in layout units }
     FScale: Single;               { pixels per layout unit }
     FMouseScale: Single;          { window coordinates per layout unit }
     FTextureW, FTextureH: Integer;
+    FPaintedW, FPaintedH: Integer;     { canvas size of the last full paint }
+    FPresentArea: TRectI;              { what Present uploads; empty: all }
     FCursors: array[TCursorKind] of Pointer;
     FCursorShown: TCursorKind;
     { window settings as last applied to the real window }
@@ -60,6 +64,8 @@ type
     procedure Reload(const NewSource: string);
     procedure Paint;
     procedure PaintOverlay;
+    procedure CheckPartialRepaint;
+    procedure PaintIfNeeded;
     procedure Present;
     procedure UpdateCursor;
     procedure SyncWindow;
@@ -281,6 +287,9 @@ begin
   if not LanguageChosen then
     UseLanguage(SystemLanguage);
   FHeadless := GetEnv('PASTEL_HEADLESS') = '1';
+  FCheckRepaint := GetEnv('PASTEL_CHECK_REPAINT') = '1';
+  if GetEnv('PASTEL_FULL_REPAINT') = '1' then
+    PartialRepaint := False;
   FScale := 1;
   FMouseScale := 1;
 end;
@@ -547,9 +556,61 @@ procedure TApplication.Paint;
 begin
   FCanvas.Scale := FScale;
   FCanvas.SetSize(FWidth, FHeight);
+  if not NeedsRepaint and NeedsPartialRepaint and (FReloadError = '') and
+    (FCanvas.PixelWidth = FPaintedW) and (FCanvas.PixelHeight = FPaintedH) then
+  begin
+    { only what changed: a blinking caret, a button under the mouse... }
+    FPresentArea := DirtyArea;
+    if FCheckRepaint then
+      FrozenTime := GetTickCount64;
+    FMainForm.RenderArea(FCanvas, FPresentArea);
+    if FCheckRepaint then
+    begin
+      CheckPartialRepaint;
+      FrozenTime := 0;
+    end;
+  end
+  else
+  begin
+    FPresentArea := RectI(0, 0, 0, 0);
+    FMainForm.Render(FCanvas);
+    PaintOverlay;
+    FPaintedW := FCanvas.PixelWidth;
+    FPaintedH := FCanvas.PixelHeight;
+  end;
+end;
+
+{ A partial repaint must give the same picture as a full one: paints
+  everything again and reports the first pixel that differs. }
+procedure TApplication.CheckPartialRepaint;
+var
+  Before: array of Cardinal;
+  P: PCardinal;
+  I, N: Integer;
+  Again, Full: Boolean;
+  Area: TRectI;
+begin
+  Inc(FRepaintsChecked);
+  N := FCanvas.PixelWidth * FCanvas.PixelHeight;
+  SetLength(Before, N);
+  Move(FCanvas.Data^, Before[0], N * 4);
+  Again := NeedsPartialRepaint;
+  Full := NeedsRepaint;
+  Area := DirtyArea;
   FMainForm.Render(FCanvas);
-  PaintOverlay;
-  NeedsRepaint := False;
+  NeedsPartialRepaint := Again;
+  NeedsRepaint := Full;
+  DirtyArea := Area;
+  P := FCanvas.Data;
+  for I := 0 to N - 1 do
+    if P[I] <> Before[I] then
+    begin
+      Inc(FRepaintMismatches);
+      WriteLn(Format('repaint mismatch at %d,%d (dirty area %d,%d %dx%d, script line %d)',
+        [I mod FCanvas.PixelWidth, I div FCanvas.PixelWidth, FPresentArea.X, FPresentArea.Y,
+        FPresentArea.W, FPresentArea.H, FScriptPos]));
+      Exit;
+    end;
 end;
 
 procedure TApplication.PaintOverlay;
@@ -577,11 +638,14 @@ begin
 end;
 
 procedure TApplication.Present;
+var
+  R: TRectI;    { the same layout as SDL_Rect }
 begin
   if FHeadless then
     Exit;
   if (FTexture = nil) or (FTextureW <> FCanvas.PixelWidth) or (FTextureH <> FCanvas.PixelHeight) then
   begin
+    FPresentArea := RectI(0, 0, 0, 0);     { a new texture gets everything }
     if FTexture <> nil then
       SDL_DestroyTexture(FTexture);
     FTexture := SDL_CreateTexture(FRenderer, SDL_PIXELFORMAT_ARGB8888,
@@ -589,7 +653,11 @@ begin
     FTextureW := FCanvas.PixelWidth;
     FTextureH := FCanvas.PixelHeight;
   end;
-  SDL_UpdateTexture(FTexture, nil, FCanvas.Data, FCanvas.PixelWidth * 4);
+  R := FCanvas.PixelRect(FPresentArea).Intersect(RectI(0, 0, FTextureW, FTextureH));
+  if (FPresentArea.W > 0) and (R.W > 0) and (R.H > 0) then
+    SDL_UpdateTexture(FTexture, @R, PByte(FCanvas.Data) + (R.Y * FTextureW + R.X) * 4, FTextureW * 4)
+  else
+    SDL_UpdateTexture(FTexture, nil, FCanvas.Data, FCanvas.PixelWidth * 4);
   SDL_RenderClear(FRenderer);
   SDL_RenderCopy(FRenderer, FTexture, nil, nil);
   SDL_RenderPresent(FRenderer);
@@ -1113,6 +1181,17 @@ begin
   end;
 end;
 
+procedure TApplication.PaintIfNeeded;
+begin
+  if NeedsLayout or (FLaidOutW <> FWidth) or (FLaidOutH <> FHeight) then
+    DoLayout;
+  if NeedsRepaint or NeedsPartialRepaint then
+  begin
+    Paint;
+    Present;
+  end;
+end;
+
 procedure TApplication.RunScript(const FileName: string);
 begin
   FScript := TStringList.Create;
@@ -1122,10 +1201,14 @@ begin
     FScriptPos := 0;
     FScriptFailures := 0;
     while RunScriptStep do
-      ;
+      PaintIfNeeded;     { like the event loop: what a line changed is drawn }
   finally
     FreeAndNil(FScript);
   end;
+  if FCheckRepaint then
+    WriteLn(Format('partial repaints: %d checked, %d wrong', [FRepaintsChecked, FRepaintMismatches]));
+  if FRepaintMismatches > 0 then
+    Inc(FScriptFailures);
   if FScriptFailures > 0 then
     Halt(1);
 end;
@@ -1172,12 +1255,12 @@ begin
   begin
     FLastBlink := NowMs;
     CaretVisible := not CaretVisible;
-    NeedsRepaint := True;
+    FMainForm.Focused.Invalidate;
   end;
   FMainForm.UpdateTooltip(NowMs);
   if NeedsLayout or (FLaidOutW <> FWidth) or (FLaidOutH <> FHeight) then
     DoLayout;
-  if NeedsRepaint then
+  if NeedsRepaint or NeedsPartialRepaint then
   begin
     AnimationRequested := False;
     Paint;
@@ -1235,8 +1318,10 @@ end;
 
 { the HWND for system dialogs on Windows (an SDL_SysWMinfo: version, subsystem, then the window) }
 function WindowHandle: Pointer;
+{$IFDEF WINDOWS}
 var
   Info: array[0..127] of Byte;
+{$ENDIF}
 begin
   Result := nil;
   {$IFDEF WINDOWS}

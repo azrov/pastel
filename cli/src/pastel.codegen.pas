@@ -27,10 +27,15 @@ function GenerateForms(const Root, GenDir: string; FileRefs: Boolean): TCodegenR
 { Builds the unit text for one parsed .pform. Exposed for tests. }
 function FormUnitSource(const UnitName, FormSource, FilePath: string): string;
 
+var
+  { ClassName=UnitName of the project's own controls (src/controls/), set by GenerateForms. }
+  ProjectClasses: TStringList = nil;
+
 implementation
 
 uses
-  Pastel.PForm, Pastel.Console, Pastel.UI, Pastel.Controls, Pastel.Menus, Pastel.Grids, Pastel.Binding;
+  Pastel.PForm, Pastel.Console, Pastel.UI, Pastel.Controls, Pastel.Menus, Pastel.Grids, Pastel.Binding,
+  Pastel.CustomCtl;
 
 function PascalString(const S: string): string;
 var
@@ -92,11 +97,22 @@ procedure CollectField(Node: TPFormNode; Data: Pointer);
 var
   L: PFieldList;
   C: TClass;
+  U: string;
 begin
   L := PFieldList(Data);
   C := FindControlClass(Node.ClassName_);
   if C = nil then
     C := FindNonVisualClass(Node.ClassName_);
+  if (C = nil) and (ProjectClasses <> nil) and (ProjectClasses.IndexOfName(Node.ClassName_) >= 0) then
+  begin
+    { a control of the project (src/controls/): known by name only here }
+    U := ProjectClasses.Values[Node.ClassName_];
+    if L^.Units.IndexOf(U) < 0 then
+      L^.Units.Add(U);
+    L^.Lines.Add(Format('    %s: %s;', [Node.Name, Node.ClassName_]));
+    L^.Binds.Add(Format('  %s := %s(BindComponent(''%s'', %s));', [Node.Name, Node.ClassName_, Node.Name, Node.ClassName_]));
+    Exit;
+  end;
   if C = nil then
   begin
     L^.Errors.Add(Format('%d'#9'unknown component type "%s" (available: %s)',
@@ -238,6 +254,8 @@ var
 begin
   Result.Generated := 0;
   Result.Errors := 0;
+  FreeAndNil(ProjectClasses);
+  ProjectClasses := ProjectControls(Root);
   Files := TStringList.Create;
   Src := TStringList.Create;
   try

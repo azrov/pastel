@@ -1559,13 +1559,13 @@ begin
   begin
     { a piece running from left to right }
     Seg := Bounds.W div 3;
-    T := (GetTickCount64 mod 1400) / 1400;
+    T := (AnimationTime mod 1400) / 1400;
     X := Bounds.X - Seg + Round(T * (Bounds.W + Seg));
     C.PushClip(Bounds);
     C.FillRoundRect(X, Bounds.Y, Seg, Bounds.H, Bounds.H / 2, Theme.Accent);
     C.PopClip;
     if Visible and Enabled then
-      RequestAnimation;
+      RequestAnimation(Self);
     Exit;
   end;
   W := Round(Bounds.W * FPosition / FMax);
@@ -1729,7 +1729,7 @@ begin
   CX := Bounds.X + Bounds.W / 2;
   CY := Bounds.Y + Bounds.H / 2;
   R := Math.Min(Bounds.W, Bounds.H) / 2 - 3;
-  Phase := (GetTickCount64 div 90) mod 8;
+  Phase := (AnimationTime div 90) mod 8;
   for I := 0 to 7 do
   begin
     A := I * Pi / 4;
@@ -1737,7 +1737,7 @@ begin
       WithAlpha(Theme.Accent, 40 + 215 * ((I - Phase + 8) mod 8) div 7));
   end;
   if Visible then
-    RequestAnimation;
+    RequestAnimation(Self);
 end;
 
 initialization
