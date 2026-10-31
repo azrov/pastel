@@ -184,6 +184,8 @@ type
     FHttp: TFPCustomHttpServer;
     FThread: TWebServerThread;
     FAccessLog: Boolean;
+    FMaxBodySize: Int64;
+    FMaxHeaderSize, FRequestTimeout, FMaxConnections: Integer;
     FStarted: TDateTime;
     FHealthVersion: string;
     FRequests: Int64;
@@ -249,6 +251,15 @@ type
     property Address: string read FAddress;
     { a log line for every request (default on) }
     property AccessLog: Boolean read FAccessLog write FAccessLog;
+    { Limits against clients that send too much or too slowly (set before Start).
+      A body larger than MaxBodySize bytes gets 413, headers larger than
+      MaxHeaderSize 431; a request that is not read completely within
+      RequestTimeout seconds (or stays silent for half of it) gets 408; when
+      MaxConnections connections are open, new ones get 503. }
+    property MaxBodySize: Int64 read FMaxBodySize write FMaxBodySize;
+    property MaxHeaderSize: Integer read FMaxHeaderSize write FMaxHeaderSize;
+    property RequestTimeout: Integer read FRequestTimeout write FRequestTimeout;
+    property MaxConnections: Integer read FMaxConnections write FMaxConnections;
     property Requests: Int64 read GetRequests;
   end;
 
@@ -286,12 +297,16 @@ function UrlDecode(const S: string): string;
 implementation
 
 uses
-  DateUtils, ssockets, Pastel.Json, Pastel.Log, Pastel.Crypto, Pastel.Jwt;
+  DateUtils, ssockets, sockets, Pastel.Json, Pastel.Log, Pastel.Crypto, Pastel.Jwt;
 
 type
-  { publishes Address, which TFPHttpServer hides in FPC 3.2.2 }
+  { publishes Address, which TFPHttpServer hides in FPC 3.2.2; guards connections }
   TPastelHttpServer = class(TFPCustomHttpServer)
+  protected
+    function CreateConnection(Data: TSocketStream): TFPHTTPConnection; override;
   public
+    MaxBodySize: Int64;
+    MaxHeaderSize, RequestTimeout, MaxConnections: Integer;
     property Address;
     property Port;
     property Threaded;
@@ -301,6 +316,146 @@ type
     property Active;
     property QueueSize;
   end;
+
+{ ---------------- limits ---------------- }
+
+{ FPC 3.2.2's HTTP server reads whatever a client sends, as long as it
+  sends it. Every connection runs in its own thread, so the limits of the
+  request being read are kept per thread. }
+threadvar
+  ConnBytes: Int64;           { read so far on this connection }
+  ConnInBody: Boolean;        { the headers are read }
+  ConnDeadline: QWord;        { GetTickCount64 when the request must be read }
+  ConnMaxHeader: Integer;
+
+type
+  { a request broke a limit; the answer was sent already }
+  EWebLimit = class(Exception);
+
+  { the socket of a connection: counts and times what it reads }
+  TGuardedSocketStream = class(TInetSocket)
+  public
+    function Read(var Buffer; Count: Longint): Longint; override;
+    procedure Answer(Status: Integer; const Reason: string);
+    procedure Linger;
+  end;
+
+  TPastelHttpConnection = class(TFPHTTPConnection)
+  protected
+    procedure SetupSocket; override;
+    procedure ReadRequestContent(ARequest: TFPHTTPConnectionRequest); override;
+  end;
+
+  { too many connections: 503 at once }
+  TBusyHttpConnection = class(TFPHTTPConnection)
+  public
+    procedure HandleRequest; override;
+  end;
+
+procedure TGuardedSocketStream.Answer(Status: Integer; const Reason: string);
+var
+  S: string;
+begin
+  S := Format('HTTP/1.1 %d %s'#13#10'Content-Type: application/json'#13#10'Connection: close'#13#10 +
+    'Content-Length: %d'#13#10#13#10'{"error":"%s"}', [Status, Reason, Length(Reason) + 12, Reason]);
+  try
+    inherited Write(S[1], Length(S));
+    Linger;
+  except
+    { the client is gone }
+  end;
+end;
+
+{ After an early answer the client may still be sending: closing now would
+  reset the connection and lose the answer. Stop writing, read and drop
+  what comes for a moment, then close. }
+procedure TGuardedSocketStream.Linger;
+var
+  Buf: array[0..4095] of Byte;
+  Until_: QWord;
+begin
+  fpshutdown(Handle, SHUT_WR);
+  IOTimeout := 200;
+  Until_ := GetTickCount64 + 1000;
+  while GetTickCount64 < Until_ do
+    if inherited Read(Buf, SizeOf(Buf)) <= 0 then
+      Break;
+end;
+
+function TGuardedSocketStream.Read(var Buffer; Count: Longint): Longint;
+begin
+  if (ConnDeadline <> 0) and (GetTickCount64 > ConnDeadline) then
+  begin
+    Answer(408, 'Request Timeout');
+    raise EWebLimit.Create('the request took too long');
+  end;
+  Result := inherited Read(Buffer, Count);
+  if Result < 0 then
+  begin
+    { nothing came within IOTimeout: a silent client }
+    if not ConnInBody and (ConnBytes = 0) then
+      Exit;      { an idle connection: just close it }
+    Answer(408, 'Request Timeout');
+    raise EWebLimit.Create('the client stopped sending');
+  end;
+  Inc(ConnBytes, Result);
+  if not ConnInBody and (ConnMaxHeader > 0) and (ConnBytes > ConnMaxHeader) then
+  begin
+    Answer(431, 'Request Header Fields Too Large');
+    raise EWebLimit.Create('the request headers are too large');
+  end;
+end;
+
+procedure TPastelHttpConnection.SetupSocket;
+var
+  H: TPastelHttpServer;
+begin
+  inherited SetupSocket;
+  H := TPastelHttpServer(Server);
+  ConnBytes := 0;
+  ConnInBody := False;
+  ConnMaxHeader := H.MaxHeaderSize;
+  if H.RequestTimeout > 0 then
+  begin
+    ConnDeadline := GetTickCount64 + QWord(H.RequestTimeout) * 1000;
+    { a read that waits longer than half of it fails }
+    Socket.IOTimeout := H.RequestTimeout * 500;
+  end
+  else
+    ConnDeadline := 0;
+end;
+
+procedure TPastelHttpConnection.ReadRequestContent(ARequest: TFPHTTPConnectionRequest);
+var
+  H: TPastelHttpServer;
+begin
+  H := TPastelHttpServer(Server);
+  ConnInBody := True;
+  if (H.MaxBodySize > 0) and (ARequest.ContentLength > H.MaxBodySize) then
+  begin
+    if Socket is TGuardedSocketStream then
+      TGuardedSocketStream(Socket).Answer(413, 'Payload Too Large');
+    raise EWebLimit.CreateFmt('the request body is too large (%d bytes)', [ARequest.ContentLength]);
+  end;
+  inherited ReadRequestContent(ARequest);
+end;
+
+procedure TBusyHttpConnection.HandleRequest;
+begin
+  if Socket is TGuardedSocketStream then
+    TGuardedSocketStream(Socket).Answer(503, 'Service Unavailable');
+end;
+
+function TPastelHttpServer.CreateConnection(Data: TSocketStream): TFPHTTPConnection;
+begin
+  { the same object with a Read that keeps the limits (no new fields) }
+  if Data.ClassType = TInetSocket then
+    PPointer(Data)^ := Pointer(TGuardedSocketStream);
+  if (MaxConnections > 0) and (ConnectionCount >= MaxConnections) then
+    Result := TBusyHttpConnection.Create(Self, Data)
+  else
+    Result := TPastelHttpConnection.Create(Self, Data);
+end;
 
 { ---------------- helpers ---------------- }
 
@@ -660,9 +815,11 @@ begin
   Result := FReq.RemoteAddress;
   if FTrustProxy then
   begin
+    { the last address is the one the proxy saw; the ones before it come
+      from the client and can be anything }
     F := Header('X-Forwarded-For');
-    if Pos(',', F) > 0 then
-      F := Copy(F, 1, Pos(',', F) - 1);
+    while Pos(',', F) > 0 do
+      Delete(F, 1, Pos(',', F));
     if Trim(F) <> '' then
       Result := Trim(F);
   end;
@@ -875,6 +1032,10 @@ begin
   FAddress := AAddress;
   FRoutes := TList.Create;
   FAccessLog := True;
+  FMaxBodySize := 8 * 1024 * 1024;
+  FMaxHeaderSize := 64 * 1024;
+  FRequestTimeout := 30;
+  FMaxConnections := 256;
   FLock := TCriticalSection.Create;
   FFilters := TList.Create;
   FOwned := TList.Create;
@@ -1040,9 +1201,12 @@ var
 begin
   Rel := Req.Param('*');
   for P in Rel.Split(['/']) do
-    if (P = '..') or (P = '.') or (Pos('\', P) > 0) or (Pos(':', P) > 0) then
+    if (P = '..') or (P = '.') or (Pos('\', P) > 0) or (Pos(':', P) > 0) or (Pos(#0, P) > 0) then
       raise EWebError.Create(404, 'not found');
   Full := Route.StaticFolder + SetDirSeparators(Rel);
+  { and once more on the final path: nothing outside the folder }
+  if Copy(ExpandFileName(Full), 1, Length(Route.StaticFolder)) <> Route.StaticFolder then
+    raise EWebError.Create(404, 'not found');
   if DirectoryExists(Full) then
     Full := IncludeTrailingPathDelimiter(Full) + 'index.html';
   if not FileExists(Full) then
@@ -1058,6 +1222,8 @@ var
   Allowed, Method: string;
   Params: TStringList;
 begin
+  { browsers must not guess another type than the one sent (an upload as HTML...) }
+  Res.SetHeader('X-Content-Type-Options', 'nosniff');
   ApplyCors(Req, Res);
   if Preflight(Req, Res) then
     Exit;
@@ -1195,6 +1361,10 @@ begin
   H.QueueSize := 64;
   H.AcceptIdleTimeout := 50;      { so Stop is noticed quickly, and Start knows it listens }
   H.OnRequest := @OnRequest;
+  H.MaxBodySize := FMaxBodySize;
+  H.MaxHeaderSize := FMaxHeaderSize;
+  H.RequestTimeout := FRequestTimeout;
+  H.MaxConnections := FMaxConnections;
   FHttp := H;
   FStarted := Now;
   FThread := TWebServerThread.Create(True);
@@ -1366,15 +1536,18 @@ begin
       Counts.Clear;
       WindowStart := GetTickCount64;
     end;
-    I := Counts.IndexOfName(Ip);
+    { sorted: a binary search, also with very many clients }
+    I := Counts.IndexOf(Ip);
     if I < 0 then
-      N := 1
+    begin
+      N := 1;
+      Counts.AddObject(Ip, TObject(PtrInt(1)));
+    end
     else
     begin
-      N := StrToIntDef(Counts.ValueFromIndex[I], 0) + 1;
-      Counts.Delete(I);
+      N := PtrInt(Counts.Objects[I]) + 1;
+      Counts.Objects[I] := TObject(PtrInt(N));
     end;
-    Counts.Add(Ip + '=' + IntToStr(N));
     Left := (Int64(Seconds) * 1000 - Int64(GetTickCount64 - WindowStart) + 999) div 1000;
   finally
     Lock.Release;
@@ -1563,6 +1736,9 @@ begin
   C.SetDefault('server.port', '8080');
   C.SetDefault('server.address', '');
   C.SetDefault('server.trust_proxy', 'false');
+  C.SetDefault('server.max_body_mb', '8');
+  C.SetDefault('server.request_timeout', '30');
+  C.SetDefault('server.max_connections', '256');
 end;
 
 procedure TWebService.Routes(Web: TWebServer);
@@ -1574,6 +1750,9 @@ begin
   inherited Started;
   FWeb := TWebServer.Create(Config.GetInt('server.port'), Config.Get('server.address'));
   FWeb.TrustProxy := Config.GetBool('server.trust_proxy');
+  FWeb.MaxBodySize := Round(Config.GetFloat('server.max_body_mb') * 1024 * 1024);
+  FWeb.RequestTimeout := Config.GetInt('server.request_timeout');
+  FWeb.MaxConnections := Config.GetInt('server.max_connections');
   if Config.Has('server.cors') then
     FWeb.Cors(Config.GetList('server.cors'));
   Routes(FWeb);

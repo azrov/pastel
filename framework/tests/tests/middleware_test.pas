@@ -287,7 +287,9 @@ begin
   AssertEquals('127.0.0.1', GetWith('/whoami', ['X-Forwarded-For: 203.0.113.9']).Body);
   Server.TrustProxy := True;
   try
-    AssertEquals('203.0.113.9', GetWith('/whoami', ['X-Forwarded-For: 203.0.113.9, 10.0.0.1']).Body);
+    AssertEquals('203.0.113.9', GetWith('/whoami', ['X-Forwarded-For: 203.0.113.9']).Body);
+    { what the client sent itself comes first; the proxy adds the real address at the end }
+    AssertEquals('203.0.113.9', GetWith('/whoami', ['X-Forwarded-For: 1.2.3.4, 203.0.113.9']).Body);
   finally
     Server.TrustProxy := False;
   end;

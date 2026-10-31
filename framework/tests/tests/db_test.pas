@@ -118,6 +118,15 @@ begin
       Row.Free;
     end;
     AssertNil(Db.QueryOne('select * from users where id = ?', [99]));
+    { ? and : inside quotes are text, not parameters }
+    Row := Db.QueryOne('select ? as a, ''what? at 12:30'' as b, ? as c', ['first', 'second']);
+    try
+      AssertEquals('first', JStr(Row, 'a'));
+      AssertEquals('what? at 12:30', JStr(Row, 'b'));
+      AssertEquals('second', JStr(Row, 'c'));
+    finally
+      Row.Free;
+    end;
     AssertEquals(2, Db.QueryInt('select count(*) from users', []));
     AssertEquals('none', Db.QueryValue('select name from users where id = ?', [99], 'none'));
     AssertEquals(1, Db.Exec('update users set score = ? where id = ?', [1, Id2]));

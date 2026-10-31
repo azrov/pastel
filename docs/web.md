@@ -219,8 +219,25 @@ Pastel answers the browser's preflight (`OPTIONS`) requests and adds the
 
 Behind nginx or Caddy every request comes from the proxy. With
 `Web.TrustProxy := True` (or `[server] trust_proxy = true`), `Req.ClientIP`
-and the rate limits use the address in `X-Forwarded-For` instead. Only turn
+and the rate limits use the last address in `X-Forwarded-For` instead (the
+one the proxy added; what comes before it was sent by the client). Only turn
 it on behind a proxy: otherwise clients could claim any address.
+
+## Limits
+
+The server protects itself against clients that send too much or too
+slowly:
+
+| Setting (`[server]`) | Property | Default | When it is broken |
+|---|---|---|---|
+| `max_body_mb` | `MaxBodySize` (bytes) | 8 MB | 413 Payload Too Large |
+| — | `MaxHeaderSize` | 64 KB | 431 Request Header Fields Too Large |
+| `request_timeout` | `RequestTimeout` (seconds) | 30 | 408 Request Timeout: the whole request must arrive within it, and no wait for more data may be longer than half of it |
+| `max_connections` | `MaxConnections` | 256 | 503 Service Unavailable for new connections |
+
+Every answer also carries `X-Content-Type-Options: nosniff`, so browsers do
+not take a file for something else than its type. Static files are only
+served from inside their folder (`..`, encoded or not, gives 404).
 
 ## Checking the data: `Req.Validate`
 

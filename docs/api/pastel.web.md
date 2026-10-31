@@ -177,6 +177,10 @@ type TWebServer = class
 | `property Port: Integer` |  |
 | `property Address: string` |  |
 | `property AccessLog: Boolean` | a log line for every request (default on) |
+| `property MaxBodySize: Int64` | Limits against clients that send too much or too slowly (set before Start). A body larger than MaxBodySize bytes gets 413, headers larger than MaxHeaderSize 431; a request that is not read completely within RequestTimeout seconds (or stays silent for half of it) gets 408; when MaxConnections connections are open, new ones get 503. |
+| `property MaxHeaderSize: Integer` |  |
+| `property RequestTimeout: Integer` |  |
+| `property MaxConnections: Integer` |  |
 | `property Requests: Int64` |  |
 
 ### TWebServerThread

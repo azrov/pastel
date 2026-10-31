@@ -78,3 +78,23 @@ Checking a webhook signature, for example:
 if not SameSecret(ToHex(HmacSha256(WebhookSecret, Req.Body)), Req.Header('X-Signature')) then
   raise EWebError.Create(401, 'bad signature');
 ```
+
+## What the web server and the database layer protect against
+
+Reviewed for 0.7; each point has a test in `framework/tests`.
+
+| Threat | What Pastel does |
+|---|---|
+| SQL injection | Values are always sent as parameters (`?`), never put into the SQL text; `?` and `:` inside quotes stay text. |
+| Huge requests | Bodies over `max_body_mb` (8 MB) get 413 before anything is read or reserved; headers over 64 KB get 431. |
+| Slow clients ("slowloris") | A request must arrive within `request_timeout` (30 s), and no single wait may be longer than half of it: 408. |
+| Too many connections | Over `max_connections` (256), new connections get 503 at once instead of a thread each. |
+| Path traversal | Static files are only served from inside their folder: `..`, `%2e%2e`, `%2f`, `\` and `%00` give 404, and the final path is checked once more. |
+| Content sniffing | Every answer has `X-Content-Type-Options: nosniff`. |
+| Spoofed client addresses | Behind a proxy (`trust_proxy`), only the last `X-Forwarded-For` address counts (the one the proxy added). |
+| Rate limit bypass | Limits are per client address, looked up in a sorted list, so many addresses do not slow the server down. |
+| Guessable secrets | API keys and signatures are compared in constant time (`SameSecret`); JWTs must be HS256 (no `none`, no algorithm switching); passwords use PBKDF2-SHA256 with 210 000 rounds. |
+| Leaking errors | Release builds answer 500 with a general message; the details go to the log. |
+| Passwords in logs | `TDatabase.SafeUrl` leaves the password out of database addresses. |
+
+Not covered by Pastel itself: HTTPS (put nginx or Caddy in front, see [deploy.md](deploy.md)), and denial of service by many machines at once (a job for the network in front of the server).

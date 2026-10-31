@@ -5,7 +5,7 @@ unit Web_Test;
 interface
 
 uses
-  Classes, SysUtils, SyncObjs, fpjson, Pastel.Testing, Pastel.Web, Pastel.Http, Pastel.Json,
+  Classes, SysUtils, SyncObjs, fpjson, ssockets, Pastel.Testing, Pastel.Web, Pastel.Http, Pastel.Json,
   Pastel.Files, Pastel.Log;
 
 type
@@ -37,6 +37,11 @@ type
     procedure ManyRequestsAtOnce;
     procedure PortInUseIsExplained;
     procedure StopsAndFreesThePort;
+    procedure TooLargeBodiesAre413;
+    procedure TooLargeHeadersAre431;
+    procedure SlowClientsAre408;
+    procedure TooManyConnectionsAre503;
+    procedure AnswersSayNoSniff;
   end;
 
 implementation
@@ -153,7 +158,41 @@ begin
   Server.Health('/health', '1.0.0');
   Server.Static('/', Folder);
   Server.Get('/api/version', @Hello);
+  Server.MaxBodySize := 4096;
+  Server.MaxHeaderSize := 8192;
+  Server.RequestTimeout := 2;
   Server.Start;
+end;
+
+{ sends Data as it is (Pause ms before the rest after a first part), returns the whole answer }
+function RawRequest(APort: Integer; const Data: string; Pause: Integer = 0; const Rest: string = ''): string;
+var
+  S: TInetSocket;
+  Buf: array[0..4095] of Char;
+  N: Integer;
+begin
+  Result := '';
+  S := TInetSocket.Create('127.0.0.1', APort);
+  try
+    S.IOTimeout := 5000;
+    if Data <> '' then
+      S.WriteBuffer(Data[1], Length(Data));
+    if Pause > 0 then
+      Sleep(Pause);
+    if Rest <> '' then
+    try
+      S.WriteBuffer(Rest[1], Length(Rest));
+    except
+      { the server may have closed already }
+    end;
+    repeat
+      N := S.Read(Buf, SizeOf(Buf));
+      if N > 0 then
+        Result := Result + Copy(Buf, 0, N);
+    until N <= 0;
+  finally
+    S.Free;
+  end;
 end;
 
 procedure TWebTests.SetUp;
@@ -340,6 +379,76 @@ begin
   AssertEquals(404, HttpGet(Base + '/../pastel-web-secret.txt').Status);
   AssertEquals(404, HttpGet(Base + '/css/%2e%2e/%2e%2e/pastel-web-secret.txt').Status);
   AssertEquals(404, HttpGet(Base + '/%2e%2e%2fpastel-web-secret.txt').Status);
+  AssertEquals(404, HttpGet(Base + '/index.html%00.png').Status);
+  AssertEquals(404, HttpGet(Base + '/..%5cpastel-web-secret.txt').Status);
+end;
+
+procedure TWebTests.TooLargeBodiesAre413;
+var
+  Body: string;
+begin
+  Body := '{"name": "' + StringOfChar('a', 5000) + '"}';
+  AssertContains('HTTP/1.1 413', RawRequest(Port, 'POST /users HTTP/1.1'#13#10'Host: x'#13#10 +
+    'Content-Type: application/json'#13#10'Content-Length: ' + IntToStr(Length(Body)) + #13#10#13#10 + Body));
+  { claiming a huge body does not make the server reserve it }
+  AssertContains('HTTP/1.1 413', RawRequest(Port, 'POST /users HTTP/1.1'#13#10'Content-Length: 99999999999'#13#10#13#10));
+  AssertEquals(201, HttpPostJson(Base + '/users', '{"name": "Ayşe"}').Status, 'small ones still work');
+end;
+
+procedure TWebTests.TooLargeHeadersAre431;
+begin
+  AssertContains('HTTP/1.1 431', RawRequest(Port, 'GET /hello HTTP/1.1'#13#10'X-Big: ' + StringOfChar('a', 10000) +
+    #13#10#13#10));
+  AssertContains('HTTP/1.1 431', RawRequest(Port, 'GET /hello HTTP/1.1'#13#10 + StringOfChar('a', 20000)));
+end;
+
+procedure TWebTests.SlowClientsAre408;
+var
+  T: QWord;
+begin
+  T := GetTickCount64;
+  { half a request, then silence }
+  AssertContains('HTTP/1.1 408', RawRequest(Port, 'GET /hello HTTP/1.1'#13#10'Host: x'#13#10));
+  AssertTrue(GetTickCount64 - T < 4000, 'within the timeout');
+  AssertEquals('merhaba dünya', HttpGetText(Base + '/hello'), 'the server is fine');
+end;
+
+procedure TWebTests.TooManyConnectionsAre503;
+var
+  Small: TWebServer;
+  P, I: Integer;
+  Idle: array[0..2] of TInetSocket;
+begin
+  P := Port + 1;
+  Small := TWebServer.Create(P, '127.0.0.1');
+  try
+    Small.AccessLog := False;
+    Small.MaxConnections := 3;
+    Small.Get('/hello', @Hello);
+    Small.Start;
+    for I := 0 to 2 do
+    begin
+      Idle[I] := TInetSocket.Create('127.0.0.1', P);
+      Idle[I].WriteBuffer('GET', 3);     { started, not finished }
+    end;
+    Sleep(200);
+    try
+      AssertContains('HTTP/1.1 503', RawRequest(P, 'GET /hello HTTP/1.1'#13#10#13#10));
+    finally
+      for I := 0 to 2 do
+        Idle[I].Free;
+    end;
+    Sleep(200);
+    AssertContains('merhaba', RawRequest(P, 'GET /hello HTTP/1.1'#13#10#13#10), 'free again');
+  finally
+    Small.Stop;
+    Small.Free;
+  end;
+end;
+
+procedure TWebTests.AnswersSayNoSniff;
+begin
+  AssertEquals('nosniff', HttpGet(Base + '/hello').Header('X-Content-Type-Options'));
 end;
 
 procedure TWebTests.RoutesBeatMissingStaticFiles;
