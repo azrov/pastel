@@ -6,9 +6,11 @@
     if OpenFileDialog(FileName, 'Text files|*.txt;*.md|All files|*') then ...
     if SaveFileDialog(FileName, 'Notes|*.txt') then ...
 
-  The dialogs are drawn by Pastel inside the window (the same on every
-  platform, and test scripts can click them). They wait until the user
-  answered, like Delphi's. Their controls have names a test script can use:
+  Messages and questions are drawn by Pastel inside the window. The file
+  and folder dialogs are the system's own when it has them (Windows; Linux
+  with zenity or kdialog), else Pastel's; UseNativeDialogs := False always
+  takes Pastel's. Test scripts and headless runs get Pastel's, which
+  scripts can click. They wait until the user answered, like Delphi's. Their controls have names a test script can use:
   OkButton, CancelButton, YesButton, NoButton, InputEdit, FileList,
   FileNameEdit, PathEdit.
   Part of the Pastel project, MIT License. }
@@ -46,13 +48,19 @@ function SaveFileDialog(var FileName: string; const Filter: string = '';
   const Title: string = 'Save'; const DefaultExt: string = ''): Boolean;
 function SelectFolderDialog(var Folder: string; const Title: string = 'Choose a folder'): Boolean;
 
+var
+  { File and folder dialogs of the system when there are some. }
+  UseNativeDialogs: Boolean = True;
+  { The window handle for system dialogs (set by the application; HWND on Windows). }
+  NativeWindowHook: function: Pointer = nil;
+
 { The caption of a modal result: 'OK', 'Cancel', 'Yes'... }
 function ModalResultCaption(R: Integer): string;
 
 implementation
 
 uses
-  Math, StrUtils, Pastel.Controls;
+  Math, StrUtils, Pastel.Controls, Pastel.NativeDialogs;
 
 function ModalResultCaption(R: Integer): string;
 begin
@@ -560,11 +568,63 @@ begin
     FileName := FResult;
 end;
 
+{ the system's dialog; False when there is none (then Pastel's is shown) }
+function TryNative(Kind: TNativeDialogKind; const Title, Filter, DefaultExt: string;
+  var FileName: string; out Ok: Boolean): Boolean;
+var
+  D: TNativeDialog;
+  P: TPopup;
+  Content: TColumn;
+  L: TLabel;
+begin
+  Ok := False;
+  Result := False;
+  if not UseNativeDialogs or (GetEnvironmentVariable('PASTEL_HEADLESS') = '1') or
+    (GetEnvironmentVariable('PASTEL_TEST_SCRIPT') <> '') or (GetEnvironmentVariable('PASTEL_NATIVE_DIALOGS') = '0') then
+    Exit;
+  D := TNativeDialog.Create(Kind, Title, Filter, FileName, DefaultExt);
+  try
+    if Assigned(NativeWindowHook) then
+      D.Owner := NativeWindowHook();
+    if not D.Start then
+      Exit;
+    Result := True;
+    if D.Running then
+    begin
+      { the dialog is another program: the window keeps drawing, dimmed }
+      P := NewDialog('', 320, Content);
+      try
+        L := TLabel.Create(P);
+        L.Text := Title + '...';
+        L.Parent := Content;
+        P.Modal := True;
+        P.PopupCentered(CheckForm);
+        while D.Running do
+        begin
+          if Assigned(ModalStep) then
+            ModalStep();
+          Sleep(15);
+        end;
+        P.Close;
+      finally
+        P.Free;
+      end;
+    end;
+    Ok := D.Ok;
+    if Ok then
+      FileName := D.FileName;
+  finally
+    D.Free;
+  end;
+end;
+
 function OpenFileDialog(var FileName: string; const Filter: string; const Title: string): Boolean;
 var
   D: TFileDialog;
   F: string;
 begin
+  if TryNative(ndOpen, Title, Filter, '', FileName, Result) then
+    Exit;
   D := TFileDialog.CreateKind(fdOpen, Title, Filter, FileName, '');
   try
     Result := D.Execute(F);
@@ -581,6 +641,8 @@ var
   D: TFileDialog;
   F: string;
 begin
+  if TryNative(ndSave, Title, Filter, DefaultExt, FileName, Result) then
+    Exit;
   D := TFileDialog.CreateKind(fdSave, Title, Filter, FileName, DefaultExt);
   try
     Result := D.Execute(F);
@@ -596,6 +658,8 @@ var
   D: TFileDialog;
   F: string;
 begin
+  if TryNative(ndFolder, Title, '', '', Folder, Result) then
+    Exit;
   D := TFileDialog.CreateKind(fdFolder, Title, '', Folder, '');
   try
     Result := D.Execute(F);

@@ -9,7 +9,7 @@ Controls, layout and input handling.
 
 `uses Pastel.UI;` · source: [framework/src/pastel.ui.pas](../../framework/src/pastel.ui.pas)
 
-**Contents:** [TAlignItems](#talignitems) · [TJustify](#tjustify) · [TTextAlign](#ttextalign) · [TButtonStyle](#tbuttonstyle) · [TCursorKind](#tcursorkind) · [TWindowState](#twindowstate) · [TThemeMode](#tthememode) · [TControl](#tcontrol) · [TAction](#taction) · [TBox](#tbox) · [TColumn](#tcolumn) · [TRow](#trow) · [TCard](#tcard) · [TSpacer](#tspacer) · [TLabel](#tlabel) · [TButton](#tbutton) · [TEditState](#teditstate) · [TVisualLine](#tvisualline) · [TCustomEdit](#tcustomedit) · [TEdit](#tedit) · [TMemo](#tmemo) · [TPopup](#tpopup) · [TTimer](#ttimer) · [TForm](#tform) · [TTheme](#ttheme) · [UseDarkTheme](#usedarktheme) · [RequestAnimation](#requestanimation) · [ProcessTimers](#processtimers) · [WrapText](#wraptext) · [RegisterControl](#registercontrol) · [FindControlClass](#findcontrolclass) · [ControlClassCount](#controlclasscount) · [ControlClassAt](#controlclassat) · [RegisterNonVisual](#registernonvisual) · [FindNonVisualClass](#findnonvisualclass) · [NonVisualClassCount](#nonvisualclasscount) · [NonVisualClassAt](#nonvisualclassat)
+**Contents:** [TAlignItems](#talignitems) · [TJustify](#tjustify) · [TTextAlign](#ttextalign) · [TButtonStyle](#tbuttonstyle) · [TCursorKind](#tcursorkind) · [TWindowState](#twindowstate) · [TThemeMode](#tthememode) · [TControl](#tcontrol) · [TAction](#taction) · [TBox](#tbox) · [TColumn](#tcolumn) · [TRow](#trow) · [TCard](#tcard) · [TSpacer](#tspacer) · [TLabel](#tlabel) · [TButton](#tbutton) · [TEditState](#teditstate) · [TVisualLine](#tvisualline) · [TCustomEdit](#tcustomedit) · [TEdit](#tedit) · [TMemo](#tmemo) · [TPopup](#tpopup) · [TTimer](#ttimer) · [TForm](#tform) · [TTheme](#ttheme) · [UseDarkTheme](#usedarktheme) · [SetThemeValue](#setthemevalue) · [RequestAnimation](#requestanimation) · [ProcessTimers](#processtimers) · [WrapText](#wraptext) · [RegisterControl](#registercontrol) · [FindControlClass](#findcontrolclass) · [ControlClassCount](#controlclasscount) · [ControlClassAt](#controlclassat) · [RegisterNonVisual](#registernonvisual) · [FindNonVisualClass](#findnonvisualclass) · [NonVisualClassCount](#nonvisualclasscount) · [NonVisualClassAt](#nonvisualclassat)
 
 ## Types
 
@@ -478,6 +478,17 @@ procedure UseDarkTheme(Dark: Boolean)
 
 Light or dark colors for every control; repaints.
 
+### SetThemeValue
+
+```pascal
+function SetThemeValue(const Name: string; const Value: string): Boolean
+```
+
+Changes one theme value by its name in assets/theme.toml: 'accent',
+'background', 'surface', 'text', 'border', 'danger', ... are colors
+('#0EA5E9'); 'radius' and 'font_size' numbers. Hover and pressed shades
+follow the color. False for an unknown name or a bad value.
+
 ### RequestAnimation
 
 ```pascal
@@ -561,6 +572,7 @@ function NonVisualClassAt(Index: Integer): TComponentClass
 | `var ModalStep: procedure` | Runs one pass of the application's event loop; set by Pastel.App. TPopup.ShowModal calls it until the popup is closed. |
 | `var ShortcutHook: function (Form : TForm ; Key : LongInt ; Shift, Ctrl : Boolean) : Boolean` | Set by Pastel.Menus: keyboard shortcuts of menus and actions. |
 | `var SystemDarkHook: function : Boolean` | Whether the computer is set to dark mode (set by the application). |
+| `var ThemeCustomizer: procedure` | Runs after UseDarkTheme set up the light or dark colors: changes to Theme go here. Pastel.App applies assets/theme.toml with it. |
 | `var PopupMenuHook: procedure (Menu : TControl ; Form : TForm ; X, Y : Integer)` | Set by Pastel.Menus: shows a TPopupMenu at a point. |
 | `var KeyAlt: Boolean` | Alt is held (with KeyDown). |
 | `var MainForm: TForm` | The main window's form; dialogs are shown on it. Set by Pastel.App. |

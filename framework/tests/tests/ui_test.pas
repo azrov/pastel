@@ -46,12 +46,16 @@ type
     procedure HotReloadKeepsWhatTheUserDid;
     procedure ListsAndReferencesInPForms;
     procedure CanvasScales;
+    procedure GridRowsAndSorting;
+    procedure GridLoadsJson;
+    procedure TreeFromLines;
+    procedure ThemeValues;
   end;
 
 implementation
 
 uses
-  Pastel.PForm, Pastel.Forms, Pastel.Controls, Pastel.Menus;
+  Pastel.PForm, Pastel.Forms, Pastel.Controls, Pastel.Menus, Pastel.Grids, fpjson, Pastel.Json;
 
 var
   Clip: string;
@@ -637,6 +641,115 @@ begin
     AssertEquals(Cardinal(RGB(255, 255, 255)), Cardinal(C.GetPixel(16, 12)), 'right of it');
   finally
     C.Free;
+  end;
+end;
+
+procedure TUITests.GridRowsAndSorting;
+var
+  G: TGrid;
+begin
+  G := TGrid.Create(nil);
+  try
+    G.AddColumn('Name');
+    G.AddColumn('Age', 80, taRight);
+    G.AddRow(['Person 10', '9']);
+    G.AddRow(['Person 9', '10']);
+    G.AddRow(['Ali', '']);
+    AssertEquals(3, G.RowCount);
+    G.Row := 1;
+    G.SortBy(0);
+    AssertEquals('Ali', G[0, 0]);
+    AssertEquals('Person 9', G[0, 1], 'numbers in text sort as numbers');
+    AssertEquals(1, G.Row, 'the selection stays on its data');
+    G.SortBy(1);
+    AssertEquals('9', G[1, 0], 'a column of numbers');
+    AssertEquals('', G[1, 2], 'empty cells last');
+    G.SortBy(1, True);
+    AssertEquals('10', G[1, 0]);
+    G.DeleteRow(0);
+    AssertEquals(2, G.RowCount);
+    G.InsertRow(0, ['Can']);
+    AssertEquals('Can', G[0, 0]);
+    AssertEquals('', G[1, 0], 'missing values are empty');
+    G[1, 0] := '3';
+    AssertEquals('3', G.RowValues[0][1]);
+    AssertEquals(1, G.FindRow(0, 'Person 10'));
+    G.Clear;
+    AssertEquals(0, G.RowCount);
+    AssertEquals(-1, G.Row);
+  finally
+    G.Free;
+  end;
+end;
+
+procedure TUITests.GridLoadsJson;
+var
+  G: TGrid;
+  A: TJSONArray;
+begin
+  G := TGrid.Create(nil);
+  A := TJSONArray(ParseJson('[{"id": 1, "name": "Ayşe", "note": null}, {"id": 2, "name": "Ali"}]'));
+  try
+    G.LoadJson(A);
+    AssertEquals(3, G.ColCount, 'columns from the first row');
+    AssertEquals('Ayşe', G[1, 0]);
+    AssertEquals('', G[2, 0]);
+    G.Free;
+    G := TGrid.Create(nil);
+    G.AddColumn('Name').Field := 'name';
+    G.LoadJson(A);
+    AssertEquals(1, G.ColCount);
+    AssertEquals('Ali', G[0, 1]);
+    A.Free;
+    A := G.ToJson;
+    AssertEquals('[{"name":"Ayşe"},{"name":"Ali"}]', ToJson(A));
+  finally
+    G.Free;
+    A.Free;
+  end;
+end;
+
+procedure TUITests.TreeFromLines;
+var
+  Root: TPFormNode;
+  F: TForm;
+  T: TTreeView;
+begin
+  Root := ParsePForm('object F: TForm'#10'  object T: TTreeView'#10 +
+    '    Items = (''A'', ''  B'', ''    C'', ''  D'', ''E'')'#10'  end'#10'end');
+  F := TForm.Create(nil);
+  try
+    BuildForm(F, Root);
+    T := TTreeView(F.FindComponent('T'));
+    AssertEquals(2, T.Count);
+    AssertEquals(2, T.TopNodes[0].Count);
+    AssertEquals('C', T.TopNodes[0][0][0].Text);
+    AssertEquals('A/B/C', T.FindNode('A/B/C').Path);
+    AssertTrue(T.FindNode('A/X') = nil);
+    T.Selected := T.FindNode('A/B/C');
+    AssertTrue(T.TopNodes[0].Expanded, 'selecting opens the parents');
+    AssertEquals('A/B/C', T.Text);
+    T.TopNodes[1].AddChild('F');
+    AssertEquals('A'#10'  B'#10'    C'#10'  D'#10'E'#10'  F', T.Items.Text.TrimRight.Replace(#13, ''));
+  finally
+    F.Free;
+    Root.Free;
+  end;
+end;
+
+procedure TUITests.ThemeValues;
+begin
+  try
+    AssertTrue(SetThemeValue('accent', '#0E9F6E'));
+    AssertEquals(Cardinal(RGB($0E, $9F, $6E)), Cardinal(Theme.Accent));
+    AssertTrue(Theme.AccentHover <> Theme.Accent, 'the hover shade follows');
+    AssertTrue(SetThemeValue('radius', '12'));
+    AssertEquals(12, Theme.Radius);
+    AssertFalse(SetThemeValue('radius', 'big'));
+    AssertFalse(SetThemeValue('nothing', '#fff'));
+    AssertFalse(SetThemeValue('accent', 'green'));
+  finally
+    UseDarkTheme(False);
   end;
 end;
 

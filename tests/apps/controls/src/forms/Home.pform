@@ -4,6 +4,7 @@ object HomeForm: THomeForm
   Height = 560
   Padding = 0
   Gap = 0
+  OnCreate = FormCreate
   object MainMenu: TMenuBar
     object FileMenu: TMenuItem
       Caption = 'File'
@@ -117,6 +118,36 @@ object HomeForm: THomeForm
         OnDblClick = PeopleDblClick
       end
       object Busy: TSpinner
+      end
+    end
+    object DataPage: TTabSheet
+      Caption = 'Data'
+      object DataRow: TRow
+        Grow = 1
+        Align = Stretch
+        Gap = 8
+        object Folders: TTreeView
+          Width = 200
+          Items = ('Documents', '  Letters', '  Bills', '    2026', 'Pictures')
+          OnChange = FoldersChange
+        end
+        object Table: TGrid
+          Grow = 1
+          Editable = True
+          OnCellEdit = TableCellEdit
+          object NameColumn: TGridColumn
+            Title = 'Name'
+          end
+          object AgeColumn: TGridColumn
+            Title = 'Age'
+            Width = 80
+            Alignment = Right
+          end
+          object CityColumn: TGridColumn
+            Title = 'City'
+            ReadOnly = True
+          end
+        end
       end
     end
   end

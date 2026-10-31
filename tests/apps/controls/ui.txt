@@ -83,6 +83,44 @@ click FileMenu
 hover RecentMenu
 click Recent1
 expect Status recent
+click DataPage
+shot grid.png
+click Folders 60 15
+expect Status folder Documents
+key right
+key down
+key down
+expect Status folder Documents/Bills
+key right
+key down
+expect Folders.Text Documents/Bills/2026
+key left
+key left
+expect Folders.Text Documents/Bills
+click Table 40 50
+expect Table.Row 0
+expect Table.Col 0
+key right
+type Table 30
+expect Table.Editing True
+key enter
+expect Table.Row 1
+key up
+key right
+key f2
+expect Table.Editing False
+expect Table.Col 2
+key left
+type Table abc
+key enter
+expect Table.Editing True
+key escape
+expect Table.Editing False
+click Table 40 15
+expect Table.SortColumn 0
+key ctrl+end
+expect Table.Row 999
+shot grid2.png
 key ctrl+q
 click NoButton
 expect Status stay

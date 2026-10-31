@@ -16,11 +16,13 @@ Made from the declarations and comments in `framework/src` (`npm run apidoc` in 
 | [Pastel.Files](pastel.files.md) | Files, folders and paths. |
 | [Pastel.Forms](pastel.forms.md) | Building forms from .pform data. |
 | [Pastel.Graphics](pastel.graphics.md) | Software 2D drawing: colors, an anti-aliased canvas and fonts. |
+| [Pastel.Grids](pastel.grids.md) | Tables and trees. |
 | [Pastel.Http](pastel.http.md) | HTTP and HTTPS client. |
 | [Pastel.Json](pastel.json.md) | JSON made easy, on top of Free Pascal's fpjson. |
 | [Pastel.Jwt](pastel.jwt.md) | JSON Web Tokens (JWT) signed with HS256. |
 | [Pastel.Log](pastel.log.md) | Logging. |
 | [Pastel.Menus](pastel.menus.md) | Menus: a menu bar, pop-up (right click) menus and keyboard |
+| [Pastel.NativeDialogs](pastel.nativedialogs.md) | The system's own open, save and folder dialogs. |
 | [Pastel.PForm](pastel.pform.md) | Reader for .pform files. |
 | [Pastel.Process](pastel.process.md) | Running other programs. |
 | [Pastel.Service](pastel.service.md) | Long-running programs (services, daemons). |

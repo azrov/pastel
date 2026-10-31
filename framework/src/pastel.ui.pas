@@ -54,6 +54,8 @@ type
     procedure Paint(C: TCanvas32); virtual;
     procedure PaintChildren(C: TCanvas32);
     function Focusable: Boolean; virtual;
+    { The keyboard focus went to another control (or none). }
+    procedure FocusLost; virtual;
     function Cursor: TCursorKind; virtual;
     procedure MouseDown(X, Y: Integer); virtual;
     procedure MouseUp(X, Y: Integer; Inside: Boolean); virtual;
@@ -562,6 +564,9 @@ var
   ShortcutHook: function(Form: TForm; Key: LongInt; Shift, Ctrl: Boolean): Boolean = nil;
   { Whether the computer is set to dark mode (set by the application). }
   SystemDarkHook: function: Boolean = nil;
+  { Runs after UseDarkTheme set up the light or dark colors: changes to
+    Theme go here. Pastel.App applies assets/theme.toml with it. }
+  ThemeCustomizer: procedure = nil;
   { Set by Pastel.Menus: shows a TPopupMenu at a point. }
   PopupMenuHook: procedure(Menu: TControl; Form: TForm; X, Y: Integer) = nil;
   { Alt is held (with KeyDown). }
@@ -616,6 +621,11 @@ const
 
 { Light or dark colors for every control; repaints. }
 procedure UseDarkTheme(Dark: Boolean);
+{ Changes one theme value by its name in assets/theme.toml: 'accent',
+  'background', 'surface', 'text', 'border', 'danger', ... are colors
+  ('#0EA5E9'); 'radius' and 'font_size' numbers. Hover and pressed shades
+  follow the color. False for an unknown name or a bad value. }
+function SetThemeValue(const Name, Value: string): Boolean;
 { Asks for another frame soon (animations). }
 procedure RequestAnimation;
 { Runs the timers that are due; the milliseconds until the next one (-1: none). }
@@ -760,8 +770,74 @@ end;
 procedure UseDarkTheme(Dark: Boolean);
 begin
   if Dark then DarkTheme else LightTheme;
+  if Assigned(ThemeCustomizer) then
+    ThemeCustomizer();
   NeedsLayout := True;
   NeedsRepaint := True;
+end;
+
+function SetThemeValue(const Name, Value: string): Boolean;
+var
+  C: TColor32;
+  N: Integer;
+  Shade: TColor32;
+begin
+  Result := True;
+  case LowerCase(Name) of
+    'radius', 'font_size', 'fontsize':
+      begin
+        if not TryStrToInt(Trim(Value), N) or (N < 0) or (N > 64) then
+          Exit(False);
+        if LowerCase(Name) = 'radius' then
+          Theme.Radius := N
+        else if N >= 8 then
+          Theme.FontSize := N
+        else
+          Exit(False);
+        Exit;
+      end;
+  end;
+  if not TryParseColor(Trim(Value), C) then
+    Exit(False);
+  if Theme.Dark then Shade := RGB(255, 255, 255) else Shade := RGB(0, 0, 0);
+  case LowerCase(Name) of
+    'accent':
+      begin
+        Theme.Accent := C;
+        Theme.AccentHover := Mix(C, Shade, 0.12);
+        Theme.AccentPressed := Mix(C, Shade, 0.22);
+        Theme.FocusRing := WithAlpha(C, $55);
+        Theme.Selection := WithAlpha(C, $2A);
+      end;
+    'on_accent': Theme.OnAccent := C;
+    'background': Theme.Background := C;
+    'surface': Theme.Surface := C;
+    'text': Theme.Text := C;
+    'text_muted': Theme.TextMuted := C;
+    'placeholder': Theme.Placeholder := C;
+    'secondary':
+      begin
+        Theme.Secondary := C;
+        Theme.SecondaryHover := Mix(C, Shade, 0.06);
+        Theme.SecondaryPressed := Mix(C, Shade, 0.12);
+      end;
+    'danger':
+      begin
+        Theme.Danger := C;
+        Theme.DangerHover := Mix(C, Shade, 0.12);
+        Theme.DangerPressed := Mix(C, Shade, 0.22);
+      end;
+    'border':
+      begin
+        Theme.Border := C;
+        Theme.BorderHover := Mix(C, Shade, 0.2);
+      end;
+    'disabled': Theme.Disabled := C;
+    'tooltip_back': Theme.TooltipBack := C;
+    'tooltip_text': Theme.TooltipText := C;
+  else
+    Result := False;
+  end;
 end;
 
 procedure RequestAnimation;
@@ -1061,6 +1137,10 @@ end;
 function TControl.Focusable: Boolean;
 begin
   Result := False;
+end;
+
+procedure TControl.FocusLost;
+begin
 end;
 
 function TControl.Cursor: TCursorKind;
@@ -2277,13 +2357,18 @@ begin
 end;
 
 procedure TForm.FocusControl(C: TControl);
+var
+  Old: TControl;
 begin
   if (C <> nil) and not C.Focusable then
     C := nil;
   if FFocused = C then
     Exit;
+  Old := FFocused;
   FFocused := C;
   CaretVisible := True;
+  if Old <> nil then
+    Old.FocusLost;
   NeedsRepaint := True;
   if (C <> nil) and (C.Parent <> nil) then
     C.Parent.ScrollIntoView(C);

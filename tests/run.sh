@@ -81,7 +81,18 @@ set +e; out="$(cd "$WORK/np" && PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT="$WORK/ex-n
 expect "notepad saves, opens, asks"      '[ "$code" = 0 ] && ! echo "$out" | grep -q FAIL'
 [ "$code" = 0 ] || echo "$out" | grep -v "^ok" | head
 expect "notepad wrote the file"          'grep -q "second line" "$WORK/np/hello.txt"'
+mkdir -p "$WORK/ex-notepad/assets" && printf 'accent = "#0E9F6E"\nmystery = "1"\n[dark]\naccent = "#34D399"\n' > "$WORK/ex-notepad/assets/theme.toml"
+(cd "$WORK/ex-notepad" && "$PASTEL" build >/dev/null)
+set +e; out="$(cd "$WORK/np" && printf 'quit\n' > q.txt && PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT=q.txt "$WORK"/ex-notepad/build/*/debug/notepad 2>&1)"; code=$?; set -e
+expect "assets/theme.toml is read"       '[ "$code" = 0 ] && echo "$out" | grep -q "\"mystery = 1\" is not a theme value"'
 echo "== end-to-end tests"
+# --- Windows program icon (when this computer can build for Windows) ---
+if "$PASTEL" doctor 2>/dev/null | grep -q "✓ windows "; then
+  rm -rf "$WORK/winicon" && (cd "$WORK" && "$PASTEL" new console winicon >/dev/null)
+  mkdir -p "$WORK/winicon/assets" && cp "$ROOT/tests/apps/controls/assets/logo.png" "$WORK/winicon/assets/icon.png"
+  (cd "$WORK/winicon" && "$PASTEL" build -t windows >/dev/null)
+  expect "the .exe carries the icon in 4 sizes" '[ "$(LC_ALL=C grep -a -o IHDR "$WORK"/winicon/build/windows/debug/winicon.exe | wc -l)" -ge 4 ]'
+fi
 cd "$WORK"
 
 "$PASTEL" new console demo-app >/dev/null

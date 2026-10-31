@@ -5,7 +5,7 @@ unit Home;
 interface
 
 uses
-  SysUtils, Pastel.UI, Pastel.Dialogs, Settings, Home.g;
+  SysUtils, Pastel.UI, Pastel.Grids, Pastel.Dialogs, Settings, Home.g;
 
 type
   THomeForm = class(THomeFormBase)
@@ -22,6 +22,9 @@ type
     procedure VolumeChange(Sender: TObject);
     procedure PeopleDblClick(Sender: TObject);
     procedure SettingsClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure FoldersChange(Sender: TObject);
+    procedure TableCellEdit(Sender: TObject; ACol, ARow: Integer; var Value: string; var Accept: Boolean);
   private
     FTicks: Integer;
   end;
@@ -112,6 +115,30 @@ end;
 procedure THomeForm.PeopleDblClick(Sender: TObject);
 begin
   Status.Text := 'hello ' + People.SelectedText;
+end;
+
+procedure THomeForm.FormCreate(Sender: TObject);
+var
+  I: Integer;
+begin
+  Table.AddRow(['Zeynep', '29', 'İzmir']);
+  Table.AddRow(['Ali', '41', 'Ankara']);
+  Table.AddRow(['Ayşe', '7', 'İstanbul']);
+  for I := 1 to 997 do
+    Table.AddRow(['Person ' + IntToStr(I), IntToStr(20 + I mod 50), 'Bursa']);
+end;
+
+procedure THomeForm.FoldersChange(Sender: TObject);
+begin
+  Status.Text := 'folder ' + Folders.Text;
+end;
+
+procedure THomeForm.TableCellEdit(Sender: TObject; ACol, ARow: Integer; var Value: string; var Accept: Boolean);
+begin
+  { ages are numbers }
+  if ACol = 1 then
+    Accept := StrToIntDef(Value, -1) >= 0;
+  Value := Trim(Value);
 end;
 
 end.

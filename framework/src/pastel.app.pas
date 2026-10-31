@@ -91,7 +91,7 @@ implementation
 uses
   Math, TypInfo, Process, {$IFDEF WINDOWS}Registry,{$ENDIF} Pastel.SDL2, Pastel.Assets,
   { linked into every app, so .pform files can use their controls }
-  Pastel.Controls, Pastel.Menus, Pastel.Dialogs;
+  Pastel.Controls, Pastel.Menus, Pastel.Dialogs, Pastel.Grids, Pastel.Toml;
 
 const
   DefaultWidth = 480;
@@ -189,6 +189,53 @@ begin
   SetFontFiles(R, B);
 end;
 
+var
+  ThemeFile: TTomlDocument = nil;
+
+{ assets/theme.toml: values for both themes, [dark] for the dark one only }
+procedure ApplyThemeFile;
+var
+  I: Integer;
+  K: string;
+
+  procedure Apply(const Name, Path: string);
+  begin
+    if not SetThemeValue(Name, ThemeFile.GetString(Path)) then
+      WriteLn(StdErr, Format('assets/theme.toml: "%s = %s" is not a theme value', [Path, ThemeFile.GetString(Path)]));
+  end;
+
+begin
+  if ThemeFile = nil then
+    Exit;
+  for I := 0 to ThemeFile.Values.Count - 1 do
+  begin
+    K := ThemeFile.Values[I];
+    if Pos('.', K) = 0 then
+      Apply(K, K)
+    else if Theme.Dark and (Copy(K, 1, 5) = 'dark.') then
+      Apply(Copy(K, 6, MaxInt), K);
+  end;
+end;
+
+procedure UseThemeFile;
+begin
+  if not AssetExists('theme.toml') then
+    Exit;
+  ThemeFile := TTomlDocument.Create;
+  try
+    ThemeFile.LoadFromString(AssetText('theme.toml'));
+  except
+    on E: Exception do
+    begin
+      WriteLn(StdErr, 'assets/theme.toml: ', E.Message);
+      FreeAndNil(ThemeFile);
+      Exit;
+    end;
+  end;
+  ThemeCustomizer := @ApplyThemeFile;
+  UseDarkTheme(False);
+end;
+
 { Is the computer set to dark colors? }
 function SystemPrefersDark: Boolean;
 var
@@ -230,6 +277,7 @@ begin
   if Err <> '' then
     Fatal(Err);
   UseAssetFonts;
+  UseThemeFile;
   FHeadless := GetEnv('PASTEL_HEADLESS') = '1';
   FScale := 1;
   FMouseScale := 1;
@@ -831,11 +879,11 @@ var
     if Info = nil then
       Fatal(Format('%s:%d: %s has no property "%s"', [FScriptFile, FScriptPos, Ctrl.Name, AProp]));
     case Info^.PropType^.Kind of
-      tkInteger, tkInt64:
+      TypInfo.tkInteger, TypInfo.tkInt64:
         Result := IntToStr(GetOrdProp(Ctrl, Info));
-      tkEnumeration, tkBool:
+      TypInfo.tkEnumeration, TypInfo.tkBool:
         Result := GetEnumProp(Ctrl, Info);
-      tkClass:
+      TypInfo.tkClass:
         if GetObjectProp(Ctrl, Info) is TStrings then
           Result := StringReplace(Trim(TStrings(GetObjectProp(Ctrl, Info)).Text), LineEnding, '|', [rfReplaceAll])
         else
@@ -1183,11 +1231,29 @@ begin
     Step;
 end;
 
+{ the HWND for system dialogs on Windows (an SDL_SysWMinfo: version, subsystem, then the window) }
+function WindowHandle: Pointer;
+var
+  Info: array[0..127] of Byte;
+begin
+  Result := nil;
+  {$IFDEF WINDOWS}
+  if (Application = nil) or (Application.FWindow = nil) or not Assigned(SDL_GetWindowWMInfo) then
+    Exit;
+  FillChar(Info, SizeOf(Info), 0);
+  Info[0] := 2;     { SDL 2.0.x }
+  if SDL_GetWindowWMInfo(Application.FWindow, @Info) <> 0 then
+    Result := PPointer(@Info[8])^;
+  {$ENDIF}
+end;
+
 initialization
   Application := TApplication.Create;
+  NativeWindowHook := @WindowHandle;
   SystemDarkHook := @SystemPrefersDark;
 
 finalization
   FreeAndNil(Application);
+  FreeAndNil(ThemeFile);
 
 end.

@@ -8,9 +8,11 @@ Dialogs: messages, questions, input, choosing files and folders.
     if OpenFileDialog(FileName, 'Text files|*.txt;*.md|All files|*') then ...
     if SaveFileDialog(FileName, 'Notes|*.txt') then ...
 
-  The dialogs are drawn by Pastel inside the window (the same on every
-  platform, and test scripts can click them). They wait until the user
-  answered, like Delphi's. Their controls have names a test script can use:
+  Messages and questions are drawn by Pastel inside the window. The file
+  and folder dialogs are the system's own when it has them (Windows; Linux
+  with zenity or kdialog), else Pastel's; UseNativeDialogs := False always
+  takes Pastel's. Test scripts and headless runs get Pastel's, which
+  scripts can click. They wait until the user answered, like Delphi's. Their controls have names a test script can use:
   OkButton, CancelButton, YesButton, NoButton, InputEdit, FileList,
   FileNameEdit, PathEdit.
 
@@ -95,3 +97,9 @@ function ModalResultCaption(R: Integer): string
 
 The caption of a modal result: 'OK', 'Cancel', 'Yes'...
 
+## Constants and variables
+
+| | |
+|---|---|
+| `var UseNativeDialogs: Boolean` | File and folder dialogs of the system when there are some. |
+| `var NativeWindowHook: function : Pointer` | The window handle for system dialogs (set by the application; HWND on Windows). |

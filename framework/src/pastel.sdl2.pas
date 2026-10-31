@@ -181,6 +181,8 @@ var
   SDL_DestroyWindow: procedure(window: PSDL_Window); cdecl;
   SDL_SetWindowTitle: procedure(window: PSDL_Window; title: PChar); cdecl;
   SDL_GetWindowSize: procedure(window: PSDL_Window; w, h: PLongInt); cdecl;
+  { info: an SDL_SysWMinfo with the version filled in (optional) }
+  SDL_GetWindowWMInfo: function(window: PSDL_Window; info: Pointer): LongInt; cdecl;
   SDL_SetWindowSize: procedure(window: PSDL_Window; w, h: LongInt); cdecl;
   SDL_SetWindowIcon: procedure(window: PSDL_Window; icon: Pointer); cdecl;
   SDL_CreateRGBSurfaceFrom: function(pixels: Pointer; width, height, depth, pitch: LongInt;
@@ -285,6 +287,7 @@ begin
   Bind(SDL_CreateRGBSurfaceFrom, 'SDL_CreateRGBSurfaceFrom');
   Bind(SDL_FreeSurface, 'SDL_FreeSurface');
   Pointer(SDL_GetDisplayDPI) := GetProcedureAddress(LibHandle, 'SDL_GetDisplayDPI');
+  Pointer(SDL_GetWindowWMInfo) := GetProcedureAddress(LibHandle, 'SDL_GetWindowWMInfo');
   Bind(SDL_SetWindowMinimumSize, 'SDL_SetWindowMinimumSize');
   Bind(SDL_GetWindowFlags, 'SDL_GetWindowFlags');
   Bind(SDL_MaximizeWindow, 'SDL_MaximizeWindow');
