@@ -11,9 +11,10 @@ import {
   SchemaProperty, stripComment,
 } from './model';
 import { FormPreview } from './preview';
-import { PascalIndex, registerNavigation, toggleDeclarationCommand } from './navigation';
+import { PascalIndex, registerNavigation, setDefinitionHook, toggleDeclarationCommand } from './navigation';
 import { registerSidebar } from './sidebar';
 import { registerRequests } from './requests';
+import { analyzerDefinition, registerIntellisense } from './intellisense';
 
 let schema: Schema | undefined;
 let schemaLoading: Promise<Schema | undefined> | undefined;
@@ -39,7 +40,10 @@ export function activate(context: vscode.ExtensionContext): void {
   registerSidebar(context);
   registerRequests(context);
   registerNavigation(context, pascalIndex);
-  loadSchema().then(sch => pascalIndex.build(sch?.frameworkDir));
+  const schemaReady = loadSchema();
+  schemaReady.then(sch => pascalIndex.build(sch?.frameworkDir));
+  registerIntellisense(context, pascalIndex, schemaReady);
+  setDefinitionHook(analyzerDefinition);
   updateFormContext(vscode.window.activeTextEditor);
   context.subscriptions.push(
     vscode.window.onDidChangeActiveTextEditor(e => updateFormContext(e)),

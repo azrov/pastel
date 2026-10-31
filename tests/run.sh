@@ -26,6 +26,13 @@ mkdir -p "$WORK/units"
 "$PASTEL" fmt --check cli framework tests examples >/dev/null || { "$PASTEL" fmt --check cli framework tests examples; exit 1; }
 echo "fmt: Pastel's own code is formatted"
 
+if [ -f vscode/out/lang/apidoc.js ] && command -v node >/dev/null; then
+  echo "== API reference is up to date"
+  node vscode/out/lang/apidoc.js framework/src "$WORK/api" >/dev/null
+  if ! diff -rq docs/api "$WORK/api" >/dev/null; then
+    echo "docs/api is out of date: run \"npm run apidoc\" in vscode/"; diff -r docs/api "$WORK/api" | head -20; exit 1
+  fi
+fi
 echo "== framework tests"
 (cd framework/tests && PASTEL_ARGS_TEST_TOKEN=secret FWTEST_SERVER_PORT=9090 FWTEST_FEATURES="a, b" \
   "$PASTEL" test >"$WORK/framework.log" 2>&1) || { cat "$WORK/framework.log"; exit 1; }
@@ -326,6 +333,18 @@ expect "bad settings stop the start with a reason" '[ "$code" = 1 ] && echo "$ou
 # --- web API with a database, migrations ---
 cd "$WORK"
 "$PASTEL" new api todo-api >/dev/null
+# --- compiler errors for unsaved text ---
+(cd todo-api
+ sed 's/FTasks.Add(Title, Done)/FTasks.Add(Titl, Done)/' src/controllers/taskscontroller.pas > ../edited.pas
+ cp src/controllers/taskscontroller.pas ../before.pas)
+out="$(cd todo-api && "$PASTEL" check src/controllers/taskscontroller.pas --stdin --json < ../edited.pas)"
+expect "check finds an error in unsaved text"  'echo "$out" | grep -q "\"severity\":\"error\"" && echo "$out" | grep -qF "Identifier not found" && echo "$out" | grep -qF "Titl"'
+expect "check names the real file"       'echo "$out" | grep -q "todo-api/src/controllers/taskscontroller.pas"'
+expect "check leaves the file alone"     'cmp -s before.pas todo-api/src/controllers/taskscontroller.pas'
+out="$(cd todo-api && "$PASTEL" check src/controllers/taskscontroller.pas --stdin --json < src/controllers/taskscontroller.pas)"
+expect "check of good code is empty"     '[ "$out" = "[]" ]'
+out="$(cd todo-api && sed 's/^  Api := /  Apix := /' src/main.pas | "$PASTEL" check src/main.pas --stdin --json)"
+expect "check works on the main program" 'echo "$out" | grep -qF "Identifier not found" && echo "$out" | grep -qF "Apix"'
 set +e; out="$("$PASTEL" new service inbox 2>&1)"; code=$?; set -e
 expect "a name that clashes with a unit is refused" '[ "$code" != 0 ] && echo "$out" | grep -q "also the name of a unit" && [ ! -d inbox ]'
 "$PASTEL" new api tasks >/dev/null

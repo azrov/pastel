@@ -114,20 +114,20 @@ Goal: a REST API with a database, deployed on a Linux server as a systemd servic
 
 ---
 
-## 0.4 — Code intelligence (next)
+## 0.4 — Code intelligence (done)
 
 Goal: VS Code understands Pascal like Lazarus/Delphi do.
 
-- [ ] Pascal language server: completion of members (`NameEdit.` → `Text`, `SetFocus`, ...), parameter hints, hover with types
-- [ ] Find all references, rename a symbol across the project
-- [ ] Errors underlined while typing (not only after building)
-- [ ] Unit names in `uses` completed from the project and the framework
-- [ ] Quick fixes: add a missing unit to `uses`, create a method body from its declaration (Delphi's Ctrl+Shift+C)
-- [ ] Documentation comments shown in hover and completion; API reference generated from them
+- [x] Pascal code intelligence: completion of members (`NameEdit.` → `Text`, `SetFocus`, ...), parameter hints, hover with types; it reads the project, the Pastel framework and the Free Pascal sources (in the VS Code extension; a language server for other editors later)
+- [x] Find all references, rename a symbol across the project
+- [x] Errors underlined while typing (not only after building): the compiler checks the unsaved text, `pastel check file.pas --stdin`
+- [x] Unit names in `uses` completed from the project, the framework and Free Pascal
+- [x] Quick fixes: add a missing unit to `uses`, create a method body from its declaration (Delphi's Ctrl+Shift+C)
+- [x] Documentation comments shown in hover and completion; API reference generated from them: `docs/api/`
 
 ---
 
-## 0.5 — Desktop apps, essentials
+## 0.5 — Desktop apps, essentials (next)
 
 Goal: typical small business apps (forms, lists, dialogs) on Linux and Windows.
 

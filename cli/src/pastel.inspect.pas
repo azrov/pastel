@@ -436,6 +436,7 @@ var
   I: Integer;
 begin
   Result := '{"version":' + JsonStr(PastelVersion) + ',"frameworkDir":' + JsonStr(FrameworkDir) +
+    ',"fpcSourceDir":' + JsonStr(FpcSourceDir) +
     ',"form":' + ClassJson(TForm, True) +
     ',"controls":[';
   for I := 0 to ControlClassCount - 1 do

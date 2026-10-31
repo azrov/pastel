@@ -2,7 +2,7 @@
   "name": "pastel-vscode",
   "displayName": "Pastel",
   "description": "Build cross-platform apps in Object Pascal with Pastel: run, build, live form preview, .pform completion and checks.",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "publisher": "pastel",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -189,6 +189,11 @@
         "command": "pastel.newMigration",
         "title": "New Database Migration…",
         "category": "Pastel"
+      },
+      {
+        "command": "pastel.completeClass",
+        "title": "Complete Class (create missing method bodies)",
+        "category": "Pastel"
       }
     ],
     "menus": {
@@ -348,6 +353,11 @@
           "type": "string",
           "default": "",
           "description": "Address for Send Request, e.g. http://localhost:8080. Empty: localhost with [server] port from config.toml."
+        },
+        "pastel.compileWhileTyping": {
+          "type": "boolean",
+          "default": true,
+          "description": "Compile Pascal files in the background while you type and underline the compiler's errors."
         }
       }
     },
@@ -402,6 +412,12 @@
         "key": "ctrl+shift+down",
         "mac": "cmd+shift+down",
         "when": "config.pastel.delphiShortcuts && editorTextFocus && (editorLangId == pascal || editorLangId == objectpascal)"
+      },
+      {
+        "command": "pastel.completeClass",
+        "key": "ctrl+shift+c",
+        "mac": "cmd+shift+c",
+        "when": "editorTextFocus && editorLangId == pascal && pastel.isProject && config.pastel.delphiShortcuts"
       }
     ],
     "debuggers": [
@@ -455,9 +471,10 @@
   "scripts": {
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "test": "node ./out/test/unit.js && node ./out/test/edit.test.js && node ./out/test/designer.test.js && node ./out/test/pascal.test.js && node ./out/test/testparse.test.js && node ./out/test/routes.test.js",
+    "test": "node ./out/test/unit.js && node ./out/test/edit.test.js && node ./out/test/designer.test.js && node ./out/test/pascal.test.js && node ./out/test/testparse.test.js && node ./out/test/routes.test.js && node ./out/test/analyzer.test.js",
     "package": "vsce package --no-dependencies --allow-missing-repository",
-    "test:integration": "node ./out/test/integration.js"
+    "test:integration": "node ./out/test/integration.js",
+    "apidoc": "node ./out/lang/apidoc.js ../framework/src ../docs/api"
   },
   "devDependencies": {
     "@types/jsdom": "^30.0.0",

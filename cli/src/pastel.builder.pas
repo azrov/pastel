@@ -21,10 +21,19 @@ type
     OutName: string;            { executable name instead of the project name }
     ExtraDirs: TStringArray;    { more unit folders }
     Defines: TStringArray;      { more -d defines }
+    { "pastel check file.pas": compile without linking, with OverlayText in
+      place of OverlayFile (unsaved editor text); compiler messages go to
+      Messages instead of the console }
+    CheckOnly: Boolean;
+    OverlayFile: string;        { absolute }
+    OverlayText: string;
+    Messages: TStringList;
   end;
 
 function FindFpc: string;
 function FpcVersion(const Fpc: string): string;
+{ The Free Pascal sources (rtl/, packages/), for code intelligence; '' if not installed. }
+function FpcSourceDir: string;
 function RunCapture(const Exe: string; Args: TStrings; const Dir: string;
   out Output: string): Integer;
 
@@ -135,6 +144,33 @@ begin
   finally
     Args.Free;
   end;
+end;
+
+function FpcSourceDir: string;
+var
+  Fpc, Ver, D: string;
+  Candidates: array of string;
+begin
+  Result := GetEnvironmentVariable('FPCDIR');
+  if (Result <> '') and DirectoryExists(IncludeTrailingPathDelimiter(Result) + 'rtl') then
+    Exit(ExcludeTrailingPathDelimiter(Result));
+  Fpc := FindFpc;
+  Ver := '';
+  if Fpc <> '' then
+    Ver := FpcVersion(Fpc);
+  Candidates := ['/usr/share/fpcsrc/' + Ver, '/usr/lib/fpc/src', '/usr/local/share/fpcsrc/' + Ver,
+    '/usr/local/lib/fpc/src', '/opt/homebrew/share/fpc/source'];
+  if Fpc <> '' then
+  begin
+    { Windows installs and fpcupdeluxe: <root>\bin\<platform>\fpc.exe and <root>\source }
+    D := ExtractFileDir(ExtractFileDir(ExtractFileDir(Fpc)));
+    Insert(D + PathDelim + 'source', Candidates, 0);
+    Insert(ExtractFileDir(D) + PathDelim + 'fpcsrc', Candidates, 0);
+  end;
+  for D in Candidates do
+    if (D <> '') and DirectoryExists(D + PathDelim + 'rtl' + PathDelim + 'objpas') then
+      Exit(D);
+  Result := '';
 end;
 
 function SplitOptions(const S: string): TStringArray;
@@ -474,6 +510,32 @@ begin
             (Pos('errors compiling module, stopping', Line) > 0);
 end;
 
+procedure WriteOverlay(const FileName, Text: string);
+var
+  F: TFileStream;
+begin
+  F := TFileStream.Create(FileName, fmCreate);
+  try
+    if Text <> '' then
+      F.WriteBuffer(Text[1], Length(Text));
+  finally
+    F.Free;
+  end;
+end;
+
+procedure CopyOverlay(const Source, Dest: string);
+var
+  L: TStringList;
+begin
+  L := TStringList.Create;
+  try
+    L.LoadFromFile(Source);
+    WriteOverlay(Dest, L.Text);
+  finally
+    L.Free;
+  end;
+end;
+
 function BuildProject(Project: TPastelProject; const Opts: TBuildOptions;
   out ExePath: string): Boolean;
 var
@@ -482,7 +544,7 @@ var
   Code, Errors, Warnings, I: Integer;
   Started: QWord;
   Host, MissingTarget, MissingPackages, HaveBinutils: Boolean;
-  BinPrefix, GenDir, Framework, LibMain: string;
+  BinPrefix, GenDir, Framework, LibMain, OverlayDir, OverlayMain, MainSrc: string;
   LibCheck: Boolean;
   LibUnits: Integer;
   Gen: TCodegenResult;
@@ -490,6 +552,9 @@ var
 begin
   Result := False;
   ExePath := '';
+  OverlayMain := '';
+  OverlayDir := '';
+  MainSrc := '';
   Fpc := FindFpc;
   if Fpc = '' then
   begin
@@ -505,6 +570,8 @@ begin
   if Opts.Release then Profile := 'release' else Profile := 'debug';
   if Opts.Profile <> '' then
     Profile := Opts.Profile;
+  if Opts.CheckOnly then
+    Profile := 'check';
   OutDir := 'build' + PathDelim + Opts.Target.Name + PathDelim + Profile;
   UnitDir := OutDir + PathDelim + 'units';
   ForceDirectories(Project.Root + UnitDir);
@@ -529,7 +596,10 @@ begin
   { .pform files -> generated units. Debug builds point at the .pform files
     so the running app can reload them (hot reload). }
   { check .pform files first: the compiler cannot see mistakes in them }
-  Issues := CheckProject(Project.Root);
+  if Opts.CheckOnly then
+    Issues := nil
+  else
+    Issues := CheckProject(Project.Root);
   if Length(Issues) > 0 then
   begin
     PrintIssues(Issues, False);
@@ -616,6 +686,27 @@ begin
     Dirs.Add(GenDir);
     if Framework <> '' then
       Dirs.Add(Framework);
+    if Opts.OverlayFile <> '' then
+    begin
+      { the unsaved text in a folder searched first; the program is copied
+        there too, as FPC looks next to the program before the unit paths }
+      OverlayDir := OutDir + PathDelim + 'overlay';
+      ForceDirectories(Project.Root + OverlayDir);
+      MainSrc := Project.MainFile;
+      if Opts.MainFile <> '' then
+        MainSrc := Opts.MainFile;
+      if SameFileName(ExpandFileName(Project.Root + MainSrc), Opts.OverlayFile) then
+        WriteOverlay(Project.Root + OverlayDir + PathDelim + ExtractFileName(MainSrc), Opts.OverlayText)
+      else
+      begin
+        CopyOverlay(Project.Root + MainSrc, Project.Root + OverlayDir + PathDelim + ExtractFileName(MainSrc));
+        WriteOverlay(Project.Root + OverlayDir + PathDelim + ExtractFileName(Opts.OverlayFile), Opts.OverlayText);
+      end;
+      Dirs.Insert(0, OverlayDir);
+      if Dirs.IndexOf(ExtractFileDir(MainSrc)) < 0 then
+        Dirs.Add(ExtractFileDir(MainSrc));
+      OverlayMain := OverlayDir + PathDelim + ExtractFileName(MainSrc);
+    end;
     for D in Dirs do
     begin
       Args.Add('-Fu' + D);
@@ -665,14 +756,18 @@ begin
 
     { -vb: full file paths in messages; shortened below to project-relative. }
     Args.Add('-vewnb');
-    if Opts.MainFile <> '' then
+    if Opts.CheckOnly then
+      Args.Add('-Cn');
+    if OverlayMain <> '' then
+      Args.Add(OverlayMain)
+    else if Opts.MainFile <> '' then
       Args.Add(Opts.MainFile)
     else if LibCheck then
       Args.Add(LibMain)
     else
       Args.Add(Project.MainFile);
 
-    if not Opts.Quiet then
+    if not Opts.Quiet and not Opts.CheckOnly then
       Status('Compiling', Format('%s v%s (%s, %s)',
         [Project.Name, Project.Version, Opts.Target.Name, Profile]));
     if Opts.Verbose then
@@ -687,6 +782,26 @@ begin
     MissingTarget := False;
     MissingPackages := False;
     Lines.Text := CompilerOut;
+    if Opts.CheckOnly then
+    begin
+      { messages about the overlay copies are about the real files }
+      for I := 0 to Lines.Count - 1 do
+      begin
+        Line := Lines[I];
+        if OverlayMain <> '' then
+        begin
+          Line := StringReplace(Line, Project.Root + OverlayDir + PathDelim + ExtractFileName(Opts.OverlayFile),
+            Opts.OverlayFile, [rfReplaceAll]);
+          Line := StringReplace(Line, OverlayDir + PathDelim + ExtractFileName(Opts.OverlayFile),
+            Opts.OverlayFile, [rfReplaceAll]);
+          Line := StringReplace(Line, OverlayMain, MainSrc, [rfReplaceAll]);
+        end;
+        if Assigned(Opts.Messages) then
+          Opts.Messages.Add(Line);
+      end;
+      Result := Code = 0;
+      Exit;
+    end;
     for I := 0 to Lines.Count - 1 do
     begin
       Line := StringReplace(Lines[I], Project.Root, '', [rfReplaceAll]);

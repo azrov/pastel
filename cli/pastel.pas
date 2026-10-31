@@ -8,7 +8,7 @@ uses
   Classes, SysUtils,
   Pastel.Console, Pastel.Toml, Pastel.Project, Pastel.Targets,
   Pastel.Builder, Pastel.Templates, Pastel.Doctor, Pastel.Inspect, Pastel.TestCmd,
-  Pastel.Watch, Pastel.FmtCmd, Pastel.Package, Pastel.MigrateCmd;
+  Pastel.Watch, Pastel.FmtCmd, Pastel.Package, Pastel.MigrateCmd, RegExpr;
 
 const
   ExitOk = 0;
@@ -465,11 +465,80 @@ begin
   Result := False;
 end;
 
+{ "pastel check src/x.pas --stdin --json": the compiler's errors for the
+  project with the unsaved text of one file }
+function CheckPascal(const CL: TCommandLine): Integer;
+var
+  Project: TPastelProject;
+  Opts: TBuildOptions;
+  Text, ExePath, Line, F, Json, Sev, Msg: string;
+  Messages: TStringList;
+  M: TRegExpr;
+  First: Boolean;
+begin
+  if not ReadText(CL.Positional[0], CL.Stdin, Text) then
+    Exit(ExitError);
+  Project := OpenProject;
+  if Project = nil then
+    Exit(ExitError);
+  Messages := TStringList.Create;
+  M := TRegExpr.Create('^(.+?)\((\d+)(?:,(\d+))?\) (Error|Fatal|Warning|Note|Hint): (.*)$');
+  try
+    Opts := Default(TBuildOptions);
+    ResolveTarget('', Opts.Target);
+    Opts.CheckOnly := True;
+    Opts.Quiet := True;
+    Opts.OverlayFile := ExpandFileName(CL.Positional[0]);
+    Opts.OverlayText := Text;
+    Opts.Messages := Messages;
+    BuildProject(Project, Opts, ExePath);
+    Json := '';
+    First := True;
+    for Line in Messages do
+      if M.Exec(Line) then
+      begin
+        F := M.Match[1];
+        if ExtractFileDrive(F) + Copy(F, 1, 1) = '' then
+          F := ExpandFileName(Project.Root + F)
+        else if (Copy(F, 1, 1) <> PathDelim) and (ExtractFileDrive(F) = '') then
+          F := ExpandFileName(Project.Root + F);
+        Sev := LowerCase(M.Match[4]);
+        if Sev = 'fatal' then
+          Sev := 'error';
+        Msg := M.Match[5];
+        if (Sev = 'note') or (Sev = 'hint') then
+          Sev := 'info';
+        { "Compilation aborted" and friends say nothing about the code }
+        if Pos('There were', Msg) = 1 then
+          Continue;
+        if CL.Json then
+        begin
+          if not First then
+            Json := Json + ',';
+          First := False;
+          Json := Json + Format('{"file":%s,"line":%s,"column":%s,"severity":"%s","message":%s}',
+            [JsonStr(F), M.Match[2], IntToStr(StrToIntDef(M.Match[3], 1)), Sev, JsonStr(Msg)]);
+        end
+        else
+          WriteLn(Line);
+      end;
+    if CL.Json then
+      WriteLn('[' + Json + ']');
+    Result := ExitOk;
+  finally
+    M.Free;
+    Messages.Free;
+    Project.Free;
+  end;
+end;
+
 function CmdCheck(const CL: TCommandLine): Integer;
 var
   Issues: TIssues;
   Root, Text: string;
 begin
+  if (Length(CL.Positional) > 0) and (LowerCase(ExtractFileExt(CL.Positional[0])) <> '.pform') then
+    Exit(CheckPascal(CL));
   if Length(CL.Positional) > 0 then
   begin
     if not ReadText(CL.Positional[0], CL.Stdin, Text) then

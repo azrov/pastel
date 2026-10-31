@@ -170,6 +170,7 @@ switches between form and code. See [forms.md](forms.md).
 | [web.md](web.md) | Web APIs: routes, JSON, validation, API keys, JWT |
 | [database.md](database.md) | SQLite, PostgreSQL, MySQL; migrations |
 | [deploy.md](deploy.md) | To a server: .deb, Docker, HTTPS with nginx or Caddy |
+| [api/](api/README.md) | Reference of every framework unit |
 | [security.md](security.md) | Passwords, tokens, JWT |
 | [testing.md](testing.md) | Tests |
 | [forms.md](forms.md) | Desktop apps: forms and controls |

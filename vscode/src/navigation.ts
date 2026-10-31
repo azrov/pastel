@@ -97,6 +97,13 @@ function displayName(s: PascalSymbol): string {
   return s.container && s.kind === 'method' && s.implementation ? `${s.container}.${s.name}` : s.name;
 }
 
+let definitionHook: ((doc: vscode.TextDocument, pos: vscode.Position) => vscode.Location[] | undefined) | undefined;
+
+/** A more precise go-to-definition (the analyzer), tried first. */
+export function setDefinitionHook(hook: typeof definitionHook): void {
+  definitionHook = hook;
+}
+
 export function registerNavigation(context: vscode.ExtensionContext, index: PascalIndex): void {
   const parsedFor = (doc: vscode.TextDocument): PascalFile => {
     index.update(doc.uri.fsPath, doc.getText());
@@ -155,6 +162,10 @@ export function registerNavigation(context: vscode.ExtensionContext, index: Pasc
 
     vscode.languages.registerDefinitionProvider(pascalSelector, {
       provideDefinition(doc, pos) {
+        const precise = definitionHook?.(doc, pos);
+        if (precise && precise.length) {
+          return precise.length === 1 ? precise[0] : precise;
+        }
         const file = parsedFor(doc);
         const lineText = doc.lineAt(pos.line).text;
         // a unit name: in a uses clause, or a dotted name like Pastel.UI

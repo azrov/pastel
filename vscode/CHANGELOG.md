@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.7.0
+
+- Pascal code intelligence from the project, the Pastel framework and the Free Pascal sources:
+  completion after a dot (`NameEdit.` → `Text`, `SetFocus`, also through properties, function
+  results, `[index]` and string helpers), names in scope, units in `uses`
+- Hover with the declaration and its documentation comment; parameter hints while typing a call, with overloads
+- Go to definition (also into the framework and Free Pascal), find all references, rename across the project
+- Compiler errors underlined while typing: the unsaved text is compiled in the background
+  (setting `pastel.compileWhileTyping`)
+- Quick fixes: add the missing unit to `uses`; create the bodies of methods without one
+  (*Pastel: Complete Class*, Ctrl+Shift+C like Delphi)
+
 ## 0.6.0
 
 - Web APIs: **▶ Send** above every route (`Web.Get('/path', @Handler)`) sends a request to the running

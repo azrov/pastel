@@ -29,7 +29,14 @@ Build cross-platform apps in Object Pascal with Pastel. This extension connects 
 
 **Web APIs and services.** In service and API projects the Pastel panel lists the routes (click one to open its code), the jobs and the database migrations, with *Run Migrations*, *Migration Status* and *New Migration…*. Above every route in the code is **▶ Send**: it sends a request to the running server (start it with F9), asks for path parameters and a JSON body, adds the API key from `config.toml`, and shows the answer in the *Pastel Requests* output. The same is in the panel (the ▶ next to a route) and as *Pastel: Send Request*.
 
-**Pascal code.** `.pas` files get syntax colors, an outline (classes, methods), symbol search across your project and the Pastel framework (`Ctrl+T`), and go to definition: `Ctrl+click` a class or method name, or a unit in a `uses` clause to open that unit.
+**Pascal code.** The extension reads your project, the Pastel framework and the Free Pascal sources (when installed, e.g. `sudo apt install fpc-source`), so it knows what every name is:
+
+- completion after a dot (`NameEdit.` → `Text`, `SetFocus`; `List.Items[0].`), of the names in scope, and of units in `uses`
+- hover shows the declaration and its documentation comment; parameter hints while you type a call
+- `Ctrl+click` / F12 goes to the definition, also in the framework and Free Pascal; *Find All References*; *Rename Symbol* (F2) across the project
+- compiler errors underlined while you type: the unsaved text is compiled in the background
+- quick fixes: add a missing unit to `uses`; create the bodies of methods that have none (*Pastel: Complete Class*, `Ctrl+Shift+C`)
+- syntax colors, an outline, symbol search (`Ctrl+T`)
 
 **Delphi keys** (in Pastel projects; turn off with `pastel.delphiShortcuts`):
 
@@ -39,6 +46,7 @@ Build cross-platform apps in Object Pascal with Pastel. This extension connects 
 | `Ctrl+F9` | Build |
 | `F12` | Switch between a form (designer or `.pform`) and its code |
 | `Ctrl+Shift+Up` / `Down` | Jump between a method's declaration and its body |
+| `Ctrl+Shift+C` | Complete the class: create the bodies of methods that have none |
 
 These replace VS Code's own F9 (toggle breakpoint) and F12 (go to definition) in Pastel projects. Breakpoints can still be set by clicking left of the line numbers, and `Ctrl+click` still goes to a definition.
 
@@ -49,4 +57,5 @@ These replace VS Code's own F9 (toggle breakpoint) and F12 (go to definition) in
 | `pastel.path` | `pastel` | Path to the `pastel` program |
 | `pastel.checkWhileTyping` | `true` | Check `.pform` files while you type |
 | `pastel.delphiShortcuts` | `true` | F9, Ctrl+F9, F12 and Ctrl+Shift+Up/Down as in Delphi |
+| `pastel.compileWhileTyping` | `true` | Compile in the background while typing and underline the compiler's errors |
 | `pastel.serverUrl` | (empty) | Address for Send Request; empty: `localhost` with `[server] port` from `config.toml` |

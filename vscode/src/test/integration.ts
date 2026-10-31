@@ -36,7 +36,15 @@ class CompletionItem {
   insertText?: unknown; detail?: string; documentation?: unknown; sortText?: string;
   constructor(public label: string, public kind?: number) {}
 }
-class MarkdownString { constructor(public value: string) {} }
+class MarkdownString {
+  constructor(public value = '') {}
+  appendCodeblock(code: string, _lang?: string) { this.value += '\n```\n' + code + '\n```\n'; return this; }
+  appendMarkdown(t: string) { this.value += t; return this; }
+}
+class CompletionList { constructor(public items: CompletionItem[], public isIncomplete?: boolean) {} }
+class SignatureHelp { signatures: any[] = []; activeSignature = 0; activeParameter = 0; }
+class SignatureInformation { parameters: any[] = []; constructor(public label: string, public documentation?: unknown) {} }
+class ParameterInformation { constructor(public label: string) {} }
 class Hover { constructor(public contents: MarkdownString, public range?: Range) {} }
 class Location { constructor(public uri: Uri, public range: Position) {} }
 class Diagnostic { source?: string; constructor(public range: Range, public message: string, public severity: number) {} }
@@ -98,7 +106,14 @@ class ProcessExecution { constructor(public process: string, public args: string
 class FakeDocument {
   version = 1;
   constructor(public uri: Uri, public languageId: string, private text: string) {}
-  getText(r?: Range) { return r ? this.lineAt(r.start.line).text.substring(r.start.character, r.end.character) : this.text; }
+  getText(r?: Range) {
+    if (!r) { return this.text; }
+    if (r.start.line === r.end.line) { return this.lineAt(r.start.line).text.substring(r.start.character, r.end.character); }
+    const ls = this.text.split('\n').slice(r.start.line, r.end.line + 1);
+    ls[ls.length - 1] = ls[ls.length - 1].substring(0, r.end.character);
+    ls[0] = ls[0].substring(r.start.character);
+    return ls.join('\n');
+  }
   setText(t: string) { this.text = t; this.version++; }
   get fileName() { return this.uri.fsPath; }
   get lineCount() { return this.text.split('\n').length; }
@@ -135,6 +150,7 @@ const on = (name: string) => (fn: (e: any) => void) => { (listeners[name] ??= []
 
 const vscodeFake = {
   Position, Range, Selection, SnippetString, CompletionItem, MarkdownString, Hover, Location, Diagnostic,
+  CompletionList, SignatureHelp, SignatureInformation, ParameterInformation,
   CodeAction, DocumentSymbol, Uri, Task, ProcessExecution, TextEdit, TestMessage,
   TestRunProfileKind: { Run: 1, Debug: 2 },
   DebugConfigurationProviderTriggerKind: { Initial: 1, Dynamic: 2 },
@@ -145,7 +161,8 @@ const vscodeFake = {
     startDebugging: async () => true,
   },
   extensions: { getExtension: (id: string) => (id === 'ms-vscode.cpptools' ? {} : undefined) },
-  CompletionItemKind: { Class: 6, Property: 9, Event: 22, EnumMember: 19, Value: 11, Method: 1, Keyword: 13, Color: 15 },
+  CompletionItemKind: { Class: 6, Property: 9, Event: 22, EnumMember: 19, Value: 11, Method: 1, Keyword: 13, Color: 15,
+    Text: 0, Function: 2, Field: 4, Variable: 5, Interface: 7, Module: 8, Enum: 12, Constant: 20, Struct: 21, TypeParameter: 24 },
   DiagnosticSeverity: { Error: 0, Warning: 1 },
   SymbolKind: { Module: 1, Class: 4, Method: 5, Property: 6, Field: 7, Interface: 10, Function: 11, Variable: 12,
     Object: 18, Struct: 22, TypeParameter: 25 },
@@ -173,15 +190,24 @@ const vscodeFake = {
       delete: (uri: Uri) => diagnosticStore.delete(uri.fsPath),
       dispose() {},
     }),
-    registerCompletionItemProvider: (_s: unknown, p: unknown) => { providers.completion = p; return { dispose() {} }; },
-    registerHoverProvider: (_s: unknown, p: unknown) => { providers.hover = p; return { dispose() {} }; },
+    registerCompletionItemProvider: (s: any, p: unknown) => {
+      providers[JSON.stringify(s).includes('pascal') ? 'pascalCompletion' : 'completion'] = p; return { dispose() {} };
+    },
+    registerHoverProvider: (s: any, p: unknown) => {
+      providers[JSON.stringify(s).includes('pascal') ? 'pascalHover' : 'hover'] = p; return { dispose() {} };
+    },
     registerDefinitionProvider: (s: any, p: unknown) => {
       providers[JSON.stringify(s).includes('pascal') ? 'pascalDefinition' : 'definition'] = p; return { dispose() {} };
     },
     registerDocumentSymbolProvider: (s: any, p: unknown) => {
       providers[JSON.stringify(s).includes('pascal') ? 'pascalSymbols' : 'symbols'] = p; return { dispose() {} };
     },
-    registerCodeActionsProvider: (_s: unknown, p: unknown) => { providers.actions = p; return { dispose() {} }; },
+    registerCodeActionsProvider: (s: any, p: unknown) => {
+      providers[JSON.stringify(s).includes('pascal') ? 'pascalActions' : 'actions'] = p; return { dispose() {} };
+    },
+    registerSignatureHelpProvider: (_s: unknown, p: unknown) => { providers.signature = p; return { dispose() {} }; },
+    registerReferenceProvider: (_s: unknown, p: unknown) => { providers.references = p; return { dispose() {} }; },
+    registerRenameProvider: (_s: unknown, p: unknown) => { providers.rename = p; return { dispose() {} }; },
     registerWorkspaceSymbolProvider: (p: unknown) => { providers.workspaceSymbols = p; return { dispose() {} }; },
     registerDocumentFormattingEditProvider: (_s: unknown, p: unknown) => { providers.formatting = p; return { dispose() {} }; },
     registerCodeLensProvider: (_s: unknown, p: unknown) => { providers.codeLens = p; return { dispose() {} }; },
@@ -472,6 +498,49 @@ async function main() {
   const pasDoc = new FakeDocument(Uri.file(pasPath), 'pascal', fs.readFileSync(pasPath, 'utf8'));
   docs.push(pasDoc);
   const pasLine = (re: RegExp) => pasDoc.getText().split('\n').findIndex(l => re.test(l));
+
+  await test('Pascal: members of a form control, hover, parameter hints', async () => {
+    // the form's generated unit exists after a check or build
+    const text = pasDoc.getText();
+    pasDoc.setText(text.replace("  NameEdit.SetFocus;", "  NameEdit.SetFocus;\n  NameEdit."));
+    listeners.change.forEach(f => f({ document: pasDoc, contentChanges: [{}] }));
+    await wait(4000);
+    const l = pasLine(/^  NameEdit\.$/);
+    const list = await providers.pascalCompletion.provideCompletionItems(pasDoc, new Position(l, 11));
+    const names = (list?.items ?? []).map((i: any) => i.label);
+    assert.ok(names.includes('Text') && names.includes('SetFocus'), names.slice(0, 30).join(','));
+    const errs = (diagnosticStore.get(pasPath) ?? []).map(d => d.message);
+    assert.ok(errs.some(m => /Syntax error|expected/i.test(m)), 'the compiler sees the unfinished line: ' + errs.join(' | '));
+    pasDoc.setText(text);
+    const h = providers.pascalHover.provideHover(pasDoc, new Position(pasLine(/if Trim\(NameEdit/), 6));
+    assert.ok(h && /function Trim/.test(h.contents.value), h?.contents.value);
+    const sl = pasLine(/if Trim\(NameEdit/);
+    const sig = providers.signature.provideSignatureHelp(pasDoc, new Position(sl, pasDoc.lineAt(sl).text.indexOf('Trim(') + 5));
+    assert.ok(sig && sig.signatures.some((s: any) => /Trim\(const S: (string|ansistring)/i.test(s.label)), JSON.stringify(sig?.signatures.map((s: any) => s.label)));
+  });
+
+  await test('Pascal: add a missing unit, create method bodies', async () => {
+    const text = pasDoc.getText();
+    const l = pasLine(/^  NameEdit\.Text := '';/);
+    const diag = new Diagnostic(new Range(l, 2, l, 9), 'Identifier not found "StrToIntDef"', 0);
+    pasDoc.setText(text.replace('uses\n  SysUtils, Pastel.UI, Home.g;', 'uses\n  Pastel.UI, Home.g;'));
+    const acts = providers.pascalActions.provideCodeActions(pasDoc, diag.range, { diagnostics: [diag] });
+    const add = acts.find((a: any) => /Add "SysUtils" to uses/i.test(a.title));
+    assert.ok(add, acts.map((a: any) => a.title).join(','));
+    pasDoc.setText(text.replace('    procedure ResetClick(Sender: TObject);', '    procedure ResetClick(Sender: TObject);\n    function Total(A, B: Integer; const Name: string): Integer;'));
+    const cls = pasLine(/function Total/);
+    const fix = providers.pascalActions.provideCodeActions(pasDoc, new Range(cls, 4, cls, 4), { diagnostics: [] });
+    assert.ok(fix.some((a: any) => /Create 1 method body/.test(a.title)), fix.map((a: any) => a.title).join(','));
+    const before = fs.readFileSync(pasPath, 'utf8');
+    vscodeFake.window.activeTextEditor = { document: pasDoc, selection: { active: new Position(cls, 4) }, revealRange() {} } as any;
+    await commands['pastel.completeClass']();
+    assert.ok(!providers.status || !/Pastel: (put|every)/.test(providers.status), providers.status);
+    const edited = docs.find(x => x.uri.fsPath === pasPath)!;     // applyEdit changes the first open copy
+    assert.ok(/function THomeForm\.Total\(A, B: Integer; const Name: string\): Integer;\nbegin\n\nend;/.test(edited.getText()), edited.getText().split('implementation')[1]);
+    edited.setText(before);
+    fs.writeFileSync(pasPath, before);
+    pasDoc.setText(before);
+  });
 
   await test('Pascal outline', () => {
     const syms = providers.pascalSymbols.provideDocumentSymbols(pasDoc);
