@@ -13,6 +13,8 @@
   Values are 'strings' (with '' for a quote), numbers, or identifiers
   (True/False, enum values, event handler names). Comments: // and braces.
   Used both by the pastel tool (code generation) and by apps (loading).
+  Internal unit: used by Pastel itself and by the code it generates; it
+  may change between versions.
   Part of the Pastel project, MIT License. }
 unit Pastel.PForm;
 

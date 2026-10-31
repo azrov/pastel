@@ -30,6 +30,8 @@ begin
   Result := StringReplace(Result, '{{name}}', Name, [rfReplaceAll]);
   Result := StringReplace(Result, '{{ident}}', Ident, [rfReplaceAll]);
   Result := StringReplace(Result, '{{pastel}}', PastelVersion, [rfReplaceAll]);
+  Result := StringReplace(Result, '{{pastelminor}}', PastelMinor, [rfReplaceAll]);
+  Result := StringReplace(Result, '{{title}}', TitleFromName(Name), [rfReplaceAll]);
 end;
 
 { my-string-tools -> MyStringTools }
@@ -81,6 +83,7 @@ begin
     '[project]',
     'name = "{{name}}"',
     'version = "0.1.0"',
+    'pastel = "{{pastelminor}}"          # the Pastel version this project is made for',
     'type = "console"',
     '',
     '[build]',
@@ -218,6 +221,7 @@ begin
     '[project]',
     'name = "{{name}}"',
     'version = "0.1.0"',
+    'pastel = "{{pastelminor}}"          # the Pastel version this project is made for',
     'type = "lib"             # units for other projects; no program of its own',
     '',
     '[build]',
@@ -342,6 +346,7 @@ begin
     '[project]',
     'name = "{{name}}"',
     'version = "0.1.0"',
+    'pastel = "{{pastelminor}}"          # the Pastel version this project is made for',
     'type = "service"          # a program that keeps running (see docs/services.md)',
     '',
     '[build]',
@@ -754,6 +759,8 @@ begin
     '[project]',
     'name = "{{name}}"',
     'version = "0.1.0"',
+    'pastel = "{{pastelminor}}"          # the Pastel version this project is made for',
+    'title = "{{title}}"         # the name in window lists, menus and installers',
     'type = "app"',
     '',
     '[build]',
@@ -906,6 +913,7 @@ begin
     '[project]',
     'name = "{{name}}"',
     'version = "0.1.0"',
+    'pastel = "{{pastelminor}}"          # the Pastel version this project is made for',
     'description = "A web API with a database"',
     'type = "service"          # a web API is a service with a web server (docs/web.md)',
     '',

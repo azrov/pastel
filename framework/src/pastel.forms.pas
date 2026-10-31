@@ -3,6 +3,8 @@
   The code Pastel generates for each .pform file registers the form's source
   here. When a form is created, its controls are built from that source and
   properties and events are set through RTTI, like Delphi does with .dfm.
+  Internal unit: used by Pastel itself and by the code it generates; it
+  may change between versions.
   Part of the Pastel project, MIT License. }
 unit Pastel.Forms;
 
@@ -36,7 +38,7 @@ procedure RestoreState(Form: TForm; State: TStringList);
 procedure BuildForm(Form: TForm; Root: TPFormNode);
 
 var
-  { False: event handlers that do not exist are skipped instead of being an
+  { Internal: False skips event handlers that do not exist instead of an
     error. Used by tools that load a form without its code (preview, check). }
   StrictEvents: Boolean = True;
 

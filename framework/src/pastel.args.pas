@@ -127,7 +127,7 @@ type
     property VersionWanted: Boolean read FVersionWanted;
   end;
 
-{ Edit distance, used for "did you mean ...?" }
+{ Edit distance: how many letters differ ("did you mean ...?" suggestions). }
 function Levenshtein(const A, B: string): Integer;
 
 { The program's arguments as UTF-8 (on Windows ParamStr uses the old ANSI

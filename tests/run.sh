@@ -29,9 +29,11 @@ echo "fmt: Pastel's own code is formatted"
 if [ -f vscode/out/lang/apidoc.js ] && command -v node >/dev/null; then
   echo "== API reference is up to date"
   node vscode/out/lang/apidoc.js framework/src "$WORK/api" >/dev/null
-  if ! diff -rq docs/api "$WORK/api" >/dev/null; then
-    echo "docs/api is out of date: run \"npm run apidoc\" in vscode/"; diff -r docs/api "$WORK/api" | head -20; exit 1
+  if ! diff -rq -x stable.txt docs/api "$WORK/api" >/dev/null; then
+    echo "docs/api is out of date: run \"npm run apidoc\" in vscode/"; diff -r -x stable.txt docs/api "$WORK/api" | head -20; exit 1
   fi
+  echo "== the stable API is still there"
+  node vscode/out/lang/apidoc.js --check-stable framework/src docs/api || exit 1
 fi
 echo "== framework tests"
 (cd framework/tests && PASTEL_ARGS_TEST_TOKEN=secret FWTEST_SERVER_PORT=9090 FWTEST_FEATURES="a, b" \
@@ -601,6 +603,32 @@ set +e; out="$(cd "$WORK" && PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT="$WORK/asset.t
 expect "a release build carries its assets"  '[ "$code" = 0 ] && echo "$out" | grep -q "ok: Logo.LoadError"'
 expect "assets are compiled in"         'grep -q "RegisterAsset(.logo.png., @Asset0" build/linux/release/gen/appassets.pas'
 cd "$WORK/gui-demo"
+
+# --- pastel upgrade ---
+cd "$WORK"
+rm -rf old-app && "$PASTEL" new app old-app >/dev/null && cd old-app
+expect "new projects record the version"  'grep -q "^pastel = \"$("$PASTEL" version | sed "s/pastel \([0-9]*\.[0-9]*\).*/\1/")\"" pastel.toml'
+expect "and are up to date"               '"$PASTEL" upgrade --check >/dev/null'
+sed -i '/^pastel = /d; /^title = /d' pastel.toml
+sed -i 's/object HintLabel: TLabel/object Hint: TLabel/' src/forms/Home.pform
+printf '*.o\n' > .gitignore
+out="$("$PASTEL" build 2>&1 || true)"
+expect "a build hints at upgrade"         'echo "$out" | grep -q "pastel upgrade"'
+set +e; out="$("$PASTEL" upgrade --check 2>&1)"; code=$?; set -e
+expect "upgrade --check lists the changes" '[ "$code" = 1 ] && echo "$out" | grep -q "the control \"Hint\" is now \"HintLabel\""'
+"$PASTEL" upgrade >/dev/null
+expect "upgrade renames the control"      'grep -q "object HintLabel: TLabel" src/forms/Home.pform'
+expect "upgrade sets the version"         'grep -q "^pastel = " pastel.toml && grep -q "^title = \"Old App\"" pastel.toml'
+expect "upgrade fixes .gitignore"         'grep -q "^build/" .gitignore'
+out="$("$PASTEL" build 2>&1)"
+expect "the upgraded project builds"      'echo "$out" | grep -q "Output" && ! echo "$out" | grep -q "pastel upgrade"'
+printf '[biuld]\nmain = "x"\n' >> pastel.toml
+out="$("$PASTEL" build 2>&1)"
+expect "a typo in pastel.toml is reported" 'echo "$out" | grep -q "unknown setting \"biuld.main\""'
+sed -i '/^\[biuld\]/,$d' pastel.toml
+sed -i 's/^pastel = .*/pastel = "9.0"/' pastel.toml
+out="$("$PASTEL" build 2>&1)"
+expect "a project for a newer Pastel warns" 'echo "$out" | grep -q "made for Pastel 9.0"'
 
 # --- the project's own controls (src/controls/) ---
 cd "$WORK"

@@ -4,6 +4,7 @@
 [project]
 name = "weather"
 version = "1.0.0"
+pastel = "0.7"
 type = "console"
 
 [build]

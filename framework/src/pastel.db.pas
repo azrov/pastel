@@ -43,6 +43,7 @@ type
 
   TDbKind = (dbSQLite, dbPostgres, dbMySQL);
 
+  { Internal: one connection of the pool. }
   TDbConnection = class
   public
     Conn: TSQLConnection;

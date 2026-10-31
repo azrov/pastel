@@ -102,4 +102,3 @@ The caption of a modal result: 'OK', 'Cancel', 'Yes'...
 | | |
 |---|---|
 | `var UseNativeDialogs: Boolean` | File and folder dialogs of the system when there are some. |
-| `var NativeWindowHook: function : Pointer` | The window handle for system dialogs (set by the application; HWND on Windows). |

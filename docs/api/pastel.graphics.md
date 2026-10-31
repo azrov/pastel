@@ -8,7 +8,7 @@ Software 2D drawing: colors, an anti-aliased canvas and fonts.
 
 `uses Pastel.Graphics;` · source: [framework/src/pastel.graphics.pas](../../framework/src/pastel.graphics.pas)
 
-**Contents:** [TRectI](#trecti) · [TGlyph](#tglyph) · [TPastelFont](#tpastelfont) · [TBitmap32](#tbitmap32) · [TCanvas32](#tcanvas32) · [EPastelGraphics](#epastelgraphics) · [RGB](#rgb) · [RGBA](#rgba) · [WithAlpha](#withalpha) · [Mix](#mix) · [TryParseColor](#tryparsecolor) · [RectI](#recti) · [NextCodePoint](#nextcodepoint) · [PrevCharStart](#prevcharstart) · [GetFont](#getfont) · [SetFontFiles](#setfontfiles) · [InitFonts](#initfonts) · [DoneFonts](#donefonts)
+**Contents:** [TRectI](#trecti) · [TPastelFont](#tpastelfont) · [TBitmap32](#tbitmap32) · [TCanvas32](#tcanvas32) · [EPastelGraphics](#epastelgraphics) · [RGB](#rgb) · [RGBA](#rgba) · [WithAlpha](#withalpha) · [Mix](#mix) · [TryParseColor](#tryparsecolor) · [RectI](#recti) · [NextCodePoint](#nextcodepoint) · [PrevCharStart](#prevcharstart) · [GetFont](#getfont) · [SetFontFiles](#setfontfiles)
 
 ## Types
 
@@ -28,22 +28,6 @@ type TRectI = record
 | `function Intersect(const R: TRectI): TRectI` |  |
 | `function Union(const R: TRectI): TRectI` | The smallest rectangle around both (an empty one is ignored). |
 | `function Inflate(D: Integer): TRectI` |  |
-
-### TGlyph
-
-```pascal
-type TGlyph = record
-```
-
-| | |
-|---|---|
-| `Index: FT_UInt` |  |
-| `Width: Integer` |  |
-| `Height: Integer` |  |
-| `Left: Integer` |  |
-| `Top: Integer` |  |
-| `Advance: Integer` |  |
-| `Bits: array of Byte` |  |
 
 ### TPastelFont
 
@@ -121,9 +105,6 @@ type EPastelGraphics = class(Exception)
 | | |
 |---|---|
 | `type TColor32 = Cardinal` | $AARRGGBB. A distinct type so .pform files can use '#RRGGBB' for it. |
-| `type PGlyph = ^TGlyph` |  |
-| `type TGlyphPage = array [0 ..255] of PGlyph` | Glyph cache: 256-entry pages, allocated when first used. |
-| `type PGlyphPage = ^TGlyphPage` |  |
 
 ## Routines
 
@@ -195,18 +176,4 @@ procedure SetFontFiles(const Regular: string; const Bold: string)
 ```
 
 Use these .ttf files instead of the system font (after InitFonts).
-
-### InitFonts
-
-```pascal
-function InitFonts: string
-```
-
-Initializes FreeType and finds a system font. Returns '' or an error.
-
-### DoneFonts
-
-```pascal
-procedure DoneFonts
-```
 

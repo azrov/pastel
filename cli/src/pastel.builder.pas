@@ -60,7 +60,7 @@ implementation
 
 uses
   Process, {$IFDEF UNIX}BaseUnix,{$ENDIF}
-  Pastel.Console, Pastel.Codegen, Pastel.Inspect, Pastel.WIcon, Pastel.Runtime, Pastel.CustomCtl, Math;
+  Pastel.Console, Pastel.Codegen, Pastel.Inspect, Pastel.WIcon, Pastel.Runtime, Pastel.CustomCtl, Pastel.Upgrade, Math;
 
 function FrameworkDir: string;
 var
@@ -887,6 +887,8 @@ begin
 
   { .pform files -> generated units. Debug builds point at the .pform files
     so the running app can reload them (hot reload). }
+  if not Opts.Quiet and not Opts.CheckOnly then
+    CheckProjectVersion(Project);
   { check .pform files first: the compiler cannot see mistakes in them }
   if Opts.CheckOnly then
     Issues := nil
@@ -1101,8 +1103,10 @@ begin
       Args.Add(Project.MainFile);
 
     if not Opts.Quiet and not Opts.CheckOnly then
+    begin
       Status('Compiling', Format('%s v%s (%s, %s)',
         [Project.Name, Project.Version, Opts.Target.Name, Profile]));
+    end;
     if Opts.Verbose then
       WriteLn(Dim('             ' + Fpc + ' ' + StringReplace(Trim(Args.Text),
         LineEnding, ' ', [rfReplaceAll])));

@@ -4,6 +4,7 @@
 [project]
 name = "contacts"
 version = "1.0.0"
+pastel = "0.7"
 title = "Contacts"
 description = "An address book"
 type = "app"

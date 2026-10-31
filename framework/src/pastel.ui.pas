@@ -557,41 +557,45 @@ type
 
 var
   Theme: TTheme;
-  { Set by controls that move (spinners...): the application paints again soon. }
+  { Internal: set by controls that move (spinners...); the application paints again soon. }
   AnimationRequested: Boolean = False;
-  { Runs one pass of the application's event loop; set by Pastel.App.
+  { Internal: one pass of the application's event loop, set by Pastel.App.
     TPopup.ShowModal calls it until the popup is closed. }
   ModalStep: procedure = nil;
-  { Set by Pastel.Menus: keyboard shortcuts of menus and actions. }
+  { Internal: keyboard shortcuts of menus and actions, set by Pastel.Menus. }
   ShortcutHook: function(Form: TForm; Key: LongInt; Shift, Ctrl: Boolean): Boolean = nil;
-  { Whether the computer is set to dark mode (set by the application). }
+  { Internal: whether the computer is set to dark mode, set by Pastel.App. }
   SystemDarkHook: function: Boolean = nil;
   { Runs after UseDarkTheme set up the light or dark colors: changes to
     Theme go here. Pastel.App applies assets/theme.toml with it. }
   ThemeCustomizer: procedure = nil;
-  { Set by Pastel.Menus: shows a TPopupMenu at a point. }
+  { Internal: shows a TPopupMenu at a point, set by Pastel.Menus. }
   PopupMenuHook: procedure(Menu: TControl; Form: TForm; X, Y: Integer) = nil;
   { Alt is held (with KeyDown). }
   KeyAlt: Boolean = False;
   { The main window's form; dialogs are shown on it. Set by Pastel.App. }
   MainForm: TForm = nil;
-  { Set by controls when something changed; the application loop reads them. }
+  { Internal: set by controls when the layout changed; the application loop reads it. }
   NeedsLayout: Boolean = True;
+  { Internal: everything needs painting. }
   NeedsRepaint: Boolean = True;
-  { Only DirtyArea needs painting (when NeedsRepaint is False): a control
-    called Invalidate. Set PartialRepaint to False to always paint everything. }
+  { Internal: only DirtyArea needs painting (when NeedsRepaint is False). }
   NeedsPartialRepaint: Boolean = False;
+  { Internal: what needs painting, in layout units. }
   DirtyArea: TRectI;
+  { False: always paint the whole window (PASTEL_FULL_REPAINT=1). }
   PartialRepaint: Boolean = True;
+  { Internal: the clock of animations stands still at this time (repaint checks); 0: runs. }
   FrozenTime: QWord = 0;
-  { Caret blink phase, toggled by the application loop. }
+  { Internal: caret blink phase, toggled by the application loop. }
   CaretVisible: Boolean = True;
-  { Set when window properties changed; the platform layer applies them. }
+  { Internal: window properties changed; the platform layer applies them. }
   NeedsWindowSync: Boolean = False;
-  { Set by TForm.Close; the application loop handles it. }
+  { Internal: set by TForm.Close; the application loop handles it. }
   CloseRequested: Boolean = False;
-  { Clipboard access, provided by the platform layer. }
+  { Internal: clipboard access, provided by the platform layer. }
   ClipboardGetText: function: string = nil;
+  { Internal: see ClipboardGetText. }
   ClipboardSetText: procedure(const S: string) = nil;
 
 const

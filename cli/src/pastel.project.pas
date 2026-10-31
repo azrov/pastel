@@ -10,8 +10,13 @@ uses
   SysUtils;
 
 const
-  PastelVersion = '0.6.0';
+  PastelVersion = '0.7.0';
   ProjectFileName = 'pastel.toml';
+
+{ '0.7' for Pastel 0.7.x: what [project] pastel records. }
+function PastelMinor: string;
+{ 'my-notes_app' -> 'My Notes App': a title people see, from a project name. }
+function TitleFromName(const Name: string): string;
 
 type
   EProjectError = class(Exception);
@@ -45,6 +50,8 @@ type
     PackageTargetInclude: array of record Target: string; Files: TStringArray; end;
     Description: string;        { [project] description }
     Title: string;              { [project] title: the name people see; Name when not set }
+    PastelFor: string;          { [project] pastel: the Pastel version it is made for ('0.7'); '' in old projects }
+    UnknownKeys: TStringArray;  { settings in pastel.toml that Pastel does not know (typos) }
     Maintainer: string;         { [package] maintainer = "Name <mail>" }
     DebDepends: TStringArray;   { [package.deb] depends = ["libsqlite3-0"] }
     DockerBase: string;         { [package.docker] base = "debian:bookworm-slim" }
@@ -64,7 +71,26 @@ function ProfileIndex(const Name: string): Integer;
 implementation
 
 uses
-  Pastel.Toml;
+  RegExpr, Pastel.Toml;
+
+function TitleFromName(const Name: string): string;
+var
+  W: string;
+begin
+  Result := '';
+  for W in Name.Split(['-', '_', ' ']) do
+    if W <> '' then
+      Result := Result + ' ' + UpCase(W[1]) + Copy(W, 2, MaxInt);
+  Result := Trim(Result);
+end;
+
+function PastelMinor: string;
+var
+  P: TStringArray;
+begin
+  P := string(PastelVersion).Split(['.']);
+  Result := P[0] + '.' + P[1];
+end;
 
 function ProfileIndex(const Name: string): Integer;
 var
@@ -158,6 +184,18 @@ begin
       P.PackageInclude := Doc.GetArray('package.include');
       P.Description := Doc.GetString('project.description', '');
       P.Title := Doc.GetString('project.title', P.Name);
+      P.PastelFor := Doc.GetString('project.pastel', '');
+      for I := 0 to Doc.Values.Count - 1 do
+        if not ExecRegExpr('^(project\.(name|version|pastel|title|description|type)|' +
+          'build\.(main|mode|defines|unit_paths)|targets\.platforms|' +
+          'profile\.(debug|release|test)\.(defines|options)|' +
+          'dependencies\.[^.]+(\.path)?|' +
+          'package\.(include|maintainer|deb\.depends|docker\.base|[a-z0-9-]+\.include)|' +
+          'format\.(indent|keywords))$', Doc.Values[I]) then
+        begin
+          SetLength(P.UnknownKeys, Length(P.UnknownKeys) + 1);
+          P.UnknownKeys[High(P.UnknownKeys)] := Doc.Values[I];
+        end;
       P.Maintainer := Doc.GetString('package.maintainer', '');
       P.DebDepends := Doc.GetArray('package.deb.depends');
       P.DockerBase := Doc.GetString('package.docker.base', 'debian:bookworm-slim');

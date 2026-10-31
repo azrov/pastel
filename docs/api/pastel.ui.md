@@ -592,25 +592,10 @@ function NonVisualClassAt(Index: Integer): TComponentClass
 | | |
 |---|---|
 | `var Theme: TTheme` |  |
-| `var AnimationRequested: Boolean` | Set by controls that move (spinners...): the application paints again soon. |
-| `var ModalStep: procedure` | Runs one pass of the application's event loop; set by Pastel.App. TPopup.ShowModal calls it until the popup is closed. |
-| `var ShortcutHook: function (Form : TForm ; Key : LongInt ; Shift, Ctrl : Boolean) : Boolean` | Set by Pastel.Menus: keyboard shortcuts of menus and actions. |
-| `var SystemDarkHook: function : Boolean` | Whether the computer is set to dark mode (set by the application). |
 | `var ThemeCustomizer: procedure` | Runs after UseDarkTheme set up the light or dark colors: changes to Theme go here. Pastel.App applies assets/theme.toml with it. |
-| `var PopupMenuHook: procedure (Menu : TControl ; Form : TForm ; X, Y : Integer)` | Set by Pastel.Menus: shows a TPopupMenu at a point. |
 | `var KeyAlt: Boolean` | Alt is held (with KeyDown). |
 | `var MainForm: TForm` | The main window's form; dialogs are shown on it. Set by Pastel.App. |
-| `var NeedsLayout: Boolean` | Set by controls when something changed; the application loop reads them. |
-| `var NeedsRepaint: Boolean` |  |
-| `var NeedsPartialRepaint: Boolean` | Only DirtyArea needs painting (when NeedsRepaint is False): a control called Invalidate. Set PartialRepaint to False to always paint everything. |
-| `var DirtyArea: TRectI` |  |
-| `var PartialRepaint: Boolean` |  |
-| `var FrozenTime: QWord` |  |
-| `var CaretVisible: Boolean` | Caret blink phase, toggled by the application loop. |
-| `var NeedsWindowSync: Boolean` | Set when window properties changed; the platform layer applies them. |
-| `var CloseRequested: Boolean` | Set by TForm.Close; the application loop handles it. |
-| `var ClipboardGetText: function : string` | Clipboard access, provided by the platform layer. |
-| `var ClipboardSetText: procedure (const S : string)` |  |
+| `var PartialRepaint: Boolean` | False: always paint the whole window (PASTEL_FULL_REPAINT=1). |
 | `const KEY_BACKSPACE = 8` | Platform-independent key codes (same values as SDL key codes). |
 | `const KEY_TAB = 9` |  |
 | `const KEY_ENTER = 13` |  |

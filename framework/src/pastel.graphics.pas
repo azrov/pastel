@@ -27,15 +27,18 @@ type
     function Inflate(D: Integer): TRectI;
   end;
 
+  { Internal: a glyph of the font cache. }
   PGlyph = ^TGlyph;
+  { Internal: a rendered glyph. }
   TGlyph = record
     Index: FT_UInt;
     Width, Height, Left, Top, Advance: Integer;
     Bits: array of Byte;
   end;
 
-  { Glyph cache: 256-entry pages, allocated when first used. }
+  { Internal: glyph cache, 256-entry pages allocated when first used. }
   TGlyphPage = array[0..255] of PGlyph;
+  { Internal: see TGlyphPage. }
   PGlyphPage = ^TGlyphPage;
 
   TPastelFont = class
@@ -144,8 +147,9 @@ function PrevCharStart(const S: string; I: Integer): Integer;
 function GetFont(Size: Integer; Bold: Boolean = False): TPastelFont;
 { Use these .ttf files instead of the system font (after InitFonts). }
 procedure SetFontFiles(const Regular, Bold: string);
-{ Initializes FreeType and finds a system font. Returns '' or an error. }
+{ Internal: initializes FreeType and finds a system font (Pastel.App does it). Returns '' or an error. }
 function InitFonts: string;
+{ Internal: frees the fonts at the end. }
 procedure DoneFonts;
 
 implementation

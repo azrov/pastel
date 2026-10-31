@@ -6,7 +6,10 @@ Every Pastel project has a `pastel.toml` in its main folder. `pastel` finds it f
 [project]
 name = "inventory"          # letters, digits, - and _; also the program's file name
 version = "1.2.0"           # AppVersion in the program, part of package names
-type = "console"            # console, app (desktop window), lib (units for other projects)
+pastel = "0.7"              # the Pastel version the project is made for (see below)
+title = "Inventory"         # apps: the name in menus and installers
+description = "Stock of the shop"
+type = "console"            # console, app (desktop window), service, lib (units for other projects)
 
 [build]
 main = "src/main.pas"       # the program (not used by lib projects)
@@ -85,3 +88,16 @@ Next to every archive is a `.sha256` file, so receivers can check it: `sha256sum
 For servers there are also `pastel package deb` (a Debian/Ubuntu package with the systemd unit) and `pastel package docker` (a container image): [deploy.md](deploy.md).
 
 Desktop apps need SDL2 and FreeType on the computer that runs them. On Linux they come with the system (`sudo apt install libsdl2-2.0-0 libfreetype6`); for Windows, put `SDL2.dll` and `freetype.dll` in the project (for example `libs/windows/`) and list them in `[package.windows] include`.
+
+## Upgrading a project
+
+`pastel = "0.7"` records the Pastel version a project is made for; `pastel new` writes it. When a newer Pastel builds an older project, the build says so, and
+
+```sh
+pastel upgrade --check   # what would change
+pastel upgrade           # make the changes
+```
+
+brings the project up to date: it sets `pastel`, renames things that newer versions treat differently (for example a control named `Hint`, which hides the `Hint` property since 0.5), adds a `title` to apps and keeps `build/` and `dist/` out of git. Projects made for a *newer* Pastel than the one installed get a warning: update `pastel`.
+
+From 1.0 on, `pastel.toml`, `.pform` files and the public framework API stay compatible within 1.x: what builds with 1.0 builds with every 1.x.

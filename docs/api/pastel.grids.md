@@ -65,7 +65,6 @@ A table of texts with columns.
 |---|---|
 | `constructor Create(AOwner: TComponent)` |  |
 | `function Font: TPastelFont` |  |
-| `function RowHeightPx: Integer` |  |
 | `function AddColumn(const ATitle: string; AWidth: Integer = 0; AAlignment: TTextAlign = taLeft): TGridColumn` | Adds a column from code. |
 | `function AddRow(const Values: array of string): Integer` | Adds a row at the end; returns its index. |
 | `procedure InsertRow(Index: Integer; const Values: array of string)` |  |

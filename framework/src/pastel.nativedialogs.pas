@@ -4,6 +4,8 @@
   most desktops) or kdialog (KDE), when installed. Pastel.Dialogs uses them
   when they are there and falls back to its own dialogs otherwise; test
   scripts and headless runs always get Pastel's own.
+  Internal unit: used by Pastel itself and by the code it generates; it
+  may change between versions.
   Part of the Pastel project, MIT License. }
 unit Pastel.NativeDialogs;
 

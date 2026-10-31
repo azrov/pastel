@@ -1,0 +1,1169 @@
+Pastel.App: TApplication.constructor Create
+Pastel.App: TApplication.destructor Destroy
+Pastel.App: TApplication.procedure CreateForm(AFormClass: TFormClass; out AReference)
+Pastel.App: TApplication.procedure Initialize
+Pastel.App: TApplication.procedure ProcessMessages
+Pastel.App: TApplication.procedure Refresh
+Pastel.App: TApplication.procedure Run
+Pastel.App: TApplication.procedure Terminate
+Pastel.App: TApplication.property Canvas: TCanvas32
+Pastel.App: TApplication.property MainForm: TForm
+Pastel.App: TApplication.property Terminated: Boolean
+Pastel.App: type TApplication = class
+Pastel.App: var Application: TApplication
+Pastel.Args: TArgCommand.constructor Create(const AName: string; const ADescription: string)
+Pastel.Args: TArgCommand.destructor Destroy
+Pastel.Args: TArgCommand.function Command(const AName: string; const ADescription: string): TArgCommand
+Pastel.Args: TArgCommand.function Flag(const AName: string; const AShort: string; const AHelp: string): TArgDef
+Pastel.Args: TArgCommand.function HelpText: string
+Pastel.Args: TArgCommand.function Option(const AName: string; const AShort: string; const AHelp: string; const ADefault: string = ''): TArgDef
+Pastel.Args: TArgCommand.function Positional(const AName: string; const AHelp: string): TArgDef
+Pastel.Args: TArgCommand.procedure Example(const Line: string)
+Pastel.Args: TArgCommand.property Description: string
+Pastel.Args: TArgCommand.property Name: string
+Pastel.Args: TArgDef.constructor Create(AKind: TArgKind; const AName: string; const AShort: string; const AHelp: string)
+Pastel.Args: TArgDef.destructor Destroy
+Pastel.Args: TArgDef.function Choices(const AValues: array of string): TArgDef
+Pastel.Args: TArgDef.function Default(const AValue: string): TArgDef
+Pastel.Args: TArgDef.function Env(const AVariable: string): TArgDef
+Pastel.Args: TArgDef.function IntRange(AMin: Int64; AMax: Int64): TArgDef
+Pastel.Args: TArgDef.function IsInteger: TArgDef
+Pastel.Args: TArgDef.function Many: TArgDef
+Pastel.Args: TArgDef.function MetaVar(const AValue: string): TArgDef
+Pastel.Args: TArgDef.function Optional: TArgDef
+Pastel.Args: TArgDef.function Required: TArgDef
+Pastel.Args: TArgDef.property Kind: TArgKind
+Pastel.Args: TArgDef.property Name: string
+Pastel.Args: TArgKind.akFlag
+Pastel.Args: TArgKind.akOption
+Pastel.Args: TArgKind.akPositional
+Pastel.Args: TArgs.constructor Create(const AProgram: string; const ADescription: string)
+Pastel.Args: TArgs.function CommandName: string
+Pastel.Args: TArgs.function Count(const AName: string): Integer
+Pastel.Args: TArgs.function Get(const AName: string): string
+Pastel.Args: TArgs.function GetAll(const AName: string): TStringArray
+Pastel.Args: TArgs.function GetInt(const AName: string): Int64
+Pastel.Args: TArgs.function Has(const AName: string): Boolean
+Pastel.Args: TArgs.procedure Parse
+Pastel.Args: TArgs.procedure ParseFrom(const Words: array of string)
+Pastel.Args: TArgs.property HelpWanted: Boolean
+Pastel.Args: TArgs.property Version: string
+Pastel.Args: TArgs.property VersionWanted: Boolean
+Pastel.Args: function CommandLineWords: TStringArray
+Pastel.Args: function Levenshtein(const A: string; const B: string): Integer
+Pastel.Args: type EArgsError = class(Exception)
+Pastel.Args: type TArgCommand = class
+Pastel.Args: type TArgDef = class
+Pastel.Args: type TArgKind = (akFlag, akOption, akPositional)
+Pastel.Args: type TArgs = class(TArgCommand)
+Pastel.Assets: function AssetBytes(const Name: string): TBytes
+Pastel.Assets: function AssetExists(const Name: string): Boolean
+Pastel.Assets: function AssetNames: TStringArray
+Pastel.Assets: function AssetText(const Name: string): string
+Pastel.Assets: function OpenAsset(const Name: string): TStream
+Pastel.Assets: procedure RegisterAsset(const Name: string; Data: Pointer; Size: Integer)
+Pastel.Assets: procedure RegisterAssetFile(const Name: string; const FileName: string)
+Pastel.Assets: type EAssetNotFound = class(Exception)
+Pastel.Binding: TDataBinding.constructor Create(AOwner: TComponent)
+Pastel.Binding: TDataBinding.destructor Destroy
+Pastel.Binding: TDataBinding.function ControlOf(Index: Integer): TControl
+Pastel.Binding: TDataBinding.function FieldOf(Index: Integer): string
+Pastel.Binding: TDataBinding.function GetValue(Control: TControl): string
+Pastel.Binding: TDataBinding.function ToJson: TJSONObject
+Pastel.Binding: TDataBinding.procedure Bind(Control: TControl; const Field: string = '')
+Pastel.Binding: TDataBinding.procedure Clear
+Pastel.Binding: TDataBinding.procedure Load(Data: TJSONObject)
+Pastel.Binding: TDataBinding.procedure LoadObject(Obj: TObject)
+Pastel.Binding: TDataBinding.procedure LoadRow(Grid: TControl; Row: Integer)
+Pastel.Binding: TDataBinding.procedure MarkSaved
+Pastel.Binding: TDataBinding.procedure Save(Data: TJSONObject)
+Pastel.Binding: TDataBinding.procedure SaveObject(Obj: TObject)
+Pastel.Binding: TDataBinding.procedure SaveRow(Grid: TControl; Row: Integer)
+Pastel.Binding: TDataBinding.procedure SetValue(Control: TControl; const Value: string)
+Pastel.Binding: TDataBinding.property Fields: TStrings
+Pastel.Binding: TDataBinding.property Modified: Boolean
+Pastel.Binding: TDataBinding.property OnLoad: TNotifyEvent
+Pastel.Binding: function FieldFromControlName(const Name: string): string
+Pastel.Binding: type EBindingError = class(Exception)
+Pastel.Binding: type TDataBinding = class(TComponent)
+Pastel.Config: TConfig.constructor Create(const AAppName: string = '')
+Pastel.Config: TConfig.destructor Destroy
+Pastel.Config: TConfig.function Get(const Key: string; const Default: string = ''): string
+Pastel.Config: TConfig.function GetBool(const Key: string; Default: Boolean = False): Boolean
+Pastel.Config: TConfig.function GetFloat(const Key: string; Default: Double = 0): Double
+Pastel.Config: TConfig.function GetInt(const Key: string; Default: Int64 = 0): Int64
+Pastel.Config: TConfig.function GetList(const Key: string): TStringArray
+Pastel.Config: TConfig.function Has(const Key: string): Boolean
+Pastel.Config: TConfig.function Keys: TStringArray
+Pastel.Config: TConfig.function LoadFileIfExists(const FileName: string): Boolean
+Pastel.Config: TConfig.function Require(const Key: string): string
+Pastel.Config: TConfig.function Source(const Key: string): string
+Pastel.Config: TConfig.procedure LoadEnv(const Prefix: string = '')
+Pastel.Config: TConfig.procedure LoadFile(const FileName: string)
+Pastel.Config: TConfig.procedure LoadStandard
+Pastel.Config: TConfig.procedure SetDefault(const Key: string; const Value: string)
+Pastel.Config: TConfig.procedure SetValue(const Key: string; const Value: string)
+Pastel.Config: TConfig.property AppName: string
+Pastel.Config: TConfig.property Files: TStringList
+Pastel.Config: function SystemConfigDir(const AppName: string): string
+Pastel.Config: function UserConfigDir(const AppName: string): string
+Pastel.Config: type EConfigError = class(Exception)
+Pastel.Config: type TConfig = class
+Pastel.Controls: TCheckBox.property Checked: Boolean
+Pastel.Controls: TCheckBox.property OnChange: TNotifyEvent
+Pastel.Controls: TCheckBox.property Text: string
+Pastel.Controls: TComboBox.constructor Create(AOwner: TComponent)
+Pastel.Controls: TComboBox.destructor Destroy
+Pastel.Controls: TComboBox.function DroppedDown: Boolean
+Pastel.Controls: TComboBox.procedure CloseUp
+Pastel.Controls: TComboBox.procedure DropDown
+Pastel.Controls: TComboBox.property ItemIndex: Integer
+Pastel.Controls: TComboBox.property Items: TStrings
+Pastel.Controls: TComboBox.property OnChange: TNotifyEvent
+Pastel.Controls: TComboBox.property Placeholder: string
+Pastel.Controls: TComboBox.property Text: string
+Pastel.Controls: TImage.constructor Create(AOwner: TComponent)
+Pastel.Controls: TImage.destructor Destroy
+Pastel.Controls: TImage.procedure LoadFromStream(Stream: TStream)
+Pastel.Controls: TImage.property FileName: string
+Pastel.Controls: TImage.property Fit: TImageFit
+Pastel.Controls: TImage.property LoadError: string
+Pastel.Controls: TImage.property Picture: TBitmap32
+Pastel.Controls: TImageFit.ifCenter
+Pastel.Controls: TImageFit.ifContain
+Pastel.Controls: TImageFit.ifCover
+Pastel.Controls: TImageFit.ifStretch
+Pastel.Controls: TListBox.constructor Create(AOwner: TComponent)
+Pastel.Controls: TListBox.destructor Destroy
+Pastel.Controls: TListBox.function Font: TPastelFont
+Pastel.Controls: TListBox.function SelectedText: string
+Pastel.Controls: TListBox.procedure MakeVisible(Index: Integer)
+Pastel.Controls: TListBox.property HotTrack: Boolean
+Pastel.Controls: TListBox.property ItemHeight: Integer
+Pastel.Controls: TListBox.property ItemIndex: Integer
+Pastel.Controls: TListBox.property Items: TStrings
+Pastel.Controls: TListBox.property OnChange: TNotifyEvent
+Pastel.Controls: TListBox.property OnDblClick: TNotifyEvent
+Pastel.Controls: TListBox.property OnItemClick: TNotifyEvent
+Pastel.Controls: TProgressBar.constructor Create(AOwner: TComponent)
+Pastel.Controls: TProgressBar.property Indeterminate: Boolean
+Pastel.Controls: TProgressBar.property Max: Integer
+Pastel.Controls: TProgressBar.property Position: Integer
+Pastel.Controls: TScrollBox.procedure ScrollIntoView(C: TControl)
+Pastel.Controls: TScrollBox.property ContentHeight: Integer
+Pastel.Controls: TScrollBox.property ScrollY: Integer
+Pastel.Controls: TSlider.constructor Create(AOwner: TComponent)
+Pastel.Controls: TSlider.property Max: Integer
+Pastel.Controls: TSlider.property Min: Integer
+Pastel.Controls: TSlider.property OnChange: TNotifyEvent
+Pastel.Controls: TSlider.property Position: Integer
+Pastel.Controls: TSlider.property Step: Integer
+Pastel.Controls: TSpinner.constructor Create(AOwner: TComponent)
+Pastel.Controls: TSpinner.property Active: Boolean
+Pastel.Controls: TTabControl.constructor Create(AOwner: TComponent)
+Pastel.Controls: TTabControl.function ActiveSheet: TTabSheet
+Pastel.Controls: TTabControl.function TabRect(ASheet: TTabSheet): TRectI
+Pastel.Controls: TTabControl.procedure ScrollIntoView(C: TControl)
+Pastel.Controls: TTabControl.property OnChange: TNotifyEvent
+Pastel.Controls: TTabControl.property TabIndex: Integer
+Pastel.Controls: TTabSheet.constructor Create(AOwner: TComponent)
+Pastel.Controls: TTabSheet.property Caption: string
+Pastel.Controls: function FindAppFile(const FileName: string): string
+Pastel.Controls: type TCheckBox = class(TControl)
+Pastel.Controls: type TComboBox = class(TControl)
+Pastel.Controls: type TImage = class(TControl)
+Pastel.Controls: type TImageFit = (ifContain, ifCover, ifStretch, ifCenter)
+Pastel.Controls: type TListBox = class(TControl)
+Pastel.Controls: type TProgressBar = class(TControl)
+Pastel.Controls: type TRadioButton = class(TCheckBox)
+Pastel.Controls: type TScrollBox = class(TColumn)
+Pastel.Controls: type TSlider = class(TControl)
+Pastel.Controls: type TSpinner = class(TControl)
+Pastel.Controls: type TSwitch = class(TCheckBox)
+Pastel.Controls: type TTabControl = class(TControl)
+Pastel.Controls: type TTabSheet = class(TColumn)
+Pastel.Crypto: function Base64UrlDecode(const Text: string): RawByteString
+Pastel.Crypto: function Base64UrlEncode(const Data: RawByteString): string
+Pastel.Crypto: function HashPassword(const Password: string; Iterations: Integer = 210000): string
+Pastel.Crypto: function HmacSha256(const Key: RawByteString; const Data: RawByteString): RawByteString
+Pastel.Crypto: function Pbkdf2Sha256(const Password: RawByteString; const Salt: RawByteString; Iterations: Integer; Length: Integer): RawByteString
+Pastel.Crypto: function RandomBytes(Count: Integer): RawByteString
+Pastel.Crypto: function RandomToken(Count: Integer = 32): string
+Pastel.Crypto: function SameSecret(const A: RawByteString; const B: RawByteString): Boolean
+Pastel.Crypto: function Sha256(const Data: RawByteString): RawByteString
+Pastel.Crypto: function Sha256File(const FileName: string): string
+Pastel.Crypto: function Sha256Hex(const Data: RawByteString): string
+Pastel.Crypto: function ToHex(const Data: RawByteString): string
+Pastel.Crypto: function VerifyPassword(const Password: string; const Hash: string): Boolean
+Pastel.Db: TDatabase.class function Open(const Url: string; MaxConnections: Integer = 10): TDatabase
+Pastel.Db: TDatabase.constructor Create(const Url: string; MaxConnections: Integer = 10)
+Pastel.Db: TDatabase.destructor Destroy
+Pastel.Db: TDatabase.function BeginTransaction: TDbTransaction
+Pastel.Db: TDatabase.function Migrate(const Dir: string = ''): Integer
+Pastel.Db: TDatabase.function MigrationStatus(const Dir: string = ''): TStringList
+Pastel.Db: TDatabase.function SafeUrl: string
+Pastel.Db: TDatabase.property Kind: TDbKind
+Pastel.Db: TDbKind.dbMySQL
+Pastel.Db: TDbKind.dbPostgres
+Pastel.Db: TDbKind.dbSQLite
+Pastel.Db: TDbSession.function Exec(const SQL: string; const Params: array of const): Int64
+Pastel.Db: TDbSession.function Insert(const SQL: string; const Params: array of const): Int64
+Pastel.Db: TDbSession.function Query(const SQL: string; const Params: array of const): TJSONArray
+Pastel.Db: TDbSession.function QueryInt(const SQL: string; const Params: array of const; Default: Int64 = 0): Int64
+Pastel.Db: TDbSession.function QueryOne(const SQL: string; const Params: array of const): TJSONObject
+Pastel.Db: TDbSession.function QueryValue(const SQL: string; const Params: array of const; const Default: string = ''): string
+Pastel.Db: TDbTransaction.constructor Create(ADb: TDatabase)
+Pastel.Db: TDbTransaction.destructor Destroy
+Pastel.Db: TDbTransaction.procedure Commit
+Pastel.Db: TDbTransaction.procedure Rollback
+Pastel.Db: function DefaultMigrationsDir: string
+Pastel.Db: function SplitSql(const Script: string): TStringArray
+Pastel.Db: type EDbDuplicate = class(EDbError)
+Pastel.Db: type EDbError = class(Exception)
+Pastel.Db: type TDatabase = class(TDbSession)
+Pastel.Db: type TDbKind = (dbSQLite, dbPostgres, dbMySQL)
+Pastel.Db: type TDbSession = class
+Pastel.Db: type TDbTransaction = class(TDbSession)
+Pastel.Dialogs: function Ask(const Msg: string; const Title: string = ''): Boolean
+Pastel.Dialogs: function InputBox(const Title: string; const Prompt: string; const Default: string): string
+Pastel.Dialogs: function InputQuery(const Title: string; const Prompt: string; var Value: string): Boolean
+Pastel.Dialogs: function MessageDlg(const Msg: string; const Title: string; const Buttons: array of Integer; Danger: Boolean = False): Integer
+Pastel.Dialogs: function ModalResultCaption(R: Integer): string
+Pastel.Dialogs: function OpenFileDialog(var FileName: string; const Filter: string = ''; const Title: string = 'Open'): Boolean
+Pastel.Dialogs: function SaveFileDialog(var FileName: string; const Filter: string = ''; const Title: string = 'Save'; const DefaultExt: string = ''): Boolean
+Pastel.Dialogs: function SelectFolderDialog(var Folder: string; const Title: string = 'Choose a folder'): Boolean
+Pastel.Dialogs: procedure ShowMessage(const Msg: string; const Title: string = '')
+Pastel.Dialogs: var UseNativeDialogs: Boolean
+Pastel.Env: function EnvList: TStringArray
+Pastel.Env: function GetEnv(const Name: string; const Default: string = ''): string
+Pastel.Env: function HasEnv(const Name: string): Boolean
+Pastel.Env: procedure SetEnv(const Name: string; const Value: string)
+Pastel.Env: procedure UnsetEnv(const Name: string)
+Pastel.Files: function AppDir: string
+Pastel.Files: function FileModified(const FileName: string): TDateTime
+Pastel.Files: function FileSize(const FileName: string): Int64
+Pastel.Files: function FormatSize(Bytes: Int64): string
+Pastel.Files: function HomeDir: string
+Pastel.Files: function JoinPath(const Parts: array of string): string
+Pastel.Files: function ListDirs(const Dir: string): TStringArray
+Pastel.Files: function ListFiles(const Dir: string; const Pattern: string = '*'; Recursive: Boolean = False): TStringArray
+Pastel.Files: function MakeTempDir(const Prefix: string = 'pastel'): string
+Pastel.Files: function ReadBytes(const FileName: string): TBytes
+Pastel.Files: function ReadLines(const FileName: string): TStringArray
+Pastel.Files: function ReadText(const FileName: string): string
+Pastel.Files: function RelativePath(const FileName: string; const BaseDir: string): string
+Pastel.Files: procedure AppendText(const FileName: string; const Text: string)
+Pastel.Files: procedure CopyFile(const Source: string; const Dest: string; Overwrite: Boolean = True)
+Pastel.Files: procedure DeleteDir(const Dir: string)
+Pastel.Files: procedure DeleteFileIfExists(const FileName: string)
+Pastel.Files: procedure EnsureDir(const Dir: string)
+Pastel.Files: procedure MoveFile(const Source: string; const Dest: string)
+Pastel.Files: procedure WriteBytes(const FileName: string; const Data: TBytes)
+Pastel.Files: procedure WriteLines(const FileName: string; const Lines: array of string)
+Pastel.Files: procedure WriteText(const FileName: string; const Text: string)
+Pastel.Files: type EFileError = class(Exception)
+Pastel.Graphics: TBitmap32.Pixels: array of Cardinal
+Pastel.Graphics: TBitmap32.function Empty: Boolean
+Pastel.Graphics: TBitmap32.procedure LoadFromFile(const FileName: string)
+Pastel.Graphics: TBitmap32.procedure LoadFromStream(Stream: TStream)
+Pastel.Graphics: TBitmap32.procedure SetSize(AWidth: Integer; AHeight: Integer)
+Pastel.Graphics: TBitmap32.property Height: Integer
+Pastel.Graphics: TBitmap32.property Width: Integer
+Pastel.Graphics: TCanvas32.function Data: Pointer
+Pastel.Graphics: TCanvas32.function GetPixel(X: Integer; Y: Integer): TColor32
+Pastel.Graphics: TCanvas32.function PixelRect(const R: TRectI): TRectI
+Pastel.Graphics: TCanvas32.procedure Clear(C: TColor32)
+Pastel.Graphics: TCanvas32.procedure DrawBitmap(B: TBitmap32; X: Integer; Y: Integer; W: Integer; H: Integer; Smooth: Boolean = True; Opacity: Byte = 255)
+Pastel.Graphics: TCanvas32.procedure DrawLine(X1: Single; Y1: Single; X2: Single; Y2: Single; Thickness: Single; C: TColor32)
+Pastel.Graphics: TCanvas32.procedure DrawText(Font: TPastelFont; X: Integer; Y: Integer; const S: string; C: TColor32)
+Pastel.Graphics: TCanvas32.procedure FillCircle(CX: Single; CY: Single; Radius: Single; C: TColor32)
+Pastel.Graphics: TCanvas32.procedure FillRect(X: Integer; Y: Integer; W: Integer; H: Integer; C: TColor32)
+Pastel.Graphics: TCanvas32.procedure FillRoundRect(X: Integer; Y: Integer; W: Integer; H: Integer; Radius: Single; C: TColor32)
+Pastel.Graphics: TCanvas32.procedure PopClip
+Pastel.Graphics: TCanvas32.procedure PushClip(const R: TRectI)
+Pastel.Graphics: TCanvas32.procedure SaveToPNG(const FileName: string)
+Pastel.Graphics: TCanvas32.procedure SetSize(AWidth: Integer; AHeight: Integer)
+Pastel.Graphics: TCanvas32.procedure StrokeRoundRect(X: Integer; Y: Integer; W: Integer; H: Integer; Radius: Single; Thickness: Single; C: TColor32)
+Pastel.Graphics: TCanvas32.property Height: Integer
+Pastel.Graphics: TCanvas32.property PixelHeight: Integer
+Pastel.Graphics: TCanvas32.property PixelWidth: Integer
+Pastel.Graphics: TCanvas32.property Scale: Single
+Pastel.Graphics: TCanvas32.property Width: Integer
+Pastel.Graphics: TPastelFont.constructor Create(const FileName: string; ASize: Integer)
+Pastel.Graphics: TPastelFont.destructor Destroy
+Pastel.Graphics: TPastelFont.function Glyph(CodePoint: Cardinal): PGlyph
+Pastel.Graphics: TPastelFont.function HitTest(const S: string; X: Integer): Integer
+Pastel.Graphics: TPastelFont.function TextWidth(const S: string): Integer
+Pastel.Graphics: TPastelFont.property Ascent: Integer
+Pastel.Graphics: TPastelFont.property Bold: Boolean
+Pastel.Graphics: TPastelFont.property Descent: Integer
+Pastel.Graphics: TPastelFont.property LineHeight: Integer
+Pastel.Graphics: TPastelFont.property Size: Integer
+Pastel.Graphics: TRectI.H: Integer
+Pastel.Graphics: TRectI.W: Integer
+Pastel.Graphics: TRectI.X: Integer
+Pastel.Graphics: TRectI.Y: Integer
+Pastel.Graphics: TRectI.function Contains(PX: Integer; PY: Integer): Boolean
+Pastel.Graphics: TRectI.function Inflate(D: Integer): TRectI
+Pastel.Graphics: TRectI.function Intersect(const R: TRectI): TRectI
+Pastel.Graphics: TRectI.function Union(const R: TRectI): TRectI
+Pastel.Graphics: function GetFont(Size: Integer; Bold: Boolean = False): TPastelFont
+Pastel.Graphics: function Mix(A: TColor32; B: TColor32; T: Single): TColor32
+Pastel.Graphics: function NextCodePoint(const S: string; var I: Integer): Cardinal
+Pastel.Graphics: function PrevCharStart(const S: string; I: Integer): Integer
+Pastel.Graphics: function RGB(R: Byte; G: Byte; B: Byte): TColor32
+Pastel.Graphics: function RGBA(R: Byte; G: Byte; B: Byte; A: Byte): TColor32
+Pastel.Graphics: function RectI(X: Integer; Y: Integer; W: Integer; H: Integer): TRectI
+Pastel.Graphics: function TryParseColor(const S: string; out C: TColor32): Boolean
+Pastel.Graphics: function WithAlpha(C: TColor32; A: Byte): TColor32
+Pastel.Graphics: procedure SetFontFiles(const Regular: string; const Bold: string)
+Pastel.Graphics: type EPastelGraphics = class(Exception)
+Pastel.Graphics: type TBitmap32 = class
+Pastel.Graphics: type TCanvas32 = class
+Pastel.Graphics: type TColor32 = Cardinal
+Pastel.Graphics: type TPastelFont = class
+Pastel.Graphics: type TRectI = record
+Pastel.Grids: TGrid.constructor Create(AOwner: TComponent)
+Pastel.Grids: TGrid.function AddColumn(const ATitle: string; AWidth: Integer = 0; AAlignment: TTextAlign = taLeft): TGridColumn
+Pastel.Grids: TGrid.function AddRow(const Values: array of string): Integer
+Pastel.Grids: TGrid.function CommitEdit: Boolean
+Pastel.Grids: TGrid.function FindRow(ACol: Integer; const Value: string): Integer
+Pastel.Grids: TGrid.function Font: TPastelFont
+Pastel.Grids: TGrid.function ToJson: TJSONArray
+Pastel.Grids: TGrid.procedure CancelEdit
+Pastel.Grids: TGrid.procedure Clear
+Pastel.Grids: TGrid.procedure DeleteRow(Index: Integer)
+Pastel.Grids: TGrid.procedure EditCell(const Text: string = ''; Replace: Boolean = False)
+Pastel.Grids: TGrid.procedure InsertRow(Index: Integer; const Values: array of string)
+Pastel.Grids: TGrid.procedure LoadJson(Rows: TJSONArray)
+Pastel.Grids: TGrid.procedure MakeVisible(ARow: Integer; ACol: Integer = -1)
+Pastel.Grids: TGrid.procedure SortBy(ACol: Integer; Descending: Boolean = False)
+Pastel.Grids: TGrid.property Cells[ACol: Integer; ARow: Integer]: string
+Pastel.Grids: TGrid.property Col: Integer
+Pastel.Grids: TGrid.property ColCount: Integer
+Pastel.Grids: TGrid.property Columns[Index: Integer]: TGridColumn
+Pastel.Grids: TGrid.property Editable: Boolean
+Pastel.Grids: TGrid.property Editing: Boolean
+Pastel.Grids: TGrid.property Editor: TGridEditor
+Pastel.Grids: TGrid.property OnCellEdit: TGridCellEvent
+Pastel.Grids: TGrid.property OnChange: TNotifyEvent
+Pastel.Grids: TGrid.property OnDblClick: TNotifyEvent
+Pastel.Grids: TGrid.property OnSort: TNotifyEvent
+Pastel.Grids: TGrid.property Row: Integer
+Pastel.Grids: TGrid.property RowCount: Integer
+Pastel.Grids: TGrid.property RowHeight: Integer
+Pastel.Grids: TGrid.property RowSelect: Boolean
+Pastel.Grids: TGrid.property RowValues[ARow: Integer]: TStringArray
+Pastel.Grids: TGrid.property SortColumn: Integer
+Pastel.Grids: TGrid.property SortDescending: Boolean
+Pastel.Grids: TGrid.property Sortable: Boolean
+Pastel.Grids: TGrid.property Striped: Boolean
+Pastel.Grids: TGridColumn.function Grid: TGrid
+Pastel.Grids: TGridColumn.property Alignment: TTextAlign
+Pastel.Grids: TGridColumn.property Field: string
+Pastel.Grids: TGridColumn.property ReadOnly: Boolean
+Pastel.Grids: TGridColumn.property Title: string
+Pastel.Grids: TListView.constructor Create(AOwner: TComponent)
+Pastel.Grids: TListView.property RowSelect
+Pastel.Grids: TTreeNode.Data: Pointer
+Pastel.Grids: TTreeNode.Tag: PtrInt
+Pastel.Grids: TTreeNode.constructor Create(ATree: TTreeView; AParent: TTreeNode; const AText: string)
+Pastel.Grids: TTreeNode.destructor Destroy
+Pastel.Grids: TTreeNode.function AddChild(const AText: string): TTreeNode
+Pastel.Grids: TTreeNode.function HasChildren: Boolean
+Pastel.Grids: TTreeNode.function Index: Integer
+Pastel.Grids: TTreeNode.function Level: Integer
+Pastel.Grids: TTreeNode.function Path: string
+Pastel.Grids: TTreeNode.procedure Clear
+Pastel.Grids: TTreeNode.procedure ExpandAll
+Pastel.Grids: TTreeNode.property Count: Integer
+Pastel.Grids: TTreeNode.property Expanded: Boolean
+Pastel.Grids: TTreeNode.property Items[AIndex: Integer]: TTreeNode
+Pastel.Grids: TTreeNode.property Parent: TTreeNode
+Pastel.Grids: TTreeNode.property Text: string
+Pastel.Grids: TTreeView.constructor Create(AOwner: TComponent)
+Pastel.Grids: TTreeView.destructor Destroy
+Pastel.Grids: TTreeView.function Add(const AText: string): TTreeNode
+Pastel.Grids: TTreeView.function FindNode(const APath: string): TTreeNode
+Pastel.Grids: TTreeView.function Font: TPastelFont
+Pastel.Grids: TTreeView.procedure BeginUpdate
+Pastel.Grids: TTreeView.procedure Clear
+Pastel.Grids: TTreeView.procedure EndUpdate
+Pastel.Grids: TTreeView.procedure FullCollapse
+Pastel.Grids: TTreeView.procedure FullExpand
+Pastel.Grids: TTreeView.procedure MakeVisible(Node: TTreeNode)
+Pastel.Grids: TTreeView.property Count: Integer
+Pastel.Grids: TTreeView.property Items: TStrings
+Pastel.Grids: TTreeView.property OnChange: TNotifyEvent
+Pastel.Grids: TTreeView.property OnDblClick: TNotifyEvent
+Pastel.Grids: TTreeView.property OnExpand: TTreeNodeEvent
+Pastel.Grids: TTreeView.property Selected: TTreeNode
+Pastel.Grids: TTreeView.property Text: string
+Pastel.Grids: TTreeView.property TopNodes[AIndex: Integer]: TTreeNode
+Pastel.Grids: type TGrid = class(TControl)
+Pastel.Grids: type TGridCellEvent = procedure(Sender: TObject; ACol: Integer; ARow: Integer; Value: string; Accept: Boolean)
+Pastel.Grids: type TGridColumn = class(TControl)
+Pastel.Grids: type TGridEditor = class(TEdit)
+Pastel.Grids: type TListView = class(TGrid)
+Pastel.Grids: type TTreeNode = class
+Pastel.Grids: type TTreeNodeEvent = procedure(Sender: TObject; Node: TTreeNode)
+Pastel.Grids: type TTreeView = class(TControl)
+Pastel.Http: EHttpError.Body: string
+Pastel.Http: EHttpError.Status: Integer
+Pastel.Http: THttpClient.BearerToken: string
+Pastel.Http: THttpClient.FollowRedirects: Boolean
+Pastel.Http: THttpClient.Headers: TStringArray
+Pastel.Http: THttpClient.OnProgress: THttpProgressEvent
+Pastel.Http: THttpClient.Password: string
+Pastel.Http: THttpClient.Proxy: string
+Pastel.Http: THttpClient.Timeout: Integer
+Pastel.Http: THttpClient.UserAgent: string
+Pastel.Http: THttpClient.UserName: string
+Pastel.Http: THttpClient.VerifyCertificates: Boolean
+Pastel.Http: THttpClient.constructor Create(const ABaseUrl: string = '')
+Pastel.Http: THttpClient.function Delete(const Path: string): THttpResponse
+Pastel.Http: THttpClient.function Get(const Path: string): THttpResponse
+Pastel.Http: THttpClient.function Get(const Path: string; const Query: array of string): THttpResponse
+Pastel.Http: THttpClient.function Head(const Path: string): THttpResponse
+Pastel.Http: THttpClient.function Patch(const Path: string; const Body: string; const ContentType: string = 'text/plain; charset=utf-8'): THttpResponse
+Pastel.Http: THttpClient.function Post(const Path: string; const Body: string; const ContentType: string = 'text/plain; charset=utf-8'): THttpResponse
+Pastel.Http: THttpClient.function PostForm(const Path: string; const Fields: array of string): THttpResponse
+Pastel.Http: THttpClient.function PostJson(const Path: string; Json: TJSONData): THttpResponse
+Pastel.Http: THttpClient.function PostJson(const Path: string; const Json: string): THttpResponse
+Pastel.Http: THttpClient.function Put(const Path: string; const Body: string; const ContentType: string = 'text/plain; charset=utf-8'): THttpResponse
+Pastel.Http: THttpClient.function PutJson(const Path: string; const Json: string): THttpResponse
+Pastel.Http: THttpClient.function Request(const Method: string; const Path: string; const Body: string; const ContentType: string): THttpResponse
+Pastel.Http: THttpClient.procedure Download(const Path: string; const FileName: string)
+Pastel.Http: THttpClient.property BaseUrl: string
+Pastel.Http: THttpResponse.Body: string
+Pastel.Http: THttpResponse.Duration: Integer
+Pastel.Http: THttpResponse.Headers: TStringArray
+Pastel.Http: THttpResponse.Method: string
+Pastel.Http: THttpResponse.Status: Integer
+Pastel.Http: THttpResponse.StatusText: string
+Pastel.Http: THttpResponse.Url: string
+Pastel.Http: THttpResponse.function Header(const Name: string): string
+Pastel.Http: THttpResponse.function Json: TJSONData
+Pastel.Http: THttpResponse.function Ok: Boolean
+Pastel.Http: THttpResponse.procedure RaiseForStatus
+Pastel.Http: function HttpGet(const Url: string): THttpResponse
+Pastel.Http: function HttpGetJson(const Url: string): TJSONData
+Pastel.Http: function HttpGetText(const Url: string): string
+Pastel.Http: function HttpPost(const Url: string; const Body: string; const ContentType: string): THttpResponse
+Pastel.Http: function HttpPostJson(const Url: string; const Json: string): THttpResponse
+Pastel.Http: function QueryString(const Pairs: array of string): string
+Pastel.Http: function UrlEncode(const S: string): string
+Pastel.Http: procedure HttpDownload(const Url: string; const FileName: string)
+Pastel.Http: type EHttpError = class(Exception)
+Pastel.Http: type THttpClient = class
+Pastel.Http: type THttpProgressEvent = procedure(Done: Int64; Total: Int64)
+Pastel.Http: type THttpResponse = record
+Pastel.Json: EJsonError.Column: Integer
+Pastel.Json: EJsonError.Line: Integer
+Pastel.Json: function JArray(Data: TJSONData; const Path: string): TJsonItems
+Pastel.Json: function JArrayOf(const Values: array of const): TJSONArray
+Pastel.Json: function JBool(Data: TJSONData; const Path: string; Default: Boolean = False): Boolean
+Pastel.Json: function JFind(Data: TJSONData; const Path: string): TJSONData
+Pastel.Json: function JFloat(Data: TJSONData; const Path: string; Default: Double = 0): Double
+Pastel.Json: function JHas(Data: TJSONData; const Path: string): Boolean
+Pastel.Json: function JInt(Data: TJSONData; const Path: string; Default: Int64 = 0): Int64
+Pastel.Json: function JObject(const NamesAndValues: array of const): TJSONObject
+Pastel.Json: function JStr(Data: TJSONData; const Path: string; const Default: string = ''): string
+Pastel.Json: function JsonQuote(const S: string): string
+Pastel.Json: function LoadJsonFile(const FileName: string): TJSONData
+Pastel.Json: function ObjectToJson(Obj: TObject; Pretty: Boolean = False): string
+Pastel.Json: function ObjectToJsonData(Obj: TObject): TJSONObject
+Pastel.Json: function ParseJson(const Text: string): TJSONData
+Pastel.Json: function ParseJsonObject(const Text: string): TJSONObject
+Pastel.Json: function ToJson(Data: TJSONData; Pretty: Boolean = False): string
+Pastel.Json: procedure JsonDataToObject(Data: TJSONObject; Obj: TObject)
+Pastel.Json: procedure JsonToObject(const Text: string; Obj: TObject)
+Pastel.Json: procedure SaveJsonFile(const FileName: string; Data: TJSONData; Pretty: Boolean = True)
+Pastel.Json: type EJsonError = class(Exception)
+Pastel.Json: type TJSONArray = fpjson.TJSONArray
+Pastel.Json: type TJSONData = fpjson.TJSONData
+Pastel.Json: type TJSONObject = fpjson.TJSONObject
+Pastel.Json: type TJSONType = fpjson.TJSONtype
+Pastel.Json: type TJsonItems = array of TJSONData
+Pastel.Jwt: function JwtSign(Claims: TJSONObject; const Secret: string; ExpiresIn: Int64 = 3600): string
+Pastel.Jwt: function JwtVerify(const Token: string; const Secret: string; Leeway: Integer = 30): TJSONObject
+Pastel.Jwt: type EJwtError = class(Exception)
+Pastel.Lang: function AvailableLanguages: TStringArray
+Pastel.Lang: function FormatDateShort(D: TDateTime): string
+Pastel.Lang: function FormatDateTimeShort(D: TDateTime): string
+Pastel.Lang: function FormatNumber(Value: Double; Decimals: Integer = 0): string
+Pastel.Lang: function FrameworkTexts: TStringArray
+Pastel.Lang: function Language: string
+Pastel.Lang: function LanguageChosen: Boolean
+Pastel.Lang: function SystemLanguage: string
+Pastel.Lang: function Translate(const S: string): string
+Pastel.Lang: function TryParseNumber(const S: string; out Value: Double): Boolean
+Pastel.Lang: function UseLanguage(const Code: string): Boolean
+Pastel.Lang: function _(const S: string): string
+Pastel.Lang: procedure AddTranslation(const Source: string; const Translated: string)
+Pastel.Log: TLogFields.Items: TStringArray
+Pastel.Log: TLogFields.Logger: TLogger
+Pastel.Log: TLogFields.procedure Debug(const Msg: string)
+Pastel.Log: TLogFields.procedure Error(const Msg: string)
+Pastel.Log: TLogFields.procedure Info(const Msg: string)
+Pastel.Log: TLogFields.procedure Warn(const Msg: string)
+Pastel.Log: TLogFormat.lfAuto
+Pastel.Log: TLogFormat.lfJournal
+Pastel.Log: TLogFormat.lfJson
+Pastel.Log: TLogFormat.lfText
+Pastel.Log: TLogLevel.llDebug
+Pastel.Log: TLogLevel.llError
+Pastel.Log: TLogLevel.llInfo
+Pastel.Log: TLogLevel.llOff
+Pastel.Log: TLogLevel.llWarn
+Pastel.Log: TLogger.constructor Create
+Pastel.Log: TLogger.destructor Destroy
+Pastel.Log: TLogger.function Enabled(Level: TLogLevel): Boolean
+Pastel.Log: TLogger.function Fields(const NamesAndValues: array of const): TLogFields
+Pastel.Log: TLogger.procedure Debug(const Fmt: string; const Args: array of const)
+Pastel.Log: TLogger.procedure Debug(const Msg: string)
+Pastel.Log: TLogger.procedure Error(E: Exception; const What: string = '')
+Pastel.Log: TLogger.procedure Error(const Fmt: string; const Args: array of const)
+Pastel.Log: TLogger.procedure Error(const Msg: string)
+Pastel.Log: TLogger.procedure Info(const Fmt: string; const Args: array of const)
+Pastel.Log: TLogger.procedure Info(const Msg: string)
+Pastel.Log: TLogger.procedure SetLevel(const Name: string)
+Pastel.Log: TLogger.procedure ToFile(const FileName: string; MaxMB: Integer = 10; Keep: Integer = 5)
+Pastel.Log: TLogger.procedure Warn(const Fmt: string; const Args: array of const)
+Pastel.Log: TLogger.procedure Warn(const Msg: string)
+Pastel.Log: TLogger.procedure Write(Level: TLogLevel; const Msg: string; const Fields: TStringArray)
+Pastel.Log: TLogger.property Console: Boolean
+Pastel.Log: TLogger.property Format: TLogFormat
+Pastel.Log: TLogger.property Level: TLogLevel
+Pastel.Log: TLogger.property MaxBytes: Int64
+Pastel.Log: TLogger.property OnLine: TLogLineEvent
+Pastel.Log: function LevelName(Level: TLogLevel): string
+Pastel.Log: type TLogFields = record
+Pastel.Log: type TLogFormat = (lfAuto, lfText, lfJson, lfJournal)
+Pastel.Log: type TLogLevel = (llDebug, llInfo, llWarn, llError, llOff)
+Pastel.Log: type TLogLineEvent = procedure(Level: TLogLevel; Line: string)
+Pastel.Log: type TLogger = class
+Pastel.Log: var Log: TLogger
+Pastel.Menus: TMenuBar.destructor Destroy
+Pastel.Menus: TMenuBar.function OpenItem: TMenuItem
+Pastel.Menus: TMenuBar.procedure CloseMenu
+Pastel.Menus: TMenuBar.procedure OpenMenu(Item: TMenuItem)
+Pastel.Menus: TMenuItem.function DisplayCaption: string
+Pastel.Menus: TMenuItem.function DisplayShortCut: string
+Pastel.Menus: TMenuItem.function HasSubmenu: Boolean
+Pastel.Menus: TMenuItem.function IsChecked: Boolean
+Pastel.Menus: TMenuItem.function IsEnabled: Boolean
+Pastel.Menus: TMenuItem.function IsSeparator: Boolean
+Pastel.Menus: TMenuItem.procedure Click
+Pastel.Menus: TMenuItem.procedure Notification(AComponent: TComponent; Operation: TOperation)
+Pastel.Menus: TMenuItem.property Action: TBasicAction
+Pastel.Menus: TMenuItem.property Caption: string
+Pastel.Menus: TMenuItem.property Checked: Boolean
+Pastel.Menus: TMenuItem.property OnClick: TNotifyEvent
+Pastel.Menus: TMenuItem.property ShortCut: string
+Pastel.Menus: TMenuView.constructor CreateFor(AOwner: TComponent; ASource: TControl)
+Pastel.Menus: TMenuView.destructor Destroy
+Pastel.Menus: TMenuView.procedure CloseAll
+Pastel.Menus: TPopupMenu.constructor Create(AOwner: TComponent)
+Pastel.Menus: TPopupMenu.destructor Destroy
+Pastel.Menus: TPopupMenu.procedure Popup(Form: TForm; X: Integer; Y: Integer)
+Pastel.Menus: function HandleShortCut(Form: TForm; Key: LongInt; Shift: Boolean; Ctrl: Boolean): Boolean
+Pastel.Menus: function MenuItemRect(Item: TMenuItem; out R: TRectI): Boolean
+Pastel.Menus: function ParseShortCut(const S: string; out Key: LongInt; out Shift: Boolean; out Ctrl: Boolean; out Alt: Boolean): Boolean
+Pastel.Menus: type TMenuBar = class(TControl)
+Pastel.Menus: type TMenuItem = class(TControl)
+Pastel.Menus: type TMenuView = class(TPopup)
+Pastel.Menus: type TPopupMenu = class(TControl)
+Pastel.Process: EProcessError.Errors: string
+Pastel.Process: EProcessError.ExitCode: Integer
+Pastel.Process: TRunOptions.Dir: string
+Pastel.Process: TRunOptions.Env: array of string
+Pastel.Process: TRunOptions.Input: string
+Pastel.Process: TRunOptions.MergeErrors: Boolean
+Pastel.Process: TRunOptions.Timeout: Integer
+Pastel.Process: TRunResult.Duration: Integer
+Pastel.Process: TRunResult.Errors: string
+Pastel.Process: TRunResult.ExitCode: Integer
+Pastel.Process: TRunResult.Output: string
+Pastel.Process: TRunResult.TimedOut: Boolean
+Pastel.Process: TRunResult.function Lines: TStringArray
+Pastel.Process: TRunResult.function Ok: Boolean
+Pastel.Process: TRunResult.function Text: string
+Pastel.Process: function Run(const Exe: string; const Args: array of string): TRunResult
+Pastel.Process: function Run(const Exe: string; const Args: array of string; const Opts: TRunOptions): TRunResult
+Pastel.Process: function RunLive(const Exe: string; const Args: array of string; const Dir: string = ''): Integer
+Pastel.Process: function RunOutput(const Exe: string; const Args: array of string): string
+Pastel.Process: function RunOutput(const Exe: string; const Args: array of string; const Opts: TRunOptions): string
+Pastel.Process: function Shell(const CommandLine: string): TRunResult
+Pastel.Process: function Shell(const CommandLine: string; const Opts: TRunOptions): TRunResult
+Pastel.Process: function Which(const Name: string): string
+Pastel.Process: type EProcessError = class(Exception)
+Pastel.Process: type TRunOptions = record
+Pastel.Process: type TRunResult = record
+Pastel.Service: TService.constructor Create(const AName: string; const AVersion: string = '')
+Pastel.Service: TService.destructor Destroy
+Pastel.Service: TService.function Run: Integer
+Pastel.Service: TService.function Wait(Ms: Integer): Boolean
+Pastel.Service: TService.procedure DailyAt(const Time: string; Job: TJobMethod; const JobName: string = '')
+Pastel.Service: TService.procedure DailyAt(const Time: string; Job: TJobProc; const JobName: string = '')
+Pastel.Service: TService.procedure Every(Seconds: Double; Job: TJobMethod; const JobName: string = ''; RunAtStart: Boolean = False)
+Pastel.Service: TService.procedure Every(Seconds: Double; Job: TJobProc; const JobName: string = ''; RunAtStart: Boolean = False)
+Pastel.Service: TService.procedure Reload
+Pastel.Service: TService.procedure Stop
+Pastel.Service: TService.property Config: TConfig
+Pastel.Service: TService.property IsStopping: Boolean
+Pastel.Service: TService.property Name: string
+Pastel.Service: TService.property StateDir: string
+Pastel.Service: TService.property Version: string
+Pastel.Service: TServiceJob.DailyTime: string
+Pastel.Service: TServiceJob.Failures: Integer
+Pastel.Service: TServiceJob.Interval: Double
+Pastel.Service: TServiceJob.Method: TJobMethod
+Pastel.Service: TServiceJob.Name: string
+Pastel.Service: TServiceJob.NextRun: TDateTime
+Pastel.Service: TServiceJob.Proc: TJobProc
+Pastel.Service: TServiceJob.Runs: Integer
+Pastel.Service: function NextDailyRun(const Time: string; Now: TDateTime): TDateTime
+Pastel.Service: procedure NotifySystemd(const Message: string)
+Pastel.Service: type TJobMethod = procedure
+Pastel.Service: type TJobProc = procedure
+Pastel.Service: type TService = class
+Pastel.Service: type TServiceJob = class
+Pastel.Term: TProgress.constructor Create(ATotal: Int64; const ALabel: string = '')
+Pastel.Term: TProgress.destructor Destroy
+Pastel.Term: TProgress.procedure Finish
+Pastel.Term: TProgress.procedure SetLabel(const AValue: string)
+Pastel.Term: TProgress.procedure SetPosition(AValue: Int64)
+Pastel.Term: TProgress.procedure Step(Amount: Int64 = 1)
+Pastel.Term: TProgress.property Position: Int64
+Pastel.Term: TProgress.property Total: Int64
+Pastel.Term: TTable.constructor Create(const AHeader: array of string)
+Pastel.Term: TTable.function RowCount: Integer
+Pastel.Term: TTable.function ToText: string
+Pastel.Term: TTable.procedure AddRow(const Cells: array of string)
+Pastel.Term: TTable.procedure Print
+Pastel.Term: TTable.procedure SetAlign(Column: Integer; Align: TTextAlign)
+Pastel.Term: TTextAlign.alCenter
+Pastel.Term: TTextAlign.alLeft
+Pastel.Term: TTextAlign.alRight
+Pastel.Term: function Ask(const Question: string; const Default: string = ''): string
+Pastel.Term: function AskPassword(const Question: string): string
+Pastel.Term: function Blue(const S: string): string
+Pastel.Term: function Bold(const S: string): string
+Pastel.Term: function Choose(const Question: string; const Choices: array of string; Default: Integer = 0): Integer
+Pastel.Term: function ColorsEnabled: Boolean
+Pastel.Term: function Confirm(const Question: string; Default: Boolean = False): Boolean
+Pastel.Term: function Cyan(const S: string): string
+Pastel.Term: function Dim(const S: string): string
+Pastel.Term: function DisplayWidth(const S: string): Integer
+Pastel.Term: function Gray(const S: string): string
+Pastel.Term: function Green(const S: string): string
+Pastel.Term: function IsInteractive: Boolean
+Pastel.Term: function IsTerminal: Boolean
+Pastel.Term: function Italic(const S: string): string
+Pastel.Term: function Magenta(const S: string): string
+Pastel.Term: function PadLeft(const S: string; Width: Integer): string
+Pastel.Term: function PadRight(const S: string; Width: Integer): string
+Pastel.Term: function Red(const S: string): string
+Pastel.Term: function Rgb(const Hex: string; const S: string): string
+Pastel.Term: function StripStyles(const S: string): string
+Pastel.Term: function TerminalWidth: Integer
+Pastel.Term: function Underline(const S: string): string
+Pastel.Term: function Yellow(const S: string): string
+Pastel.Term: procedure Error(const Msg: string)
+Pastel.Term: procedure Info(const Msg: string)
+Pastel.Term: procedure SetColors(AEnabled: Boolean)
+Pastel.Term: procedure Success(const Msg: string)
+Pastel.Term: procedure Warning(const Msg: string)
+Pastel.Term: type TProgress = class
+Pastel.Term: type TTable = class
+Pastel.Term: type TTextAlign = (alLeft, alRight, alCenter)
+Pastel.Testing: ETestFailure.Location: string
+Pastel.Testing: TTestSuite.procedure SetUp
+Pastel.Testing: TTestSuite.procedure TearDown
+Pastel.Testing: function HumanName(const Identifier: string): string
+Pastel.Testing: function RunTests: Integer
+Pastel.Testing: procedure AssertContains(const Part: string; const Actual: string; const Msg: string = '')
+Pastel.Testing: procedure AssertEquals(Expected: Boolean; Actual: Boolean; const Msg: string = '')
+Pastel.Testing: procedure AssertEquals(Expected: Double; Actual: Double; Delta: Double = 1E-9; const Msg: string = '')
+Pastel.Testing: procedure AssertEquals(Expected: Int64; Actual: Int64; const Msg: string = '')
+Pastel.Testing: procedure AssertEquals(const Expected: string; const Actual: string; const Msg: string = '')
+Pastel.Testing: procedure AssertFalse(Condition: Boolean; const Msg: string = '')
+Pastel.Testing: procedure AssertNil(P: Pointer; const Msg: string = '')
+Pastel.Testing: procedure AssertNotEquals(NotExpected: Int64; Actual: Int64; const Msg: string = '')
+Pastel.Testing: procedure AssertNotEquals(const NotExpected: string; const Actual: string; const Msg: string = '')
+Pastel.Testing: procedure AssertNotNil(P: Pointer; const Msg: string = '')
+Pastel.Testing: procedure AssertRaises(AClass: ExceptClass; AMethod: TTestMethod; const Msg: string = '')
+Pastel.Testing: procedure AssertRaises(AClass: ExceptClass; AProc: TTestProc; const Msg: string = '')
+Pastel.Testing: procedure AssertStartsWith(const Prefix: string; const Actual: string; const Msg: string = '')
+Pastel.Testing: procedure AssertTrue(Condition: Boolean; const Msg: string = '')
+Pastel.Testing: procedure Fail(const Msg: string)
+Pastel.Testing: procedure RegisterTests(ASuite: TTestSuiteClass)
+Pastel.Testing: procedure Skip(const Reason: string)
+Pastel.Testing: procedure Test(const AName: string; AProc: TTestProc)
+Pastel.Testing: type ETestFailure = class(Exception)
+Pastel.Testing: type ETestSkipped = class(Exception)
+Pastel.Testing: type TTestMethod = procedure
+Pastel.Testing: type TTestProc = procedure
+Pastel.Testing: type TTestSuite = class
+Pastel.Testing: type TTestSuiteClass = class of TTestSuite
+Pastel.Text: function Capitalize(const S: string; const Lang: string = ''): string
+Pastel.Text: function CharCopy(const S: string; Start: Integer; Count: Integer): string
+Pastel.Text: function CharCount(const S: string): Integer
+Pastel.Text: function Lower(const S: string; const Lang: string = ''): string
+Pastel.Text: function Shorten(const S: string; MaxChars: Integer): string
+Pastel.Text: function Upper(const S: string; const Lang: string = ''): string
+Pastel.Toml: TTomlDocument.constructor Create
+Pastel.Toml: TTomlDocument.destructor Destroy
+Pastel.Toml: TTomlDocument.function Find(const Path: string): TTomlValue
+Pastel.Toml: TTomlDocument.function GetArray(const Path: string): TStringArray
+Pastel.Toml: TTomlDocument.function GetBool(const Path: string; Default: Boolean = False): Boolean
+Pastel.Toml: TTomlDocument.function GetInt(const Path: string; Default: Int64 = 0): Int64
+Pastel.Toml: TTomlDocument.function GetString(const Path: string; const Default: string = ''): string
+Pastel.Toml: TTomlDocument.function Has(const Path: string): Boolean
+Pastel.Toml: TTomlDocument.function Keys(const Table: string): TStringArray
+Pastel.Toml: TTomlDocument.procedure LoadFromFile(const FileName: string)
+Pastel.Toml: TTomlDocument.procedure LoadFromString(const Src: string)
+Pastel.Toml: TTomlDocument.property Values: TStringList
+Pastel.Toml: TTomlKind.tkArray
+Pastel.Toml: TTomlKind.tkBoolean
+Pastel.Toml: TTomlKind.tkFloat
+Pastel.Toml: TTomlKind.tkInteger
+Pastel.Toml: TTomlKind.tkString
+Pastel.Toml: TTomlValue.Items: TStringArray
+Pastel.Toml: TTomlValue.Kind: TTomlKind
+Pastel.Toml: TTomlValue.Text: string
+Pastel.Toml: function CodePointToUTF8(CP: Cardinal): string
+Pastel.Toml: type ETomlError = class(Exception)
+Pastel.Toml: type TTomlDocument = class
+Pastel.Toml: type TTomlKind = (tkString, tkInteger, tkFloat, tkBoolean, tkArray)
+Pastel.Toml: type TTomlValue = class
+Pastel.UI: TAction.constructor Create(AOwner: TComponent)
+Pastel.UI: TAction.function Execute: Boolean
+Pastel.UI: TAction.property Caption: string
+Pastel.UI: TAction.property Checked: Boolean
+Pastel.UI: TAction.property Enabled: Boolean
+Pastel.UI: TAction.property Hint: string
+Pastel.UI: TAction.property OnExecute
+Pastel.UI: TAction.property ShortCut: string
+Pastel.UI: TAlignItems.aiCenter
+Pastel.UI: TAlignItems.aiEnd
+Pastel.UI: TAlignItems.aiStart
+Pastel.UI: TAlignItems.aiStretch
+Pastel.UI: TBox.property Align: TAlignItems
+Pastel.UI: TBox.property BorderColor: TColor32
+Pastel.UI: TBox.property BorderWidth: Integer
+Pastel.UI: TBox.property Color: TColor32
+Pastel.UI: TBox.property Gap: Integer
+Pastel.UI: TBox.property Horizontal: Boolean
+Pastel.UI: TBox.property Justify: TJustify
+Pastel.UI: TBox.property Padding: Integer
+Pastel.UI: TBox.property Radius: Integer
+Pastel.UI: TButton.procedure Click
+Pastel.UI: TButton.procedure Notification(AComponent: TComponent; Operation: TOperation)
+Pastel.UI: TButton.property Action: TBasicAction
+Pastel.UI: TButton.property Cancel: Boolean
+Pastel.UI: TButton.property Default: Boolean
+Pastel.UI: TButton.property ModalResult: Integer
+Pastel.UI: TButton.property OnClick: TNotifyEvent
+Pastel.UI: TButton.property Style: TButtonStyle
+Pastel.UI: TButton.property Text: string
+Pastel.UI: TButtonStyle.bsDanger
+Pastel.UI: TButtonStyle.bsPrimary
+Pastel.UI: TButtonStyle.bsSecondary
+Pastel.UI: TCard.constructor Create(AOwner: TComponent)
+Pastel.UI: TControl.constructor Create(AOwner: TComponent)
+Pastel.UI: TControl.destructor Destroy
+Pastel.UI: TControl.function HitTest(X: Integer; Y: Integer): TControl
+Pastel.UI: TControl.function IndexOfChild(C: TControl): Integer
+Pastel.UI: TControl.function ParentForm: TForm
+Pastel.UI: TControl.function ParentPopup: TPopup
+Pastel.UI: TControl.procedure GetSize(AvailWidth: Integer; out W: Integer; out H: Integer)
+Pastel.UI: TControl.procedure Invalidate
+Pastel.UI: TControl.procedure SetFocus
+Pastel.UI: TControl.property Bounds: TRectI
+Pastel.UI: TControl.property ChildCount: Integer
+Pastel.UI: TControl.property Children[Index: Integer]: TControl
+Pastel.UI: TControl.property Enabled: Boolean
+Pastel.UI: TControl.property Grow: Integer
+Pastel.UI: TControl.property Height: Integer
+Pastel.UI: TControl.property Hint: string
+Pastel.UI: TControl.property Parent: TControl
+Pastel.UI: TControl.property PopupMenu: TControl
+Pastel.UI: TControl.property Visible: Boolean
+Pastel.UI: TControl.property Width: Integer
+Pastel.UI: TCursorKind.ckArrow
+Pastel.UI: TCursorKind.ckHand
+Pastel.UI: TCursorKind.ckIBeam
+Pastel.UI: TCustomEdit.constructor Create(AOwner: TComponent)
+Pastel.UI: TCustomEdit.destructor Destroy
+Pastel.UI: TCustomEdit.function CanUndo: Boolean
+Pastel.UI: TCustomEdit.function Font: TPastelFont
+Pastel.UI: TCustomEdit.procedure CopyToClipboard
+Pastel.UI: TCustomEdit.procedure CutToClipboard
+Pastel.UI: TCustomEdit.procedure PasteFromClipboard
+Pastel.UI: TCustomEdit.procedure Redo
+Pastel.UI: TCustomEdit.procedure SelectAll
+Pastel.UI: TCustomEdit.procedure Undo
+Pastel.UI: TCustomEdit.property CaretPos: Integer
+Pastel.UI: TCustomEdit.property MaxLength: Integer
+Pastel.UI: TCustomEdit.property OnChange: TNotifyEvent
+Pastel.UI: TCustomEdit.property Placeholder: string
+Pastel.UI: TCustomEdit.property ReadOnly: Boolean
+Pastel.UI: TCustomEdit.property SelLength: Integer
+Pastel.UI: TCustomEdit.property SelStart: Integer
+Pastel.UI: TCustomEdit.property SelText: string
+Pastel.UI: TCustomEdit.property Text: string
+Pastel.UI: TEdit.property MaxLength
+Pastel.UI: TEdit.property OnChange
+Pastel.UI: TEdit.property OnSubmit: TNotifyEvent
+Pastel.UI: TEdit.property Password: Boolean
+Pastel.UI: TEdit.property Placeholder
+Pastel.UI: TEdit.property ReadOnly
+Pastel.UI: TEdit.property Text
+Pastel.UI: TEditState.Anchor: Integer
+Pastel.UI: TEditState.Caret: Integer
+Pastel.UI: TEditState.Text: string
+Pastel.UI: TForm.constructor Create(AOwner: TComponent)
+Pastel.UI: TForm.destructor Destroy
+Pastel.UI: TForm.function BindComponent(const AName: string; AClass: TComponentClass): TComponent
+Pastel.UI: TForm.function BindControl(const AName: string; AClass: TControlClass): TControl
+Pastel.UI: TForm.function CloseQuery: Boolean
+Pastel.UI: TForm.function CurrentCursor: TCursorKind
+Pastel.UI: TForm.function FindControl(const AName: string): TControl
+Pastel.UI: TForm.function HitTest(X: Integer; Y: Integer): TControl
+Pastel.UI: TForm.function PopupAt(Index: Integer): TPopup
+Pastel.UI: TForm.function PopupCount: Integer
+Pastel.UI: TForm.function ShowModal: Integer
+Pastel.UI: TForm.function TopPopup: TPopup
+Pastel.UI: TForm.function UpdateTooltip(NowMs: QWord): Boolean
+Pastel.UI: TForm.procedure BindControls
+Pastel.UI: TForm.procedure ClearControls
+Pastel.UI: TForm.procedure Close
+Pastel.UI: TForm.procedure ClosePopup(P: TPopup)
+Pastel.UI: TForm.procedure FocusControl(C: TControl)
+Pastel.UI: TForm.procedure FocusNext(Backward: Boolean)
+Pastel.UI: TForm.procedure HandleContextMenu(X: Integer; Y: Integer)
+Pastel.UI: TForm.procedure HandleKeyDown(Key: LongInt; Shift: Boolean; Ctrl: Boolean)
+Pastel.UI: TForm.procedure HandleMouseDown(X: Integer; Y: Integer; Button: Integer = 1; Clicks: Integer = 1)
+Pastel.UI: TForm.procedure HandleMouseLeave
+Pastel.UI: TForm.procedure HandleMouseMove(X: Integer; Y: Integer)
+Pastel.UI: TForm.procedure HandleMouseUp(X: Integer; Y: Integer; Button: Integer = 1)
+Pastel.UI: TForm.procedure HandleMouseWheel(DX: Integer; DY: Integer)
+Pastel.UI: TForm.procedure HandleTextInput(const S: string)
+Pastel.UI: TForm.procedure HideTooltip
+Pastel.UI: TForm.procedure Layout(AWidth: Integer; AHeight: Integer)
+Pastel.UI: TForm.procedure Maximize
+Pastel.UI: TForm.procedure Minimize
+Pastel.UI: TForm.procedure Notification(AComponent: TComponent; Operation: TOperation)
+Pastel.UI: TForm.procedure Render(C: TCanvas32)
+Pastel.UI: TForm.procedure RenderArea(C: TCanvas32; const Area: TRectI)
+Pastel.UI: TForm.procedure Restore
+Pastel.UI: TForm.procedure ShowPopup(P: TPopup)
+Pastel.UI: TForm.procedure WindowStateChanged(AState: TWindowState)
+Pastel.UI: TForm.property AlwaysOnTop: Boolean
+Pastel.UI: TForm.property Appearance: TThemeMode
+Pastel.UI: TForm.property Captured: TControl
+Pastel.UI: TForm.property ClickCount: Integer
+Pastel.UI: TForm.property FocusVisible: Boolean
+Pastel.UI: TForm.property Focused: TControl
+Pastel.UI: TForm.property Hovered: TControl
+Pastel.UI: TForm.property MinHeight: Integer
+Pastel.UI: TForm.property MinWidth: Integer
+Pastel.UI: TForm.property ModalResult: Integer
+Pastel.UI: TForm.property MouseButton: Integer
+Pastel.UI: TForm.property MouseX: Integer
+Pastel.UI: TForm.property MouseY: Integer
+Pastel.UI: TForm.property OnClose: TNotifyEvent
+Pastel.UI: TForm.property OnCloseQuery: TCloseQueryEvent
+Pastel.UI: TForm.property OnCreate: TNotifyEvent
+Pastel.UI: TForm.property OnResize: TNotifyEvent
+Pastel.UI: TForm.property Resizable: Boolean
+Pastel.UI: TForm.property ShiftDown: Boolean
+Pastel.UI: TForm.property Title: string
+Pastel.UI: TForm.property WindowState: TWindowState
+Pastel.UI: TJustify.jsCenter
+Pastel.UI: TJustify.jsEnd
+Pastel.UI: TJustify.jsSpaceBetween
+Pastel.UI: TJustify.jsStart
+Pastel.UI: TLabel.constructor Create(AOwner: TComponent)
+Pastel.UI: TLabel.function Font: TPastelFont
+Pastel.UI: TLabel.function TextLines(AWidth: Integer): TStringArray
+Pastel.UI: TLabel.property Bold: Boolean
+Pastel.UI: TLabel.property Color: TColor32
+Pastel.UI: TLabel.property FontSize: Integer
+Pastel.UI: TLabel.property Text: string
+Pastel.UI: TLabel.property TextAlign: TTextAlign
+Pastel.UI: TLabel.property WordWrap: Boolean
+Pastel.UI: TMemo.constructor Create(AOwner: TComponent)
+Pastel.UI: TMemo.property Lines: TStrings
+Pastel.UI: TMemo.property MaxLength
+Pastel.UI: TMemo.property OnChange
+Pastel.UI: TMemo.property Placeholder
+Pastel.UI: TMemo.property ReadOnly
+Pastel.UI: TMemo.property Text
+Pastel.UI: TMemo.property WordWrap: Boolean
+Pastel.UI: TPopup.constructor Create(AOwner: TComponent)
+Pastel.UI: TPopup.function ShowModal(Form: TForm): Integer
+Pastel.UI: TPopup.procedure Close(AModalResult: Integer = 0)
+Pastel.UI: TPopup.procedure Popup(Form: TForm; const Anchor: TRectI; PlaceRight: Boolean = False)
+Pastel.UI: TPopup.procedure PopupCentered(Form: TForm)
+Pastel.UI: TPopup.property ActiveControl: TControl
+Pastel.UI: TPopup.property Closed: Boolean
+Pastel.UI: TPopup.property Modal: Boolean
+Pastel.UI: TPopup.property ModalResult: Integer
+Pastel.UI: TPopup.property OnClose: TNotifyEvent
+Pastel.UI: TPopup.property Shown: Boolean
+Pastel.UI: TRow.constructor Create(AOwner: TComponent)
+Pastel.UI: TSpacer.constructor Create(AOwner: TComponent)
+Pastel.UI: TTextAlign.taCenter
+Pastel.UI: TTextAlign.taLeft
+Pastel.UI: TTextAlign.taRight
+Pastel.UI: TTheme.Accent: TColor32
+Pastel.UI: TTheme.AccentHover: TColor32
+Pastel.UI: TTheme.AccentPressed: TColor32
+Pastel.UI: TTheme.Backdrop: TColor32
+Pastel.UI: TTheme.Background: TColor32
+Pastel.UI: TTheme.Border: TColor32
+Pastel.UI: TTheme.BorderHover: TColor32
+Pastel.UI: TTheme.Danger: TColor32
+Pastel.UI: TTheme.DangerHover: TColor32
+Pastel.UI: TTheme.DangerPressed: TColor32
+Pastel.UI: TTheme.Dark: Boolean
+Pastel.UI: TTheme.Disabled: TColor32
+Pastel.UI: TTheme.FocusRing: TColor32
+Pastel.UI: TTheme.FontSize: Integer
+Pastel.UI: TTheme.OnAccent: TColor32
+Pastel.UI: TTheme.Placeholder: TColor32
+Pastel.UI: TTheme.Radius: Integer
+Pastel.UI: TTheme.Secondary: TColor32
+Pastel.UI: TTheme.SecondaryHover: TColor32
+Pastel.UI: TTheme.SecondaryPressed: TColor32
+Pastel.UI: TTheme.Selection: TColor32
+Pastel.UI: TTheme.Shadow: TColor32
+Pastel.UI: TTheme.Surface: TColor32
+Pastel.UI: TTheme.Text: TColor32
+Pastel.UI: TTheme.TextMuted: TColor32
+Pastel.UI: TTheme.TooltipBack: TColor32
+Pastel.UI: TTheme.TooltipText: TColor32
+Pastel.UI: TThemeMode.tmDark
+Pastel.UI: TThemeMode.tmLight
+Pastel.UI: TThemeMode.tmSystem
+Pastel.UI: TTimer.constructor Create(AOwner: TComponent)
+Pastel.UI: TTimer.destructor Destroy
+Pastel.UI: TTimer.property Enabled: Boolean
+Pastel.UI: TTimer.property Interval: Integer
+Pastel.UI: TTimer.property OnTimer: TNotifyEvent
+Pastel.UI: TVisualLine.EndPos: Integer
+Pastel.UI: TVisualLine.StartPos: Integer
+Pastel.UI: TWindowState.wsFullScreen
+Pastel.UI: TWindowState.wsMaximized
+Pastel.UI: TWindowState.wsMinimized
+Pastel.UI: TWindowState.wsNormal
+Pastel.UI: const KEY_APPLICATION = $40000065
+Pastel.UI: const KEY_BACKSPACE = 8
+Pastel.UI: const KEY_DELETE = 127
+Pastel.UI: const KEY_DOWN = $40000051
+Pastel.UI: const KEY_END = $4000004D
+Pastel.UI: const KEY_ENTER = 13
+Pastel.UI: const KEY_ESCAPE = 27
+Pastel.UI: const KEY_F1 = $4000003A
+Pastel.UI: const KEY_HOME = $4000004A
+Pastel.UI: const KEY_INSERT = $40000049
+Pastel.UI: const KEY_KP_ENTER = $40000058
+Pastel.UI: const KEY_LEFT = $40000050
+Pastel.UI: const KEY_MENU = $40000076
+Pastel.UI: const KEY_PAGEDOWN = $4000004E
+Pastel.UI: const KEY_PAGEUP = $4000004B
+Pastel.UI: const KEY_RIGHT = $4000004F
+Pastel.UI: const KEY_SPACE = 32
+Pastel.UI: const KEY_TAB = 9
+Pastel.UI: const KEY_UP = $40000052
+Pastel.UI: const mrAbort = 3
+Pastel.UI: const mrCancel = 2
+Pastel.UI: const mrClose = 8
+Pastel.UI: const mrIgnore = 5
+Pastel.UI: const mrNo = 7
+Pastel.UI: const mrNone = 0
+Pastel.UI: const mrOk = 1
+Pastel.UI: const mrRetry = 4
+Pastel.UI: const mrYes = 6
+Pastel.UI: function AnimationTime: QWord
+Pastel.UI: function ControlClassAt(Index: Integer): TControlClass
+Pastel.UI: function ControlClassCount: Integer
+Pastel.UI: function FindControlClass(const AName: string): TControlClass
+Pastel.UI: function FindNonVisualClass(const AName: string): TComponentClass
+Pastel.UI: function NonVisualClassAt(Index: Integer): TComponentClass
+Pastel.UI: function NonVisualClassCount: Integer
+Pastel.UI: function ProcessTimers(NowMs: QWord): Integer
+Pastel.UI: function SetThemeValue(const Name: string; const Value: string): Boolean
+Pastel.UI: function WrapText(Font: TPastelFont; const S: string; Width: Integer): TStringArray
+Pastel.UI: procedure InvalidateArea(const R: TRectI)
+Pastel.UI: procedure RegisterControl(AClass: TControlClass)
+Pastel.UI: procedure RegisterNonVisual(AClass: TComponentClass)
+Pastel.UI: procedure RequestAnimation
+Pastel.UI: procedure RequestAnimation(Control: TControl)
+Pastel.UI: procedure UseDarkTheme(Dark: Boolean)
+Pastel.UI: type TAction = class(TBasicAction)
+Pastel.UI: type TAlignItems = (aiStretch, aiStart, aiCenter, aiEnd)
+Pastel.UI: type TBox = class(TControl)
+Pastel.UI: type TButton = class(TControl)
+Pastel.UI: type TButtonStyle = (bsPrimary, bsSecondary, bsDanger)
+Pastel.UI: type TCard = class(TBox)
+Pastel.UI: type TCloseQueryEvent = procedure(Sender: TObject; CanClose: Boolean)
+Pastel.UI: type TColumn = class(TBox)
+Pastel.UI: type TControl = class(TComponent)
+Pastel.UI: type TControlClass = class of TControl
+Pastel.UI: type TCursorKind = (ckArrow, ckIBeam, ckHand)
+Pastel.UI: type TCustomEdit = class(TControl)
+Pastel.UI: type TEdit = class(TCustomEdit)
+Pastel.UI: type TEditState = record
+Pastel.UI: type TEditStates = array of TEditState
+Pastel.UI: type TForm = class(TBox)
+Pastel.UI: type TFormClass = class of TForm
+Pastel.UI: type TJustify = (jsStart, jsCenter, jsEnd, jsSpaceBetween)
+Pastel.UI: type TLabel = class(TControl)
+Pastel.UI: type TMemo = class(TCustomEdit)
+Pastel.UI: type TPopup = class(TBox)
+Pastel.UI: type TRow = class(TBox)
+Pastel.UI: type TSpacer = class(TControl)
+Pastel.UI: type TTextAlign = (taLeft, taCenter, taRight)
+Pastel.UI: type TTheme = record
+Pastel.UI: type TThemeMode = (tmLight, tmDark, tmSystem)
+Pastel.UI: type TTimer = class(TComponent)
+Pastel.UI: type TVisualLine = record
+Pastel.UI: type TWindowState = (wsNormal, wsMaximized, wsMinimized, wsFullScreen)
+Pastel.UI: var KeyAlt: Boolean
+Pastel.UI: var MainForm: TForm
+Pastel.UI: var PartialRepaint: Boolean
+Pastel.UI: var Theme: TTheme
+Pastel.UI: var ThemeCustomizer: procedure
+Pastel.Web: EWebError.Fields: TJSONObject
+Pastel.Web: EWebError.Status: Integer
+Pastel.Web: EWebError.constructor Create(AStatus: Integer; const AMessage: string)
+Pastel.Web: EWebError.constructor CreateFmt(AStatus: Integer; const Fmt: string; const Args: array of const)
+Pastel.Web: EWebError.destructor Destroy
+Pastel.Web: TValidator.constructor Create(AData: TJSONObject)
+Pastel.Web: TValidator.destructor Destroy
+Pastel.Web: TValidator.function Bool(const Name: string): Boolean
+Pastel.Web: TValidator.function Choice(const Name: string; const Choices: array of string): string
+Pastel.Web: TValidator.function Email(const Name: string): string
+Pastel.Web: TValidator.function Float(const Name: string; Min: Double = -1e308; Max: Double = 1e308): Double
+Pastel.Web: TValidator.function Int(const Name: string; Min: Int64 = Low (Int64); Max: Int64 = High (Int64)): Int64
+Pastel.Web: TValidator.function Ok: Boolean
+Pastel.Web: TValidator.function OptBool(const Name: string; Default: Boolean): Boolean
+Pastel.Web: TValidator.function OptFloat(const Name: string; Default: Double; Min: Double = -1e308; Max: Double = 1e308): Double
+Pastel.Web: TValidator.function OptInt(const Name: string; Default: Int64; Min: Int64 = Low (Int64); Max: Int64 = High (Int64)): Int64
+Pastel.Web: TValidator.function OptStr(const Name: string; const Default: string; MaxLength: Integer = MaxInt): string
+Pastel.Web: TValidator.function Str(const Name: string; MinLength: Integer = 1; MaxLength: Integer = MaxInt): string
+Pastel.Web: TValidator.procedure AddError(const Name: string; const Message: string)
+Pastel.Web: TValidator.procedure Check
+Pastel.Web: TWebRequest.constructor Create(AReq: TFPHTTPConnectionRequest; const APath: string; ATrustProxy: Boolean = False)
+Pastel.Web: TWebRequest.destructor Destroy
+Pastel.Web: TWebRequest.function Claim(const Name: string): string
+Pastel.Web: TWebRequest.function ClientIP: string
+Pastel.Web: TWebRequest.function Form(const Name: string; const Default: string = ''): string
+Pastel.Web: TWebRequest.function HasQuery(const Name: string): Boolean
+Pastel.Web: TWebRequest.function Header(const Name: string): string
+Pastel.Web: TWebRequest.function Json: TJSONData
+Pastel.Web: TWebRequest.function JsonObject: TJSONObject
+Pastel.Web: TWebRequest.function Method: string
+Pastel.Web: TWebRequest.function Param(const Name: string): string
+Pastel.Web: TWebRequest.function ParamInt(const Name: string): Int64
+Pastel.Web: TWebRequest.function Query(const Name: string; const Default: string = ''): string
+Pastel.Web: TWebRequest.function QueryInt(const Name: string; Default: Int64): Int64
+Pastel.Web: TWebRequest.function Validate: TValidator
+Pastel.Web: TWebRequest.property Body: string
+Pastel.Web: TWebRequest.property Claims: TJSONObject
+Pastel.Web: TWebRequest.property Params: TStringList
+Pastel.Web: TWebRequest.property Path: string
+Pastel.Web: TWebRequest.property Values: TStringList
+Pastel.Web: TWebResponse.constructor Create(ARes: TFPHTTPConnectionResponse)
+Pastel.Web: TWebResponse.procedure Error(AStatus: Integer; const Message: string)
+Pastel.Web: TWebResponse.procedure Html(const S: string; AStatus: Integer = 200)
+Pastel.Web: TWebResponse.procedure Json(Data: TJSONData; AStatus: Integer = 200)
+Pastel.Web: TWebResponse.procedure JsonText(const S: string; AStatus: Integer = 200)
+Pastel.Web: TWebResponse.procedure NoContent
+Pastel.Web: TWebResponse.procedure Redirect(const Url: string; AStatus: Integer = 302)
+Pastel.Web: TWebResponse.procedure SendFile(const FileName: string; const ContentType: string = '')
+Pastel.Web: TWebResponse.procedure SetHeader(const Name: string; const Value: string)
+Pastel.Web: TWebResponse.procedure Text(const S: string; AStatus: Integer = 200)
+Pastel.Web: TWebResponse.property Sent: Boolean
+Pastel.Web: TWebResponse.property Status: Integer
+Pastel.Web: TWebRoute.Handler: TWebHandler
+Pastel.Web: TWebRoute.Method: string
+Pastel.Web: TWebRoute.Parts: TStringArray
+Pastel.Web: TWebRoute.Pattern: string
+Pastel.Web: TWebRoute.Proc: TWebHandlerProc
+Pastel.Web: TWebRoute.StaticFolder: string
+Pastel.Web: TWebServer.constructor Create(APort: Integer = 8080; const AAddress: string = '')
+Pastel.Web: TWebServer.destructor Destroy
+Pastel.Web: TWebServer.function Running: Boolean
+Pastel.Web: TWebServer.function Url: string
+Pastel.Web: TWebServer.procedure Cors(const Origins: array of string; AllowCredentials: Boolean = False)
+Pastel.Web: TWebServer.procedure Delete(const Pattern: string; Handler: TWebHandler)
+Pastel.Web: TWebServer.procedure Delete(const Pattern: string; Handler: TWebHandlerProc)
+Pastel.Web: TWebServer.procedure Get(const Pattern: string; Handler: TWebHandler)
+Pastel.Web: TWebServer.procedure Get(const Pattern: string; Handler: TWebHandlerProc)
+Pastel.Web: TWebServer.procedure Health(const Path: string = '/health'; const Version: string = '')
+Pastel.Web: TWebServer.procedure Patch(const Pattern: string; Handler: TWebHandler)
+Pastel.Web: TWebServer.procedure Patch(const Pattern: string; Handler: TWebHandlerProc)
+Pastel.Web: TWebServer.procedure Post(const Pattern: string; Handler: TWebHandler)
+Pastel.Web: TWebServer.procedure Post(const Pattern: string; Handler: TWebHandlerProc)
+Pastel.Web: TWebServer.procedure Put(const Pattern: string; Handler: TWebHandler)
+Pastel.Web: TWebServer.procedure Put(const Pattern: string; Handler: TWebHandlerProc)
+Pastel.Web: TWebServer.procedure RateLimit(const Prefix: string; Count: Integer; Seconds: Integer)
+Pastel.Web: TWebServer.procedure RequireApiKey(const Prefix: string; const Keys: array of string)
+Pastel.Web: TWebServer.procedure RequireJwt(const Prefix: string; const Secret: string)
+Pastel.Web: TWebServer.procedure Start
+Pastel.Web: TWebServer.procedure Static(const UrlPrefix: string; const Folder: string)
+Pastel.Web: TWebServer.procedure Stop
+Pastel.Web: TWebServer.procedure Use(const Prefix: string; Filter: TWebHandler)
+Pastel.Web: TWebServer.procedure Use(const Prefix: string; Filter: TWebHandlerProc)
+Pastel.Web: TWebServer.property AccessLog: Boolean
+Pastel.Web: TWebServer.property Address: string
+Pastel.Web: TWebServer.property Port: Integer
+Pastel.Web: TWebServer.property Requests: Int64
+Pastel.Web: TWebServer.property TrustProxy: Boolean
+Pastel.Web: TWebServerThread.Error: string
+Pastel.Web: TWebServerThread.Listening: Boolean
+Pastel.Web: TWebServerThread.Ready: Boolean
+Pastel.Web: TWebServerThread.Server: TFPCustomHttpServer
+Pastel.Web: TWebServerThread.procedure Execute
+Pastel.Web: TWebServerThread.procedure Idle(Sender: TObject)
+Pastel.Web: TWebService.destructor Destroy
+Pastel.Web: TWebService.property Server: TWebServer
+Pastel.Web: function ContentTypeOf(const FileName: string): string
+Pastel.Web: function UrlDecode(const S: string): string
+Pastel.Web: type EWebError = class(Exception)
+Pastel.Web: type EWebServerError = class(Exception)
+Pastel.Web: type TValidator = class
+Pastel.Web: type TWebHandler = procedure(Req: TWebRequest; Res: TWebResponse)
+Pastel.Web: type TWebHandlerProc = procedure(Req: TWebRequest; Res: TWebResponse)
+Pastel.Web: type TWebRequest = class
+Pastel.Web: type TWebResponse = class
+Pastel.Web: type TWebRoute = class
+Pastel.Web: type TWebServer = class
+Pastel.Web: type TWebServerThread = class(TThread)
+Pastel.Web: type TWebService = class(TService)
+Pastel.Workers: TMessageQueue.constructor Create(MaxCount: Integer = 0)
+Pastel.Workers: TMessageQueue.destructor Destroy
+Pastel.Workers: TMessageQueue.function Count: Integer
+Pastel.Workers: TMessageQueue.function Pop(out Msg: string; TimeoutMs: Integer = -1): Boolean
+Pastel.Workers: TMessageQueue.function Push(const Msg: string): Boolean
+Pastel.Workers: TMessageQueue.procedure Close
+Pastel.Workers: TMessageQueue.property Closed: Boolean
+Pastel.Workers: TWorkerPool.constructor Create(const AName: string; Count: Integer; Handler: TWorkHandler; MaxQueue: Integer = 0)
+Pastel.Workers: TWorkerPool.constructor Create(const AName: string; Count: Integer; Handler: TWorkHandlerProc; MaxQueue: Integer = 0)
+Pastel.Workers: TWorkerPool.destructor Destroy
+Pastel.Workers: TWorkerPool.function Submit(const Msg: string): Boolean
+Pastel.Workers: TWorkerPool.function WaitIdle(TimeoutMs: Integer = 30000): Boolean
+Pastel.Workers: TWorkerPool.procedure Stop(WarnAfterMs: Integer = 30000)
+Pastel.Workers: TWorkerPool.property Failed: Integer
+Pastel.Workers: TWorkerPool.property Name: string
+Pastel.Workers: TWorkerPool.property Pending: Integer
+Pastel.Workers: TWorkerPool.property Processed: Integer
+Pastel.Workers: type TMessageQueue = class
+Pastel.Workers: type TWorkHandler = procedure(Msg: string)
+Pastel.Workers: type TWorkHandlerProc = procedure(Msg: string)
+Pastel.Workers: type TWorkerPool = class

@@ -31,7 +31,7 @@ Databases: SQLite, PostgreSQL, MySQL/MariaDB.
 
 `uses Pastel.Db;` · source: [framework/src/pastel.db.pas](../../framework/src/pastel.db.pas)
 
-**Contents:** [EDbError](#edberror) · [EDbDuplicate](#edbduplicate) · [TDbKind](#tdbkind) · [TDbConnection](#tdbconnection) · [TDbSession](#tdbsession) · [TDbTransaction](#tdbtransaction) · [TDatabase](#tdatabase) · [DefaultMigrationsDir](#defaultmigrationsdir) · [SplitSql](#splitsql)
+**Contents:** [EDbError](#edberror) · [EDbDuplicate](#edbduplicate) · [TDbKind](#tdbkind) · [TDbSession](#tdbsession) · [TDbTransaction](#tdbtransaction) · [TDatabase](#tdatabase) · [DefaultMigrationsDir](#defaultmigrationsdir) · [SplitSql](#splitsql)
 
 ## Types
 
@@ -58,16 +58,6 @@ type TDbKind = (dbSQLite, dbPostgres, dbMySQL)
 - `dbSQLite`
 - `dbPostgres`
 - `dbMySQL`
-### TDbConnection
-
-```pascal
-type TDbConnection = class
-```
-
-| | |
-|---|---|
-| `destructor Destroy` |  |
-
 ### TDbSession
 
 ```pascal

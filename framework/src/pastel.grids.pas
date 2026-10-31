@@ -118,6 +118,7 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     function Font: TPastelFont;
+    { Internal: the height of a row in use (RowHeight, or from the font). }
     function RowHeightPx: Integer;
     { Adds a column from code. }
     function AddColumn(const ATitle: string; AWidth: Integer = 0; AAlignment: TTextAlign = taLeft): TGridColumn;

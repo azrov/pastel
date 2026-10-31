@@ -51,7 +51,7 @@ function SelectFolderDialog(var Folder: string; const Title: string = 'Choose a 
 var
   { File and folder dialogs of the system when there are some. }
   UseNativeDialogs: Boolean = True;
-  { The window handle for system dialogs (set by the application; HWND on Windows). }
+  { Internal: the window handle for system dialogs (set by the application; HWND on Windows). }
   NativeWindowHook: function: Pointer = nil;
 
 { The caption of a modal result: 'OK', 'Cancel', 'Yes'... }

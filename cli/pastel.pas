@@ -8,7 +8,7 @@ uses
   Classes, SysUtils,
   Pastel.Console, Pastel.Toml, Pastel.Project, Pastel.Targets,
   Pastel.Builder, Pastel.Templates, Pastel.Doctor, Pastel.Inspect, Pastel.TestCmd,
-  Pastel.Watch, Pastel.FmtCmd, Pastel.Package, Pastel.MigrateCmd, Pastel.LangCmd, Pastel.Runtime, Pastel.CustomCtl, Pastel.UI, RegExpr;
+  Pastel.Watch, Pastel.FmtCmd, Pastel.Package, Pastel.MigrateCmd, Pastel.LangCmd, Pastel.Runtime, Pastel.CustomCtl, Pastel.Upgrade, Pastel.UI, RegExpr;
 
 const
   ExitOk = 0;
@@ -49,6 +49,7 @@ begin
   WriteLn('  package [deb|docker] Release build in an archive, a .deb or a container image (--target, --all, --no-build)');
   WriteLn('  migrate [status|new]  Database migrations in database/migrations (--database URL)');
   WriteLn('  lang [add <code>]     Texts to translate in assets/lang/*.json');
+  WriteLn('  upgrade [--check]     Bring a project from an older Pastel up to date');
   WriteLn('  clean                Remove the build folder');
   WriteLn('  targets              List the platforms Pastel can build for');
   WriteLn('  doctor               Check your setup');
@@ -716,6 +717,7 @@ begin
       'check':   ExitCode := CmdCheck(CL);
       'migrate': ExitCode := RunMigrate(CL.Positional, CL.Database);
       'lang':    ExitCode := RunLang(CL.Positional);
+      'upgrade': ExitCode := RunUpgrade(CL.Check);
       'fmt':     ExitCode := RunFormat(CL.Positional, CL.Check, CL.Stdin);
       'package': ExitCode := CmdPackage(CL);
       'preview': ExitCode := CmdPreview(CL);

@@ -118,7 +118,7 @@ type TArgs = class(TArgCommand)
 function Levenshtein(const A: string; const B: string): Integer
 ```
 
-Edit distance, used for "did you mean ...?"
+Edit distance: how many letters differ ("did you mean ...?" suggestions).
 
 ### CommandLineWords
 
