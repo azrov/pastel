@@ -210,6 +210,8 @@ Everything for 1.0 is in the repository; what is left needs the public repositor
 
 ## From 1.0 to 2.0
 
+**Platforms.** Pastel is made and tested on **Linux, Windows and Android** — the platforms its developers use every day. Raspberry Pi builds stay (they are Linux on ARM) but are tested by the community; macOS and iOS are open for contributions from people who use them (see [Open for contributions](#open-for-contributions)).
+
 Everything in 1.x stays compatible with 1.0 (see [compatibility.md](docs/compatibility.md)): new things are added, nothing is taken away. What would break existing programs waits for 2.0. The order may change with what people need most; each version ends with docs, examples and tests like the ones before.
 
 ### 1.1 — Everyday desktop comfort
@@ -232,15 +234,27 @@ The things every business app needs, built in instead of written again in every 
 - [ ] Reading and writing spreadsheets: CSV with the language's separators, `.xlsx` (the common cases)
 - [ ] An example: the salon prints its invoices as PDF
 
-### 1.3 — Data made easier
+### 1.3 — Android
+
+The same Pascal code and `.pform` forms on an Android phone or tablet. The framework draws its own controls with SDL2 and FreeType, and Free Pascal 3.2.2 compiles for Android (ARM64 and ARM), so most of a desktop app carries over.
+
+- [ ] `pastel doctor --install android`: the Android NDK and the Free Pascal cross-compiler
+- [ ] `pastel build --target android-arm64`; `pastel package apk` (and `.aab` for Google Play), signed with the project's key
+- [ ] `pastel run --device`: installs on the connected phone (`adb`) and shows its log
+- [ ] Touch: tap, long press (= right click), scrolling and flinging lists with a finger; the on-screen keyboard moves the form so the edit stays visible
+- [ ] Phone layout: forms for small, upright screens (`pastel new form --phone`), bigger touch targets, the back button closes a form
+- [ ] The app's life: pausing and resuming, the folder for its data, settings that survive an update
+- [ ] An example: the salon's agenda on the phone, syncing with the same server as the desktop
+
+### 1.4 — Data made easier
 
 - [ ] `pastel new model Customer`: a model unit, its migration and tests from a few lines
-- [ ] `Pastel.Sync`: the offline-first synchronization of the salon example as a library (ids, `updated_at`, the newer change wins, deletions), with server routes and a desktop client
-- [ ] Login for apps: users and roles on the server, a login form on the desktop, tokens that renew
+- [ ] `Pastel.Sync`: the offline-first synchronization of the salon example as a library (ids, `updated_at`, the newer change wins, deletions), with server routes and desktop and phone clients
+- [ ] Login for apps: users and roles on the server, a login form on the desktop and the phone, tokens that renew
 - [ ] Backups of SQLite and PostgreSQL from the app or the server, and restoring them
 - [ ] Data binding: `TDataBinding` checks values (required, ranges) and shows the problem next to the control
 
-### 1.4 — The web, further
+### 1.5 — The web, further
 
 - [ ] HTTP keep-alive and streaming answers; WebSockets and server-sent events (live updates for apps and pages)
 - [ ] OpenAPI description made from the routes; `pastel new client` makes the Pascal client for an API
@@ -248,30 +262,37 @@ The things every business app needs, built in instead of written again in every 
 - [ ] Jobs that survive a restart: a queue in the database
 - [ ] Metrics (Prometheus) and request tracing
 
-### 1.5 — Platforms and distribution
+### 1.6 — Distribution
 
-- [ ] SDL3 (when the Linux distributions ship it)
-- [ ] Raspberry Pi: `pastel doctor --install rpi` sets up the cross-compiler
-- [ ] macOS: apps as `.app` bundles and `.dmg`, signing and notarization
 - [ ] Windows: signing the `.exe` and the installer; updates of desktop apps from a server
+- [ ] Android: updates outside Google Play (from your own server)
+- [ ] SDL3 (when the Linux distributions ship it)
 - [ ] A package registry: `pastel add text-tools` for libraries others published
 
-### 1.6 — Tooling
+### 1.7 — Tooling
 
 - [ ] `pastel test --coverage`, and a profiler view in VS Code
 - [ ] The debugger shows JSON, lists and records readably
 - [ ] Refactorings: extract method, rename a unit, move a class
 - [ ] Hot reload of code changes for desktop apps (reload the window's code without restarting)
 
-### 2.0 — Mobile and beyond
+### 2.0 — Beyond
 
 A major version: what had to wait for compatibility can change here (with `pastel upgrade` doing as much of the work as possible).
 
-- [ ] Android and iOS apps from the same `.pform` forms: touch, screen sizes, the phone's look
+- [ ] Forms that adapt by themselves between desktop, tablet and phone
 - [ ] GPU drawing (Skia) for animations and heavy graphics
 - [ ] Forms in the browser (WebAssembly)
 - [ ] Accessibility: screen readers, high contrast, keyboard everywhere
 - [ ] Clean-up: what 1.x marked deprecated is removed; a new stable API list
+
+### Open for contributions
+
+These are wanted, but not tested by the people who make Pastel now. A pull request (and someone who keeps it working) brings them into a version:
+
+- macOS: apps as `.app` bundles and `.dmg`, signing and notarization (Free Pascal and SDL2 work there)
+- iOS: needs a Mac and an Apple developer account; after Android, most of the work carries over
+- Raspberry Pi: `pastel doctor --install rpi` that sets up the cross-compiler; 32-bit boards
 
 ---
 
