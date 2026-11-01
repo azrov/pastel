@@ -20,6 +20,10 @@ export interface SchemaClass {
   project?: boolean;
   /** A component without a place on the form (TTimer, TAction, TDataBinding...). */
   nonvisual?: boolean;
+  /** Where it works now (Windows, Linux). */
+  platforms?: string[];
+  /** On Android: 'planned' (coming in 1.5) or 'desktop only'. */
+  android?: string;
   properties: SchemaProperty[];
 }
 

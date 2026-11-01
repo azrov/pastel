@@ -2,6 +2,12 @@
 
 The `pastel` tool and the framework. The VS Code extension has its own list: [vscode/CHANGELOG.md](vscode/CHANGELOG.md). What is planned is in [ROADMAP.md](ROADMAP.md).
 
+## 1.4.1
+
+- `pastel new form` and `pastel new control` refuse projects that have no windows (console, service, API) and say what to do instead
+- `TControl.DesktopOnly`: a menu bar, a splitter and a status bar are for desktops; `pastel schema` tells each control's platforms (Windows, Linux; Android coming in 1.5)
+- Screenshots of the designer and the New Project wizard in the README and the docs
+
 ## 1.4.0
 
 Forms like Delphi.

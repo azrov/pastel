@@ -179,6 +179,9 @@ expect "new creates service unit"  '[ -f demo-app/src/services/greeting.pas ]'
 expect "new refuses existing dir"  '! "$PASTEL" new console demo-app 2>/dev/null'
 expect "new rejects bad names"     '! "$PASTEL" new console 1bad 2>/dev/null'
 
+set +e; out="$(cd demo-app && "$PASTEL" new form Settings 2>&1)"; code=$?; set -e
+expect "a console project gets no forms"   '[ "$code" = 1 ] && echo "$out" | grep -q "forms belong to app projects" && [ ! -d demo-app/src/forms ]'
+
 cd demo-app
 out="$("$PASTEL" run 2>&1)"
 expect "run prints greeting"       'echo "$out" | grep -q "Hello, world! This is demo-app"'

@@ -11,6 +11,7 @@ import {
   SchemaProperty, stripComment,
 } from './model';
 import { FormPreview } from './preview';
+import { openJustCreated, rememberProject, WelcomePanel } from './welcome';
 import { PascalIndex, registerNavigation, setDefinitionHook, toggleDeclarationCommand } from './navigation';
 import { registerSidebar } from './sidebar';
 import { registerRequests } from './requests';
@@ -61,6 +62,7 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(diagnostics);
 
   updateProjectContext();
+  onProjectsOpened(context);
   registerSidebar(context);
   registerRequests(context);
   registerNavigation(context, pascalIndex);
@@ -126,6 +128,7 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('pastel.clean', () => runTask('clean')),
     vscode.commands.registerCommand('pastel.doctor', doctor),
     vscode.commands.registerCommand('pastel.newProject', newProject),
+    vscode.commands.registerCommand('pastel.welcome', showWelcome),
     vscode.commands.registerCommand('pastel.newForm', newForm),
     vscode.commands.registerCommand('pastel.openPreview', openPreview),
     vscode.commands.registerCommand('pastel.refreshSchema', async () => {
@@ -318,6 +321,13 @@ async function newForm(): Promise<void> {
     vscode.window.showWarningMessage('Pastel: open a Pastel app first.');
     return;
   }
+  const kind = readProjectInfo(root)?.kind ?? 'app';
+  if (kind !== 'app') {
+    // a console program, a service or an API has no window
+    vscode.window.showWarningMessage(`Pastel: this is a ${kind} project; forms belong to app projects. ` +
+      'Make the window part as a new app (Pastel: New Project…) that uses this one.');
+    return;
+  }
   const name = await vscode.window.showInputBox({
     prompt: 'Name of the new form (it is shown with Form.ShowModal or as a dialog)',
     placeHolder: 'Settings',
@@ -361,45 +371,27 @@ async function doctor(): Promise<void> {
   await vscode.tasks.executeTask(task);
 }
 
+/** The New Project wizard (on the Welcome page). */
 async function newProject(): Promise<void> {
-  const kind = await vscode.window.showQuickPick([
-    { label: 'app', description: 'Desktop app with a window and forms' },
-    { label: 'console', description: 'Terminal program' },
-    { label: 'service', description: 'Keeps running: jobs, settings, systemd (a server program)' },
-    { label: 'api', description: 'Web API with a database: models, controllers, migrations' },
-    { label: 'lib', description: 'Units for other projects (a library)' },
-  ], { placeHolder: 'What kind of project?' });
-  if (!kind) {
-    return;
+  const schema = await loadSchema();
+  WelcomePanel.show(extensionContext!, schema?.version ?? '', true);
+}
+
+async function showWelcome(): Promise<void> {
+  const schema = await loadSchema();
+  WelcomePanel.show(extensionContext!, schema?.version ?? '', false);
+}
+
+/** Remembers the open projects for the Welcome page; a project just made opens its main form. */
+function onProjectsOpened(context: vscode.ExtensionContext): void {
+  const roots = (vscode.workspace.workspaceFolders ?? []).map(f => f.uri.fsPath).filter(r => fs.existsSync(path.join(r, 'pastel.toml')));
+  for (const r of roots) {
+    rememberProject(context, r);
+    openJustCreated(context, r);
   }
-  const name = await vscode.window.showInputBox({
-    prompt: 'Project name',
-    placeHolder: 'my-app',
-    validateInput: v => /^[A-Za-z][A-Za-z0-9_-]*$/.test(v) ? undefined :
-      'Start with a letter; use letters, digits, "-" and "_".',
-  });
-  if (!name) {
-    return;
-  }
-  const parent = await vscode.window.showOpenDialog({
-    canSelectFolders: true, canSelectFiles: false, canSelectMany: false,
-    openLabel: 'Create project here',
-  });
-  if (!parent || parent.length === 0) {
-    return;
-  }
-  const result = await runPastel(['new', kind.label, name], parent[0].fsPath);
-  if (result.code !== 0) {
-    vscode.window.showErrorMessage(`Pastel: ${(result.stderr || result.stdout).trim()}`);
-    return;
-  }
-  vscode.commands.executeCommand('pastel.refreshTree');
-  const folder = vscode.Uri.file(path.join(parent[0].fsPath, name));
-  const open = await vscode.window.showInformationMessage(
-    `Project "${name}" was created. Open it now?`, { modal: true },
-    'Open in This Window', 'Open in New Window');
-  if (open) {
-    await vscode.commands.executeCommand('vscode.openFolder', folder, open === 'Open in New Window');
+  if (roots.length === 0 && (vscode.workspace.workspaceFolders ?? []).length === 0 &&
+    vscode.workspace.getConfiguration('pastel').get<boolean>('showWelcome', true)) {
+    showWelcome();
   }
 }
 

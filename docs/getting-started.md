@@ -147,6 +147,8 @@ easiest way to add them.
 
 ## 9. A desktop app
 
+In VS Code: **Pastel: New Project…** (or *New Project* on the Welcome page) → *Desktop* → *Desktop App*, a name and a folder; the project opens with its form in the designer. Or in a terminal:
+
 ```sh
 pastel new app notes
 cd notes

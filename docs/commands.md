@@ -27,6 +27,10 @@ pastel new model Customer name:string! email:string age:integer
                                 # a table: its migration, src/models/customers.pas and tests
 ```
 
+Forms exist only in app projects: `pastel new form` in a console program, a service or an API stops and says so — a window there would never be shown. Make the window part as an app that uses the project (`pastel add <project> --path ../<project>`). Controls (`pastel new control`) belong to apps and libraries.
+
+In VS Code, **Pastel: New Project…** does the same as `pastel new` with a wizard: the kind of project, its name, its folder and its platforms.
+
 The kinds are explained in [getting-started.md](getting-started.md); forms in [forms.md](forms.md), controls in [components.md](components.md), models in [database.md](database.md#models-where-the-sql-lives).
 
 ## pastel build

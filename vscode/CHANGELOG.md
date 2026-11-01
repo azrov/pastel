@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.0
+
+- A Welcome page like Android Studio's: recent projects, New Project, Open; shown when VS Code opens without a folder (`pastel.showWelcome`), or with **Pastel: Welcome**
+- The New Project wizard: templates grouped as Desktop, Console, Server, Library and Mobile (Android: coming in Pastel 1.5), then the name, the folder and the platforms; the new project opens with its main form in the designer
+- Designer: a form that stacks its controls (`Layout = Flow`, from before 1.4) offers **Place freely**, keeping every control where it is; ⇱ *Place freely* on a selected row, column or card
+- Designer: the palette and the inspector show where a control works (Windows ✓ Linux ✓ · Android)
+- New Form… only in app projects
+
+
 ## 1.1.0
 
 - The designer is laid out like Delphi's IDE: Structure and the Object Inspector (Properties and Events tabs, search, alphabetical) on the left, the form in a window frame in the middle, the Tool Palette in groups with a search box on the right, non-visual components in a tray under the form

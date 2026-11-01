@@ -218,6 +218,15 @@ test('errors are shown', () => {
   assert.strictEqual(doc.getElementById('error').textContent, 'Home.pform(3) Error: bad');
 });
 
+test('a Flow form offers to place its controls freely, where they are now', () => {
+  assert.ok(doc.getElementById('flowBanner').classList.contains('on'), 'the banner is shown');
+  doc.getElementById('makeFree').click();
+  assert.deepStrictEqual(last('makeFree'), { type: 'makeFree', name: 'HomeForm', items: [
+    { name: 'Buttons', left: 20, top: 20, width: 360, height: 40 },
+    { name: 'Info', left: 20, top: 80, width: 360 },
+  ] });
+});
+
 // ---- a form with Layout = Free, like a Delphi form ----
 const free = {
   width: 400, height: 300, controls: [
@@ -232,6 +241,7 @@ const free = {
 test('free layout: a control is dragged to a place on the grid', () => {
   post({ type: 'render', data: '', layout: free, file: 'Login.pform', title: 'Sign in' });
   assert.strictEqual(doc.getElementById('wtitle').textContent, 'Sign in', 'the window frame shows the title');
+  assert.ok(!doc.getElementById('flowBanner').classList.contains('on'), 'no banner on a free form');
   sent.length = 0;
   mouse(stage, 'mousedown', 20, 70);
   mouse(w, 'mouseup', 20, 70);
@@ -302,6 +312,8 @@ test('the palette is grouped and can be searched; non-visual components sit in t
   search.value = 'gri';
   search.dispatchEvent(new w.Event('input'));
   assert.deepStrictEqual([...doc.querySelectorAll('.chip:not(.hidden)')].map((c: any) => c.textContent), ['Grid']);
+  const grid = doc.querySelector('.chip:not(.hidden)');
+  assert.ok(grid.title.includes('Windows ✓') && grid.title.includes('Linux ✓') && grid.title.includes('Android: coming'), grid.title);
   post({ type: 'tree', items: [{ name: 'LoginForm', className: 'TLoginForm', depth: 0 }, { name: 'Tick', className: 'TTimer', depth: 1, nonvisual: true }] });
   const nv = doc.querySelector('#tray .nv');
   assert.ok(nv && nv.textContent.includes('Tick'));

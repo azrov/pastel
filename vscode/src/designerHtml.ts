@@ -96,6 +96,10 @@ export function designerHtml(nonce: string): string {
     background: var(--vscode-editor-background); border: 1px solid var(--vscode-focusBorder); }
   .drop { position: absolute; background: var(--vscode-charts-orange, #f0a030); pointer-events: none; z-index: 3; }
   .ghost { opacity: .45; }
+  .banner { display: none; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 6px; max-width: 640px; line-height: 1.4;
+    background: var(--vscode-editorInfo-background, rgba(55,148,255,.12)); border: 1px solid var(--vscode-editorInfo-foreground, #3794ff); }
+  .banner.on { display: flex; }
+  .banner span { flex: 1; }
   .tray { display: flex; flex-wrap: wrap; gap: 8px; min-height: 0; }
   .tray .nv { display: flex; flex-direction: column; align-items: center; gap: 2px; width: 72px; padding: 6px 2px; cursor: pointer;
     border: 1px solid var(--vscode-panel-border); border-radius: 4px; font-size: 11px; background: var(--vscode-editor-background); }
@@ -124,6 +128,8 @@ export function designerHtml(nonce: string): string {
   .chip.project { font-style: italic; }
   .chip.nonvisual::before { content: '◇ '; opacity: .7; }
   .chip.hidden { display: none; }
+  .chip.desktop::after { content: ' 🖥'; font-size: 10px; opacity: .6; }
+  .insp-head .plat { font-size: 11px; opacity: .65; margin-top: 2px; }
 </style>
 </head>
 <body class="">
@@ -161,6 +167,9 @@ export function designerHtml(nonce: string): string {
     </aside>
     <main class="center">
       <div class="canvas">
+        <div class="banner" id="flowBanner"><span>This form stacks its controls (<b>Layout = Flow</b>), so they move only up and down.
+          Place them freely, like in Delphi: they stay where they are now, and then go wherever you drag them.</span>
+          <button id="makeFree">Place freely</button></div>
         <div class="window">
           <div class="titlebar"><span class="t" id="wtitle"></span><span class="wb">—▢✕</span></div>
           <div class="stage" id="stage"><img id="img" alt="" draggable="false"></div>
@@ -290,6 +299,8 @@ export function designerHtml(nonce: string): string {
     stage.querySelectorAll('.box, .drop, .handle').forEach(e => e.remove());
     stage.classList.toggle('grid', !!(root() && root().free && document.getElementById('snap').checked));
     stage.style.setProperty('--grid', (GRID * scale()) + 'px');
+    const r0 = root();
+    document.getElementById('flowBanner').classList.toggle('on', !!(r0 && !r0.free && layout.controls.some(k => k.parent === r0.name)));
     if (!layout) return;
     const h = byName(hoverName);
     if (h && hoverName !== selected) box(h, 'hover');
@@ -314,6 +325,19 @@ export function designerHtml(nonce: string): string {
     drawTray();
     drawAlign();
   }
+
+  // a Flow container becomes Layout = Free; its controls keep their present places and sizes
+  function makeFree(name) {
+    const c = byName(name);
+    if (!c) return;
+    const items = layout.controls.filter(k => k.parent === name && k.visible).map(k => {
+      const it = { name: k.name, left: k.x - c.x, top: k.y - c.y, width: k.w };
+      if (k.container) it.height = k.h;
+      return it;
+    });
+    vscode.postMessage({ type: 'makeFree', name, items });
+  }
+  document.getElementById('makeFree').addEventListener('click', () => { const r = root(); if (r) makeFree(r.name); });
 
   function drawTree() {
     treeEl.innerHTML = '';
@@ -620,9 +644,12 @@ export function designerHtml(nonce: string): string {
         chip.className = 'chip' + (c.project ? ' project' : '') + (c.nonvisual ? ' nonvisual' : '');
         chip.textContent = c.name.replace(/^T/, '');
         chip.draggable = true;
-        chip.title = c.name + '. ' + (c.project ? 'From this project or its libraries (src/controls). ' : '') +
+        chip.title = c.name + (c.nonvisual ? ' (non-visual)' : '') + '\\n' + platformText(c.name) + '\\n\\n' +
+          (c.project ? 'From this project or its libraries (src/controls). ' : '') +
           (c.nonvisual ? 'Not visible on the form: it goes to the top of the .pform. ' : '') +
           'Drag onto the form, or click to add it next to the selected control';
+        chip.dataset.platforms = platformText(c.name);
+        if (c.android === 'desktop only') chip.classList.add('desktop');
         chip.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', c.name); e.dataTransfer.effectAllowed = 'copy'; });
         chip.addEventListener('click', () => addNear(c.name));
         toolbox.appendChild(chip);
@@ -637,6 +664,14 @@ export function designerHtml(nonce: string): string {
   }
   document.getElementById('paletteSearch').addEventListener('input', filterPalette);
 
+  // where a component works, like the platform list in Delphi's palette hints
+  function platformText(className) {
+    const c = controlsInfo.find(x => x.name === className);
+    if (!c) return '';
+    const now = (c.platforms || ['Windows', 'Linux']).map(p => p + ' ✓').join('  ');
+    const android = c.android === 'desktop only' ? 'Android: desktop only' : 'Android: coming in 1.5';
+    return now + '  ·  ' + android;
+  }
   function isNonVisual(className) {
     return controlsInfo.some(c => c.name === className && c.nonvisual);
   }
@@ -826,6 +861,9 @@ export function designerHtml(nonce: string): string {
     const cls = document.createElement('div'); cls.className = 'cls';
     cls.textContent = several ? sel.names.join(', ') + ' — what they all have' : sel.className;
     head.append(h, cls);
+    // the form's own class is TXxxForm; its platforms are those of the app
+    const plat = !several && !sel.isRoot ? platformText(sel.className) : '';
+    if (plat) { const pl = document.createElement('div'); pl.className = 'plat'; pl.textContent = plat; head.appendChild(pl); }
     propsEl.appendChild(head);
     const dl = document.createElement('datalist'); dl.id = 'handlers';
     for (const n of sel.handlers) dl.appendChild(new Option(n));
@@ -859,6 +897,15 @@ export function designerHtml(nonce: string): string {
         row.append(lab, input(p));
         propsEl.appendChild(row);
       }
+    }
+    const selBox = !several && byName(sel.name);
+    if (selBox && selBox.container && !selBox.free) {
+      const bar0 = document.createElement('div'); bar0.className = 'buttons';
+      const b = document.createElement('button'); b.className = 'small'; b.textContent = '⇱ Place freely';
+      b.title = 'Layout = Free: the controls in ' + sel.name + ' stay where they are now and can then be dragged anywhere';
+      b.addEventListener('click', () => makeFree(sel.name));
+      bar0.appendChild(b);
+      propsEl.appendChild(bar0);
     }
     if (!sel.isRoot) {
       const bar = document.createElement('div'); bar.className = 'buttons';

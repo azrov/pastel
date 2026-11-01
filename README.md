@@ -95,7 +95,8 @@ Building for another platform needs Free Pascal's units for it. `pastel doctor` 
 The `vscode/` folder contains the Pastel extension for Visual Studio Code. Build it with `cd vscode && npm install && npm run compile && npm run package`, then install the `.vsix` file with *Extensions: Install from VSIX…*. It gives you:
 
 - a **Pastel Run** button and Run / Build / Build for Platform commands, with errors in the Problems panel
-- a **form designer** beside the editor: click to select, edit properties, drag to move, drag in new controls; updated as you type
+- a **Welcome page** with recent projects and a **New Project wizard** (Pastel: Welcome, Pastel: New Project…)
+- a **form designer** like Delphi's: Object Inspector, Tool Palette, controls placed and resized freely on a grid; updated as you type
 - completion, hover help and checks while typing in `.pform` files
 - `Ctrl+click` from `OnClick = SendClick` to the code, and a quick fix that creates missing event handlers
 - a Pastel panel in the activity bar, Pascal outline and go to definition (into the framework too)
@@ -104,6 +105,16 @@ The `vscode/` folder contains the Pastel extension for Visual Studio Code. Build
 - **F5** builds and debugs without any setup (gdb through the C/C++ extension), with Pascal strings shown as text
 - the **Testing** view: every test in `tests/`, run or debugged one by one, failures at the line of the assert
 - snippets for Pascal: `class`, `proc`, `func`, `tryf`, `trye`, `for`, `case`, `testsuite`, ...
+
+**Welcome page and New Project wizard.** When VS Code opens without a folder, Pastel shows your recent projects; *New Project* lets you pick what you are making (desktop app, console program, web API, service, library), a name, a folder and the platforms, and opens the new project with its main form in the designer.
+
+![The Welcome page: recent projects, New Project and Open](docs/images/welcome.png)
+
+![The New Project wizard: templates grouped as Desktop, Console, Server, Library and Mobile](docs/images/new-project.png)
+
+**The form designer** is laid out like Delphi: Structure and the Object Inspector on the left, the form in the middle, the Tool Palette on the right. Drop a control where it should go, drag it anywhere, pull its grips to resize it; timers and actions sit in the tray under the form. Hovering over a control in the palette shows the platforms it works on.
+
+![The form designer: Structure, Object Inspector, the form with a selected edit and its grips, the Tool Palette](docs/images/designer.png)
 
 New projects come with `.vscode` settings: `Ctrl+Shift+B` builds, `F5` builds and debugs with gdb (through the C/C++ extension; F5 also works without a `launch.json`).
 

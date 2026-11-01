@@ -80,6 +80,7 @@ type
     procedure Arrange(const R: TRectI); override;
     procedure Paint(C: TCanvas32); override;
   public
+    class function DesktopOnly: Boolean; override;
     destructor Destroy; override;
     { Opens the menu of a top-level item (keyboard: Alt and F10 open the first). }
     procedure OpenMenu(Item: TMenuItem);
@@ -421,6 +422,10 @@ end;
 
 { ---- TMenuBar ---- }
 
+class function TMenuBar.DesktopOnly: Boolean;
+begin
+  Result := True;
+end;
 destructor TMenuBar.Destroy;
 begin
   CloseMenu;

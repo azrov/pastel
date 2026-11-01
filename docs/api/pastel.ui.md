@@ -152,6 +152,7 @@ type TControl = class(TComponent)
 | `function ParentForm: TForm` |  |
 | `function ParentPopup: TPopup` | The popup the control is in, or nil. |
 | `procedure GetSize(AvailWidth: Integer; out W: Integer; out H: Integer)` | Preferred size including explicit Width/Height. |
+| `class function DesktopOnly: Boolean` | True for controls that only make sense with a mouse and a big window (a menu bar, a splitter, a status bar): the designer says they will not be on phones. |
 | `property Parent: TControl` |  |
 | `property Children[Index: Integer]: TControl` |  |
 | `property ChildCount: Integer` |  |

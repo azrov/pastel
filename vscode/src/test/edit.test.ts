@@ -3,7 +3,7 @@ import * as assert from 'assert';
 import {
   deleteObject, extractObject, findBlock, formatValue, insertObject, isObjectText, moveObject, parseBlocks,
   parseValue, pasteObjects, renameIdentifier, renameObject, setProperty,
-  wrapObjects, unwrapObject, moveSibling, extractObjects, deleteObjects, outline, placeObjects, insertObjectAt,
+  wrapObjects, unwrapObject, moveSibling, extractObjects, deleteObjects, outline, placeObjects, insertObjectAt, makeFree,
 } from '../edit';
 
 let passed = 0;
@@ -248,6 +248,14 @@ test('a new control at a place; a new panel gets a size', () => {
   const r = insertObjectAt(form, 'HomeForm', 'TPanel', 16, 32)!;
   assert.strictEqual(r.name, 'Panel1');
   assert.ok(/object Panel1: TPanel\n    Left = 16\n    Top = 32\n    Width = 200\n    Height = 120\n  end\nend$/.test(r.text), r.text);
+});
+
+test('a Flow container becomes free, its controls keeping their places', () => {
+  const t = makeFree(form.replace("  Title = 'Demo'", "  Title = 'Demo'\n  Gap = 8\n  Padding = 16"), 'HomeForm',
+    [{ name: 'Card', left: 16, top: 16, width: 300, height: 120 }, { name: 'Info', left: 16, top: 144, width: 300 }]);
+  assert.ok(/object HomeForm: THomeForm\n  Title = 'Demo'\n  Layout = Free\n  object Card/.test(t), t);
+  assert.ok(/object Card: TCard\n    Left = 16\n    Top = 16\n    Width = 300\n    Height = 120\n/.test(t), t);
+  assert.ok(parseBlocks(t));
 });
 
 test('sets', () => {

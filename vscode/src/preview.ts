@@ -6,7 +6,7 @@ import { findProjectRoot, runPastel } from './cli';
 import { designerHtml } from './designerHtml';
 import {
   deleteObjects, extractObject, extractObjects, findBlock, formatValue, insertObject, isObjectText, moveObject,
-  moveSibling, outline, parseBlocks, placeObjects, insertObjectAt, parseValue, pasteObjects, renameIdentifier, renameObject, setProperty,
+  moveSibling, outline, parseBlocks, placeObjects, insertObjectAt, makeFree, parseValue, pasteObjects, renameIdentifier, renameObject, setProperty,
   unwrapObject, wrapObjects,
 } from './edit';
 import { declaredProcedures, enclosingObjects, findProcedure, Schema, SchemaClass } from './model';
@@ -127,7 +127,10 @@ export class FormPreview {
     if (schema) {
       this.panel.webview.postMessage({
         type: 'schema',
-        controls: schema.controls.map(c => ({ name: c.name, container: c.container, project: !!c.project, nonvisual: !!c.nonvisual })),
+        controls: schema.controls.map(c => ({
+          name: c.name, container: c.container, project: !!c.project, nonvisual: !!c.nonvisual,
+          platforms: c.platforms ?? ['Windows', 'Linux'], android: c.android ?? 'planned',
+        })),
       });
     }
   }
@@ -386,6 +389,10 @@ export class FormPreview {
         }
         break;
       }
+      case 'makeFree':
+        // a Flow form or container becomes freely placed, its controls staying where they are
+        await this.applyText(makeFree(text, m.name, Array.isArray(m.items) ? m.items : []));
+        break;
       case 'place': {
         // moved or resized in a parent with Layout = Free (or the form resized)
         const items = Array.isArray(m.items) ? m.items : [];

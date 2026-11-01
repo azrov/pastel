@@ -105,6 +105,9 @@ type
     function ParentPopup: TPopup;
     { Preferred size including explicit Width/Height. }
     procedure GetSize(AvailWidth: Integer; out W, H: Integer);
+    { True for controls that only make sense with a mouse and a big window (a menu bar,
+      a splitter, a status bar): the designer says they will not be on phones. }
+    class function DesktopOnly: Boolean; virtual;
     property Parent: TControl read FParent write SetParent;
     property Children[Index: Integer]: TControl read GetChild;
     property ChildCount: Integer read GetChildCount;
@@ -1270,6 +1273,11 @@ procedure TControl.Measure(AvailWidth: Integer; out W, H: Integer);
 begin
   W := 0;
   H := 0;
+end;
+
+class function TControl.DesktopOnly: Boolean;
+begin
+  Result := False;
 end;
 
 procedure TControl.GetSize(AvailWidth: Integer; out W, H: Integer);

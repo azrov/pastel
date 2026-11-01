@@ -2,7 +2,7 @@
   "name": "pastel-vscode",
   "displayName": "Pastel",
   "description": "Build cross-platform apps in Object Pascal with Pastel: run, build, live form preview, .pform completion and checks.",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "publisher": "pastel",
   "repository": {
     "type": "git",
@@ -37,7 +37,8 @@
     "onView:pastel.project",
     "onDebugResolve:pastel",
     "onDebugDynamicConfigurations:pastel",
-    "onDebugInitialConfigurations"
+    "onDebugInitialConfigurations",
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -213,6 +214,11 @@
         "command": "pastel.chooseRunProject",
         "title": "Choose the Program to Run",
         "category": "Pastel"
+      },
+      {
+        "command": "pastel.welcome",
+        "title": "Welcome",
+        "category": "Pastel"
       }
     ],
     "menus": {
@@ -377,6 +383,11 @@
           "type": "boolean",
           "default": true,
           "description": "Compile Pascal files in the background while you type and underline the compiler's errors."
+        },
+        "pastel.showWelcome": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the Pastel Welcome page (recent projects, New Project) when VS Code opens without a folder."
         }
       }
     },
@@ -400,7 +411,7 @@
     "viewsWelcome": [
       {
         "view": "pastel.project",
-        "contents": "There is no Pastel project in this folder yet.\n[New Project](command:pastel.newProject)\n[Open Folder](command:vscode.openFolder)\nPastel builds apps for Linux, Windows, macOS and Raspberry Pi from Object Pascal."
+        "contents": "There is no Pastel project in this folder yet.\n[New Project](command:pastel.newProject)\n[Open Folder](command:vscode.openFolder)\n[Welcome Page](command:pastel.welcome) lists your recent projects.\nPastel makes desktop apps, console programs, web APIs and services for Windows and Linux from Object Pascal."
       }
     ],
     "keybindings": [
@@ -490,7 +501,7 @@
   "scripts": {
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "test": "node ./out/test/unit.js && node ./out/test/edit.test.js && node ./out/test/designer.test.js && node ./out/test/pascal.test.js && node ./out/test/testparse.test.js && node ./out/test/routes.test.js && node ./out/test/analyzer.test.js && node ./out/test/projectinfo.test.js",
+    "test": "node ./out/test/unit.js && node ./out/test/edit.test.js && node ./out/test/designer.test.js && node ./out/test/pascal.test.js && node ./out/test/testparse.test.js && node ./out/test/routes.test.js && node ./out/test/analyzer.test.js && node ./out/test/projectinfo.test.js && node ./out/test/welcome.test.js",
     "package": "vsce package --no-dependencies --allow-missing-repository",
     "test:integration": "node ./out/test/integration.js",
     "apidoc": "node ./out/lang/apidoc.js ../framework/src ../docs/api"

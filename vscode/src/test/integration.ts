@@ -316,13 +316,20 @@ async function main() {
   const ext = require('../extension');
   const pform = new FakeDocument(Uri.file(pformPath), 'pform', fs.readFileSync(pformPath, 'utf8'));
   docs.push(pform);
-  ext.activate({ subscriptions: [], extensionPath: path.resolve(__dirname, '..', '..') });
+  const stored = new Map<string, unknown>();
+  const globalState = { get: (k: string) => stored.get(k), update: async (k: string, v: unknown) => { stored.set(k, v); } };
+  ext.activate({ subscriptions: [], extensionPath: path.resolve(__dirname, '..', '..'), globalState });
   vscodeFake.window.activeTextEditor = { document: pform };
   const lines = () => pform.getText().split('\n');
   const lineOf = (re: RegExp) => lines().findIndex(l => re.test(l));
 
+  await test('the open project is remembered for the Welcome page', () => {
+    const recent = stored.get('pastel.recentProjects') as { name: string; kind: string }[];
+    assert.ok(recent && recent[0].kind === 'app', JSON.stringify(recent));
+  });
+
   await test('commands are registered', () => {
-    for (const c of ['pastel.run', 'pastel.build', 'pastel.openPreview', 'pastel.addHandler', 'pastel.newProject']) {
+    for (const c of ['pastel.run', 'pastel.build', 'pastel.openPreview', 'pastel.addHandler', 'pastel.newProject', 'pastel.welcome']) {
       assert.ok(commands[c], c);
     }
   });

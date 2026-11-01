@@ -88,7 +88,13 @@ end;
 
 ## Designing in VS Code
 
+![The form designer: Structure, Object Inspector, the form with a selected edit and its grips, the Tool Palette](images/designer.png)
+
 With the Pastel extension, open a `.pform` file and press the designer button in the editor title. It is laid out like Delphi's IDE: **Structure** and the **Object Inspector** (with *Properties* and *Events* tabs and a search box) on the left, the form in a window frame in the middle, the **Tool Palette** (grouped, with a search box) on the right; timers, actions and other non-visual components sit in a tray under the form.
+
+A form made before Pastel 1.4 stacks its controls (`Layout = Flow`), so they move only up and down; the designer then shows **Place freely**, which turns it into `Layout = Free` with every control kept where it is now. The ⇱ *Place freely* button under a selected row, column or card does the same for that container.
+
+Hovering over a control in the palette shows where it works (Windows ✓ Linux ✓, and whether it will be on Android); the inspector shows the same under the control's class. A menu bar, a splitter and a status bar are desktop only.
 
 In a form or panel with `Layout = Free`:
 

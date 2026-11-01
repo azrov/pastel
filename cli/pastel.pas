@@ -199,9 +199,28 @@ begin
   end;
 end;
 
+{ the type in pastel.toml (app, console, service, api, lib); '' when it cannot be read }
+function ProjectKindAt(const Root: string): string;
+var
+  P: TPastelProject;
+begin
+  Result := '';
+  try
+    P := TPastelProject.Load(Root);
+    try
+      Result := LowerCase(P.Kind);
+    finally
+      P.Free;
+    end;
+  except
+    on E: EProjectError do
+      Result := '';
+  end;
+end;
+
 function CmdNew(const CL: TCommandLine): Integer;
 var
-  Root: string;
+  Root, Kind: string;
 begin
   if (Length(CL.Positional) = 2) and SameText(CL.Positional[0], 'form') then
   begin
@@ -209,6 +228,15 @@ begin
     if Root = '' then
     begin
       Fail('"pastel new form" adds a form to an app: run it in the app''s folder');
+      Exit(ExitError);
+    end;
+    { a console program, a service or an API has no window: a form there would not be shown }
+    Kind := ProjectKindAt(Root);
+    if (Kind <> '') and (Kind <> 'app') then
+    begin
+      Fail(Format('this is a %s project; forms belong to app projects (type = "app" in pastel.toml)', [Kind]));
+      Hint('make the window part as an app that uses this project: pastel new app <name>, then pastel add ' +
+        ExtractFileName(ExcludeTrailingPathDelimiter(Root)) + ' --path ../' + ExtractFileName(ExcludeTrailingPathDelimiter(Root)));
       Exit(ExitError);
     end;
     if CreateFormFiles(Root, CL.Positional[1]) then Exit(ExitOk) else Exit(ExitError);
@@ -232,6 +260,12 @@ begin
     if Root = '' then
     begin
       Fail('"pastel new control" adds a control to an app: run it in the app''s folder');
+      Exit(ExitError);
+    end;
+    Kind := ProjectKindAt(Root);
+    if (Kind <> '') and (Kind <> 'app') and (Kind <> 'lib') then
+    begin
+      Fail(Format('this is a %s project; controls belong to app and library projects', [Kind]));
       Exit(ExitError);
     end;
     if CreateControlFile(Root, CL.Positional[1]) then Exit(ExitOk) else Exit(ExitError);

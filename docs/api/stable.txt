@@ -198,11 +198,13 @@ Pastel.Controls: TSlider.property Position: Integer
 Pastel.Controls: TSlider.property Step: Integer
 Pastel.Controls: TSpinner.constructor Create(AOwner: TComponent)
 Pastel.Controls: TSpinner.property Active: Boolean
+Pastel.Controls: TSplitter.class function DesktopOnly: Boolean
 Pastel.Controls: TSplitter.constructor Create(AOwner: TComponent)
 Pastel.Controls: TSplitter.function Target: TControl
 Pastel.Controls: TSplitter.procedure MoveTo(Size: Integer)
 Pastel.Controls: TSplitter.property MinSize: Integer
 Pastel.Controls: TSplitter.property OnMoved: TNotifyEvent
+Pastel.Controls: TStatusBar.class function DesktopOnly: Boolean
 Pastel.Controls: TStatusBar.constructor Create(AOwner: TComponent)
 Pastel.Controls: TStatusBar.property Text: string
 Pastel.Controls: TTabControl.constructor Create(AOwner: TComponent)
@@ -667,6 +669,7 @@ Pastel.Log: type TLogLevel = (llDebug, llInfo, llWarn, llError, llOff)
 Pastel.Log: type TLogLineEvent = procedure(Level: TLogLevel; Line: string)
 Pastel.Log: type TLogger = class
 Pastel.Log: var Log: TLogger
+Pastel.Menus: TMenuBar.class function DesktopOnly: Boolean
 Pastel.Menus: TMenuBar.destructor Destroy
 Pastel.Menus: TMenuBar.function OpenItem: TMenuItem
 Pastel.Menus: TMenuBar.procedure CloseMenu
@@ -1045,6 +1048,7 @@ Pastel.UI: TButtonStyle.bsFlat
 Pastel.UI: TButtonStyle.bsPrimary
 Pastel.UI: TButtonStyle.bsSecondary
 Pastel.UI: TCard.constructor Create(AOwner: TComponent)
+Pastel.UI: TControl.class function DesktopOnly: Boolean
 Pastel.UI: TControl.constructor Create(AOwner: TComponent)
 Pastel.UI: TControl.destructor Destroy
 Pastel.UI: TControl.function HitTest(X: Integer; Y: Integer): TControl

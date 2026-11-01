@@ -323,6 +323,7 @@ type
     procedure MouseMove(X, Y: Integer); override;
     procedure MouseUp(X, Y: Integer; Inside: Boolean); override;
   public
+    class function DesktopOnly: Boolean; override;
     constructor Create(AOwner: TComponent); override;
     { The control it resizes: the visible one before it; nil when there is none. }
     function Target: TControl;
@@ -355,6 +356,7 @@ type
     procedure Measure(AvailWidth: Integer; out W, H: Integer); override;
     procedure Paint(C: TCanvas32); override;
   public
+    class function DesktopOnly: Boolean; override;
     constructor Create(AOwner: TComponent); override;
   published
     property Text: string read FText write SetText;
@@ -1799,6 +1801,10 @@ end;
 
 { ---- TSplitter ---- }
 
+class function TSplitter.DesktopOnly: Boolean;
+begin
+  Result := True;
+end;
 constructor TSplitter.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
@@ -1930,6 +1936,10 @@ end;
 
 { ---- TStatusBar ---- }
 
+class function TStatusBar.DesktopOnly: Boolean;
+begin
+  Result := True;
+end;
 constructor TStatusBar.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);

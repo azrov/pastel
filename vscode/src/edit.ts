@@ -504,3 +504,16 @@ export function insertObjectAt(text: string, parentName: string, className: stri
   const size = containerClasses.test(className) ? { width: 200, height: 120 } : {};
   return { name: r.name, text: placeObjects(r.text, undefined, [{ name: r.name, left, top, ...size }]) };
 }
+
+/** Turns a Flow container into Layout = Free, keeping where its children are now (items: their current places). */
+export function makeFree(text: string, containerName: string, items: Placement[]): string {
+  let out = setProperty(text, containerName, 'Layout', 'Free');
+  // what only a Flow container uses
+  for (const p of ['Gap', 'Padding', 'Align', 'Justify']) {
+    out = setProperty(out, containerName, p, undefined);
+  }
+  for (const it of items) {
+    out = setProperty(out, it.name, 'Grow', undefined);
+  }
+  return placeObjects(out, undefined, items);
+}

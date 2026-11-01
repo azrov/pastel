@@ -454,6 +454,7 @@ var
   Kind, Extra, Items: string;
   Names: TStringList;
   First: Boolean;
+  Android: string;
 begin
   Count := GetPropList(Cls.ClassInfo, Props);
   Names := TStringList.Create;
@@ -560,13 +561,19 @@ begin
     Names.Free;
     FreeMem(Props);
   end;
-  Result := Format('{"name":%s,"container":%s,"form":%s,"nonvisual":%s,"project":%s,"properties":[%s]}',
+  { where it works: Windows and Linux now; Android is coming (1.5), except for desktop-only controls }
+  if Cls.InheritsFrom(TControl) and TControlClass(Cls).DesktopOnly then
+    Android := 'desktop only'
+  else
+    Android := 'planned';
+  Result := Format('{"name":%s,"container":%s,"form":%s,"nonvisual":%s,"project":%s,' +
+    '"platforms":["Windows","Linux"],"android":%s,"properties":[%s]}',
     [JsonStr(Cls.ClassName), BoolToStr(Cls.InheritsFrom(TBox), 'true', 'false'),
      BoolToStr(IsForm, 'true', 'false'),
      { a component without a place on the form (TTimer, TAction...) }
      BoolToStr(not Cls.InheritsFrom(TControl), 'true', 'false'),
      { a control of the project (src/controls/), not of the framework }
-     BoolToStr(not SameText(Copy(Cls.UnitName, 1, 7), 'Pastel.'), 'true', 'false'), Items]);
+     BoolToStr(not SameText(Copy(Cls.UnitName, 1, 7), 'Pastel.'), 'true', 'false'), JsonStr(Android), Items]);
 end;
 
 function SchemaJson: string;

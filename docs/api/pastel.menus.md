@@ -63,6 +63,7 @@ The bar with menus at the top of a window (put it first, in a form with Padding 
 
 | | |
 |---|---|
+| `class function DesktopOnly: Boolean` |  |
 | `destructor Destroy` |  |
 | `procedure OpenMenu(Item: TMenuItem)` | Opens the menu of a top-level item (keyboard: Alt and F10 open the first). |
 | `procedure CloseMenu` |  |

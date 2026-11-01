@@ -206,6 +206,7 @@ it Grow = 1.
 
 | | |
 |---|---|
+| `class function DesktopOnly: Boolean` |  |
 | `constructor Create(AOwner: TComponent)` |  |
 | `function Target: TControl` | The control it resizes: the visible one before it; nil when there is none. |
 | `procedure MoveTo(Size: Integer)` | Gives the target this size (clamped between MinSize and the room there is). |
@@ -237,6 +238,7 @@ them pushes the next ones to the right).
 
 | | |
 |---|---|
+| `class function DesktopOnly: Boolean` |  |
 | `constructor Create(AOwner: TComponent)` |  |
 | `property Text: string` |  |
 
