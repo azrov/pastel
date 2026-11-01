@@ -38,6 +38,7 @@ type
     procedure DeleteCustomerClick(Sender: TObject);
     { invoices }
     procedure InvoiceCustomerChange(Sender: TObject);
+    procedure InvoiceSearchChange(Sender: TObject);
     procedure CreateInvoiceClick(Sender: TObject);
     procedure InvoiceListChange(Sender: TObject);
     procedure PaidClick(Sender: TObject);
@@ -60,6 +61,8 @@ type
     function SyncFile: string;
     { the selected invoice as a PDF file in the invoices folder; '' when none is selected }
     function SaveInvoicePdf: string;
+    { the invoice of the selected row (the list may be filtered); nil when none }
+    function SelectedInvoice: TJSONData;
   public
     destructor Destroy; override;
   end;
@@ -414,20 +417,41 @@ procedure THomeForm.LoadInvoices;
 var
   I: Integer;
   Inv: TJSONData;
-  Paid: string;
+  NumberFormat: TFormatSettings;
 begin
+  NumberFormat := DefaultFormatSettings;
+  NumberFormat.DecimalSeparator := '.';
   FreeAndNil(FInvoiceRows);
   FInvoiceRows := FStore.List(skInvoice);
   InvoiceList.Clear;
   for I := 0 to FInvoiceRows.Count - 1 do
   begin
     Inv := FInvoiceRows[I];
-    if JInt(Inv, 'paid') = 1 then Paid := _('yes') else Paid := '';
+    { Total is a money column, Paid a check box column: they get values, and show them }
     InvoiceList.AddRow([JStr(Inv, 'number'), IssuedText(JStr(Inv, 'issued_on')),
-      JStr(Inv, 'customer_name'), CentsToText(JInt(Inv, 'total_cents')), Paid]);
+      JStr(Inv, 'customer_name'), FloatToStr(JInt(Inv, 'total_cents') / 100, NumberFormat),
+      IntToStr(JInt(Inv, 'paid'))]);
   end;
   InvoiceLinesLabel.Text := '';
+  InvoiceSearch.Text := '';
   InvoiceCustomerChange(nil);
+end;
+
+function THomeForm.SelectedInvoice: TJSONData;
+var
+  I: Integer;
+begin
+  Result := nil;
+  if (InvoiceList.Row < 0) or (InvoiceList.Row >= InvoiceList.RowCount) then
+    Exit;
+  for I := 0 to FInvoiceRows.Count - 1 do
+    if JStr(FInvoiceRows[I], 'number') = InvoiceList.Cells[0, InvoiceList.Row] then
+      Exit(FInvoiceRows[I]);
+end;
+
+procedure THomeForm.InvoiceSearchChange(Sender: TObject);
+begin
+  InvoiceList.Filter(Trim(InvoiceSearch.Text));
 end;
 
 procedure THomeForm.InvoiceCustomerChange(Sender: TObject);
@@ -489,9 +513,9 @@ var
   S: string;
   I: Integer;
 begin
-  if (InvoiceList.Row < 0) or (InvoiceList.Row >= FInvoiceRows.Count) then
+  Inv := SelectedInvoice;
+  if Inv = nil then
     Exit;
-  Inv := FInvoiceRows[InvoiceList.Row];
   S := '';
   Lines := GetJSON(JStr(Inv, 'lines', '[]'));
   try
@@ -509,19 +533,19 @@ end;
 procedure THomeForm.PaidClick(Sender: TObject);
 var
   P: TJSONObject;
-  Row: Integer;
+  Number: string;
 begin
-  Row := InvoiceList.Row;
-  if (Row < 0) or (Row >= FInvoiceRows.Count) then
+  if SelectedInvoice = nil then
     Exit;
-  P := JObject(['id', JStr(FInvoiceRows[Row], 'id'), 'paid', 1]);
+  Number := JStr(SelectedInvoice, 'number');
+  P := JObject(['id', JStr(SelectedInvoice, 'id'), 'paid', 1]);
   try
     FStore.Save(skInvoice, P);
   finally
     P.Free;
   end;
   LoadInvoices;
-  InvoiceList.Row := Row;
+  InvoiceList.Row := InvoiceList.FindRow(0, Number);
 end;
 
 { ---- sync, settings ---- }
@@ -576,18 +600,18 @@ end;
 function THomeForm.SaveInvoicePdf: string;
 var
   R: TReport;
-  Row: Integer;
+  Inv: TJSONData;
   Dir: string;
 begin
   Result := '';
-  Row := InvoiceList.Row;
-  if (Row < 0) or (Row >= FInvoiceRows.Count) then
+  Inv := SelectedInvoice;
+  if Inv = nil then
     Exit;
   { next to the database: <settings folder>/invoices/2026-0001.pdf }
   Dir := JoinPath([ExtractFileDir(Copy(DatabaseUrl, 8, MaxInt)), 'invoices']);
   ForceDirectories(Dir);
-  Result := JoinPath([Dir, JStr(FInvoiceRows[Row], 'number') + '.pdf']);
-  R := InvoiceReport(FStore, JStr(FInvoiceRows[Row], 'id'), SettingsForm.Shop);
+  Result := JoinPath([Dir, JStr(Inv, 'number') + '.pdf']);
+  R := InvoiceReport(FStore, JStr(Inv, 'id'), SettingsForm.Shop);
   try
     R.SaveToFile(Result);
   finally

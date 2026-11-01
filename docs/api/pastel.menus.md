@@ -45,9 +45,11 @@ One command of a menu; items inside it make a submenu. Caption '-' is a line.
 | `function DisplayShortCut: string` |  |
 | `function IsEnabled: Boolean` |  |
 | `function IsChecked: Boolean` |  |
+| `function DisplayIcon: string` | Icon, or the action's icon |
 | `property Caption: string` |  |
 | `property ShortCut: string` | Like 'Ctrl+S', 'Ctrl+Shift+Z', 'F5', 'Delete'. |
 | `property Checked: Boolean` |  |
+| `property Icon: string` | A built-in icon before the caption ('save', 'print'...; Pastel.Icons); the action's when empty. |
 | `property Action: TBasicAction` |  |
 | `property OnClick: TNotifyEvent` |  |
 

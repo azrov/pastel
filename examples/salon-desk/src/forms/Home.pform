@@ -265,6 +265,14 @@ object HomeForm: THomeForm
           Text = 'Invoice the done appointments'
           OnClick = CreateInvoiceClick
         end
+      end
+      object InvoiceTools: TRow
+        Gap = 8
+        object InvoiceSearch: TEdit
+          Grow = 1
+          Placeholder = 'Search invoices'
+          OnChange = InvoiceSearchChange
+        end
         object ExcelButton: TButton
           Text = 'Excel'
           Icon = 'download'
@@ -291,11 +299,12 @@ object HomeForm: THomeForm
         object TotalColumn: TGridColumn
           Title = 'Total'
           Width = 120
-          Alignment = Right
+          Kind = Money
         end
         object PaidColumn: TGridColumn
           Title = 'Paid'
           Width = 90
+          Kind = Check
         end
       end
       object InvoiceDetail: TRow

@@ -58,6 +58,12 @@ expect InvoiceList.Row 0
 expect InvoiceLinesLabel 2026-11-03 Color: 900.50|Net 900.50 + VAT 20% 180.10 = 1,080.60
 click PaidButton
 expect PaidButton.Enabled False
+type InvoiceSearch nobody
+expect InvoiceList.Row -1
+set InvoiceSearch.Text ayşe
+click InvoiceList 20 40
+expect InvoiceList.Row 0
+expect InvoiceLinesLabel 2026-11-03 Color: 900.50|Net 900.50 + VAT 20% 180.10 = 1,080.60
 # --- the invoice as PDF (next to the database, in invoices/), all invoices as Excel ---
 click PdfButton
 click ExcelButton

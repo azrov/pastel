@@ -38,19 +38,35 @@ uses
 type
   TGrid = class;
 
+  { What a column holds. The cells keep the value as data ('1380.6',
+    '2026-11-03', '1'); the column shows it the way the language writes it,
+    sorts it as what it is, and gives it to ToJson as a number or true/false.
+    gkCheck: a check box (a click or Space changes it in an Editable grid);
+    gkIcon: the cell is the name of an icon (Pastel.Icons). }
+  TGridColumnKind = (gkText, gkNumber, gkMoney, gkDate, gkCheck, gkIcon);
+
   { One column of a TGrid. Width 0 shares the free space. }
   TGridColumn = class(TControl)
   private
     FTitle, FField: string;
     FAlignment: TTextAlign;
     FReadOnly: Boolean;
+    FKind: TGridColumnKind;
+    FDecimals: Integer;
     procedure SetTitle(const AValue: string);
     procedure SetAlignment(AValue: TTextAlign);
+    procedure SetKind(AValue: TGridColumnKind);
   protected
     procedure Paint(C: TCanvas32); override;
   public
+    constructor Create(AOwner: TComponent); override;
     function Grid: TGrid;
+    { How a cell's value is shown: 1380.6 -> '1,380.60' for money. }
+    function DisplayText(const Value: string): string;
   published
+    property Kind: TGridColumnKind read FKind write SetKind default gkText;
+    { Digits after the point for numbers (-1: as many as the value has); money has 2 unless set. }
+    property Decimals: Integer read FDecimals write FDecimals default -1;
     property Title: string read FTitle write SetTitle;
     { The name of the value in LoadJson (a database column); the Title when empty. }
     property Field: string read FField write FField;
@@ -73,6 +89,9 @@ type
   TGrid = class(TControl)
   private
     FData: array of TStringArray;
+    FAll: array of TStringArray;       { every row while a filter is on }
+    FAllCount: Integer;
+    FFilterText: string;
     FRowCount, FRow, FCol, FTop, FLeft, FHotRow, FRowHeight: Integer;
     FSortCol: Integer;
     FSortDesc, FEditable, FRowSelect, FSortable, FStriped, FEditing: Boolean;
@@ -138,6 +157,16 @@ type
     function ToJson: TJSONArray;
     { Index of the row whose cell in ACol is Value, -1 when there is none. }
     function FindRow(ACol: Integer; const Value: string): Integer;
+    { Shows only the rows with Text in one of their cells (as shown, any
+      case); '' shows all again. Rows, Cells and Row then count the shown
+      rows; changes of cells are kept. }
+    procedure Filter(const Text: string);
+    { The text of the current filter. }
+    property FilterText: string read FFilterText;
+    { The shown rows as CSV (with the titles first), for Excel: SaveToFile(Grid.ToCsv(';')). }
+    function ToCsv(Separator: Char = ','): string;
+    { Sets a check box cell (gkCheck): '1' or '0'. }
+    procedure ToggleCheck(ACol, ARow: Integer);
     procedure MakeVisible(ARow: Integer; ACol: Integer = -1);
     { Starts editing the current cell; Text replaces the value when given. }
     procedure EditCell(const Text: string = ''; Replace: Boolean = False);
@@ -297,7 +326,19 @@ type
 implementation
 
 uses
-  StrUtils;
+  StrUtils, Pastel.Lang, Pastel.Icons, Pastel.Text;
+
+procedure PaintCheck(C: TCanvas32; X, Y: Integer; Checked: Boolean; Col: TColor32);
+begin
+  if Checked then
+  begin
+    C.FillRoundRect(X, Y, 16, 16, 4, Theme.Accent);
+    C.DrawLine(X + 3.5, Y + 8.5, X + 6.5, Y + 11.5, 2, Theme.OnAccent);
+    C.DrawLine(X + 6.5, Y + 11.5, X + 12.5, Y + 4.5, 2, Theme.OnAccent);
+  end
+  else
+    C.StrokeRoundRect(X, Y, 16, 16, 4, 1.5, Theme.BorderHover);
+end;
 
 procedure PaintArrow(C: TCanvas32; CX, CY: Integer; Down: Boolean; Col: TColor32);
 begin
@@ -408,6 +449,98 @@ end;
 procedure TGridColumn.Paint(C: TCanvas32);
 begin
   { drawn by the grid }
+end;
+
+constructor TGridColumn.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FDecimals := -1;
+end;
+
+procedure TGridColumn.SetKind(AValue: TGridColumnKind);
+begin
+  FKind := AValue;
+  { numbers line up at the right, check boxes and icons in the middle }
+  if FAlignment = taLeft then
+    case AValue of
+      gkNumber, gkMoney: FAlignment := taRight;
+      gkCheck, gkIcon: FAlignment := taCenter;
+    end;
+  Invalidate;
+end;
+
+function CellNumber(const S: string; out V: Double): Boolean;
+var
+  FS: TFormatSettings;
+begin
+  FS := DefaultFormatSettings;
+  FS.DecimalSeparator := '.';
+  Result := TryStrToFloat(Trim(S), V, FS);
+end;
+
+{ lower case, also for ş, İ, Ğ... (in the language's way: Turkish I -> ı) }
+function LowerText(const S: string): string;
+begin
+  Result := Lower(S, Language);
+end;
+
+function DataNumber(V: Double): string;
+var
+  FS: TFormatSettings;
+begin
+  FS := DefaultFormatSettings;
+  FS.DecimalSeparator := '.';
+  FS.ThousandSeparator := #0;
+  Result := FloatToStr(V, FS);
+end;
+
+function CellChecked(const S: string): Boolean;
+begin
+  Result := (S = '1') or SameText(S, 'true') or SameText(S, 'yes');
+end;
+
+function TGridColumn.DisplayText(const Value: string): string;
+var
+  V: Double;
+  D: Integer;
+  Y, M, Dd, H, N: Word;
+begin
+  Result := Value;
+  case FKind of
+    gkNumber, gkMoney:
+      if CellNumber(Value, V) then
+      begin
+        D := FDecimals;
+        if (D < 0) and (FKind = gkMoney) then
+          D := 2;
+        if D < 0 then
+        begin
+          { as many digits as the value has, at most 6 }
+          D := 0;
+          while (D < 6) and (Abs(V * IntPower(10, D) - Round(V * IntPower(10, D))) > 1E-9) do
+            Inc(D);
+        end;
+        Result := FormatNumber(V, D);
+      end;
+    gkDate:
+      if (Length(Value) >= 10) and (Value[5] = '-') and (Value[8] = '-') then
+      begin
+        Y := StrToIntDef(Copy(Value, 1, 4), 0);
+        M := StrToIntDef(Copy(Value, 6, 2), 0);
+        Dd := StrToIntDef(Copy(Value, 9, 2), 0);
+        if (M in [1..12]) and (Dd in [1..31]) then
+          if (Length(Value) >= 16) and (Value[11] in [' ', 'T']) then
+          begin
+            H := StrToIntDef(Copy(Value, 12, 2), 0);
+            N := StrToIntDef(Copy(Value, 15, 2), 0);
+            Result := FormatDateTimeShort(EncodeDate(Y, M, Dd) + EncodeTime(H mod 24, N mod 60, 0, 0));
+          end
+          else
+            Result := FormatDateShort(EncodeDate(Y, M, Dd));
+      end;
+    gkCheck, gkIcon:
+      Result := '';
+  end;
 end;
 
 { ---- TGridEditor ---- }
@@ -574,6 +707,14 @@ function TGrid.AddRow(const Values: array of string): Integer;
 begin
   InsertRow(FRowCount, Values);
   Result := FRowCount - 1;
+  if FFilterText <> '' then
+  begin
+    { a new row is shown even when it does not match; it is in all rows too }
+    if FAllCount >= Length(FAll) then
+      SetLength(FAll, FAllCount * 2 + 16);
+    FAll[FAllCount] := FData[Result];
+    Inc(FAllCount);
+  end;
 end;
 
 procedure TGrid.InsertRow(Index: Integer; const Values: array of string);
@@ -602,6 +743,15 @@ begin
     Exit;
   if FEditing then
     CancelEdit;
+  if FFilterText <> '' then
+    for I := 0 to FAllCount - 1 do
+      if Pointer(FAll[I]) = Pointer(FData[Index]) then
+      begin
+        Move(FAll[I + 1], FAll[I], (FAllCount - I - 1) * SizeOf(Pointer));
+        Pointer(FAll[FAllCount - 1]) := nil;
+        Dec(FAllCount);
+        Break;
+      end;
   for I := Index to FRowCount - 2 do
     FData[I] := FData[I + 1];
   FData[FRowCount - 1] := nil;
@@ -623,6 +773,9 @@ begin
   if FEditing then
     CancelEdit;
   FData := nil;
+  FAll := nil;
+  FAllCount := 0;
+  FFilterText := '';
   FRowCount := 0;
   FTop := 0;
   if FRow <> -1 then
@@ -647,9 +800,17 @@ var
   begin
     SA := Cells[ACol, A];
     SB := Cells[ACol, B];
+    if Columns[ACol].Kind = gkCheck then
+    begin
+      SA := IntToStr(Ord(CellChecked(SA)));
+      SB := IntToStr(Ord(CellChecked(SB)));
+    end;
     if (SA = '') <> (SB = '') then
       Exit(SB = '');                  { empty cells last, both ways }
-    R := CompareCells(SA, SB);
+    if Columns[ACol].Kind = gkDate then
+      R := CompareStr(SA, SB)         { ISO dates sort as text }
+    else
+      R := CompareCells(SA, SB);
     if Descending then
       R := -R;
     Result := (R < 0) or ((R = 0) and (A < B));    { stable }
@@ -765,6 +926,8 @@ begin
         Values[J] := ''
       else if D.JSONType in [jtObject, jtArray] then
         Values[J] := D.AsJSON
+      else if D is TJSONFloatNumber then
+        Values[J] := DataNumber(D.AsFloat)        { 1380.6, not 1.3806E+003 }
       else
         Values[J] := D.AsString;
     end;
@@ -782,6 +945,7 @@ var
   I, J: Integer;
   O: TJSONObject;
   N: string;
+  V: Double;
 begin
   Result := TJSONArray.Create;
   for I := 0 to FRowCount - 1 do
@@ -792,7 +956,24 @@ begin
       N := Columns[J].Field;
       if N = '' then
         N := Columns[J].Title;
-      O.Add(N, Cells[J, I]);
+      case Columns[J].Kind of
+        gkNumber, gkMoney:
+          if CellNumber(Cells[J, I], V) then
+          begin
+            if (Frac(V) = 0) and (Abs(V) < 1E15) then
+              O.Add(N, Round(V))
+            else
+              O.Add(N, V);
+          end
+          else if Cells[J, I] = '' then
+            O.Add(N, TJSONNull.Create)
+          else
+            O.Add(N, Cells[J, I]);
+        gkCheck:
+          O.Add(N, CellChecked(Cells[J, I]));
+      else
+        O.Add(N, Cells[J, I]);
+      end;
     end;
     Result.Add(O);
   end;
@@ -998,7 +1179,115 @@ end;
 
 function TGrid.CanEdit(ACol: Integer): Boolean;
 begin
-  Result := FEditable and Enabled and (ACol >= 0) and (ACol < ColCount) and not Columns[ACol].ReadOnly;
+  Result := FEditable and Enabled and (ACol >= 0) and (ACol < ColCount) and not Columns[ACol].ReadOnly and
+    not (Columns[ACol].Kind in [gkCheck, gkIcon]);
+end;
+
+procedure TGrid.ToggleCheck(ACol, ARow: Integer);
+var
+  Value: string;
+  Accept: Boolean;
+begin
+  if CellChecked(Cells[ACol, ARow]) then Value := '0' else Value := '1';
+  Accept := True;
+  if Assigned(FOnCellEdit) then
+    FOnCellEdit(Self, ACol, ARow, Value, Accept);
+  if Accept then
+    Cells[ACol, ARow] := Value;
+end;
+
+procedure TGrid.Filter(const Text: string);
+var
+  I, J, Keep: Integer;
+  Low: string;
+  Hit: Boolean;
+begin
+  if FEditing then
+    CancelEdit;
+  { back to all rows }
+  if FFilterText <> '' then
+  begin
+    FData := Copy(FAll, 0, FAllCount);
+    FRowCount := FAllCount;
+    FAll := nil;
+    FAllCount := 0;
+    FFilterText := '';
+  end;
+  if Text <> '' then
+  begin
+    FAll := Copy(FData, 0, FRowCount);
+    FAllCount := FRowCount;
+    FFilterText := Text;
+    Low := LowerText(Text);
+    Keep := 0;
+    for I := 0 to FAllCount - 1 do
+    begin
+      Hit := False;
+      for J := 0 to ColCount - 1 do
+        if (J < Length(FAll[I])) and
+           ((Pos(Low, LowerText(FAll[I][J])) > 0) or
+            (Pos(Low, LowerText(Columns[J].DisplayText(FAll[I][J]))) > 0)) then
+        begin
+          Hit := True;
+          Break;
+        end;
+      if Hit then
+      begin
+        FData[Keep] := FAll[I];
+        Inc(Keep);
+      end;
+    end;
+    for I := Keep to FRowCount - 1 do
+      FData[I] := nil;
+    FRowCount := Keep;
+  end;
+  FTop := 0;
+  if FRow >= FRowCount then
+    FRow := FRowCount - 1;
+  if (FRow < 0) and (FRowCount > 0) and FRowSelect then
+    FRow := -1;
+  Invalidate;
+  if Assigned(FOnChange) then
+    FOnChange(Self);
+end;
+
+function TGrid.ToCsv(Separator: Char): string;
+
+  function Quote(const S: string): string;
+  begin
+    if (Pos(Separator, S) > 0) or (Pos('"', S) > 0) or (Pos(#10, S) > 0) then
+      Result := '"' + StringReplace(S, '"', '""', [rfReplaceAll]) + '"'
+    else
+      Result := S;
+  end;
+
+var
+  I, J: Integer;
+  Line, V: string;
+begin
+  Result := '';
+  Line := '';
+  for J := 0 to ColCount - 1 do
+  begin
+    if J > 0 then Line := Line + Separator;
+    Line := Line + Quote(Columns[J].Title);
+  end;
+  Result := Line + #13#10;
+  for I := 0 to FRowCount - 1 do
+  begin
+    Line := '';
+    for J := 0 to ColCount - 1 do
+    begin
+      if J > 0 then Line := Line + Separator;
+      V := Cells[J, I];
+      case Columns[J].Kind of
+        gkCheck: V := BoolToStr(CellChecked(V), '1', '0');
+        gkNumber, gkMoney, gkDate: V := Columns[J].DisplayText(V);
+      end;
+      Line := Line + Quote(V);
+    end;
+    Result := Result + Line + #13#10;
+  end;
 end;
 
 procedure TGrid.PlaceEditor;
@@ -1026,7 +1315,10 @@ begin
   end
   else
   begin
-    FEditor.Text := Cells[FCol, FRow];
+    if Columns[FCol].Kind in [gkNumber, gkMoney] then
+      FEditor.Text := Columns[FCol].DisplayText(Cells[FCol, FRow])
+    else
+      FEditor.Text := Cells[FCol, FRow];
     FEditor.Visible := True;
     FEditor.SetFocus;
     FEditor.SelectAll;
@@ -1039,13 +1331,20 @@ function TGrid.CommitEdit: Boolean;
 var
   Value: string;
   Accept: Boolean;
+  N: Double;
 begin
   Result := True;
   if not FEditing then
     Exit;
   Value := FEditor.Text;
   Accept := True;
-  if Assigned(FOnCellEdit) then
+  { numbers as the language writes them ('1.380,6') are kept as data ('1380.6') }
+  if (Columns[FCol].Kind in [gkNumber, gkMoney]) and (Trim(Value) <> '') then
+    if TryParseNumber(Value, N) then
+      Value := DataNumber(N)
+    else
+      Accept := False;
+  if Accept and Assigned(FOnCellEdit) then
     FOnCellEdit(Self, FCol, FRow, Value, Accept);
   if not Accept then
   begin
@@ -1181,14 +1480,21 @@ begin
             Fg := Theme.OnAccent
           else if not Enabled then
             Fg := Theme.Disabled;
-          S := Fit(F, Cells[J, I], W - 16);
-          case Columns[J].Alignment of
-            taRight: TX := X + W - 8 - F.TextWidth(S);
-            taCenter: TX := X + (W - F.TextWidth(S)) div 2;
+          case Columns[J].Kind of
+            gkCheck:
+              PaintCheck(C, X + W div 2 - 8, Y + (RH - 16) div 2, CellChecked(Cells[J, I]), Fg);
+            gkIcon:
+              DrawIcon(C, Cells[J, I], X + W div 2 - 9, Y + (RH - 18) div 2, 18, Fg);
           else
-            TX := X + 8;
+            S := Fit(F, Columns[J].DisplayText(Cells[J, I]), W - 16);
+            case Columns[J].Alignment of
+              taRight: TX := X + W - 8 - F.TextWidth(S);
+              taCenter: TX := X + (W - F.TextWidth(S)) div 2;
+            else
+              TX := X + 8;
+            end;
+            C.DrawText(F, TX, Y + (RH - F.LineHeight) div 2, S, Fg);
           end;
-          C.DrawText(F, TX, Y + (RH - F.LineHeight) div 2, S, Fg);
           if (I = FRow) and (J = FCol) and not FRowSelect and not FEditing then
             C.StrokeRoundRect(X + 1, Y + 1, W - 2, RH - 2, 3, 2, IfThen(Focus, Theme.Accent, Theme.BorderHover));
         end;
@@ -1266,6 +1572,8 @@ begin
   if C < 0 then
     C := FCol;
   Select(R, C);
+  if (Columns[C].Kind = gkCheck) and FEditable and Enabled and not Columns[C].ReadOnly then
+    ToggleCheck(C, R);
   F := ParentForm;
   if (F <> nil) and (F.ClickCount = 2) then
     if CanEdit(FCol) and not FRowSelect then
@@ -1377,6 +1685,12 @@ begin
         Select(R, FCol + IfThen(Shift, -1, 1));
     KEY_F1 + 1:
       EditCell;
+    KEY_SPACE:
+      if (FRow >= 0) and (FCol < ColCount) and (Columns[FCol].Kind = gkCheck) and FEditable and
+         not Columns[FCol].ReadOnly then
+        ToggleCheck(FCol, FRow)
+      else
+        Result := False;
     KEY_ENTER, KEY_KP_ENTER:
       if (FRow >= 0) and CanEdit(FCol) and not FRowSelect then
         EditCell

@@ -36,6 +36,7 @@ type
   private
     FCaption, FShortCut: string;
     FChecked: Boolean;
+    FIcon: string;
     FOnClick: TNotifyEvent;
     FAction: TBasicAction;
     procedure SetCaption(const AValue: string);
@@ -55,11 +56,15 @@ type
     function DisplayShortCut: string;
     function IsEnabled: Boolean;
     function IsChecked: Boolean;
+    { Icon, or the action's icon }
+    function DisplayIcon: string;
   published
     property Caption: string read FCaption write SetCaption;
     { Like 'Ctrl+S', 'Ctrl+Shift+Z', 'F5', 'Delete'. }
     property ShortCut: string read FShortCut write FShortCut;
     property Checked: Boolean read FChecked write FChecked default False;
+    { A built-in icon before the caption ('save', 'print'...; Pastel.Icons); the action's when empty. }
+    property Icon: string read FIcon write FIcon;
     property Action: TBasicAction read FAction write SetAction;
     property OnClick: TNotifyEvent read FOnClick write FOnClick;
   end;
@@ -136,7 +141,7 @@ function HandleShortCut(Form: TForm; Key: LongInt; Shift, Ctrl: Boolean): Boolea
 implementation
 
 uses
-  Math;
+  Math, Pastel.Icons;
 
 function KeyName(const S: string): LongInt;
 var
@@ -359,6 +364,13 @@ end;
 function TMenuItem.IsEnabled: Boolean;
 begin
   Result := Enabled and not ((FAction is TAction) and not TAction(FAction).Enabled);
+end;
+
+function TMenuItem.DisplayIcon: string;
+begin
+  Result := FIcon;
+  if (Result = '') and (FAction is TAction) then
+    Result := TAction(FAction).Icon;
 end;
 
 function TMenuItem.IsChecked: Boolean;
@@ -681,7 +693,9 @@ begin
       begin
         C.DrawLine(Bounds.X + 13, Y + RH / 2, Bounds.X + 16.5, Y + RH / 2 + 3.5, 1.8, Fg);
         C.DrawLine(Bounds.X + 16.5, Y + RH / 2 + 3.5, Bounds.X + 22, Y + RH / 2 - 3.5, 1.8, Fg);
-      end;
+      end
+      else if Item.DisplayIcon <> '' then
+        DrawIcon(C, Item.DisplayIcon, Bounds.X + 9, Y + (RH - 16) div 2, 16, Muted);
       C.DrawText(F, Bounds.X + Padding + 28, Y + (RH - F.LineHeight) div 2, Item.DisplayCaption, Fg);
       if Item.HasSubmenu then
       begin

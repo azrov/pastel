@@ -67,6 +67,7 @@
   "Save the invoice as PDF and open it": "Faturayı PDF olarak kaydet ve aç",
   "Saved %s": "%s kaydedildi",
   "Saved.": "Kaydedildi.",
+  "Search invoices": "Faturalarda ara",
   "Search: name, phone or e-mail": "Ara: ad, telefon veya e-posta",
   "Server (for Sync)": "Sunucu (eşitleme için)",
   "Service": "Hizmet",

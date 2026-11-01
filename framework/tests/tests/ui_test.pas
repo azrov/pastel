@@ -48,6 +48,9 @@ type
     procedure CanvasScales;
     procedure OnlyWhatChangedIsRepainted;
     procedure ATooNarrowRowShrinksWhatGrows;
+    procedure GridColumnsOfNumbersDatesAndChecks;
+    procedure GridFilterAndCsv;
+    procedure AFlowWrapsItsChildren;
     procedure GridRowsAndSorting;
     procedure GridLoadsJson;
     procedure TreeFromLines;
@@ -59,7 +62,8 @@ type
 implementation
 
 uses
-  Pastel.PForm, Pastel.Forms, Pastel.Controls, Pastel.Menus, Pastel.Grids, Pastel.Binding, fpjson, Pastel.Json;
+  Pastel.PForm, Pastel.Forms, Pastel.Controls, Pastel.Menus, Pastel.Grids, Pastel.Binding, fpjson, Pastel.Json,
+  Pastel.Lang;
 
 var
   Clip: string;
@@ -902,6 +906,101 @@ begin
     F.Free;
     Root.Free;
   end;
+end;
+
+procedure TUITests.GridColumnsOfNumbersDatesAndChecks;
+var
+  G: TGrid;
+  A: TJSONArray;
+  O: TJSONArray;
+begin
+  UseLanguage('en');
+  G := TGrid.Create(nil);
+  A := TJSONArray(ParseJson('[{"total": 1380.6, "on": "2026-11-03", "paid": true}, ' +
+    '{"total": 250, "on": "2026-11-04 09:30", "paid": false}, {"total": 99.5, "on": "2025-01-02", "paid": true}]'));
+  try
+    G.AddColumn('Total').Field := 'total';
+    G.Columns[0].Kind := gkMoney;
+    G.AddColumn('On').Field := 'on';
+    G.Columns[1].Kind := gkDate;
+    G.AddColumn('Paid').Field := 'paid';
+    G.Columns[2].Kind := gkCheck;
+    G.LoadJson(A);
+    AssertEquals('1380.6', G.Cells[0, 0], 'the cell keeps the value');
+    AssertEquals('1,380.60', G.Columns[0].DisplayText(G.Cells[0, 0]), 'shown as money');
+    AssertTrue(G.Columns[0].Alignment = taRight, 'numbers at the right');
+    AssertEquals('11/03/2026', G.Columns[1].DisplayText(G.Cells[1, 0]));
+    AssertEquals('11/04/2026 09:30', G.Columns[1].DisplayText(G.Cells[1, 1]));
+    G.SortBy(0);
+    AssertEquals('99.5', G.Cells[0, 0], 'numbers sort as numbers');
+    G.SortBy(1);
+    AssertEquals('2025-01-02', G.Cells[1, 0], 'dates sort as dates');
+    G.Editable := True;
+    G.ToggleCheck(2, 0);
+    AssertEquals('0', G.Cells[2, 0]);
+    O := G.ToJson;
+    try
+      AssertEquals('[{"total":99.5,"on":"2025-01-02","paid":false},{"total":1380.6,"on":"2026-11-03","paid":true},' +
+        '{"total":250,"on":"2026-11-0409:30","paid":false}]', StringReplace(O.AsJSON, ' ', '', [rfReplaceAll]),
+        'numbers and true/false as such');
+    finally
+      O.Free;
+    end;
+    Form.Width := 400;
+    G.Parent := Form;
+    G.Height := 200;
+    Render;                 { check boxes and icons are drawn without trouble }
+  finally
+    A.Free;
+  end;
+end;
+
+procedure TUITests.GridFilterAndCsv;
+var
+  G: TGrid;
+begin
+  G := TGrid.Create(nil);
+  try
+    G.AddColumn('Name');
+    G.AddColumn('Phone');
+    G.AddRow(['Ayşe Yılmaz', '0532']);
+    G.AddRow(['Ali Can', '0533']);
+    G.AddRow(['Zeynep "Z" Kaya', '0544']);
+    G.Filter('ayşe');
+    AssertEquals(1, G.RowCount);
+    G.Cells[1, 0] := '0500';
+    G.Filter('053');
+    AssertEquals(1, G.RowCount, 'Ali; Ayşe has 0500 now');
+    G.Filter('');
+    AssertEquals(3, G.RowCount);
+    AssertEquals('0500', G.Cells[1, 0], 'changes made while filtered stay');
+    AssertEquals('Name;Phone'#13#10'Ayşe Yılmaz;0500'#13#10'Ali Can;0533'#13#10'"Zeynep ""Z"" Kaya";0544'#13#10,
+      G.ToCsv(';'));
+  finally
+    G.Free;
+  end;
+end;
+
+procedure TUITests.AFlowWrapsItsChildren;
+var
+  F: TFlow;
+  I: Integer;
+  B: TButton;
+begin
+  F := TFlow.Create(Form);
+  F.Parent := Form;
+  for I := 1 to 6 do
+  begin
+    B := TButton.Create(Form);
+    B.Text := 'Button ' + IntToStr(I);
+    B.Width := 120;
+    B.Parent := F;
+  end;
+  Form.Layout(300, 300);
+  AssertEquals(F.Children[0].Bounds.Y, F.Children[1].Bounds.Y, 'two in the first line');
+  AssertTrue(F.Children[2].Bounds.Y > F.Children[1].Bounds.Y, 'the third on the next line');
+  AssertEquals(F.Children[0].Bounds.X, F.Children[2].Bounds.X, 'from the left again');
+  AssertTrue(F.Bounds.H >= 3 * F.Children[0].Bounds.H, 'three lines high');
 end;
 
 initialization

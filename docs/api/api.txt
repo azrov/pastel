@@ -340,15 +340,18 @@ Pastel.Grids: TGrid.function AddRow(const Values: array of string): Integer
 Pastel.Grids: TGrid.function CommitEdit: Boolean
 Pastel.Grids: TGrid.function FindRow(ACol: Integer; const Value: string): Integer
 Pastel.Grids: TGrid.function Font: TPastelFont
+Pastel.Grids: TGrid.function ToCsv(Separator: Char = ','): string
 Pastel.Grids: TGrid.function ToJson: TJSONArray
 Pastel.Grids: TGrid.procedure CancelEdit
 Pastel.Grids: TGrid.procedure Clear
 Pastel.Grids: TGrid.procedure DeleteRow(Index: Integer)
 Pastel.Grids: TGrid.procedure EditCell(const Text: string = ''; Replace: Boolean = False)
+Pastel.Grids: TGrid.procedure Filter(const Text: string)
 Pastel.Grids: TGrid.procedure InsertRow(Index: Integer; const Values: array of string)
 Pastel.Grids: TGrid.procedure LoadJson(Rows: TJSONArray)
 Pastel.Grids: TGrid.procedure MakeVisible(ARow: Integer; ACol: Integer = -1)
 Pastel.Grids: TGrid.procedure SortBy(ACol: Integer; Descending: Boolean = False)
+Pastel.Grids: TGrid.procedure ToggleCheck(ACol: Integer; ARow: Integer)
 Pastel.Grids: TGrid.property Cells[ACol: Integer; ARow: Integer]: string
 Pastel.Grids: TGrid.property Col: Integer
 Pastel.Grids: TGrid.property ColCount: Integer
@@ -356,6 +359,7 @@ Pastel.Grids: TGrid.property Columns[Index: Integer]: TGridColumn
 Pastel.Grids: TGrid.property Editable: Boolean
 Pastel.Grids: TGrid.property Editing: Boolean
 Pastel.Grids: TGrid.property Editor: TGridEditor
+Pastel.Grids: TGrid.property FilterText: string
 Pastel.Grids: TGrid.property OnCellEdit: TGridCellEvent
 Pastel.Grids: TGrid.property OnChange: TNotifyEvent
 Pastel.Grids: TGrid.property OnDblClick: TNotifyEvent
@@ -369,11 +373,21 @@ Pastel.Grids: TGrid.property SortColumn: Integer
 Pastel.Grids: TGrid.property SortDescending: Boolean
 Pastel.Grids: TGrid.property Sortable: Boolean
 Pastel.Grids: TGrid.property Striped: Boolean
+Pastel.Grids: TGridColumn.constructor Create(AOwner: TComponent)
+Pastel.Grids: TGridColumn.function DisplayText(const Value: string): string
 Pastel.Grids: TGridColumn.function Grid: TGrid
 Pastel.Grids: TGridColumn.property Alignment: TTextAlign
+Pastel.Grids: TGridColumn.property Decimals: Integer
 Pastel.Grids: TGridColumn.property Field: string
+Pastel.Grids: TGridColumn.property Kind: TGridColumnKind
 Pastel.Grids: TGridColumn.property ReadOnly: Boolean
 Pastel.Grids: TGridColumn.property Title: string
+Pastel.Grids: TGridColumnKind.gkCheck
+Pastel.Grids: TGridColumnKind.gkDate
+Pastel.Grids: TGridColumnKind.gkIcon
+Pastel.Grids: TGridColumnKind.gkMoney
+Pastel.Grids: TGridColumnKind.gkNumber
+Pastel.Grids: TGridColumnKind.gkText
 Pastel.Grids: TListView.constructor Create(AOwner: TComponent)
 Pastel.Grids: TListView.property RowSelect
 Pastel.Grids: TTreeNode.Data: Pointer
@@ -414,6 +428,7 @@ Pastel.Grids: TTreeView.property TopNodes[AIndex: Integer]: TTreeNode
 Pastel.Grids: type TGrid = class(TControl)
 Pastel.Grids: type TGridCellEvent = procedure(Sender: TObject; ACol: Integer; ARow: Integer; Value: string; Accept: Boolean)
 Pastel.Grids: type TGridColumn = class(TControl)
+Pastel.Grids: type TGridColumnKind = (gkText, gkNumber, gkMoney, gkDate, gkCheck, gkIcon)
 Pastel.Grids: type TGridEditor = class(TEdit)
 Pastel.Grids: type TListView = class(TGrid)
 Pastel.Grids: type TTreeNode = class
@@ -615,6 +630,7 @@ Pastel.Menus: TMenuBar.function OpenItem: TMenuItem
 Pastel.Menus: TMenuBar.procedure CloseMenu
 Pastel.Menus: TMenuBar.procedure OpenMenu(Item: TMenuItem)
 Pastel.Menus: TMenuItem.function DisplayCaption: string
+Pastel.Menus: TMenuItem.function DisplayIcon: string
 Pastel.Menus: TMenuItem.function DisplayShortCut: string
 Pastel.Menus: TMenuItem.function HasSubmenu: Boolean
 Pastel.Menus: TMenuItem.function IsChecked: Boolean
@@ -625,6 +641,7 @@ Pastel.Menus: TMenuItem.procedure Notification(AComponent: TComponent; Operation
 Pastel.Menus: TMenuItem.property Action: TBasicAction
 Pastel.Menus: TMenuItem.property Caption: string
 Pastel.Menus: TMenuItem.property Checked: Boolean
+Pastel.Menus: TMenuItem.property Icon: string
 Pastel.Menus: TMenuItem.property OnClick: TNotifyEvent
 Pastel.Menus: TMenuItem.property ShortCut: string
 Pastel.Menus: TMenuView.constructor CreateFor(AOwner: TComponent; ASource: TControl)
@@ -914,6 +931,7 @@ Pastel.UI: TAction.property Caption: string
 Pastel.UI: TAction.property Checked: Boolean
 Pastel.UI: TAction.property Enabled: Boolean
 Pastel.UI: TAction.property Hint: string
+Pastel.UI: TAction.property Icon: string
 Pastel.UI: TAction.property OnExecute
 Pastel.UI: TAction.property ShortCut: string
 Pastel.UI: TAlignItems.aiCenter
@@ -998,6 +1016,7 @@ Pastel.UI: TEdit.property Text
 Pastel.UI: TEditState.Anchor: Integer
 Pastel.UI: TEditState.Caret: Integer
 Pastel.UI: TEditState.Text: string
+Pastel.UI: TFlow.constructor Create(AOwner: TComponent)
 Pastel.UI: TForm.constructor Create(AOwner: TComponent)
 Pastel.UI: TForm.destructor Destroy
 Pastel.UI: TForm.function BindComponent(const AName: string; AClass: TComponentClass): TComponent
@@ -1194,12 +1213,14 @@ Pastel.UI: type TCustomEdit = class(TControl)
 Pastel.UI: type TEdit = class(TCustomEdit)
 Pastel.UI: type TEditState = record
 Pastel.UI: type TEditStates = array of TEditState
+Pastel.UI: type TFlow = class(TBox)
 Pastel.UI: type TForm = class(TBox)
 Pastel.UI: type TFormClass = class of TForm
 Pastel.UI: type TJustify = (jsStart, jsCenter, jsEnd, jsSpaceBetween)
 Pastel.UI: type TLabel = class(TControl)
 Pastel.UI: type TMemo = class(TCustomEdit)
 Pastel.UI: type TPopup = class(TBox)
+Pastel.UI: type TRectArray = array of TRectI
 Pastel.UI: type TRow = class(TBox)
 Pastel.UI: type TSpacer = class(TControl)
 Pastel.UI: type TTextAlign = (taLeft, taCenter, taRight)

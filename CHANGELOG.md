@@ -2,6 +2,16 @@
 
 The `pastel` tool and the framework. The VS Code extension has its own list: [vscode/CHANGELOG.md](vscode/CHANGELOG.md). What is planned is in [ROADMAP.md](ROADMAP.md).
 
+## 1.2.0
+
+Everyday desktop comfort.
+
+- Grids: `TGridColumn.Kind` — `Number`, `Money`, `Date` (shown the language's way, sorted as what they are, numbers typed the language's way), `Check` (a check box), `Icon`; `Decimals`; `Filter(Text)` shows only matching rows; `ToCsv`; `ToJson` gives numbers and true/false
+- `TFlow`: a row that wraps into more lines
+- Icons on menu items and on actions (their buttons and menu items share it)
+- Grid values from JSON as plain numbers (`1380.6`, not `1.3806E+003`)
+- The salon: invoices with a money and a check box column, and a search
+
 ## 1.1.0
 
 Reports and documents.

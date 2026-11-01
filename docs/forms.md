@@ -148,11 +148,12 @@ All controls have `Width`, `Height`, `Grow`, `Visible`, `Enabled`, `Hint` (a too
 | `TProgressBar` | `Position`, `Max`, `Indeterminate` | |
 | `TSlider` | `Position`, `Min`, `Max`, `Step` | `OnChange` |
 | `TSpinner` | `Active` | |
+| `TFlow` | A row that wraps into more lines: tags, buttons, small cards; `Gap` | |
 | `TSplitter` | Between two controls of a row or column; dragging it changes the `Width`/`Height` of the one before it; `MinSize` | `OnMoved` |
 | `TToolBar`, `TStatusBar` | Rows at the top and bottom of a form: flat buttons (`Style = Flat`); `Text` or labels | |
 | `TDatePicker`, `TCalendarView` | A date: `DateText = '2026-11-01'`, `Placeholder`; `Date`, `HasDate`, `Clear` from code | `OnChange`, `OnPick` |
 | `TTimeEdit`, `TNumberEdit`, `TCurrencyEdit` | A time (`Step` minutes), a whole number (`Min`, `Max`, `Step`, `Value`), an amount (`Symbol`, `Decimals`, `Value`) — [controls.md](controls.md#dates-numbers-and-money) | `OnChange` |
-| `TGrid`, `TListView` | A table: `TGridColumn` children (`Title`, `Field`, `Width`), `Editable`, `Sortable`; `LoadJson` from code | `OnChange`, `OnDblClick`, `OnCellEdit` |
+| `TGrid`, `TListView` | A table: `TGridColumn` children (`Title`, `Field`, `Width`, `Kind = Money`/`Date`/`Check`...), `Editable`, `Sortable`; `LoadJson`, `Filter`, `ToCsv` from code | `OnChange`, `OnDblClick`, `OnCellEdit` |
 | `TTreeView` | A tree: `Items = ('Documents', '  Letters')` | `OnChange`, `OnDblClick` |
 | `TDataBinding` | Fills edits from a record and back: `Fields = ('NameEdit', 'EmailEdit')` | |
 | `TMenuBar`, `TMenuItem`, `TPopupMenu` | Menus: `Caption` (`'-'` is a line), `ShortCut = 'Ctrl+S'`, `Checked`, `Action`; items inside items are submenus | `OnClick` |

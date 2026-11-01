@@ -29,8 +29,28 @@ Tables and trees.
 
 `uses Pastel.Grids;` · source: [framework/src/pastel.grids.pas](../../framework/src/pastel.grids.pas)
 
+**Contents:** [TGridColumnKind](#tgridcolumnkind) · [TGridColumn](#tgridcolumn) · [TGridEditor](#tgrideditor) · [TGrid](#tgrid) · [TListView](#tlistview) · [TTreeNode](#ttreenode) · [TTreeView](#ttreeview)
+
 ## Types
 
+### TGridColumnKind
+
+```pascal
+type TGridColumnKind = (gkText, gkNumber, gkMoney, gkDate, gkCheck, gkIcon)
+```
+
+What a column holds. The cells keep the value as data ('1380.6',
+'2026-11-03', '1'); the column shows it the way the language writes it,
+sorts it as what it is, and gives it to ToJson as a number or true/false.
+gkCheck: a check box (a click or Space changes it in an Editable grid);
+gkIcon: the cell is the name of an icon (Pastel.Icons).
+
+- `gkText` What a column holds. The cells keep the value as data ('1380.6', '2026-11-03', '1'); the column shows it the way the language writes it, sorts it as what it is, and gives it to ToJson as a number or true/false. gkCheck: a check box (a click or Space changes it in an Editable grid); gkIcon: the cell is the name of an icon (Pastel.Icons).
+- `gkNumber` What a column holds. The cells keep the value as data ('1380.6', '2026-11-03', '1'); the column shows it the way the language writes it, sorts it as what it is, and gives it to ToJson as a number or true/false. gkCheck: a check box (a click or Space changes it in an Editable grid); gkIcon: the cell is the name of an icon (Pastel.Icons).
+- `gkMoney` What a column holds. The cells keep the value as data ('1380.6', '2026-11-03', '1'); the column shows it the way the language writes it, sorts it as what it is, and gives it to ToJson as a number or true/false. gkCheck: a check box (a click or Space changes it in an Editable grid); gkIcon: the cell is the name of an icon (Pastel.Icons).
+- `gkDate` What a column holds. The cells keep the value as data ('1380.6', '2026-11-03', '1'); the column shows it the way the language writes it, sorts it as what it is, and gives it to ToJson as a number or true/false. gkCheck: a check box (a click or Space changes it in an Editable grid); gkIcon: the cell is the name of an icon (Pastel.Icons).
+- `gkCheck` What a column holds. The cells keep the value as data ('1380.6', '2026-11-03', '1'); the column shows it the way the language writes it, sorts it as what it is, and gives it to ToJson as a number or true/false. gkCheck: a check box (a click or Space changes it in an Editable grid); gkIcon: the cell is the name of an icon (Pastel.Icons).
+- `gkIcon` What a column holds. The cells keep the value as data ('1380.6', '2026-11-03', '1'); the column shows it the way the language writes it, sorts it as what it is, and gives it to ToJson as a number or true/false. gkCheck: a check box (a click or Space changes it in an Editable grid); gkIcon: the cell is the name of an icon (Pastel.Icons).
 ### TGridColumn
 
 ```pascal
@@ -41,7 +61,11 @@ One column of a TGrid. Width 0 shares the free space.
 
 | | |
 |---|---|
+| `constructor Create(AOwner: TComponent)` |  |
 | `function Grid: TGrid` |  |
+| `function DisplayText(const Value: string): string` | How a cell's value is shown: 1380.6 -> '1,380.60' for money. |
+| `property Kind: TGridColumnKind` |  |
+| `property Decimals: Integer` | Digits after the point for numbers (-1: as many as the value has); money has 2 unless set. |
 | `property Title: string` |  |
 | `property Field: string` | The name of the value in LoadJson (a database column); the Title when empty. |
 | `property Alignment: TTextAlign` |  |
@@ -74,6 +98,10 @@ A table of texts with columns.
 | `procedure LoadJson(Rows: TJSONArray)` | Fills the grid from JSON objects (Db.Query): one row per object, each column takes the value named by its Field (or Title). Without columns, one is made for every name in the first object. Frees nothing. |
 | `function ToJson: TJSONArray` | The rows as JSON objects named by Field (or Title); the caller frees it. |
 | `function FindRow(ACol: Integer; const Value: string): Integer` | Index of the row whose cell in ACol is Value, -1 when there is none. |
+| `procedure Filter(const Text: string)` | Shows only the rows with Text in one of their cells (as shown, any case); '' shows all again. Rows, Cells and Row then count the shown rows; changes of cells are kept. |
+| `property FilterText: string` | The text of the current filter. |
+| `function ToCsv(Separator: Char = ','): string` | The shown rows as CSV (with the titles first), for Excel: SaveToFile(Grid.ToCsv(';')). |
+| `procedure ToggleCheck(ACol: Integer; ARow: Integer)` | Sets a check box cell (gkCheck): '1' or '0'. |
 | `procedure MakeVisible(ARow: Integer; ACol: Integer = -1)` |  |
 | `procedure EditCell(const Text: string = ''; Replace: Boolean = False)` | Starts editing the current cell; Text replaces the value when given. |
 | `function CommitEdit: Boolean` | Ends editing: stores the value (OnCellEdit may refuse it). |

@@ -9,7 +9,7 @@ Controls, layout and input handling.
 
 `uses Pastel.UI;` · source: [framework/src/pastel.ui.pas](../../framework/src/pastel.ui.pas)
 
-**Contents:** [TAlignItems](#talignitems) · [TJustify](#tjustify) · [TTextAlign](#ttextalign) · [TButtonStyle](#tbuttonstyle) · [TCursorKind](#tcursorkind) · [TWindowState](#twindowstate) · [TThemeMode](#tthememode) · [TControl](#tcontrol) · [TAction](#taction) · [TBox](#tbox) · [TColumn](#tcolumn) · [TRow](#trow) · [TCard](#tcard) · [TSpacer](#tspacer) · [TLabel](#tlabel) · [TButton](#tbutton) · [TEditState](#teditstate) · [TVisualLine](#tvisualline) · [TCustomEdit](#tcustomedit) · [TEdit](#tedit) · [TMemo](#tmemo) · [TPopup](#tpopup) · [TTimer](#ttimer) · [TForm](#tform) · [TTheme](#ttheme) · [UseDarkTheme](#usedarktheme) · [SetThemeValue](#setthemevalue) · [InvalidateArea](#invalidatearea) · [RequestAnimation](#requestanimation) · [AnimationTime](#animationtime) · [RequestAnimation](#requestanimation) · [ProcessTimers](#processtimers) · [WrapText](#wraptext) · [RegisterControl](#registercontrol) · [FindControlClass](#findcontrolclass) · [ControlClassCount](#controlclasscount) · [ControlClassAt](#controlclassat) · [RegisterNonVisual](#registernonvisual) · [FindNonVisualClass](#findnonvisualclass) · [NonVisualClassCount](#nonvisualclasscount) · [NonVisualClassAt](#nonvisualclassat)
+**Contents:** [TAlignItems](#talignitems) · [TJustify](#tjustify) · [TTextAlign](#ttextalign) · [TButtonStyle](#tbuttonstyle) · [TCursorKind](#tcursorkind) · [TWindowState](#twindowstate) · [TThemeMode](#tthememode) · [TControl](#tcontrol) · [TAction](#taction) · [TBox](#tbox) · [TColumn](#tcolumn) · [TRow](#trow) · [TFlow](#tflow) · [TCard](#tcard) · [TSpacer](#tspacer) · [TLabel](#tlabel) · [TButton](#tbutton) · [TEditState](#teditstate) · [TVisualLine](#tvisualline) · [TCustomEdit](#tcustomedit) · [TEdit](#tedit) · [TMemo](#tmemo) · [TPopup](#tpopup) · [TTimer](#ttimer) · [TForm](#tform) · [TTheme](#ttheme) · [UseDarkTheme](#usedarktheme) · [SetThemeValue](#setthemevalue) · [InvalidateArea](#invalidatearea) · [RequestAnimation](#requestanimation) · [AnimationTime](#animationtime) · [RequestAnimation](#requestanimation) · [ProcessTimers](#processtimers) · [WrapText](#wraptext) · [RegisterControl](#registercontrol) · [FindControlClass](#findcontrolclass) · [ControlClassCount](#controlclasscount) · [ControlClassAt](#controlclassat) · [RegisterNonVisual](#registernonvisual) · [FindNonVisualClass](#findnonvisualclass) · [NonVisualClassCount](#nonvisualclasscount) · [NonVisualClassAt](#nonvisualclassat)
 
 ## Types
 
@@ -131,6 +131,7 @@ buttons: one place for what happens, and for Enabled and Checked.
 | `property Caption: string` |  |
 | `property ShortCut: string` | Like 'Ctrl+S', 'Ctrl+Shift+Z', 'F5', 'Delete'. |
 | `property Hint: string` |  |
+| `property Icon: string` | A built-in icon for its buttons and menu items ('save', 'print'...). |
 | `property Enabled: Boolean` |  |
 | `property Checked: Boolean` |  |
 | `property OnExecute` |  |
@@ -166,6 +167,21 @@ type TColumn = class(TBox)
 ```pascal
 type TRow = class(TBox)
 ```
+
+| | |
+|---|---|
+| `constructor Create(AOwner: TComponent)` |  |
+
+### TFlow
+
+```pascal
+type TFlow = class(TBox)
+```
+
+A row that wraps: children are placed left to right, and continue on
+the next line when there is no room (chips, tags, buttons, small cards).
+Gap is the space between them, also between lines; in each line the
+ones with Grow share what is left.
 
 | | |
 |---|---|
@@ -472,6 +488,7 @@ type TTheme = record
 |---|---|
 | `type TCloseQueryEvent = procedure(Sender: TObject; CanClose: Boolean)` |  |
 | `type TControlClass = class of TControl` |  |
+| `type TRectArray = array of TRectI` |  |
 | `type TEditStates = array of TEditState` |  |
 | `type TFormClass = class of TForm` |  |
 

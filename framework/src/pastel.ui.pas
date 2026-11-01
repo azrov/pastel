@@ -110,7 +110,7 @@ type
     buttons: one place for what happens, and for Enabled and Checked. }
   TAction = class(TBasicAction)
   private
-    FCaption, FShortCut, FHint: string;
+    FCaption, FShortCut, FHint, FIcon: string;
     FEnabled, FChecked: Boolean;
     procedure SetEnabled(AValue: Boolean);
     procedure SetChecked(AValue: Boolean);
@@ -122,6 +122,8 @@ type
     { Like 'Ctrl+S', 'Ctrl+Shift+Z', 'F5', 'Delete'. }
     property ShortCut: string read FShortCut write FShortCut;
     property Hint: string read FHint write FHint;
+    { A built-in icon for its buttons and menu items ('save', 'print'...). }
+    property Icon: string read FIcon write FIcon;
     property Enabled: Boolean read FEnabled write SetEnabled default True;
     property Checked: Boolean read FChecked write SetChecked default False;
     property OnExecute;
@@ -168,6 +170,22 @@ type
   TColumn = class(TBox);
 
   TRow = class(TBox)
+  public
+    constructor Create(AOwner: TComponent); override;
+  end;
+
+  TRectArray = array of TRectI;
+
+  { A row that wraps: children are placed left to right, and continue on
+    the next line when there is no room (chips, tags, buttons, small cards).
+    Gap is the space between them, also between lines; in each line the
+    ones with Grow share what is left. }
+  TFlow = class(TBox)
+  private
+    function Lines(AWidth: Integer; out Sizes: TRectArray): Integer;
+  protected
+    procedure Measure(AvailWidth: Integer; out W, H: Integer); override;
+    procedure Arrange(const R: TRectI); override;
   public
     constructor Create(AOwner: TComponent); override;
   end;
@@ -231,6 +249,7 @@ type
     procedure SetText(const AValue: string);
     procedure SetIcon(const AValue: string);
     function IconSize: Integer;
+    function GetIcon: string;
     procedure SetStyle(AValue: TButtonStyle);
     procedure SetAction(AValue: TBasicAction);
     function GetText: string;
@@ -1580,6 +1599,105 @@ begin
   FAlign := aiCenter;
 end;
 
+constructor TFlow.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FRow := True;
+  FGap := 8;
+  FAlign := aiCenter;
+end;
+
+{ the children's places relative to the inner top left; returns the height }
+function TFlow.Lines(AWidth: Integer; out Sizes: TRectArray): Integer;
+var
+  I, X, Y, LineH, First, CW, CH, GrowSum, Extra, Shift: Integer;
+  Child: TControl;
+
+  procedure EndLine(Last: Integer);
+  var
+    K: Integer;
+  begin
+    { what is left goes to the growing ones; then centre in the line's height }
+    Extra := AWidth - X + FGap;
+    if (Extra > 0) and (GrowSum > 0) then
+    begin
+      Shift := 0;
+      for K := First to Last do
+        if Children[K].Visible then
+        begin
+          Sizes[K].X := Sizes[K].X + Shift;
+          if Children[K].Grow > 0 then
+          begin
+            Sizes[K].W := Sizes[K].W + Extra * Children[K].Grow div GrowSum;
+            Inc(Shift, Extra * Children[K].Grow div GrowSum);
+          end;
+        end;
+    end;
+    for K := First to Last do
+      if Children[K].Visible then
+        case FAlign of
+          aiCenter: Sizes[K].Y := Y + (LineH - Sizes[K].H) div 2;
+          aiEnd: Sizes[K].Y := Y + LineH - Sizes[K].H;
+          aiStretch: begin Sizes[K].Y := Y; if Children[K].Height = 0 then Sizes[K].H := LineH; end;
+        else
+          Sizes[K].Y := Y;
+        end;
+  end;
+
+begin
+  SetLength(Sizes, ChildCount);
+  X := 0;
+  Y := 0;
+  LineH := 0;
+  First := 0;
+  GrowSum := 0;
+  for I := 0 to ChildCount - 1 do
+  begin
+    Child := Children[I];
+    if not Child.Visible then
+      Continue;
+    Child.GetSize(AWidth, CW, CH);
+    CW := Min(CW, AWidth);
+    if (X > 0) and (X + CW > AWidth) then
+    begin
+      EndLine(I - 1);
+      Inc(Y, LineH + FGap);
+      X := 0;
+      LineH := 0;
+      First := I;
+      GrowSum := 0;
+    end;
+    Sizes[I] := RectI(X, Y, CW, CH);
+    Inc(X, CW + FGap);
+    LineH := Max(LineH, CH);
+    Inc(GrowSum, Child.Grow);
+  end;
+  EndLine(ChildCount - 1);
+  Result := Y + LineH;
+end;
+
+procedure TFlow.Measure(AvailWidth: Integer; out W, H: Integer);
+var
+  Sizes: TRectArray;
+  Inner: Integer;
+begin
+  Inner := Max(0, AvailWidth - 2 * FPadding);
+  H := Lines(Inner, Sizes) + 2 * FPadding;
+  W := AvailWidth;
+end;
+
+procedure TFlow.Arrange(const R: TRectI);
+var
+  Sizes: TRectArray;
+  I: Integer;
+begin
+  SetBoundsOnly(R);
+  Lines(Max(0, R.W - 2 * FPadding), Sizes);
+  for I := 0 to ChildCount - 1 do
+    if Children[I].Visible then
+      Children[I].Arrange(RectI(R.X + FPadding + Sizes[I].X, R.Y + FPadding + Sizes[I].Y, Sizes[I].W, Sizes[I].H));
+end;
+
 constructor TCard.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
@@ -1756,6 +1874,13 @@ begin
   Changed;
 end;
 
+function TButton.GetIcon: string;
+begin
+  Result := FIcon;
+  if (Result = '') and (FAction is TAction) then
+    Result := TAction(FAction).Icon;
+end;
+
 function TButton.GetText: string;
 begin
   Result := FText;
@@ -1798,7 +1923,7 @@ var
 begin
   F := GetFont(Theme.FontSize, True);
   W := F.TextWidth(GetText);
-  if HasIcon(FIcon) then
+  if HasIcon(GetIcon) then
   begin
     if GetText <> '' then
       Inc(W, 6);
@@ -1885,7 +2010,7 @@ begin
     C.FillRoundRect(Bounds.X, Bounds.Y, Bounds.W, Bounds.H, Theme.Radius, Bg);
   C.PushClip(Bounds);
   IW := 0;
-  if HasIcon(FIcon) then
+  if HasIcon(GetIcon) then
   begin
     IS_ := IconSize;
     IW := IS_;
@@ -1894,7 +2019,7 @@ begin
   end;
   X := Bounds.X + (Bounds.W - IW - F.TextWidth(S)) div 2;
   if IW > 0 then
-    DrawIcon(C, FIcon, X, Bounds.Y + (Bounds.H - IS_) div 2, IS_, Fg);
+    DrawIcon(C, GetIcon, X, Bounds.Y + (Bounds.H - IS_) div 2, IS_, Fg);
   C.DrawText(F, X + IW, Bounds.Y + (Bounds.H - F.LineHeight) div 2, S, Fg);
   C.PopClip;
 end;
@@ -2764,6 +2889,7 @@ initialization
   RegisterNonVisual(TAction);
   RegisterControl(TColumn);
   RegisterControl(TRow);
+  RegisterControl(TFlow);
   RegisterControl(TCard);
   RegisterControl(TSpacer);
   RegisterControl(TLabel);

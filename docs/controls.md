@@ -2,7 +2,7 @@
 
 Every control and component of Pastel, each with an example for the `.pform` file and for the code. Properties that every control has (`Width`, `Height`, `Grow`, `Visible`, `Enabled`, `Hint`, `PopupMenu`) are explained once, under [Common properties](#common-properties). How forms work in general: [forms.md](forms.md); a whole app step by step: [guide-desktop.md](guide-desktop.md); writing controls of your own: [components.md](components.md).
 
-**Layout:** [TColumn](#tcolumn) · [TRow](#trow) · [TCard](#tcard) · [TScrollBox](#tscrollbox) · [TTabControl](#ttabcontrol) · [TTabSheet](#ttabsheet) · [TSpacer](#tspacer) · [TSplitter](#tsplitter) · [TToolBar](#ttoolbar) · [TStatusBar](#tstatusbar)
+**Layout:** [TColumn](#tcolumn) · [TRow](#trow) · [TCard](#tcard) · [TScrollBox](#tscrollbox) · [TTabControl](#ttabcontrol) · [TTabSheet](#ttabsheet) · [TSpacer](#tspacer) · [TFlow](#tflow) · [TSplitter](#tsplitter) · [TToolBar](#ttoolbar) · [TStatusBar](#tstatusbar)
 **Text:** [TLabel](#tlabel) · [TEdit](#tedit) · [TMemo](#tmemo)
 **Dates, numbers and money:** [TDatePicker](#tdatepicker) · [TCalendarView](#tcalendarview) · [TTimeEdit](#ttimeedit) · [TNumberEdit](#tnumberedit) · [TCurrencyEdit](#tcurrencyedit)
 **Choices:** [TButton](#tbutton) · [TCheckBox](#tcheckbox) · [TSwitch](#tswitch) · [TRadioButton](#tradiobutton) · [TComboBox](#tcombobox) · [TListBox](#tlistbox) · [TSlider](#tslider)
@@ -138,6 +138,36 @@ object StatusBar: TStatusBar
   end
 end
 ```
+
+### TFlow
+
+A row that wraps: the controls are placed left to right and go on in the next line when there is no more room — for tags, chips, a set of buttons, small cards that fill a wide window and stack on a narrow one. `Gap` is the space between them and between the lines; in each line, the ones with `Grow` share what is left.
+
+```
+object Services: TFlow
+  Gap = 8
+  object Cut: TButton
+    Text = 'Cut'
+    Style = Secondary
+  end
+  object Color: TButton
+    Text = 'Color'
+    Style = Secondary
+  end
+  object Care: TButton
+    Text = 'Care'
+    Style = Secondary
+  end
+end
+```
+
+```pascal
+B := TButton.Create(Self);
+B.Text := Name;
+B.Parent := Services;          // added at the end; the flow places it
+```
+
+`Align` places the controls of a line at its top (`Start`), middle (`Center`, the default) or bottom.
 
 ### TSplitter
 
@@ -608,7 +638,40 @@ end;
 | `OnCellEdit` | A cell was edited: change `Value`, or set `Accept := False` |
 | `OnSort` | The rows were sorted |
 
-From code: `AddRow`, `InsertRow`, `DeleteRow`, `Clear`, `RowCount`, `Cells[Col, Row]`, `RowValues[Row]`, `LoadJson`, `ToJson`, `SortBy`, `FindRow(Col, Value)`, `MakeVisible`, `AddColumn`.
+From code: `AddRow`, `InsertRow`, `DeleteRow`, `Clear`, `RowCount`, `Cells[Col, Row]`, `RowValues[Row]`, `LoadJson`, `ToJson`, `SortBy`, `FindRow(Col, Value)`, `MakeVisible`, `AddColumn`, `ToggleCheck(Col, Row)`.
+
+**Numbers, money, dates, check boxes, icons.** A column's `Kind` says what its cells hold. The cell keeps the value as data — `'1380.6'`, `'2026-11-03'`, `'1'` — and the column shows it the way the language writes it (`1.380,60` in Turkish), sorts it as a number or a date, and `ToJson` gives numbers and true/false:
+
+```
+object TotalColumn: TGridColumn
+  Title = 'Total'
+  Field = 'total'
+  Kind = Money              // Text, Number, Money, Date, Check, Icon
+end
+object PaidColumn: TGridColumn
+  Title = 'Paid'
+  Field = 'paid'
+  Kind = Check              // a check box; a click or Space changes it in an Editable grid
+end
+object StateColumn: TGridColumn
+  Field = 'state_icon'
+  Kind = Icon               // the cell is an icon's name: 'check', 'warning'...
+  Width = 40
+end
+```
+
+Numbers are typed the language's way (`1.380,6`) and kept as `1380.6`. `Decimals` sets the digits after the point (money: 2).
+
+**Searching.** `Filter(Text)` shows only the rows with the text in a cell (as shown, any case); `Filter('')` shows all again. Row numbers then count the shown rows; changes made meanwhile stay.
+
+```pascal
+procedure THomeForm.SearchChange(Sender: TObject);
+begin
+  Invoices.Filter(Trim(SearchEdit.Text));
+end;
+```
+
+**To Excel.** `ToCsv(';')` gives the shown rows as CSV with the titles, which Excel opens; for a real `.xlsx`, `TSpreadsheet.AddJson(Grid.ToJson, ...)` ([documents.md](documents.md#excel-and-csv)).
 
 ### TGridColumn
 
@@ -620,6 +683,8 @@ One column of a [TGrid](#tgrid) or [TListView](#tlistview).
 | `Field` | The name in `LoadJson` / `ToJson` (a database column); the `Title` when empty |
 | `Width` | 0 = shares the free space |
 | `Alignment` | `Left`, `Center`, `Right` (numbers) |
+| `Kind` | `Text`, `Number`, `Money`, `Date`, `Check`, `Icon` — how the values are shown and sorted ([TGrid](#tgrid)) |
+| `Decimals` | Digits after the point for `Number` and `Money` |
 | `ReadOnly` | This column is not edited in an editable grid |
 
 ### TListView
@@ -752,7 +817,8 @@ end
 | `Caption` | The text; `'-'` is a separator line |
 | `ShortCut` | `'Ctrl+S'`, `'Ctrl+Shift+S'`, `'F5'`, `'Alt+Enter'`; works in the whole window |
 | `Checked` | A check mark (toggle it in `OnClick`) |
-| `Action` | A [TAction](#taction) gives caption, shortcut, `Enabled` and `Checked` |
+| `Icon` | An [icon](#icons) before the caption: `Icon = 'save'` |
+| `Action` | A [TAction](#taction) gives caption, shortcut, icon, `Enabled` and `Checked` |
 | `OnClick` | |
 
 Menu items inside a menu item are a submenu.
@@ -811,11 +877,12 @@ These components are not drawn: they appear at the top of the `.pform` file. In 
 
 ### TAction
 
-One command for a menu item, a button and a shortcut together: they share the caption, and `Enabled := False` disables all of them.
+One command for a menu item, a button and a shortcut together: they share the caption and the icon, and `Enabled := False` disables all of them.
 
 ```
 object DeleteAction: TAction
   Caption = 'Delete'
+  Icon = 'delete'
   ShortCut = 'Ctrl+D'
   OnExecute = DeleteExecute
 end
