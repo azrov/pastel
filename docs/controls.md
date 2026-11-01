@@ -2,7 +2,7 @@
 
 Every control and component of Pastel, each with an example for the `.pform` file and for the code. Properties that every control has (`Width`, `Height`, `Grow`, `Visible`, `Enabled`, `Hint`, `PopupMenu`) are explained once, under [Common properties](#common-properties). How forms work in general: [forms.md](forms.md); a whole app step by step: [guide-desktop.md](guide-desktop.md); writing controls of your own: [components.md](components.md).
 
-**Layout:** [TColumn](#tcolumn) · [TRow](#trow) · [TCard](#tcard) · [TScrollBox](#tscrollbox) · [TTabControl](#ttabcontrol) · [TTabSheet](#ttabsheet) · [TSpacer](#tspacer) · [TFlow](#tflow) · [TSplitter](#tsplitter) · [TToolBar](#ttoolbar) · [TStatusBar](#tstatusbar)
+**Layout:** [TPanel](#tpanel) · [TColumn](#tcolumn) · [TRow](#trow) · [TCard](#tcard) · [TScrollBox](#tscrollbox) · [TTabControl](#ttabcontrol) · [TTabSheet](#ttabsheet) · [TSpacer](#tspacer) · [TFlow](#tflow) · [TSplitter](#tsplitter) · [TToolBar](#ttoolbar) · [TStatusBar](#tstatusbar)
 **Text:** [TLabel](#tlabel) · [TEdit](#tedit) · [TMemo](#tmemo)
 **Dates, numbers and money:** [TDatePicker](#tdatepicker) · [TCalendarView](#tcalendarview) · [TTimeEdit](#ttimeedit) · [TNumberEdit](#tnumberedit) · [TCurrencyEdit](#tcurrencyedit)
 **Choices:** [TButton](#tbutton) · [TCheckBox](#tcheckbox) · [TSwitch](#tswitch) · [TRadioButton](#tradiobutton) · [TComboBox](#tcombobox) · [TListBox](#tlistbox) · [TSlider](#tslider)
@@ -17,6 +17,9 @@ Every control and component of Pastel, each with an example for the `.pform` fil
 | Property | | Example |
 |---|---|---|
 | `Width`, `Height` | Fixed size in pixels; `0` (the default) is as big as the content | `Width = 200` |
+| `Left`, `Top` | The place in a parent with `Layout = Free` ([free placement](forms.md#free-placement)) | `Left = 24` |
+| `Anchors` | In a free parent: the edges that follow the parent's when it is resized | `Anchors = [Left, Top, Right]` |
+| `Dock` | In a free parent: `Top`, `Bottom`, `Left`, `Right` or `Fill` (Delphi's `Align`) | `Dock = Bottom` |
 | `Grow` | Takes the free space of its row or column; `2` takes twice as much as `1` | `Grow = 1` |
 | `Visible` | `False` hides it and gives its space to the others | `Visible = False` |
 | `Enabled` | `False` makes it grey and ignores clicks and keys | `Enabled = False` |
@@ -26,6 +29,37 @@ Every control and component of Pastel, each with an example for the `.pform` fil
 From code, every control has `SetFocus`, `Invalidate` (paint again) and `Bounds` (its place in the window).
 
 ## Layout
+
+### TPanel
+
+A box whose children stay where they are put, like Delphi's `TPanel` (a container with `Layout = Free`). Give it a `Width` and `Height`; `Color`, `BorderColor`, `BorderWidth`, `Radius` and `BackgroundImage` make it visible.
+
+```
+object Details: TPanel
+  Left = 16
+  Top = 64
+  Width = 300
+  Height = 160
+  Anchors = [Left, Top, Right, Bottom]
+  BorderWidth = 1
+  BorderColor = '#D0D4DC'
+  object CityLabel: TLabel
+    Left = 12
+    Top = 12
+    Text = 'City'
+  end
+  object CityEdit: TEdit
+    Left = 80
+    Top = 8
+    Width = 208
+    Anchors = [Left, Top, Right]
+  end
+end
+```
+
+```pascal
+Details.Visible := ShowDetailsCheck.Checked;
+```
 
 ### TColumn
 
@@ -44,6 +78,7 @@ end
 
 | Property | |
 |---|---|
+| `Layout` | `Flow` (default): children below each other; `Free`: where their `Left` and `Top` say ([free placement](forms.md#free-placement)) |
 | `Gap` | Space between the children |
 | `Padding` | Space inside the edges |
 | `Align` | Across the column: `Stretch` (default: as wide as the column), `Start`, `Center`, `End` |

@@ -1362,15 +1362,15 @@ end;
 
 procedure TScrollBox.ScrollIntoView(C: TControl);
 var
-  Top, Bottom: Integer;
+  TopY, BottomY: Integer;
 begin
   { positions inside the content, without the scrolling }
-  Top := C.Bounds.Y - Bounds.Y + FScrollY;
-  Bottom := Top + C.Bounds.H;
-  if Top - 8 < FScrollY then
-    ScrollY := Top - 8
-  else if Bottom + 8 > FScrollY + Bounds.H then
-    ScrollY := Bottom + 8 - Bounds.H;
+  TopY := C.Bounds.Y - Bounds.Y + FScrollY;
+  BottomY := TopY + C.Bounds.H;
+  if TopY - 8 < FScrollY then
+    ScrollY := TopY - 8
+  else if BottomY + 8 > FScrollY + Bounds.H then
+    ScrollY := BottomY + 8 - Bounds.H;
   inherited ScrollIntoView(C);
 end;
 

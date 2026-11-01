@@ -54,6 +54,7 @@ end
 - Numbers: `Width = 200`, `Gap = -2`.
 - `True` / `False` for yes/no properties.
 - Choices can be written short: `Align = Center` is the same as `Align = aiCenter`.
+- Sets are in brackets: `Anchors = [Left, Top, Right]`.
 - Colors are text: `Color = '#4F46E5'` (also `#RGB` and `#AARRGGBB`).
 - Events name a method of your form class: `OnClick = SendClick`. The method must be declared in the class: `procedure SendClick(Sender: TObject);`
 - Comments: `// to the end of the line` and `{ like this }`.
@@ -87,11 +88,24 @@ end;
 
 ## Designing in VS Code
 
-With the Pastel extension, open a `.pform` file and press the designer button in the editor title:
+With the Pastel extension, open a `.pform` file and press the designer button in the editor title. It is laid out like Delphi's IDE: **Structure** and the **Object Inspector** (with *Properties* and *Events* tabs and a search box) on the left, the form in a window frame in the middle, the **Tool Palette** (grouped, with a search box) on the right; timers, actions and other non-visual components sit in a tray under the form.
+
+In a form or panel with `Layout = Free`:
+
+- drop a control from the palette where it should be; it snaps to an 8 pixel grid (*Snap to grid*; hold `Alt` to place it freely)
+- drag controls to move them — also into a panel — and pull the eight grips to resize them; the position and size are shown at the top right
+- `Ctrl+arrows` move the selection by one pixel, `Shift+arrows` change its size
+- select several (`Ctrl+click`) to move them together, or line them up with the align buttons at the top (left, right, top, bottom edges, same width, same height — the control clicked last is the model)
+- double-click an event in the inspector to write its handler, like in Delphi
+
+In a `Flow` container:
 
 - click a control to select it; the editor jumps to its line, and moving the cursor in the editor selects it in the designer
 - change properties in the panel on the right; the → button next to an event opens its code, or creates the handler if it does not exist yet
-- drag controls to move them: the orange line shows where the control will go (between other controls, or into a row, column or card)
+- drag controls to move them: the orange line shows where the control will go (between other controls, or into a row, column or card); the right and bottom grips give a control a fixed `Width` and `Height`
+
+Everywhere:
+
 - drag new controls in from the toolbox, or click one to add it after the selected control
 - `Delete` removes the selected control; `Ctrl+C`, `Ctrl+X`, `Ctrl+V` and `Ctrl+D` (duplicate) copy controls, with new names when a name is taken
 - `F2` or the **Name** row at the top of the properties panel renames a control, and the form's `.pas` code is renamed with it
@@ -100,7 +114,7 @@ With the Pastel extension, open a `.pform` file and press the designer button in
 - `Ctrl+Z` / `Ctrl+Y` undo and redo designer changes (every change is also an ordinary edit of the `.pform` text)
 - the size box shows the form at phone, tablet and desktop sizes; *Dark* shows it in the dark theme
 - `Ctrl+click` selects several controls: change a property of all of them at once (`Style = Secondary` for three buttons), delete, copy or cut them together
-- **⊞ Row**, **⊞ Column** and **⊞ Card** put the selected controls into a new container — the way to lay out a form, since controls are placed by rows and columns, not by coordinates; **Unwrap** takes them out again
+- **⊞ Panel**, **⊞ Row**, **⊞ Column** and **⊞ Card** put the selected controls into a new container; **Unwrap** takes them out again
 - `Alt+Up` / `Alt+Down` (or the ↑ ↓ buttons) move a control before or after its neighbour; `Escape` selects the container it is in
 - **Structure** under the properties lists every object, also timers, actions, data bindings and other components that are not drawn
 - what `pastel check` finds is outlined on the form (a row whose controls are cut off, an unknown property) and listed under it
@@ -117,7 +131,51 @@ What needs a restart: changes to `.pas` code, and new event handlers.
 
 ## Layout
 
-Containers place their children one after another:
+A form (and every container) places its children in one of two ways, chosen with `Layout`:
+
+- **`Layout = Free`** — like Delphi and Lazarus: every control stays where you put it (`Left`, `Top`) at its own size. New forms are made this way, and so is a `TPanel`.
+- **`Layout = Flow`** (the default when `Layout` is not written) — the responsive way: children below each other in a column, side by side in a row, and they follow the window's size.
+
+The two mix: a free form can hold a `TRow` of buttons, and a column can hold a `TPanel` with free-placed controls.
+
+### Free placement
+
+```
+object LoginForm: TLoginForm
+  Width = 420
+  Height = 260
+  Layout = Free
+  object NameEdit: TEdit
+    Left = 24
+    Top = 24
+    Width = 372
+    Anchors = [Left, Top, Right]      // gets wider with the window
+  end
+  object OkButton: TButton
+    Left = 312
+    Top = 208
+    Width = 84
+    Anchors = [Right, Bottom]         // stays in the bottom right corner
+    Text = 'OK'
+  end
+  object Bar: TStatusBar
+    Dock = Bottom                     // Delphi's Align = alBottom
+  end
+end
+```
+
+| Property | |
+|---|---|
+| `Left`, `Top` | The place in the parent, in pixels from its top left corner |
+| `Width`, `Height` | The size; `0` is the control's natural size (a button as wide as its text) |
+| `Anchors` | The edges that keep their distance to the parent's edges when the window is resized: `[Left, Top]` (default) stays put, `[Left, Top, Right]` gets wider, `[Right, Bottom]` moves with the corner. The design size is the parent's `Width` and `Height` |
+| `Dock` | Delphi's `Align`: `Top`, `Bottom`, `Left`, `Right` take that edge of the parent (in order); `Fill` takes what is left |
+
+In a free form `Padding` is 0, so `Left = 0` is the very edge; docked controls keep `Padding` away from the edges when it is set. Controls drawn later are on top; the designer's ↑ ↓ buttons change that order.
+
+### Flow
+
+Containers with `Layout = Flow` place their children one after another:
 
 - `TColumn` stacks children top to bottom; `TRow` places them left to right. The form itself is a column.
 - `Gap`: space between children. `Padding`: space inside the edges.

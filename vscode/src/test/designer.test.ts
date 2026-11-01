@@ -218,4 +218,122 @@ test('errors are shown', () => {
   assert.strictEqual(doc.getElementById('error').textContent, 'Home.pform(3) Error: bad');
 });
 
+// ---- a form with Layout = Free, like a Delphi form ----
+const free = {
+  width: 400, height: 300, controls: [
+    { name: 'LoginForm', class: 'TForm', parent: '', x: 0, y: 0, w: 400, h: 300, container: true, row: false, free: true, visible: true },
+    { name: 'NameEdit', class: 'TEdit', parent: 'LoginForm', x: 16, y: 16, w: 200, h: 32, container: false, row: false, visible: true },
+    { name: 'OkButton', class: 'TButton', parent: 'LoginForm', x: 16, y: 64, w: 80, h: 40, container: false, row: false, visible: true },
+    { name: 'Box', class: 'TPanel', parent: 'LoginForm', x: 200, y: 120, w: 160, h: 120, container: true, row: false, free: true, visible: true },
+    { name: 'Bar', class: 'TPanel', parent: 'LoginForm', x: 0, y: 260, w: 400, h: 40, container: true, row: false, free: true, dock: true, visible: true },
+  ],
+};
+
+test('free layout: a control is dragged to a place on the grid', () => {
+  post({ type: 'render', data: '', layout: free, file: 'Login.pform', title: 'Sign in' });
+  assert.strictEqual(doc.getElementById('wtitle').textContent, 'Sign in', 'the window frame shows the title');
+  sent.length = 0;
+  mouse(stage, 'mousedown', 20, 70);
+  mouse(w, 'mouseup', 20, 70);
+  mouse(stage, 'mousedown', 20, 70);
+  mouse(stage, 'mousemove', 60, 90);
+  mouse(stage, 'mousemove', 71, 93);
+  assert.ok(doc.querySelector('.ghostbox'), 'where it will go is shown');
+  mouse(w, 'mouseup', 71, 93);
+  assert.deepStrictEqual(last('place'), { type: 'place', parent: 'LoginForm', items: [{ name: 'OkButton', left: 64, top: 88 }] },
+    '16 + 51 = 67 snaps to 64; 64 + 23 = 87 snaps to 88');
+});
+
+test('free layout: dragged into a panel, the place is inside it', () => {
+  sent.length = 0;
+  mouse(stage, 'mousedown', 20, 70);
+  mouse(stage, 'mousemove', 220, 150);
+  mouse(stage, 'mousemove', 230, 150);
+  mouse(w, 'mouseup', 230, 150);
+  assert.deepStrictEqual(last('place'), { type: 'place', parent: 'Box', items: [{ name: 'OkButton', left: 24, top: 24 }] });
+});
+
+test('free layout: the grips resize the control', () => {
+  post({ type: 'select', name: 'OkButton', names: ['OkButton'], className: 'TButton', isRoot: false, handlers: [], props: [] });
+  const grips = [...doc.querySelectorAll('.handle')];
+  assert.strictEqual(grips.length, 8, 'eight grips, like Delphi');
+  const se = grips.find((g: any) => g.dataset.dir === 'se');
+  sent.length = 0;
+  se.dispatchEvent(new w.MouseEvent('mousedown', { clientX: 96, clientY: 104, button: 0, bubbles: true }));
+  mouse(stage, 'mousemove', 137, 111);
+  mouse(w, 'mouseup', 137, 111);
+  assert.deepStrictEqual(last('place'), { type: 'place', parent: null,
+    items: [{ name: 'OkButton', width: 120, height: 48, left: 16, top: 64 }] });
+});
+
+test('free layout: Ctrl+arrows move by a pixel, Shift+arrows resize', () => {
+  sent.length = 0;
+  w.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'ArrowRight', ctrlKey: true }));
+  assert.deepStrictEqual(last('place').items, [{ name: 'OkButton', left: 17, top: 64 }]);
+  w.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'ArrowDown', shiftKey: true }));
+  assert.deepStrictEqual(last('place').items, [{ name: 'OkButton', height: 41 }]);
+});
+
+test('free layout: a control from the palette goes where it is dropped', () => {
+  sent.length = 0;
+  const drop = new w.Event('drop', { bubbles: true }) as any;
+  drop.clientX = 250; drop.clientY = 13;
+  drop.dataTransfer = { getData: () => 'TButton' };
+  stage.dispatchEvent(drop);
+  assert.deepStrictEqual(last('add'), { type: 'add', className: 'TButton', parent: 'LoginForm', index: 9999, left: 248, top: 16 });
+});
+
+test('free layout: several controls are aligned to the one chosen last', () => {
+  post({ type: 'select', name: 'NameEdit', names: ['OkButton', 'NameEdit'], className: '', isRoot: false, handlers: [], props: [], sameParent: true });
+  const right = doc.querySelector('[data-align="right"]');
+  assert.ok(right, 'the align tools are shown');
+  right.click();
+  assert.deepStrictEqual(last('place').items, [
+    { name: 'OkButton', left: 136, top: 64 },
+    { name: 'NameEdit', left: 16, top: 16 },
+  ]);
+});
+
+test('the palette is grouped and can be searched; non-visual components sit in the tray', () => {
+  post({ type: 'schema', controls: [{ name: 'TButton' }, { name: 'TPanel', container: true }, { name: 'TGrid' }, { name: 'TTimer', nonvisual: true }] });
+  const cats = [...doc.querySelectorAll('.cat')].map((c: any) => c.textContent);
+  assert.deepStrictEqual(cats, ['Standard', 'Lists and tables', 'Non-visual']);
+  const search = doc.getElementById('paletteSearch');
+  search.value = 'gri';
+  search.dispatchEvent(new w.Event('input'));
+  assert.deepStrictEqual([...doc.querySelectorAll('.chip:not(.hidden)')].map((c: any) => c.textContent), ['Grid']);
+  post({ type: 'tree', items: [{ name: 'LoginForm', className: 'TLoginForm', depth: 0 }, { name: 'Tick', className: 'TTimer', depth: 1, nonvisual: true }] });
+  const nv = doc.querySelector('#tray .nv');
+  assert.ok(nv && nv.textContent.includes('Tick'));
+  nv.click();
+  assert.deepStrictEqual(last('select'), { type: 'select', name: 'Tick', names: ['Tick'] });
+});
+
+test('the inspector: events on their own tab, Anchors as check boxes, search', () => {
+  post({
+    type: 'select', name: 'OkButton', names: ['OkButton'], className: 'TButton', isRoot: false, handlers: [],
+    props: [
+      { name: 'Anchors', type: 'set', values: ['Left', 'Top', 'Right', 'Bottom'], default: 'Left, Top', doc: '' },
+      { name: 'Text', type: 'string', doc: '', value: 'OK' },
+      { name: 'OnClick', type: 'event', doc: '', signature: '(Sender: TObject)' },
+    ],
+  });
+  assert.ok(doc.getElementById('props').classList.contains('props'));
+  doc.getElementById('tabEvents').click();
+  assert.ok(doc.getElementById('props').classList.contains('events'), 'the Events tab');
+  doc.getElementById('tabProps').click();
+  const boxes = [...doc.querySelectorAll('[data-prop="Anchors"] input')];
+  assert.deepStrictEqual(boxes.map((b: any) => b.checked), [true, true, false, false], 'the default: Left, Top');
+  boxes[2].checked = true;
+  boxes[2].dispatchEvent(new w.Event('change'));
+  assert.deepStrictEqual(last('setProp'), { type: 'setProp', name: 'OkButton', names: ['OkButton'], prop: 'Anchors', propType: 'set', value: '[Left, Top, Right]' });
+  const q = doc.getElementById('propSearch');
+  q.value = 'tex';
+  q.dispatchEvent(new w.Event('input'));
+  assert.ok(doc.querySelector('[data-for="Anchors"]').parentElement.classList.contains('hidden'));
+  assert.ok(!doc.querySelector('[data-for="Text"]').parentElement.classList.contains('hidden'));
+  q.value = '';
+  q.dispatchEvent(new w.Event('input'));
+});
+
 console.log(`designer: ${passed} passed`);

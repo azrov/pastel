@@ -17,7 +17,7 @@ Pastel aims to be the missing piece: free, open source, modern, and easy to set 
 
 ## Goals
 
-- **One codebase, many platforms:** Linux, Windows and Raspberry Pi today; Android is next ([ROADMAP](ROADMAP.md#14--android)); macOS and iOS are [open for contributions](ROADMAP.md#open-for-contributions)
+- **One codebase, many platforms:** Linux, Windows and Raspberry Pi today; Android is next ([ROADMAP](ROADMAP.md#15--android)); macOS and iOS are [open for contributions](ROADMAP.md#open-for-contributions)
 - **Any kind of app:** GUI apps, terminal tools, servers and headless device programs
 - **Easy setup:** `pastel doctor` finds and installs missing compilers and SDKs
 - **Modern editor experience:** VS Code extension with code completion, live preview and hot reload

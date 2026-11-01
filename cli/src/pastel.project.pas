@@ -10,7 +10,7 @@ uses
   SysUtils;
 
 const
-  PastelVersion = '1.3.0';
+  PastelVersion = '1.4.0';
   ProjectFileName = 'pastel.toml';
 
 { '0.7' for Pastel 0.7.x: what [project] pastel records. }

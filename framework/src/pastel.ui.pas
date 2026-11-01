@@ -19,6 +19,15 @@ type
   TJustify = (jsStart, jsCenter, jsEnd, jsSpaceBetween);
   { How a picture fills its place: Contain: all of it fits; Cover: fills, cut at the edges; Stretch; Center: real size. }
   TImageFit = (ifContain, ifCover, ifStretch, ifCenter);
+  { How a box places its children. Flow: below each other (or side by side in a row), the
+    responsive way; Free: where their Left and Top say, like Delphi and Lazarus forms. }
+  TLayoutKind = (lkFlow, lkFree);
+  { The edges of a free-placed control that keep their distance to the parent's edges when
+    the parent is resized: [Left, Top] stays put, [Left, Right] gets wider with it. }
+  TAnchorKind = (akLeft, akTop, akRight, akBottom);
+  TAnchors = set of TAnchorKind;
+  { A free-placed control docked to an edge of its parent (Delphi's Align): Fill takes what is left. }
+  TDock = (dkNone, dkTop, dkBottom, dkLeft, dkRight, dkFill);
   TTextAlign = (taLeft, taCenter, taRight);
   { bsFlat: no background until the mouse is on it (tool bars). }
   TButtonStyle = (bsPrimary, bsSecondary, bsDanger, bsFlat);
@@ -36,6 +45,9 @@ type
     FParent: TControl;
     FChildren: TFPList;
     FWidth, FHeight, FGrow: Integer;
+    FLeft, FTop: Integer;
+    FAnchors: TAnchors;
+    FDock: TDock;
     FVisible, FEnabled: Boolean;
     FBounds: TRectI;
     FHint: string;
@@ -48,6 +60,10 @@ type
     procedure SetWidth(AValue: Integer);
     procedure SetHeight(AValue: Integer);
     procedure SetGrow(AValue: Integer);
+    procedure SetLeft(AValue: Integer);
+    procedure SetTop(AValue: Integer);
+    procedure SetAnchors(AValue: TAnchors);
+    procedure SetDock(AValue: TDock);
     procedure SetVisible(AValue: Boolean);
     procedure SetEnabled(AValue: Boolean);
   protected
@@ -98,6 +114,13 @@ type
     property Width: Integer read FWidth write SetWidth default 0;
     property Height: Integer read FHeight write SetHeight default 0;
     property Grow: Integer read FGrow write SetGrow default 0;
+    { The place in a parent with Layout = Free (a TPanel, or a form with Layout = Free). }
+    property Left: Integer read FLeft write SetLeft default 0;
+    property Top: Integer read FTop write SetTop default 0;
+    { In a parent with Layout = Free: which edges follow the parent's when it is resized. }
+    property Anchors: TAnchors read FAnchors write SetAnchors default [akLeft, akTop];
+    { In a parent with Layout = Free: docked to an edge (Top, Bottom, Left, Right) or Fill. }
+    property Dock: TDock read FDock write SetDock default dkNone;
     property Visible: Boolean read FVisible write SetVisible default True;
     property Enabled: Boolean read FEnabled write SetEnabled default True;
     { Shown in a tooltip when the mouse rests on the control. }
@@ -143,6 +166,10 @@ type
     FBackgroundImage: string;
     FBackgroundFit: TImageFit;
     FBackground: TBitmap32;
+    FLayout: TLayoutKind;
+    procedure SetLayout(AValue: TLayoutKind);
+    procedure MeasureFree(out W, H: Integer);
+    procedure ArrangeFree(const R: TRectI);
     procedure SetGap(AValue: Integer);
     procedure SetBackgroundImage(const AValue: string);
     procedure SetBackgroundFit(AValue: TImageFit);
@@ -168,6 +195,8 @@ type
     { True for TRow: children are placed left to right. }
     property Horizontal: Boolean read FRow;
   published
+    { Flow (default): children below each other, or side by side in a row; Free: where their Left and Top say. }
+    property Layout: TLayoutKind read FLayout write SetLayout default lkFlow;
     property Gap: Integer read FGap write SetGap default 0;
     property Padding: Integer read FPadding write SetPadding default 0;
     property Align: TAlignItems read FAlign write SetAlign default aiStretch;
@@ -182,6 +211,14 @@ type
   end;
 
   TColumn = class(TBox);
+
+  { A box whose children stay where they are put (Left, Top), like a Delphi TPanel. }
+  TPanel = class(TBox)
+  public
+    constructor Create(AOwner: TComponent); override;
+  published
+    property Layout default lkFree;
+  end;
 
   TRow = class(TBox)
   public
@@ -1085,6 +1122,7 @@ begin
   FChildren := TFPList.Create;
   FVisible := True;
   FEnabled := True;
+  FAnchors := [akLeft, akTop];
 end;
 
 destructor TControl.Destroy;
@@ -1149,6 +1187,34 @@ procedure TControl.SetHeight(AValue: Integer);
 begin
   if FHeight = AValue then Exit;
   FHeight := Max(0, AValue);
+  Changed;
+end;
+
+procedure TControl.SetLeft(AValue: Integer);
+begin
+  if FLeft = AValue then Exit;
+  FLeft := AValue;
+  Changed;
+end;
+
+procedure TControl.SetTop(AValue: Integer);
+begin
+  if FTop = AValue then Exit;
+  FTop := AValue;
+  Changed;
+end;
+
+procedure TControl.SetAnchors(AValue: TAnchors);
+begin
+  if FAnchors = AValue then Exit;
+  FAnchors := AValue;
+  Changed;
+end;
+
+procedure TControl.SetDock(AValue: TDock);
+begin
+  if FDock = AValue then Exit;
+  FDock := AValue;
   Changed;
 end;
 
@@ -1435,11 +1501,132 @@ begin
   Invalidate;
 end;
 
+procedure TBox.SetLayout(AValue: TLayoutKind);
+begin
+  if FLayout = AValue then Exit;
+  FLayout := AValue;
+  { free-placed children start at the very edge, like on a Delphi form; Padding can still be set after }
+  if AValue = lkFree then
+    FPadding := 0;
+  Changed;
+end;
+
+procedure TBox.MeasureFree(out W, H: Integer);
+var
+  I, CW, CH: Integer;
+  Child: TControl;
+begin
+  W := 0;
+  H := 0;
+  for I := 0 to ChildCount - 1 do
+  begin
+    Child := Children[I];
+    if not Child.Visible then
+      Continue;
+    Child.GetSize(0, CW, CH);
+    case Child.FDock of
+      dkNone:
+        begin
+          W := Max(W, Child.FLeft + CW);
+          H := Max(H, Child.FTop + CH);
+        end;
+      dkTop, dkBottom: Inc(H, CH);
+      dkLeft, dkRight: Inc(W, CW);
+    end;
+  end;
+  Inc(W, FPadding);
+  Inc(H, FPadding);
+end;
+
+{ docked children take the edges of the inner area (in order, Fill last); the others are
+  placed at Left, Top, moved or stretched by how much the box differs from its design size }
+procedure TBox.ArrangeFree(const R: TRectI);
+var
+  Client: TRectI;
+  I, CW, CH, DX, DY, X, Y: Integer;
+  Child: TControl;
+begin
+  Client := RectI(R.X + FPadding, R.Y + FPadding, Max(0, R.W - 2 * FPadding), Max(0, R.H - 2 * FPadding));
+  for I := 0 to ChildCount - 1 do
+  begin
+    Child := Children[I];
+    if not Child.Visible or (Child.FDock in [dkNone, dkFill]) then
+      Continue;
+    Child.GetSize(Client.W, CW, CH);
+    case Child.FDock of
+      dkTop:
+        begin
+          CH := Min(CH, Client.H);
+          Child.Arrange(RectI(Client.X, Client.Y, Client.W, CH));
+          Inc(Client.Y, CH);
+          Dec(Client.H, CH);
+        end;
+      dkBottom:
+        begin
+          CH := Min(CH, Client.H);
+          Child.Arrange(RectI(Client.X, Client.Y + Client.H - CH, Client.W, CH));
+          Dec(Client.H, CH);
+        end;
+      dkLeft:
+        begin
+          CW := Min(CW, Client.W);
+          Child.Arrange(RectI(Client.X, Client.Y, CW, Client.H));
+          Inc(Client.X, CW);
+          Dec(Client.W, CW);
+        end;
+      dkRight:
+        begin
+          CW := Min(CW, Client.W);
+          Child.Arrange(RectI(Client.X + Client.W - CW, Client.Y, CW, Client.H));
+          Dec(Client.W, CW);
+        end;
+    end;
+  end;
+  for I := 0 to ChildCount - 1 do
+  begin
+    Child := Children[I];
+    if Child.Visible and (Child.FDock = dkFill) then
+      Child.Arrange(Client);
+  end;
+  { the design size is Width and Height; without them nothing moves }
+  DX := 0;
+  DY := 0;
+  if Width > 0 then DX := R.W - Width;
+  if Height > 0 then DY := R.H - Height;
+  for I := 0 to ChildCount - 1 do
+  begin
+    Child := Children[I];
+    if not Child.Visible or (Child.FDock <> dkNone) then
+      Continue;
+    Child.GetSize(Max(0, R.W - Child.FLeft), CW, CH);
+    X := R.X + Child.FLeft;
+    Y := R.Y + Child.FTop;
+    if akRight in Child.FAnchors then
+    begin
+      if akLeft in Child.FAnchors then Inc(CW, DX) else Inc(X, DX);
+    end
+    else if not (akLeft in Child.FAnchors) then
+      Inc(X, DX div 2);
+    if akBottom in Child.FAnchors then
+    begin
+      if akTop in Child.FAnchors then Inc(CH, DY) else Inc(Y, DY);
+    end
+    else if not (akTop in Child.FAnchors) then
+      Inc(Y, DY div 2);
+    Child.Arrange(RectI(X, Y, Max(0, CW), Max(0, CH)));
+  end;
+end;
+
 procedure TBox.Measure(AvailWidth: Integer; out W, H: Integer);
 var
   I, CW, CH, N, Inner: Integer;
   Child: TControl;
 begin
+  if FLayout = lkFree then
+  begin
+    MeasureFree(W, H);
+    Exit;
+  end;
   W := 0;
   H := 0;
   N := 0;
@@ -1478,6 +1665,11 @@ var
   Items: TFPList;
 begin
   inherited Arrange(R);
+  if FLayout = lkFree then
+  begin
+    ArrangeFree(R);
+    Exit;
+  end;
   Inner := RectI(R.X + FPadding, R.Y + FPadding,
     Max(0, R.W - 2 * FPadding), Max(0, R.H - 2 * FPadding));
   Items := TFPList.Create;
@@ -1702,6 +1894,12 @@ begin
   C.PushClip(RectI(Bounds.X - 4, Bounds.Y - 4, Bounds.W + 8, Bounds.H + 8));
   PaintChildren(C);
   C.PopClip;
+end;
+
+constructor TPanel.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FLayout := lkFree;
 end;
 
 constructor TRow.Create(AOwner: TComponent);
@@ -3020,6 +3218,7 @@ initialization
   NonVisualClasses.CaseSensitive := False;
   RegisterNonVisual(TTimer);
   RegisterNonVisual(TAction);
+  RegisterControl(TPanel);
   RegisterControl(TColumn);
   RegisterControl(TRow);
   RegisterControl(TFlow);

@@ -763,15 +763,15 @@ end;
 
 procedure TMenuView.CloseAll;
 var
-  Top: TMenuView;
+  TopItem: TMenuView;
 begin
   CloseSub;
-  Top := Self;
-  while Top.FParentView <> nil do
-    Top := Top.FParentView;
-  if Top <> Self then
+  TopItem := Self;
+  while TopItem.FParentView <> nil do
+    TopItem := TopItem.FParentView;
+  if TopItem <> Self then
   begin
-    Top.CloseAll;
+    TopItem.CloseAll;
     Exit;
   end;
   Close;

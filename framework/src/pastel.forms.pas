@@ -195,7 +195,7 @@ var
   Dot: Integer;
   Sub: TObject;
   Ref: TComponent;
-  L: TStringList;
+  L, Names: TStringList;
 
   procedure Fail(const Msg: string);
   begin
@@ -264,6 +264,30 @@ begin
     Fail(Format('property "%s" is read-only', [P.Name]));
   if (P.Kind = pvList) then
     Fail(Format('%s expects one value, not a list', [P.Name]));
+  if T^.Kind = tkSet then
+  begin
+    { Anchors = [Left, Top, Right] }
+    if P.Kind <> pvSet then
+      Fail(Format('%s expects a set like [%s]', [P.Name, EnumNames(GetTypeData(T)^.CompType)]));
+    N := 0;
+    Names := TStringList.Create;
+    try
+      Names.Text := P.Value;
+      for I := 0 to Names.Count - 1 do
+      begin
+        E := FindEnumValue(GetTypeData(T)^.CompType, Trim(Names[I]));
+        if E < 0 then
+          Fail(Format('%s: "%s" is not one of %s', [P.Name, Names[I], EnumNames(GetTypeData(T)^.CompType)]));
+        N := N or (Int64(1) shl E);
+      end;
+    finally
+      Names.Free;
+    end;
+    SetOrdProp(Instance, PI, N);
+    Exit;
+  end;
+  if P.Kind = pvSet then
+    Fail(Format('%s expects one value, not a set', [P.Name]));
   case T^.Kind of
     tkInteger, tkInt64, tkQWord:
       begin

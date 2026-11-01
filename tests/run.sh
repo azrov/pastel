@@ -708,14 +708,14 @@ cp src/forms/Home.pform Home.bak
 sed -i 's/object HintLabel: TLabel/object HintLabel: TLable/' src/forms/Home.pform
 set +e; out="$("$PASTEL" build 2>&1)"; code=$?; set -e
 expect "unknown component fails the build" '[ "$code" = 1 ]'
-expect "pform error has file and line"     'echo "$out" | grep -q "src/forms/Home.pform(13) Error: unknown component type"'
+expect "pform error has file and line"     'echo "$out" | grep -q "src/forms/Home.pform(15) Error: unknown component type"'
 mv Home.bak src/forms/Home.pform
 
 cp src/forms/Home.pform Home.bak
 sed -i 's/OnClick = ClearClick/OnClick = Missing/' src/forms/Home.pform
 set +e; out="$("$PASTEL" build 2>&1)"; code=$?; set -e
 expect "missing event handler fails the build" '[ "$code" = 1 ]'
-expect "missing event handler is explained"    'echo "$out" | grep -q "Home.pform(27) Error: event handler \"Missing\" is not declared in Home.pas"'
+expect "missing event handler is explained"    'echo "$out" | grep -q "Home.pform(36) Error: event handler \"Missing\" is not declared in Home.pas"'
 mv Home.bak src/forms/Home.pform
 
 # --- all the controls, menus and dialogs (tests/apps/controls) ---
@@ -740,7 +740,25 @@ cd "$WORK/gui-demo"
 set +e; out="$(cd "$ROOT/examples/salon-core" && "$PASTEL" run 2>&1)"; code=$?; set -e
 expect "run in a library names its programs" '[ "$code" = 2 ] && echo "$out" | grep -q "these programs use it: ../salon-api, ../salon-desk"'
 cd "$WORK" && rm -rf narrow && "$PASTEL" new app narrow >/dev/null && cd narrow
-sed -i 's/^  Width = 460$/  Width = 200/' src/forms/Home.pform
+cat > src/forms/Home.pform <<'EOS'
+object HomeForm: THomeForm
+  Width = 200
+  object Buttons: TRow
+    object ClearButton: TButton
+      Text = 'Clear the whole form'
+      OnClick = ClearClick
+    end
+    object SendButton: TButton
+      Text = 'Send it now please'
+      OnClick = SendClick
+    end
+  end
+  object NameEdit: TEdit
+  end
+  object Greeting: TLabel
+  end
+end
+EOS
 out="$("$PASTEL" check 2>&1)"
 expect "check warns about a row that is cut off" 'echo "$out" | grep -q "Warning: Buttons: its controls need"'
 out="$("$PASTEL" build 2>&1)"
@@ -777,7 +795,7 @@ cd "$WORK"
 rm -rf own-controls && "$PASTEL" new app own-controls >/dev/null && cd own-controls
 "$PASTEL" new control Badge >/dev/null
 expect "new control writes a unit"        'grep -q "RegisterControl(TBadge)" src/controls/badge.pas'
-sed -i "s/^  object Card: TCard$/  object NewBadge: TBadge\n    Text = 'New'\n    OnClick = BadgeClick\n  end\n  object Card: TCard/" src/forms/Home.pform
+sed -i "s/^  object Heading: TLabel$/  object NewBadge: TBadge\n    Left = 300\n    Top = 24\n    Text = 'New'\n    OnClick = BadgeClick\n  end\n  object Heading: TLabel/" src/forms/Home.pform
 sed -i 's/^    procedure SendClick(Sender: TObject);/    procedure SendClick(Sender: TObject);\n    procedure BadgeClick(Sender: TObject);/' src/forms/Home.pas
 printf '\nprocedure THomeForm.BadgeClick(Sender: TObject);\nbegin\n  Greeting.Text := NewBadge.Text + '"'"' clicked'"'"';\nend;\n' > extra.inc
 sed -i '/^implementation$/r extra.inc' src/forms/Home.pas
@@ -807,12 +825,12 @@ expect "close works without a handler" 'echo "$out" | grep -q "^closed"'
 out="$("$PASTEL" check --json)"
 expect "check --json reports no problems" '[ "$out" = "[]" ]'
 out="$(sed 's/Bold = True/Bold = Yes/' src/forms/Home.pform | "$PASTEL" check src/forms/Home.pform --stdin --json || true)"
-expect "check --stdin reads unsaved text" 'echo "$out" | grep -q "\"line\":11,\"severity\":\"error\",\"message\":\"Bold expects True or False\""'
+expect "check --stdin reads unsaved text" 'echo "$out" | grep -q "\"line\":13,\"severity\":\"error\",\"message\":\"Bold expects True or False\""'
 expect "schema lists TButton"             '"$PASTEL" schema | grep -q "\"name\":\"TButton\""'
 "$PASTEL" preview src/forms/Home.pform -o preview.png >/dev/null
 expect "preview writes a PNG"             'head -c 4 preview.png | grep -q PNG'
 "$PASTEL" preview src/forms/Home.pform -o preview.png --layout layout.json --json
-expect "preview writes the layout"        'grep -q "\"name\":\"SendButton\",\"class\":\"TButton\",\"parent\":\"Buttons\"" layout.json'
+expect "preview writes the layout"        'grep -q "\"name\":\"SendButton\",\"class\":\"TButton\",\"parent\":\"HomeForm\"" layout.json'
 cd "$WORK"
 
 echo "e2e: $pass passed, $fail failed"

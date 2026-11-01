@@ -3,7 +3,7 @@ import * as assert from 'assert';
 import {
   deleteObject, extractObject, findBlock, formatValue, insertObject, isObjectText, moveObject, parseBlocks,
   parseValue, pasteObjects, renameIdentifier, renameObject, setProperty,
-  wrapObjects, unwrapObject, moveSibling, extractObjects, deleteObjects, outline,
+  wrapObjects, unwrapObject, moveSibling, extractObjects, deleteObjects, outline, placeObjects, insertObjectAt,
 } from '../edit';
 
 let passed = 0;
@@ -232,6 +232,28 @@ test('any series of designer edits keeps every object closed by its own end', ()
     text = next;
   }
   assert.ok(parseBlocks(text));
+});
+
+test('free placement: Left, Top, Width, Height in one edit; 0 is not written', () => {
+  let t = placeObjects(form, undefined, [{ name: 'Info', left: 24, top: 120, width: 200 }]);
+  assert.ok(/object Info: TLabel\n    Left = 24\n    Top = 120\n    Width = 200\n  end/.test(t), t);
+  t = placeObjects(t, undefined, [{ name: 'Info', left: 0, top: 8 }]);
+  assert.ok(/object Info: TLabel\n    Top = 8\n    Width = 200\n  end/.test(t), t);
+  t = placeObjects(t, 'Card', [{ name: 'Info', left: 8, top: 8 }]);
+  assert.strictEqual(findBlock(parseBlocks(t)!, 'Info')!.parent!.name, 'Card', 'moved into the new parent');
+  assert.strictEqual(placeObjects(t, 'Info', [{ name: 'Card', left: 1 }]), t, 'not into itself');
+});
+
+test('a new control at a place; a new panel gets a size', () => {
+  const r = insertObjectAt(form, 'HomeForm', 'TPanel', 16, 32)!;
+  assert.strictEqual(r.name, 'Panel1');
+  assert.ok(/object Panel1: TPanel\n    Left = 16\n    Top = 32\n    Width = 200\n    Height = 120\n  end\nend$/.test(r.text), r.text);
+});
+
+test('sets', () => {
+  assert.strictEqual(formatValue('set', '[Left,Top , Right]'), '[Left, Top, Right]');
+  assert.strictEqual(formatValue('set', '[]'), '[]');
+  assert.strictEqual(formatValue('set', '[Left, 3x]'), undefined);
 });
 
 console.log(`edit: ${passed} passed`);

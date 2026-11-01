@@ -798,35 +798,50 @@ begin
     '  Title = ''{{name}}''',
     '  Width = 460',
     '  Height = 340',
-    '  object Card: TCard',
-    '    object Heading: TLabel',
-    '      Text = ''Hello!''',
-    '      FontSize = 22',
-    '      Bold = True',
-    '    end',
-    '    object HintLabel: TLabel',
-    '      Text = ''Type your name and press Send.''',
-    '      Color = ''#6B7080''',
-    '    end',
-    '    object NameEdit: TEdit',
-    '      Placeholder = ''Your name''',
-    '      OnSubmit = SendClick',
-    '    end',
-    '    object Buttons: TRow',
-    '      Gap = 8',
-    '      Justify = End',
-    '      object ClearButton: TButton',
-    '        Text = ''Clear''',
-    '        Style = Secondary',
-    '        OnClick = ClearClick',
-    '      end',
-    '      object SendButton: TButton',
-    '        Text = ''Send''',
-    '        OnClick = SendClick',
-    '      end',
-    '    end',
+    '  Layout = Free',
+    '  object Heading: TLabel',
+    '    Left = 24',
+    '    Top = 24',
+    '    Text = ''Hello!''',
+    '    FontSize = 22',
+    '    Bold = True',
+    '  end',
+    '  object HintLabel: TLabel',
+    '    Left = 24',
+    '    Top = 64',
+    '    Text = ''Type your name and press Send.''',
+    '    Color = ''#6B7080''',
+    '  end',
+    '  object NameEdit: TEdit',
+    '    Left = 24',
+    '    Top = 96',
+    '    Width = 412',
+    '    Anchors = [Left, Top, Right]',
+    '    Placeholder = ''Your name''',
+    '    OnSubmit = SendClick',
+    '  end',
+    '  object ClearButton: TButton',
+    '    Left = 264',
+    '    Top = 144',
+    '    Width = 80',
+    '    Anchors = [Top, Right]',
+    '    Text = ''Clear''',
+    '    Style = Secondary',
+    '    OnClick = ClearClick',
+    '  end',
+    '  object SendButton: TButton',
+    '    Left = 356',
+    '    Top = 144',
+    '    Width = 80',
+    '    Anchors = [Top, Right]',
+    '    Text = ''Send''',
+    '    OnClick = SendClick',
     '  end',
     '  object Greeting: TLabel',
+    '    Left = 24',
+    '    Top = 208',
+    '    Width = 412',
+    '    Anchors = [Left, Top, Right]',
     '    TextAlign = Center',
     '  end',
     'end'
@@ -1757,26 +1772,33 @@ begin
     '  Title = ''' + Base + '''' + LineEnding +
     '  Width = 420' + LineEnding +
     '  Height = 240' + LineEnding +
+    '  Layout = Free' + LineEnding +
     '  object MessageLabel: TLabel' + LineEnding +
+    '    Left = 24' + LineEnding +
+    '    Top = 24' + LineEnding +
+    '    Width = 372' + LineEnding +
+    '    Anchors = [Left, Top, Right]' + LineEnding +
     '    Text = ''' + Base + '''' + LineEnding +
     '    WordWrap = True' + LineEnding +
     '  end' + LineEnding +
-    '  object Space: TSpacer' + LineEnding +
+    '  object CancelButton: TButton' + LineEnding +
+    '    Left = 216' + LineEnding +
+    '    Top = 176' + LineEnding +
+    '    Width = 88' + LineEnding +
+    '    Anchors = [Right, Bottom]' + LineEnding +
+    '    Text = ''Cancel''' + LineEnding +
+    '    Style = Secondary' + LineEnding +
+    '    ModalResult = mrCancel' + LineEnding +
+    '    Cancel = True' + LineEnding +
     '  end' + LineEnding +
-    '  object Buttons: TRow' + LineEnding +
-    '    Gap = 8' + LineEnding +
-    '    Justify = End' + LineEnding +
-    '    object CancelButton: TButton' + LineEnding +
-    '      Text = ''Cancel''' + LineEnding +
-    '      Style = Secondary' + LineEnding +
-    '      ModalResult = mrCancel' + LineEnding +
-    '      Cancel = True' + LineEnding +
-    '    end' + LineEnding +
-    '    object OkButton: TButton' + LineEnding +
-    '      Text = ''OK''' + LineEnding +
-    '      ModalResult = mrOk' + LineEnding +
-    '      Default = True' + LineEnding +
-    '    end' + LineEnding +
+    '  object OkButton: TButton' + LineEnding +
+    '    Left = 312' + LineEnding +
+    '    Top = 176' + LineEnding +
+    '    Width = 84' + LineEnding +
+    '    Anchors = [Right, Bottom]' + LineEnding +
+    '    Text = ''OK''' + LineEnding +
+    '    ModalResult = mrOk' + LineEnding +
+    '    Default = True' + LineEnding +
     '  end' + LineEnding +
     'end' + LineEnding);
   WriteText(Dir + Base + '.pas',

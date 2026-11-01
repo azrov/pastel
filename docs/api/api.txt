@@ -1008,6 +1008,10 @@ Pastel.UI: TAlignItems.aiCenter
 Pastel.UI: TAlignItems.aiEnd
 Pastel.UI: TAlignItems.aiStart
 Pastel.UI: TAlignItems.aiStretch
+Pastel.UI: TAnchorKind.akBottom
+Pastel.UI: TAnchorKind.akLeft
+Pastel.UI: TAnchorKind.akRight
+Pastel.UI: TAnchorKind.akTop
 Pastel.UI: TBox.constructor Create(AOwner: TComponent)
 Pastel.UI: TBox.destructor Destroy
 Pastel.UI: TBox.property Align: TAlignItems
@@ -1019,6 +1023,7 @@ Pastel.UI: TBox.property Color: TColor32
 Pastel.UI: TBox.property Gap: Integer
 Pastel.UI: TBox.property Horizontal: Boolean
 Pastel.UI: TBox.property Justify: TJustify
+Pastel.UI: TBox.property Layout: TLayoutKind
 Pastel.UI: TBox.property Padding: Integer
 Pastel.UI: TBox.property Radius: Integer
 Pastel.UI: TButton.procedure Click
@@ -1047,15 +1052,19 @@ Pastel.UI: TControl.function ParentPopup: TPopup
 Pastel.UI: TControl.procedure GetSize(AvailWidth: Integer; out W: Integer; out H: Integer)
 Pastel.UI: TControl.procedure Invalidate
 Pastel.UI: TControl.procedure SetFocus
+Pastel.UI: TControl.property Anchors: TAnchors
 Pastel.UI: TControl.property Bounds: TRectI
 Pastel.UI: TControl.property ChildCount: Integer
 Pastel.UI: TControl.property Children[Index: Integer]: TControl
+Pastel.UI: TControl.property Dock: TDock
 Pastel.UI: TControl.property Enabled: Boolean
 Pastel.UI: TControl.property Grow: Integer
 Pastel.UI: TControl.property Height: Integer
 Pastel.UI: TControl.property Hint: string
+Pastel.UI: TControl.property Left: Integer
 Pastel.UI: TControl.property Parent: TControl
 Pastel.UI: TControl.property PopupMenu: TControl
+Pastel.UI: TControl.property Top: Integer
 Pastel.UI: TControl.property Visible: Boolean
 Pastel.UI: TControl.property Width: Integer
 Pastel.UI: TCursorKind.ckArrow
@@ -1083,6 +1092,12 @@ Pastel.UI: TCustomEdit.property SelLength: Integer
 Pastel.UI: TCustomEdit.property SelStart: Integer
 Pastel.UI: TCustomEdit.property SelText: string
 Pastel.UI: TCustomEdit.property Text: string
+Pastel.UI: TDock.dkBottom
+Pastel.UI: TDock.dkFill
+Pastel.UI: TDock.dkLeft
+Pastel.UI: TDock.dkNone
+Pastel.UI: TDock.dkRight
+Pastel.UI: TDock.dkTop
 Pastel.UI: TEdit.property MaxLength
 Pastel.UI: TEdit.property OnChange
 Pastel.UI: TEdit.property OnSubmit: TNotifyEvent
@@ -1169,6 +1184,8 @@ Pastel.UI: TLabel.property FontSize: Integer
 Pastel.UI: TLabel.property Text: string
 Pastel.UI: TLabel.property TextAlign: TTextAlign
 Pastel.UI: TLabel.property WordWrap: Boolean
+Pastel.UI: TLayoutKind.lkFlow
+Pastel.UI: TLayoutKind.lkFree
 Pastel.UI: TMemo.constructor Create(AOwner: TComponent)
 Pastel.UI: TMemo.property Lines: TStrings
 Pastel.UI: TMemo.property MaxLength
@@ -1177,6 +1194,8 @@ Pastel.UI: TMemo.property Placeholder
 Pastel.UI: TMemo.property ReadOnly
 Pastel.UI: TMemo.property Text
 Pastel.UI: TMemo.property WordWrap: Boolean
+Pastel.UI: TPanel.constructor Create(AOwner: TComponent)
+Pastel.UI: TPanel.property Layout
 Pastel.UI: TPopup.constructor Create(AOwner: TComponent)
 Pastel.UI: TPopup.function ShowModal(Form: TForm): Integer
 Pastel.UI: TPopup.procedure Close(AModalResult: Integer = 0)
@@ -1281,6 +1300,8 @@ Pastel.UI: procedure RequestAnimation(Control: TControl)
 Pastel.UI: procedure UseDarkTheme(Dark: Boolean)
 Pastel.UI: type TAction = class(TBasicAction)
 Pastel.UI: type TAlignItems = (aiStretch, aiStart, aiCenter, aiEnd)
+Pastel.UI: type TAnchorKind = (akLeft, akTop, akRight, akBottom)
+Pastel.UI: type TAnchors = set of TAnchorKind
 Pastel.UI: type TBox = class(TControl)
 Pastel.UI: type TButton = class(TControl)
 Pastel.UI: type TButtonStyle = (bsPrimary, bsSecondary, bsDanger, bsFlat)
@@ -1291,6 +1312,7 @@ Pastel.UI: type TControl = class(TComponent)
 Pastel.UI: type TControlClass = class of TControl
 Pastel.UI: type TCursorKind = (ckArrow, ckIBeam, ckHand, ckSizeWE, ckSizeNS)
 Pastel.UI: type TCustomEdit = class(TControl)
+Pastel.UI: type TDock = (dkNone, dkTop, dkBottom, dkLeft, dkRight, dkFill)
 Pastel.UI: type TEdit = class(TCustomEdit)
 Pastel.UI: type TEditState = record
 Pastel.UI: type TEditStates = array of TEditState
@@ -1300,7 +1322,9 @@ Pastel.UI: type TFormClass = class of TForm
 Pastel.UI: type TImageFit = (ifContain, ifCover, ifStretch, ifCenter)
 Pastel.UI: type TJustify = (jsStart, jsCenter, jsEnd, jsSpaceBetween)
 Pastel.UI: type TLabel = class(TControl)
+Pastel.UI: type TLayoutKind = (lkFlow, lkFree)
 Pastel.UI: type TMemo = class(TCustomEdit)
+Pastel.UI: type TPanel = class(TBox)
 Pastel.UI: type TPopup = class(TBox)
 Pastel.UI: type TRectArray = array of TRectI
 Pastel.UI: type TRow = class(TBox)

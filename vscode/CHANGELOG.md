@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.0
+
+- The designer is laid out like Delphi's IDE: Structure and the Object Inspector (Properties and Events tabs, search, alphabetical) on the left, the form in a window frame in the middle, the Tool Palette in groups with a search box on the right, non-visual components in a tray under the form
+- Free placement (`Layout = Free`): drop controls where they should be, drag to move (also into a panel), eight grips to resize, an 8 pixel grid (`Alt` places freely), `Ctrl+arrows` move by a pixel, `Shift+arrows` resize, align and same-size buttons for several controls; the position and size are shown while dragging
+- Flow containers get grips for a fixed width and height too
+- `Anchors` as check boxes; colors can also be typed (`#RRGGBB`); a double-click on an event writes its handler
+- The form is shown at its real size (*Fit* shrinks a big one)
+
+
 ## 1.0.5
 
 - Designer: properties the `.pform` does not set show their default — `Enabled`, `Visible` and a form's `Resizable` are ticked, `Style` says *(default: Primary)*; choosing the default again removes the line

@@ -32,8 +32,9 @@ type
     constructor CreateAt(ALine: Integer; const Msg: string);
   end;
 
-  { pvList: ('a', 'b'); Value holds the items, one per line (#10 between) }
-  TPFormValueKind = (pvString, pvNumber, pvIdent, pvList);
+  { pvList: ('a', 'b'); Value holds the items, one per line (#10 between);
+    pvSet: [Left, Top]; Value holds the names, one per line }
+  TPFormValueKind = (pvString, pvNumber, pvIdent, pvList, pvSet);
 
   TPFormProp = class
   public
@@ -213,7 +214,7 @@ begin
           Inc(L.P);
         until False;
       end;
-    ':', '=', '.', '(', ')', ',':
+    ':', '=', '.', '(', ')', ',', '[', ']':
       begin
         L.Kind := tkSymbol;
         L.Text := C;
@@ -326,6 +327,32 @@ begin
               end;
             end;
             Prop.Value := StringReplace(Prop.Value, #0, '', [rfReplaceAll]);
+          end
+          else if L.Text = '[' then
+          begin
+            { a set: [Left, Top, Right] }
+            Prop.Kind := pvSet;
+            Prop.Value := '';
+            NextToken(L);
+            while not ((L.Kind = tkSymbol) and (L.Text = ']')) do
+            begin
+              if L.Kind <> tkIdent then
+              begin
+                Prop.Free;
+                LexError(L, 'a set holds names: [Left, Top]');
+              end;
+              if Prop.Value <> '' then
+                Prop.Value := Prop.Value + #10;
+              Prop.Value := Prop.Value + L.Text;
+              NextToken(L);
+              if (L.Kind = tkSymbol) and (L.Text = ',') then
+                NextToken(L)
+              else if not ((L.Kind = tkSymbol) and (L.Text = ']')) then
+              begin
+                Prop.Free;
+                LexError(L, 'expected "," or "]" in the set of "' + PropName + '"');
+              end;
+            end;
           end
           else
           begin

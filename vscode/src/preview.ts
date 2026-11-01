@@ -6,7 +6,7 @@ import { findProjectRoot, runPastel } from './cli';
 import { designerHtml } from './designerHtml';
 import {
   deleteObjects, extractObject, extractObjects, findBlock, formatValue, insertObject, isObjectText, moveObject,
-  moveSibling, outline, parseBlocks, parseValue, pasteObjects, renameIdentifier, renameObject, setProperty,
+  moveSibling, outline, parseBlocks, placeObjects, insertObjectAt, parseValue, pasteObjects, renameIdentifier, renameObject, setProperty,
   unwrapObject, wrapObjects,
 } from './edit';
 import { declaredProcedures, enclosingObjects, findProcedure, Schema, SchemaClass } from './model';
@@ -166,7 +166,10 @@ export class FormPreview {
         } catch {
           layout = undefined;
         }
-        this.panel.webview.postMessage({ type: 'render', data, layout, file: path.basename(file) });
+        const root = parseBlocks(this.document.getText());
+        const titleLine = root?.props.find(p => p.name.toLowerCase() === 'title');
+        const title = titleLine ? parseValue(titleLine.value) : root?.name ?? '';
+        this.panel.webview.postMessage({ type: 'render', data, layout, file: path.basename(file), title });
         await this.sendSelection();
         await this.sendTree();
         this.sendIssues(cwd, rel);
@@ -372,11 +375,24 @@ export class FormPreview {
         await this.applyText(moveSibling(text, m.name, m.delta));
         break;
       case 'add': {
-        const r = insertObject(text, m.parent, m.index, m.className);
+        // into a parent with Layout = Free: at the place it was dropped
+        const r = typeof m.left === 'number' && typeof m.top === 'number'
+          ? insertObjectAt(text, m.parent, m.className, m.left, m.top)
+          : insertObject(text, m.parent, m.index, m.className);
         if (r) {
           this.selected = r.name;
           await this.applyText(r.text);
           this.revealInEditor(r.name);
+        }
+        break;
+      }
+      case 'place': {
+        // moved or resized in a parent with Layout = Free (or the form resized)
+        const items = Array.isArray(m.items) ? m.items : [];
+        await this.applyText(placeObjects(text, m.parent ?? undefined, items));
+        if (items.length) {
+          this.selected = items[items.length - 1].name;
+          this.selectedAll = items.map((i: { name: string }) => i.name);
         }
         break;
       }

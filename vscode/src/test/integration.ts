@@ -337,7 +337,7 @@ async function main() {
 
   await test('completion: properties of the enclosing control', async () => {
     const l = lineOf(/Placeholder = 'Your name'/);
-    const items = await providers.completion.provideCompletionItems(pform, new Position(l, 6));
+    const items = await providers.completion.provideCompletionItems(pform, new Position(l, 4));
     const names = items.map((i: CompletionItem) => i.label);
     assert.ok(names.includes('OnSubmit') === false, 'OnSubmit is already set, so it is not offered');
     assert.ok(names.includes('OnChange'));
@@ -346,14 +346,14 @@ async function main() {
   });
 
   await test('completion: enum values', async () => {
-    const l = lineOf(/Justify = End/);
-    const items = await providers.completion.provideCompletionItems(pform, new Position(l, 16));
-    assert.deepStrictEqual(items.map((i: CompletionItem) => i.label), ['Start', 'Center', 'End', 'SpaceBetween']);
+    const l = lineOf(/Style = Secondary/);
+    const items = await providers.completion.provideCompletionItems(pform, new Position(l, 12));
+    assert.deepStrictEqual(items.map((i: CompletionItem) => i.label), ['Primary', 'Secondary', 'Danger', 'Flat']);
   });
 
   await test('completion: event handlers from Home.pas', async () => {
     const l = lineOf(/OnClick = ClearClick/);
-    const items = await providers.completion.provideCompletionItems(pform, new Position(l, 18));
+    const items = await providers.completion.provideCompletionItems(pform, new Position(l, 14));
     const names = items.map((i: CompletionItem) => i.label);
     assert.ok(names.includes('ClearClick') && names.includes('SendClick'), names.join(','));
   });
@@ -375,7 +375,7 @@ async function main() {
   await test('outline lists the controls', () => {
     const syms = providers.symbols.provideDocumentSymbols(pform);
     assert.strictEqual(syms[0].name, 'HomeForm');
-    assert.ok(syms[0].children.some((s: DocumentSymbol) => s.name === 'Card'));
+    assert.ok(syms[0].children.some((s: DocumentSymbol) => s.name === 'SendButton'));
   });
 
   await test('typing a mistake shows a diagnostic', async () => {
@@ -424,16 +424,25 @@ async function main() {
 
   await test('designer: editing a property changes the .pform text', async () => {
     await send({ type: 'setProp', name: 'SendButton', prop: 'Text', propType: 'string', value: 'Gönder' });
-    assert.ok(pform.getText().includes("        Text = 'Gönder'"), pform.getText());
+    assert.ok(pform.getText().includes("    Text = 'Gönder'"), pform.getText());
     await send({ type: 'setProp', name: 'SendButton', prop: 'Style', propType: 'enum', value: 'Danger' });
-    assert.ok(pform.getText().includes('        Style = Danger'));
+    assert.ok(pform.getText().includes('    Style = Danger'));
   });
 
   await test('designer: add, move and delete controls', async () => {
-    await send({ type: 'add', className: 'TLabel', parent: 'Card', index: 0 });
-    assert.ok(/object Card: TCard\n    object Label1: TLabel\n      Text = 'Label1'\n    end/.test(pform.getText()), pform.getText());
+    // the form has Layout = Free: a new control goes where it was dropped
+    await send({ type: 'add', className: 'TLabel', parent: 'HomeForm', index: 9999, left: 24, top: 256 });
+    assert.ok(/  object Label1: TLabel\n    Text = 'Label1'\n    Left = 24\n    Top = 256\n  end\nend/.test(pform.getText()), pform.getText());
+    let r0 = [...webviewMessages].reverse().find(m => m.type === 'render');
+    const lab = r0.layout.controls.find((c: any) => c.name === 'Label1');
+    assert.ok(lab && lab.x === 24 && lab.y === 256, JSON.stringify(lab));
+    assert.ok(r0.layout.controls[0].free, 'the form is free');
+    await send({ type: 'place', parent: null, items: [{ name: 'Label1', left: 40, top: 264, width: 120 }] });
+    assert.ok(/Left = 40\n    Top = 264\n    Width = 120/.test(pform.getText()), pform.getText());
+    r0 = [...webviewMessages].reverse().find(m => m.type === 'render');
+    assert.ok(r0.layout.controls.some((c: any) => c.name === 'Label1' && c.x === 40 && c.w === 120), 'redrawn at its new place');
     await send({ type: 'move', name: 'Label1', parent: 'HomeForm', index: 0 });
-    assert.ok(/object HomeForm: THomeForm[\s\S]*?\n  object Label1: TLabel\n    Text = 'Label1'\n  end\n  object Card/.test(pform.getText()), pform.getText());
+    assert.ok(/object HomeForm: THomeForm[\s\S]*?\n  object Label1: TLabel\n    Text = 'Label1'[\s\S]*?\n  end\n  object Heading/.test(pform.getText()), pform.getText());
     await send({ type: 'delete', name: 'Label1' });
     assert.ok(!pform.getText().includes('Label1'));
     const r = [...webviewMessages].reverse().find(m => m.type === 'render');

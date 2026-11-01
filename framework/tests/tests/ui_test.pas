@@ -45,6 +45,7 @@ type
     procedure ControlNamesMustNotHideFormProperties;
     procedure HotReloadKeepsWhatTheUserDid;
     procedure ListsAndReferencesInPForms;
+    procedure FreeLayoutLikeDelphi;
     procedure CanvasScales;
     procedure OnlyWhatChangedIsRepainted;
     procedure ATooNarrowRowShrinksWhatGrows;
@@ -632,6 +633,52 @@ begin
   finally
     F.Free;
     Root.Free;
+  end;
+end;
+
+procedure TUITests.FreeLayoutLikeDelphi;
+var
+  Root: TPFormNode;
+  F: TForm;
+  Ok, Memo, Bar, Fill: TControl;
+begin
+  Root := ParsePForm('object F: TForm'#10'  Layout = Free'#10'  Width = 400'#10'  Height = 300'#10 +
+    '  object Bar: TPanel'#10'    Dock = Top'#10'    Height = 40'#10'  end'#10 +
+    '  object Memo: TMemo'#10'    Left = 10'#10'    Top = 50'#10'    Width = 380'#10'    Height = 200'#10 +
+    '    Anchors = [Left, Top, Right, Bottom]'#10'  end'#10 +
+    '  object Ok: TButton'#10'    Text = ''OK'''#10'    Left = 300'#10'    Top = 260'#10'    Anchors = [Right, Bottom]'#10'  end'#10 +
+    '  object Side: TPanel'#10'    Dock = Fill'#10'    Visible = False'#10'  end'#10 +
+    'end');
+  F := TForm.Create(nil);
+  try
+    BuildForm(F, Root);
+    Ok := TControl(F.FindComponent('Ok'));
+    Memo := TControl(F.FindComponent('Memo'));
+    Bar := TControl(F.FindComponent('Bar'));
+    Fill := TControl(F.FindComponent('Side'));
+    AssertTrue(TControl(F.FindComponent('Memo')).Anchors = [akLeft, akTop, akRight, akBottom], 'a set in the .pform');
+    F.Layout(400, 300);
+    AssertEquals(300, Ok.Bounds.X, 'where Left says');
+    AssertEquals(260, Ok.Bounds.Y);
+    AssertTrue(Ok.Bounds.W < 200, 'its own size, not the width of the form');
+    AssertEquals(0, Bar.Bounds.Y, 'docked at the top');
+    AssertEquals(400, Bar.Bounds.W, 'as wide as the form');
+    F.Layout(500, 400);
+    AssertEquals(400, Ok.Bounds.X, 'anchored right and bottom: it moves with the corner');
+    AssertEquals(360, Ok.Bounds.Y);
+    AssertEquals(10, Memo.Bounds.X, 'anchored on all sides: it grows');
+    AssertEquals(480, Memo.Bounds.W);
+    AssertEquals(300, Memo.Bounds.H);
+    AssertFalse(Fill.Visible);
+  finally
+    F.Free;
+    Root.Free;
+  end;
+  try
+    ParsePForm('object F: TForm'#10'  Anchors = [Left, 3]'#10'end').Free;
+    Fail('a number in a set');
+  except
+    on E: EPFormError do ;
   end;
 end;
 

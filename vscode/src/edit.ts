@@ -312,6 +312,11 @@ export function formatValue(type: string, value: string): string | undefined {
       return /^-?\d+(\.\d+)?$/.test(value.trim()) ? value.trim() : undefined;
     case 'boolean':
       return value === 'true' || value === 'True' ? 'True' : 'False';
+    case 'set': {
+      // Anchors: [Left, Top, Right]
+      const names = value.trim().replace(/^\[|\]$/g, '').split(',').map(n => n.trim()).filter(n => n !== '');
+      return names.every(n => /^[A-Za-z_]\w*$/.test(n)) ? `[${names.join(', ')}]` : undefined;
+    }
     default:
       return /^[A-Za-z_]\w*$/.test(value.trim()) ? value.trim() : undefined;
   }
@@ -435,4 +440,67 @@ export function outline(text: string): { name: string; className: string; depth:
     walk(root, 0);
   }
   return out;
+}
+
+/** A place in a parent with Layout = Free; a size of 0 (or a place of 0) is the default and is not written. */
+export interface Placement {
+  name: string;
+  left?: number;
+  top?: number;
+  width?: number;
+  height?: number;
+}
+
+function setNumber(text: string, name: string, prop: string, v: number | undefined): string {
+  if (v === undefined) {
+    return text;
+  }
+  const n = Math.round(v);
+  return setProperty(text, name, prop, n === 0 ? undefined : String(n));
+}
+
+/** Moves controls into `parentName` (when given and different) and sets Left, Top, Width, Height: one edit. */
+export function placeObjects(text: string, parentName: string | undefined, items: Placement[]): string {
+  let out = text;
+  for (const it of items) {
+    const root = parseBlocks(out);
+    const b = root && findBlock(root, it.name);
+    if (!root || !b) {
+      continue;
+    }
+    if (parentName && b.parent && b.parent.name.toLowerCase() !== parentName.toLowerCase()) {
+      const parent = findBlock(root, parentName);
+      if (!parent || parent === b || isInsideBlock(parent, b)) {
+        continue;
+      }
+      out = moveObject(out, it.name, parentName, parent.children.length);
+    }
+    out = setNumber(out, it.name, 'Left', it.left);
+    out = setNumber(out, it.name, 'Top', it.top);
+    out = setNumber(out, it.name, 'Width', it.width);
+    out = setNumber(out, it.name, 'Height', it.height);
+  }
+  return out;
+}
+
+function isInsideBlock(b: Block, ancestor: Block): boolean {
+  for (let p: Block | undefined = b; p; p = p.parent) {
+    if (p === ancestor) {
+      return true;
+    }
+  }
+  return false;
+}
+
+const containerClasses = /^(TPanel|TCard|TColumn|TRow|TFlow|TScrollBox|TTabControl|TToolBar|TStatusBar)$/i;
+
+/** Adds a new control at a place in a parent with Layout = Free (containers get a size to draw). */
+export function insertObjectAt(text: string, parentName: string, className: string, left: number, top: number):
+  { text: string; name: string } | undefined {
+  const r = insertObject(text, parentName, 1 << 20, className);
+  if (!r) {
+    return undefined;
+  }
+  const size = containerClasses.test(className) ? { width: 200, height: 120 } : {};
+  return { name: r.name, text: placeObjects(r.text, undefined, [{ name: r.name, left, top, ...size }]) };
 }

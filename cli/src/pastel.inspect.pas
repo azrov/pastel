@@ -453,6 +453,7 @@ var
   T: PTypeInfo;
   Kind, Extra, Items: string;
   Names: TStringList;
+  First: Boolean;
 begin
   Count := GetPropList(Cls.ClassInfo, Props);
   Names := TStringList.Create;
@@ -500,6 +501,35 @@ begin
             end;
           end;
         tkFloat: Kind := 'number';
+        tkSet:
+          begin
+            { Anchors = [Left, Top] }
+            Kind := 'set';
+            Extra := ',"values":[';
+            with GetTypeData(GetTypeData(T)^.CompType)^ do
+              for V := MinValue to MaxValue do
+              begin
+                if V > MinValue then
+                  Extra := Extra + ',';
+                Extra := Extra + JsonStr(ShortEnumName(GetEnumName(GetTypeData(T)^.CompType, V)));
+              end;
+            Extra := Extra + ']';
+            if Props^[I]^.Default <> LongInt($80000000) then
+            begin
+              Extra := Extra + ',"default":"';
+              First := True;
+              with GetTypeData(GetTypeData(T)^.CompType)^ do
+                for V := MinValue to MaxValue do
+                  if (Props^[I]^.Default and (1 shl V)) <> 0 then
+                  begin
+                    if not First then
+                      Extra := Extra + ', ';
+                    Extra := Extra + ShortEnumName(GetEnumName(GetTypeData(T)^.CompType, V));
+                    First := False;
+                  end;
+              Extra := Extra + '"';
+            end;
+          end;
         tkMethod:
           begin
             Kind := 'event';
@@ -567,10 +597,11 @@ begin
   Container := C is TBox;
   Row := Container and TBox(C).Horizontal;
   Result := Format('{"name":%s,"class":%s,"parent":%s,"x":%d,"y":%d,"w":%d,"h":%d,' +
-    '"container":%s,"row":%s,"visible":%s}',
+    '"container":%s,"row":%s,"free":%s,"visible":%s,"dock":%s}',
     [JsonStr(AName), JsonStr(C.ClassName), JsonStr(ParentName), C.Bounds.X, C.Bounds.Y,
      C.Bounds.W, C.Bounds.H, BoolToStr(Container, 'true', 'false'),
-     BoolToStr(Row, 'true', 'false'), BoolToStr(C.Visible, 'true', 'false')]);
+     BoolToStr(Row, 'true', 'false'), BoolToStr(Container and (TBox(C).Layout = lkFree), 'true', 'false'),
+     BoolToStr(C.Visible, 'true', 'false'), BoolToStr(C.Dock <> dkNone, 'true', 'false')]);
 end;
 
 procedure CollectLayout(C: TControl; const ParentName: string; List: TStrings);

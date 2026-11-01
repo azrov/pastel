@@ -244,7 +244,12 @@ The things every business app needs, built in instead of written again in every 
 - [x] Backups of SQLite, PostgreSQL and MySQL from the app or the server, keeping the newest ones, and restoring them (`TDatabase.Backup`, `BackupTo`, `Restore`)
 - [x] `TDataBinding` checks values (`Rules`: required, email, number, range, min, max, pattern) and marks the wrong controls
 
-### 1.4 — Android
+### 1.4 — Forms like Delphi (done)
+
+- [x] Free placement: `Layout = Free`, `TPanel`, `Left`/`Top`, `Anchors`, `Dock` (Delphi's `Align`); new forms are free-placed
+- [x] The designer laid out like Delphi's IDE: Structure, Object Inspector (Properties/Events), Tool Palette in groups, non-visual components in a tray; drop where it goes, drag, eight grips, grid, align tools
+
+### 1.5 — Android
 
 The same Pascal code and `.pform` forms on an Android phone or tablet. The framework draws its own controls with SDL2 and FreeType, and Free Pascal 3.2.2 compiles for Android (ARM64 and ARM), so most of a desktop app carries over.
 
@@ -256,7 +261,7 @@ The same Pascal code and `.pform` forms on an Android phone or tablet. The frame
 - [ ] The app's life: pausing and resuming, the folder for its data, settings that survive an update
 - [ ] An example: the salon's agenda on the phone, syncing with the same server as the desktop
 
-### 1.5 — The web, further
+### 1.6 — The web, further
 
 - [ ] HTTP keep-alive and streaming answers; WebSockets and server-sent events (live updates for apps and pages)
 - [ ] OpenAPI description made from the routes; `pastel new client` makes the Pascal client for an API

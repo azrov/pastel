@@ -67,6 +67,21 @@ begin
   end;
 end;
 
+procedure TestSets;
+var
+  Root: TPFormNode;
+begin
+  Root := ParsePForm('object A: TForm' + LineEnding + '  Anchors = [Left, Top, Right]' + LineEnding +
+    '  Empty = []' + LineEnding + 'end');
+  try
+    Check(Root.FindProp('Anchors').Kind = pvSet, 'set kind');
+    Check(Root.FindProp('Anchors').Value = 'Left'#10'Top'#10'Right', 'set names');
+    Check(Root.FindProp('Empty').Value = '', 'empty set');
+  finally
+    Root.Free;
+  end;
+end;
+
 procedure TestErrors;
 begin
   Check(Pos('line 1', ErrorOf('object A TForm' + LineEnding + 'end')) > 0, 'missing colon');
@@ -79,6 +94,10 @@ begin
     LineEnding + 'end')) > 0, 'unterminated string');
   Check(Pos('must start with', ErrorOf('form A: TForm end')) > 0, 'must start with object');
   Check(Pos('after the last "end"', ErrorOf('object A: TForm end end')) > 0, 'text after end');
+  Check(Pos('a set holds names', ErrorOf('object A: TForm' + LineEnding + '  Anchors = [Left, 2]' + LineEnding +
+    'end')) > 0, 'a number in a set');
+  Check(Pos('expected "," or "]"', ErrorOf('object A: TForm' + LineEnding + '  Anchors = [Left Top]' + LineEnding +
+    'end')) > 0, 'a set without commas');
 end;
 
 procedure TestCodegen;
@@ -114,6 +133,7 @@ begin
   Passed := 0;
   Failed := 0;
   TestParse;
+  TestSets;
   TestErrors;
   TestCodegen;
   WriteLn(Format('pform: %d passed, %d failed', [Passed, Failed]));

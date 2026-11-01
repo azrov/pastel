@@ -37,15 +37,17 @@ type EPFormError = class(Exception)
 ### TPFormValueKind
 
 ```pascal
-type TPFormValueKind = (pvString, pvNumber, pvIdent, pvList)
+type TPFormValueKind = (pvString, pvNumber, pvIdent, pvList, pvSet)
 ```
 
-pvList: ('a', 'b'); Value holds the items, one per line (#10 between)
+pvList: ('a', 'b'); Value holds the items, one per line (#10 between);
+pvSet: [Left, Top]; Value holds the names, one per line
 
-- `pvString` pvList: ('a', 'b'); Value holds the items, one per line (#10 between)
-- `pvNumber` pvList: ('a', 'b'); Value holds the items, one per line (#10 between)
-- `pvIdent` pvList: ('a', 'b'); Value holds the items, one per line (#10 between)
-- `pvList` pvList: ('a', 'b'); Value holds the items, one per line (#10 between)
+- `pvString` pvList: ('a', 'b'); Value holds the items, one per line (#10 between); pvSet: [Left, Top]; Value holds the names, one per line
+- `pvNumber` pvList: ('a', 'b'); Value holds the items, one per line (#10 between); pvSet: [Left, Top]; Value holds the names, one per line
+- `pvIdent` pvList: ('a', 'b'); Value holds the items, one per line (#10 between); pvSet: [Left, Top]; Value holds the names, one per line
+- `pvList` pvList: ('a', 'b'); Value holds the items, one per line (#10 between); pvSet: [Left, Top]; Value holds the names, one per line
+- `pvSet` pvList: ('a', 'b'); Value holds the items, one per line (#10 between); pvSet: [Left, Top]; Value holds the names, one per line
 ### TPFormProp
 
 ```pascal

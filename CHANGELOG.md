@@ -2,7 +2,15 @@
 
 The `pastel` tool and the framework. The VS Code extension has its own list: [vscode/CHANGELOG.md](vscode/CHANGELOG.md). What is planned is in [ROADMAP.md](ROADMAP.md).
 
-## 1.3.0
+## 1.4.0
+
+Forms like Delphi.
+
+- Free placement: `Layout = Free` on a form, card or column, and the new `TPanel` — controls stay where they are put (`Left`, `Top`) at their own size; `Anchors` (`[Left, Top, Right]`...) and `Dock` (`Top`, `Bottom`, `Left`, `Right`, `Fill`) follow the window like Delphi's `Anchors` and `Align`
+- New apps and forms (`pastel new app`, `pastel new form`) are free-placed; `Layout = Flow` keeps the responsive rows and columns
+- Sets in `.pform` files: `Anchors = [Left, Top, Right]`
+- The designer is laid out like Delphi's IDE (extension 1.1.0)
+
 
 Data made easier.
 

@@ -9,7 +9,7 @@ Controls, layout and input handling.
 
 `uses Pastel.UI;` · source: [framework/src/pastel.ui.pas](../../framework/src/pastel.ui.pas)
 
-**Contents:** [TAlignItems](#talignitems) · [TJustify](#tjustify) · [TImageFit](#timagefit) · [TTextAlign](#ttextalign) · [TButtonStyle](#tbuttonstyle) · [TCursorKind](#tcursorkind) · [TWindowState](#twindowstate) · [TThemeMode](#tthememode) · [TControl](#tcontrol) · [TAction](#taction) · [TBox](#tbox) · [TColumn](#tcolumn) · [TRow](#trow) · [TFlow](#tflow) · [TCard](#tcard) · [TSpacer](#tspacer) · [TLabel](#tlabel) · [TButton](#tbutton) · [TEditState](#teditstate) · [TVisualLine](#tvisualline) · [TCustomEdit](#tcustomedit) · [TEdit](#tedit) · [TMemo](#tmemo) · [TPopup](#tpopup) · [TTimer](#ttimer) · [TForm](#tform) · [TTheme](#ttheme) · [UseDarkTheme](#usedarktheme) · [SetThemeValue](#setthemevalue) · [InvalidateArea](#invalidatearea) · [RequestAnimation](#requestanimation) · [AnimationTime](#animationtime) · [RequestAnimation](#requestanimation) · [ProcessTimers](#processtimers) · [WrapText](#wraptext) · [RegisterControl](#registercontrol) · [FindControlClass](#findcontrolclass) · [ControlClassCount](#controlclasscount) · [ControlClassAt](#controlclassat) · [RegisterNonVisual](#registernonvisual) · [FindNonVisualClass](#findnonvisualclass) · [NonVisualClassCount](#nonvisualclasscount) · [NonVisualClassAt](#nonvisualclassat)
+**Contents:** [TAlignItems](#talignitems) · [TJustify](#tjustify) · [TImageFit](#timagefit) · [TLayoutKind](#tlayoutkind) · [TAnchorKind](#tanchorkind) · [TDock](#tdock) · [TTextAlign](#ttextalign) · [TButtonStyle](#tbuttonstyle) · [TCursorKind](#tcursorkind) · [TWindowState](#twindowstate) · [TThemeMode](#tthememode) · [TControl](#tcontrol) · [TAction](#taction) · [TBox](#tbox) · [TColumn](#tcolumn) · [TPanel](#tpanel) · [TRow](#trow) · [TFlow](#tflow) · [TCard](#tcard) · [TSpacer](#tspacer) · [TLabel](#tlabel) · [TButton](#tbutton) · [TEditState](#teditstate) · [TVisualLine](#tvisualline) · [TCustomEdit](#tcustomedit) · [TEdit](#tedit) · [TMemo](#tmemo) · [TPopup](#tpopup) · [TTimer](#ttimer) · [TForm](#tform) · [TTheme](#ttheme) · [UseDarkTheme](#usedarktheme) · [SetThemeValue](#setthemevalue) · [InvalidateArea](#invalidatearea) · [RequestAnimation](#requestanimation) · [AnimationTime](#animationtime) · [RequestAnimation](#requestanimation) · [ProcessTimers](#processtimers) · [WrapText](#wraptext) · [RegisterControl](#registercontrol) · [FindControlClass](#findcontrolclass) · [ControlClassCount](#controlclasscount) · [ControlClassAt](#controlclassat) · [RegisterNonVisual](#registernonvisual) · [FindNonVisualClass](#findnonvisualclass) · [NonVisualClassCount](#nonvisualclasscount) · [NonVisualClassAt](#nonvisualclassat)
 
 ## Types
 
@@ -45,6 +45,44 @@ How a picture fills its place: Contain: all of it fits; Cover: fills, cut at the
 - `ifCover` How a picture fills its place: Contain: all of it fits; Cover: fills, cut at the edges; Stretch; Center: real size.
 - `ifStretch` How a picture fills its place: Contain: all of it fits; Cover: fills, cut at the edges; Stretch; Center: real size.
 - `ifCenter` How a picture fills its place: Contain: all of it fits; Cover: fills, cut at the edges; Stretch; Center: real size.
+### TLayoutKind
+
+```pascal
+type TLayoutKind = (lkFlow, lkFree)
+```
+
+How a box places its children. Flow: below each other (or side by side in a row), the
+responsive way; Free: where their Left and Top say, like Delphi and Lazarus forms.
+
+- `lkFlow` How a box places its children. Flow: below each other (or side by side in a row), the responsive way; Free: where their Left and Top say, like Delphi and Lazarus forms.
+- `lkFree` How a box places its children. Flow: below each other (or side by side in a row), the responsive way; Free: where their Left and Top say, like Delphi and Lazarus forms.
+### TAnchorKind
+
+```pascal
+type TAnchorKind = (akLeft, akTop, akRight, akBottom)
+```
+
+The edges of a free-placed control that keep their distance to the parent's edges when
+the parent is resized: [Left, Top] stays put, [Left, Right] gets wider with it.
+
+- `akLeft` The edges of a free-placed control that keep their distance to the parent's edges when the parent is resized: [Left, Top] stays put, [Left, Right] gets wider with it.
+- `akTop` The edges of a free-placed control that keep their distance to the parent's edges when the parent is resized: [Left, Top] stays put, [Left, Right] gets wider with it.
+- `akRight` The edges of a free-placed control that keep their distance to the parent's edges when the parent is resized: [Left, Top] stays put, [Left, Right] gets wider with it.
+- `akBottom` The edges of a free-placed control that keep their distance to the parent's edges when the parent is resized: [Left, Top] stays put, [Left, Right] gets wider with it.
+### TDock
+
+```pascal
+type TDock = (dkNone, dkTop, dkBottom, dkLeft, dkRight, dkFill)
+```
+
+A free-placed control docked to an edge of its parent (Delphi's Align): Fill takes what is left.
+
+- `dkNone` A free-placed control docked to an edge of its parent (Delphi's Align): Fill takes what is left.
+- `dkTop` A free-placed control docked to an edge of its parent (Delphi's Align): Fill takes what is left.
+- `dkBottom` A free-placed control docked to an edge of its parent (Delphi's Align): Fill takes what is left.
+- `dkLeft` A free-placed control docked to an edge of its parent (Delphi's Align): Fill takes what is left.
+- `dkRight` A free-placed control docked to an edge of its parent (Delphi's Align): Fill takes what is left.
+- `dkFill` A free-placed control docked to an edge of its parent (Delphi's Align): Fill takes what is left.
 ### TTextAlign
 
 ```pascal
@@ -122,6 +160,10 @@ type TControl = class(TComponent)
 | `property Width: Integer` |  |
 | `property Height: Integer` |  |
 | `property Grow: Integer` |  |
+| `property Left: Integer` | The place in a parent with Layout = Free (a TPanel, or a form with Layout = Free). |
+| `property Top: Integer` |  |
+| `property Anchors: TAnchors` | In a parent with Layout = Free: which edges follow the parent's when it is resized. |
+| `property Dock: TDock` | In a parent with Layout = Free: docked to an edge (Top, Bottom, Left, Right) or Fill. |
 | `property Visible: Boolean` |  |
 | `property Enabled: Boolean` |  |
 | `property Hint: string` | Shown in a tooltip when the mouse rests on the control. |
@@ -161,6 +203,7 @@ A container that stacks its children vertically or horizontally.
 | `constructor Create(AOwner: TComponent)` |  |
 | `destructor Destroy` |  |
 | `property Horizontal: Boolean` | True for TRow: children are placed left to right. |
+| `property Layout: TLayoutKind` | Flow (default): children below each other, or side by side in a row; Free: where their Left and Top say. |
 | `property Gap: Integer` |  |
 | `property Padding: Integer` |  |
 | `property Align: TAlignItems` |  |
@@ -177,6 +220,19 @@ A container that stacks its children vertically or horizontally.
 ```pascal
 type TColumn = class(TBox)
 ```
+
+### TPanel
+
+```pascal
+type TPanel = class(TBox)
+```
+
+A box whose children stay where they are put (Left, Top), like a Delphi TPanel.
+
+| | |
+|---|---|
+| `constructor Create(AOwner: TComponent)` |  |
+| `property Layout` |  |
 
 ### TRow
 
@@ -505,6 +561,7 @@ type TTheme = record
 
 | | |
 |---|---|
+| `type TAnchors = set of TAnchorKind` |  |
 | `type TCloseQueryEvent = procedure(Sender: TObject; CanClose: Boolean)` |  |
 | `type TControlClass = class of TControl` |  |
 | `type TRectArray = array of TRectI` |  |
