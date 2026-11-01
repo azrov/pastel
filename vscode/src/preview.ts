@@ -99,7 +99,7 @@ export class FormPreview {
     if (schema) {
       this.panel.webview.postMessage({
         type: 'schema',
-        controls: schema.controls.map(c => ({ name: c.name, container: c.container, project: !!c.project })),
+        controls: schema.controls.map(c => ({ name: c.name, container: c.container, project: !!c.project, nonvisual: !!c.nonvisual })),
       });
     }
   }

@@ -15,6 +15,7 @@ export function designerHtml(nonce: string): string {
     background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); cursor: grab; user-select: none; }
   .chip:hover { background: var(--vscode-button-secondaryHoverBackground); }
   .chip.project { border-style: dashed; font-style: italic; }
+  .chip.nonvisual::before { content: '◇ '; opacity: .7; }
   .toolbar .hint { opacity: .7; margin-left: auto; font-size: 12px; }
   .main { display: flex; flex-wrap: wrap; gap: 16px; padding: 16px; align-items: flex-start; }
   .stage { position: relative; display: inline-block; box-shadow: 0 2px 12px rgba(0,0,0,.25); border-radius: 6px; line-height: 0; user-select: none; }
@@ -239,18 +240,27 @@ export function designerHtml(nonce: string): string {
     const ordered = controlsInfo.filter(c => c.project).concat(controlsInfo.filter(c => !c.project));
     for (const c of ordered) {
       const chip = document.createElement('span');
-      chip.className = c.project ? 'chip project' : 'chip';
+      chip.className = 'chip' + (c.project ? ' project' : '') + (c.nonvisual ? ' nonvisual' : '');
       chip.textContent = c.name.replace(/^T/, '');
       chip.draggable = true;
-      chip.title = (c.project ? 'A control of this project (src/controls). ' : '') +
+      chip.title = (c.project ? 'From this project or its libraries (src/controls). ' : '') +
+        (c.nonvisual ? 'Not visible on the form: it goes to the top of the .pform. ' : '') +
         'Drag onto the form, or click to add after the selected control';
       chip.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', c.name); e.dataTransfer.effectAllowed = 'copy'; });
       chip.addEventListener('click', () => addNear(c.name));
       toolbox.insertBefore(chip, hint);
     }
   }
+  function isNonVisual(className) {
+    return controlsInfo.some(c => c.name === className && c.nonvisual);
+  }
   function addNear(className) {
     if (!layout) return;
+    if (isNonVisual(className)) {
+      // a timer, an action...: at the start of the form
+      vscode.postMessage({ type: 'add', className, parent: layout.controls[0].name, index: 0 });
+      return;
+    }
     const sel = byName(selected) || layout.controls[0];
     if (sel.container) {
       // into the selected container, at the end
@@ -272,7 +282,8 @@ export function designerHtml(nonce: string): string {
     const className = e.dataTransfer.getData('text/plain');
     const t = dropTarget(pointFromEvent(e), null);
     drag = null;
-    if (className && t) vscode.postMessage({ type: 'add', className, parent: t.container.name, index: t.index });
+    if (className && isNonVisual(className)) addNear(className);
+    else if (className && t) vscode.postMessage({ type: 'add', className, parent: t.container.name, index: t.index });
     drawBoxes();
   });
 

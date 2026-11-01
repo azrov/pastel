@@ -14,6 +14,8 @@ export interface SchemaClass {
   form: boolean;
   /** A control of the project (src/controls/), not of Pastel. */
   project?: boolean;
+  /** A component without a place on the form (TTimer, TAction, TDataBinding...). */
+  nonvisual?: boolean;
   properties: SchemaProperty[];
 }
 

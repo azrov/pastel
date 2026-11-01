@@ -426,9 +426,11 @@ begin
     Names.Free;
     FreeMem(Props);
   end;
-  Result := Format('{"name":%s,"container":%s,"form":%s,"project":%s,"properties":[%s]}',
+  Result := Format('{"name":%s,"container":%s,"form":%s,"nonvisual":%s,"project":%s,"properties":[%s]}',
     [JsonStr(Cls.ClassName), BoolToStr(Cls.InheritsFrom(TBox), 'true', 'false'),
      BoolToStr(IsForm, 'true', 'false'),
+     { a component without a place on the form (TTimer, TAction...) }
+     BoolToStr(not Cls.InheritsFrom(TControl), 'true', 'false'),
      { a control of the project (src/controls/), not of the framework }
      BoolToStr(not SameText(Copy(Cls.UnitName, 1, 7), 'Pastel.'), 'true', 'false'), Items]);
 end;
@@ -447,6 +449,8 @@ begin
       Result := Result + ',';
     Result := Result + ClassJson(ControlClassAt(I), False);
   end;
+  for I := 0 to NonVisualClassCount - 1 do
+    Result := Result + ',' + ClassJson(NonVisualClassAt(I), False);
   Result := Result + ']}';
 end;
 

@@ -16,7 +16,7 @@ Translations and the number and date formats of a language.
 
 `uses Pastel.Lang;` · source: [framework/src/pastel.lang.pas](../../framework/src/pastel.lang.pas)
 
-**Contents:** [_](#_) · [Translate](#translate) · [UseLanguage](#uselanguage) · [Language](#language) · [LanguageChosen](#languagechosen) · [SystemLanguage](#systemlanguage) · [AvailableLanguages](#availablelanguages) · [FrameworkTexts](#frameworktexts) · [AddTranslation](#addtranslation) · [FormatNumber](#formatnumber) · [FormatDateShort](#formatdateshort) · [FormatDateTimeShort](#formatdatetimeshort) · [TryParseNumber](#tryparsenumber)
+**Contents:** [_](#_) · [Translate](#translate) · [UseLanguage](#uselanguage) · [Language](#language) · [LanguageChosen](#languagechosen) · [SystemLanguage](#systemlanguage) · [AvailableLanguages](#availablelanguages) · [FrameworkTexts](#frameworktexts) · [AddTranslation](#addtranslation) · [FormatNumber](#formatnumber) · [FormatDateShort](#formatdateshort) · [FormatDateTimeShort](#formatdatetimeshort) · [MonthName](#monthname) · [DayNameShort](#daynameshort) · [TryParseNumber](#tryparsenumber)
 
 ## Routines
 
@@ -113,6 +113,22 @@ The date in the language's short form: 31.10.2026, 10/31/2026, 2026-10-31...
 ```pascal
 function FormatDateTimeShort(D: TDateTime): string
 ```
+
+### MonthName
+
+```pascal
+function MonthName(Month: Integer): string
+```
+
+'November' / 'Kasım' (Month 1..12), in the current language.
+
+### DayNameShort
+
+```pascal
+function DayNameShort(Day: Integer): string
+```
+
+'Mo' / 'Pzt' (Day 1 = Monday .. 7 = Sunday, like DayOfTheWeek), in the current language.
 
 ### TryParseNumber
 

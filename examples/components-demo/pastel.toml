@@ -1,0 +1,19 @@
+# Example: an app that uses the components of another project (../components).
+# Its controls are in the designer's toolbox; try: pastel run
+
+[project]
+name = "components-demo"
+version = "1.0.0"
+pastel = "1.0"
+title = "Order Form"
+type = "app"
+
+[build]
+main = "src/main.pas"
+mode = "objfpc"
+
+[targets]
+platforms = ["linux", "windows"]
+
+[dependencies]
+components = { path = "../components" }     # TStarRating, TCurrencyEdit, TDatePicker, TFormMemory

@@ -50,12 +50,51 @@ begin
   Result := IncludeTrailingPathDelimiter(Root) + 'src' + PathDelim + 'controls';
 end;
 
-function ControlFiles(const Root: string): TStringArray;
+{ the project and every library it depends on (also indirectly) }
+procedure CollectRoots(const Root: string; Roots: TStringList);
+var
+  P: TPastelProject;
+  D: TDependency;
+  R: string;
 begin
-  if DirectoryExists(ControlsDir(Root)) then
-    Result := ListFiles(ControlsDir(Root), '*.pas', False)
-  else
-    Result := nil;
+  R := IncludeTrailingPathDelimiter(ExpandFileName(Root));
+  if Roots.IndexOf(R) >= 0 then
+    Exit;
+  Roots.Add(R);
+  try
+    P := TPastelProject.Load(R);
+  except
+    Exit;     { a broken pastel.toml is reported by the build }
+  end;
+  try
+    for D in P.Dependencies do
+      CollectRoots(D.Root, Roots);
+  finally
+    P.Free;
+  end;
+end;
+
+{ the units in src/controls/ of the project and of its libraries: a library's
+  controls are in the designer's toolbox like the project's own }
+function ControlFiles(const Root: string): TStringArray;
+var
+  Roots: TStringList;
+  R, F: string;
+begin
+  Result := nil;
+  Roots := TStringList.Create;
+  try
+    CollectRoots(Root, Roots);
+    for R in Roots do
+      if DirectoryExists(ControlsDir(R)) then
+        for F in ListFiles(ControlsDir(R), '*.pas', False) do
+        begin
+          SetLength(Result, Length(Result) + 1);
+          Result[High(Result)] := F;
+        end;
+  finally
+    Roots.Free;
+  end;
 end;
 
 function ProjectControls(const Root: string): TStringList;

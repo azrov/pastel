@@ -2,6 +2,17 @@
 
 The `pastel` tool and the framework. The VS Code extension has its own list: [vscode/CHANGELOG.md](vscode/CHANGELOG.md). What is planned is in [ROADMAP.md](ROADMAP.md).
 
+## 1.0.0-rc.2
+
+Components and documentation.
+
+- Controls and components of libraries (`[dependencies]`) are in the designer's toolbox, like the project's own; non-visual components (`TTimer`, `TAction`, `TDataBinding`, your own) are in the schema and the toolbox too
+- `examples/components`: a library with `TStarRating`, `TCurrencyEdit`, `TDatePicker` and `TFormMemory`; `examples/components-demo` uses it
+- `Pastel.Lang`: `MonthName`, `DayNameShort` in 11 languages
+- UI scripts: `set Name.Property value`
+- Documentation: an index of all topics, a reference of every control with examples (`docs/controls.md`), every command with examples (`docs/commands.md`), writing components (`docs/components.md`); `tests/docs-coverage.sh` fails when a control, command or example is not documented
+- Dependencies can be given with a full path
+
 ## 1.0.0-rc.1
 
 The release candidate for 1.0. From 1.0 on, the framework API in `docs/api/stable.txt`, `pastel.toml`, `.pform` files and the `pastel` commands stay compatible within 1.x ([docs/compatibility.md](docs/compatibility.md)).

@@ -31,7 +31,7 @@ defines = ["FAKE_CLOCK"]
 platforms = ["linux", "windows", "rpi"]   # pastel build --all, pastel package --all
 
 [dependencies]
-text-tools = { path = "../text-tools" }   # another Pastel project, see workflow.md
+text-tools = { path = "../text-tools" }   # another Pastel project (a relative or a full path), see workflow.md
 
 [package]
 include = ["config.example.toml", "assets"]   # put into every package

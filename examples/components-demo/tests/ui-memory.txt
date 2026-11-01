@@ -1,0 +1,5 @@
+# Run after ui.txt: the form remembers what was entered last time (TFormMemory).
+expect CustomerEdit Ayşe Yılmaz
+expect PriceEdit 1,234.50 ₺
+expect TotalLabel Total: 1,234.50 ₺
+quit

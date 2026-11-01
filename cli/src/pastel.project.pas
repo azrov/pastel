@@ -10,7 +10,7 @@ uses
   SysUtils;
 
 const
-  PastelVersion = '1.0.0-rc.1';
+  PastelVersion = '1.0.0-rc.2';
   ProjectFileName = 'pastel.toml';
 
 { '0.7' for Pastel 0.7.x: what [project] pastel records. }
@@ -217,7 +217,11 @@ begin
         else
           raise EProjectError.CreateFmt('%s: dependency "%s" needs a path, e.g. %s = { path = "../%s" }',
             [ProjectFileName, Dep, Dep, Dep]);
-        D.Root := IncludeTrailingPathDelimiter(ExpandFileName(P.Root + SetDirSeparators(D.Path)));
+        { relative to the project, or a full path }
+        if (D.Path <> '') and ((D.Path[1] in ['/', '\']) or ((Length(D.Path) > 1) and (D.Path[2] = ':'))) then
+          D.Root := IncludeTrailingPathDelimiter(ExpandFileName(SetDirSeparators(D.Path)))
+        else
+          D.Root := IncludeTrailingPathDelimiter(ExpandFileName(P.Root + SetDirSeparators(D.Path)));
         SetLength(P.Dependencies, Length(P.Dependencies) + 1);
         P.Dependencies[High(P.Dependencies)] := D;
       end;

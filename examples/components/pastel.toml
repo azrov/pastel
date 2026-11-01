@@ -1,0 +1,14 @@
+# Example: a library of components (controls and non-visual components) that
+# other projects use. Its controls appear in the designer's toolbox of every
+# project that depends on it:
+#   [dependencies]
+#   components = { path = "../components" }
+
+[project]
+name = "components"
+version = "1.0.0"
+pastel = "1.0"
+type = "lib"
+
+[build]
+mode = "objfpc"

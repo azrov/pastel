@@ -489,12 +489,14 @@ Pastel.Jwt: function JwtSign(Claims: TJSONObject; const Secret: string; ExpiresI
 Pastel.Jwt: function JwtVerify(const Token: string; const Secret: string; Leeway: Integer = 30): TJSONObject
 Pastel.Jwt: type EJwtError = class(Exception)
 Pastel.Lang: function AvailableLanguages: TStringArray
+Pastel.Lang: function DayNameShort(Day: Integer): string
 Pastel.Lang: function FormatDateShort(D: TDateTime): string
 Pastel.Lang: function FormatDateTimeShort(D: TDateTime): string
 Pastel.Lang: function FormatNumber(Value: Double; Decimals: Integer = 0): string
 Pastel.Lang: function FrameworkTexts: TStringArray
 Pastel.Lang: function Language: string
 Pastel.Lang: function LanguageChosen: Boolean
+Pastel.Lang: function MonthName(Month: Integer): string
 Pastel.Lang: function SystemLanguage: string
 Pastel.Lang: function Translate(const S: string): string
 Pastel.Lang: function TryParseNumber(const S: string; out Value: Double): Boolean

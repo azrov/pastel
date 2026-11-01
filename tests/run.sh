@@ -39,6 +39,8 @@ if [ -f vscode/out/lang/apidoc.js ] && command -v node >/dev/null; then
   echo "== the stable API is still there"
   node vscode/out/lang/apidoc.js --check-stable framework/src docs/api || exit 1
 fi
+echo "== every feature is documented"
+PASTEL="$PASTEL" sh tests/docs-coverage.sh || exit 1
 echo "== framework tests"
 (cd framework/tests && PASTEL_ARGS_TEST_TOKEN=secret FWTEST_SERVER_PORT=9090 FWTEST_FEATURES="a, b" \
   "$PASTEL" test >"$WORK/framework.log" 2>&1) || { cat "$WORK/framework.log"; exit 1; }
@@ -46,10 +48,10 @@ tail -1 "$WORK/framework.log"
 
 
 echo "== examples"
-for ex in dupfinder weather notes-api contacts notepad; do
+for ex in dupfinder weather notes-api contacts notepad components; do
   rm -rf "$WORK/ex-$ex" && cp -r "examples/$ex" "$WORK/ex-$ex" && rm -rf "$WORK/ex-$ex/build"
   out="$(cd "$WORK/ex-$ex" && "$PASTEL" test 2>&1)" || { echo "$out"; exit 1; }
-  echo "$ex: $(echo "$out" | tail -1)"
+  echo "$ex: $(echo "$out" | grep "Tests:" | tail -1)"
 done
 mkdir -p "$WORK/dups/sub" && echo same > "$WORK/dups/a.txt" && echo same > "$WORK/dups/sub/b.txt" && echo other > "$WORK/dups/c.txt"
 out="$(cd "$WORK/ex-dupfinder" && "$PASTEL" run -- "$WORK/dups" 2>&1)"
@@ -91,6 +93,18 @@ mkdir -p "$WORK/ex-notepad/assets" && printf 'accent = "#0E9F6E"\nmystery = "1"\
 (cd "$WORK/ex-notepad" && "$PASTEL" build >/dev/null)
 set +e; out="$(cd "$WORK/np" && printf 'quit\n' > q.txt && PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT=q.txt "$WORK"/ex-notepad/build/*/debug/notepad 2>&1)"; code=$?; set -e
 expect "assets/theme.toml is read"       '[ "$code" = 0 ] && echo "$out" | grep -q "\"mystery = 1\" is not a theme value"'
+# a library of components, used by an app (examples/components, components-demo)
+rm -rf "$WORK/ex-components-demo" && cp -r examples/components-demo "$WORK/ex-components-demo" && rm -rf "$WORK/ex-components-demo/build"
+sed -i "s|path = \"../components\"|path = \"$WORK/ex-components\"|" "$WORK/ex-components-demo/pastel.toml"
+(cd "$WORK/ex-components-demo" && "$PASTEL" build >/dev/null 2>&1)
+rm -rf "$WORK/cfg"
+for t in ui ui-memory; do
+  set +e; out="$(cd "$WORK/ex-components-demo" && XDG_CONFIG_HOME="$WORK/cfg" PASTEL_LANG=en PASTEL_CHECK_REPAINT=1 PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT=tests/$t.txt ./build/*/debug/components-demo 2>&1)"; code=$?; set -e
+  expect "components-demo: $t.txt"        '[ "$code" = 0 ] && ! echo "$out" | grep -q FAIL'
+  [ "$code" = 0 ] || echo "$out" | grep -v "^ok" | head
+done
+expect "a library's controls are in the toolbox" '(cd "$WORK/ex-components-demo" && "$PASTEL" schema 2>/dev/null) | grep -q "\"name\":\"TDatePicker\",\"container\":false,\"form\":false,\"nonvisual\":false,\"project\":true"'
+expect "and its non-visual components"     '(cd "$WORK/ex-components-demo" && "$PASTEL" schema 2>/dev/null) | grep -q "\"name\":\"TFormMemory\",\"container\":false,\"form\":false,\"nonvisual\":true,\"project\":true"'
 echo "== end-to-end tests"
 # --- desktop packages ---
 (cd "$WORK/ex-notepad" && "$PASTEL" package deb >/dev/null)
@@ -648,7 +662,7 @@ expect "an app uses its own control"      '[ -x build/linux/debug/own-controls ]
 printf 'click NewBadge\nexpect Greeting New clicked\nquit\n' > ui.txt
 set +e; out="$(PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT=ui.txt ./build/linux/debug/own-controls 2>&1)"; set -e
 expect "and it works"                     'echo "$out" | grep -q "ok: Greeting = \"New clicked\""'
-expect "schema lists it for the designer" '"$PASTEL" schema 2>/dev/null | grep -q "\"name\":\"TBadge\",\"container\":false,\"form\":false,\"project\":true"'
+expect "schema lists it for the designer" '"$PASTEL" schema 2>/dev/null | grep -q "\"name\":\"TBadge\",\"container\":false,\"form\":false,\"nonvisual\":false,\"project\":true"'
 out="$(sed "s/Text = 'New'/Txt = 'New'/" src/forms/Home.pform | "$PASTEL" check src/forms/Home.pform --stdin --json 2>/dev/null || true)"
 expect "check knows its properties"       'echo "$out" | grep -q "TBadge has no property"'
 "$PASTEL" preview src/forms/Home.pform -o badge.png >/dev/null 2>&1

@@ -1,0 +1,41 @@
+# The order form, driven like a user would (run by tests/run.sh with a fresh settings folder):
+#   PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT=tests/ui.txt ./build/linux/debug/components-demo
+expect Rating.Value 3
+type CustomerEdit Ayşe Yılmaz
+type PriceEdit 1234,5
+key tab
+expect PriceEdit 1,234.50 ₺
+click QuantitySlider
+key end
+expect QuantitySlider.Position 20
+expect TotalLabel Total: 24,690.00 ₺
+click Rating 110 10
+expect Rating.Value 4
+key left
+expect Rating.Value 3
+set DuePicker.DateText 2026-11-01
+click DuePicker
+key right
+key enter
+expect DuePicker.DateText 2026-11-02
+click DuePicker
+key pagedown
+key down
+key enter
+expect DuePicker.DateText 2026-12-09
+click DuePicker
+click Calendar 20 15
+click Calendar 100 100
+expect DuePicker.DateText 2026-11-04
+key delete
+expect DuePicker.DateText 
+set DuePicker.DateText 2026-11-20
+click AddButton
+expect Orders.Row 0
+set CustomerEdit.Text 
+click AddButton
+expect MessageText Who is the order for?
+click OkButton
+# TFormMemory stores the customer and the price when the window closes
+set CustomerEdit.Text Ayşe Yılmaz
+close

@@ -1152,6 +1152,24 @@ begin
           else
             WriteLn(Format('ok: %s = "%s"', [Arg1, Want]));
         end;
+      'set':
+        begin
+          { set Name.Property value: like the .pform line Property = value }
+          N := Pos('.', Arg1);
+          if N = 0 then
+            Fatal(Format('%s:%d: set needs Name.Property, like: set DueDate.DateText 2026-11-01',
+              [FScriptFile, FScriptPos]));
+          C := Ctl(Copy(Arg1, 1, N - 1));
+          Prop := Copy(Arg1, N + 1, MaxInt);
+          if GetPropInfo(C, Prop) = nil then
+            Fatal(Format('%s:%d: %s has no property "%s"', [FScriptFile, FScriptPos, C.Name, Prop]));
+          try
+            SetPropValue(C, Prop, Rest);
+          except
+            on E: Exception do
+              Fatal(Format('%s:%d: %s.%s = %s: %s', [FScriptFile, FScriptPos, C.Name, Prop, Rest, E.Message]));
+          end;
+        end;
       'print':
         WriteLn(Arg1, ': ', TextOf(Ctl(Arg1)));
       'sleep':

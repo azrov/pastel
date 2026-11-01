@@ -2,6 +2,7 @@
 
 ## 1.0.0
 
+- The toolbox shows the controls of the libraries a project uses, and non-visual components (◇): timers, actions, data bindings and your own; adding one puts it at the top of the form
 - Ready for the Marketplace and Open VSX; works with Pastel 1.0 (`pastel = "1.0"` projects)
 - The form designer, Pascal code intelligence, tests, routes and tasks as in 0.9, now with a stable `pastel` tool behind them
 

@@ -19,6 +19,7 @@ type
     procedure RegionFallsBackToLanguage;
     procedure NumbersAndDates;
     procedure ReadsNumbersOfTheLanguage;
+    procedure MonthAndDayNames;
   end;
 
 implementation
@@ -102,6 +103,20 @@ begin
   AssertTrue(TryParseNumber('1,234.5', V));
   AssertEquals(1234.5, V, 0.0001);
   AssertFalse(TryParseNumber('abc', V));
+end;
+
+procedure TLangTests.MonthAndDayNames;
+begin
+  UseLanguage('en');
+  AssertEquals('November', MonthName(11));
+  AssertEquals('Mo', DayNameShort(1));
+  UseLanguage('tr');
+  AssertEquals('Kasım', MonthName(11));
+  AssertEquals('Pz', DayNameShort(7));
+  UseLanguage('de');
+  AssertEquals('März', MonthName(3));
+  AssertEquals('', MonthName(13));
+  UseLanguage('en');
 end;
 
 initialization

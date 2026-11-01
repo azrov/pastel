@@ -1,4 +1,4 @@
-{ Pastel - translations and the number and date formats of a language.
+(* Pastel - translations and the number and date formats of a language.
 
     assets/lang/tr.json:   { "Save": "Kaydet", "Delete %s?": "%s silinsin mi?" }
 
@@ -11,7 +11,7 @@
   (Text, Caption, Title, Placeholder, Hint, Items) are translated when the
   form loads. A text without a translation stays as it is. "pastel lang"
   collects the texts of a project into the files.
-  Part of the Pastel project, MIT License. }
+  Part of the Pastel project, MIT License. *)
 unit Pastel.Lang;
 
 {$mode objfpc}{$H+}
@@ -47,6 +47,10 @@ function FormatNumber(Value: Double; Decimals: Integer = 0): string;
 { The date in the language's short form: 31.10.2026, 10/31/2026, 2026-10-31... }
 function FormatDateShort(D: TDateTime): string;
 function FormatDateTimeShort(D: TDateTime): string;
+{ 'November' / 'Kasım' (Month 1..12), in the current language. }
+function MonthName(Month: Integer): string;
+{ 'Mo' / 'Pzt' (Day 1 = Monday .. 7 = Sunday, like DayOfTheWeek), in the current language. }
+function DayNameShort(Day: Integer): string;
 { Reads a number the way users of the language write it ('1.234,5' in tr). }
 function TryParseNumber(const S: string; out Value: Double): Boolean;
 
@@ -444,6 +448,57 @@ begin
       SetLength(Result, Length(Result) + 1);
       Result[High(Result)] := ChangeFileExt(Copy(N, 6, MaxInt), '');
     end;
+end;
+
+const
+  CalendarLangs: array[0..10] of string = ('en', 'tr', 'az', 'de', 'fr', 'es', 'it', 'pt', 'nl', 'ru', 'pl');
+  MonthNames: array[0..10, 1..12] of string = (
+    ('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'),
+    ('Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'),
+    ('Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'İyun', 'İyul', 'Avqust', 'Sentyabr', 'Oktyabr', 'Noyabr', 'Dekabr'),
+    ('Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'),
+    ('janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'),
+    ('enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'),
+    ('gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'),
+    ('janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'),
+    ('januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'),
+    ('Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'),
+    ('styczeń', 'luty', 'marzec', 'kwiecień', 'maj', 'czerwiec', 'lipiec', 'sierpień', 'wrzesień', 'październik', 'listopad', 'grudzień'));
+  DayNames: array[0..10, 1..7] of string = (
+    ('Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'),
+    ('Pt', 'Sa', 'Ça', 'Pe', 'Cu', 'Ct', 'Pz'),
+    ('B.e', 'Ç.a', 'Ç', 'C.a', 'C', 'Ş', 'B'),
+    ('Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'),
+    ('lu', 'ma', 'me', 'je', 've', 'sa', 'di'),
+    ('lu', 'ma', 'mi', 'ju', 'vi', 'sá', 'do'),
+    ('lu', 'ma', 'me', 'gi', 've', 'sa', 'do'),
+    ('seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom'),
+    ('ma', 'di', 'wo', 'do', 'vr', 'za', 'zo'),
+    ('Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'),
+    ('pn', 'wt', 'śr', 'cz', 'pt', 'so', 'nd'));
+
+function CalendarLang: Integer;
+var
+  I: Integer;
+begin
+  for I := 0 to High(CalendarLangs) do
+    if SameText(CalendarLangs[I], Copy(Language, 1, 2)) then
+      Exit(I);
+  Result := 0;
+end;
+
+function MonthName(Month: Integer): string;
+begin
+  if (Month < 1) or (Month > 12) then
+    Exit('');
+  Result := _(MonthNames[CalendarLang, Month]);
+end;
+
+function DayNameShort(Day: Integer): string;
+begin
+  if (Day < 1) or (Day > 7) then
+    Exit('');
+  Result := _(DayNames[CalendarLang, Day]);
 end;
 
 function FormatNumber(Value: Double; Decimals: Integer): string;

@@ -38,7 +38,15 @@ The database tests also run against PostgreSQL and MySQL/MariaDB when `PASTEL_TE
 1. **Discuss bigger changes first** in an issue, so no work is lost.
 2. **Write a test** for what you fix or add: a framework test (`framework/tests/tests/`), an end-to-end check (`tests/run.sh`) or a UI script (see [docs/forms.md](docs/forms.md#testing-a-form-without-a-window)).
 3. **Keep the style:** `bin/pastel fmt cli framework tests examples` formats the Pascal code; the tests check it.
-4. **Document it:** a comment above every public declaration (it becomes the API reference: `npm run apidoc` in `vscode/`), and the guide in `docs/` when people need to know.
+4. **Document it, with an example, in the same change.** Pastel's docs are meant to answer every "how do I...?" with something to copy:
+   - a comment above every public declaration (it becomes the API reference: `npm run apidoc` in `vscode/`);
+   - a new control or component: a section `### TName` in [docs/controls.md](docs/controls.md) with a `.pform` and a code example;
+   - a new command or option: [docs/commands.md](docs/commands.md);
+   - a new feature: a section in the topic's page ([docs/README.md](docs/README.md) lists them), and in the guide when it changes how a program is built;
+   - a new example program: a `README.md` and a line in [docs/README.md](docs/README.md#examples);
+   - a line in [CHANGELOG.md](CHANGELOG.md).
+
+   `tests/docs-coverage.sh` fails when a control, a command or an example has no documentation, and the website build fails on broken links.
 5. **Keep compatibility:** from 1.0 on, nothing in `docs/api/stable.txt` may be removed or changed in 1.x; add new things instead. See [docs/compatibility.md](docs/compatibility.md).
 6. Run `sh build.sh test` and open a pull request.
 

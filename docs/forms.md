@@ -121,7 +121,7 @@ Containers place their children one after another:
 
 ## Controls
 
-All controls have `Width`, `Height`, `Grow`, `Visible`, `Enabled`, `Hint` (a tooltip) and `PopupMenu` (a right-click menu). The full list, with every property, is in the [desktop app guide](guide-desktop.md#controls).
+All controls have `Width`, `Height`, `Grow`, `Visible`, `Enabled`, `Hint` (a tooltip) and `PopupMenu` (a right-click menu). Every control with a `.pform` and a code example: [controls.md](controls.md). Your own controls: [components.md](components.md).
 
 | Control | Properties | Events |
 |---|---|---|
@@ -172,6 +172,7 @@ Commands:
 - `type <name> <text>` – `\n` presses Enter
 - `key ctrl+a`, `key shift+down`, `key f10`, `key enter|tab|escape|backspace|delete|up|down|left|right|home|end|space`
 - `expect <name> <text>` checks the text; `expect <name>.<property> <value>` any property (`expect Agree.Checked True`, `expect HomeForm.Title Notes`)
+- `set <name>.<property> <value>` sets a property like a `.pform` line does (`set DueDate.DateText 2026-11-01`)
 - `wait <ms>` (lets timers and threads run), `print <name>`, `resize <w> <h>`, `shot <file.png>`, `reload`, `close`, `quit`
 
 Dialogs are scripted like everything else: the lines after the one that opened a dialog act on it (`click YesButton`, `type FileNameEdit notes.txt\n`). The exit code is 1 if an `expect` fails. `PASTEL_HEADLESS=1` draws into memory without opening a window, so no display is needed; `PASTEL_SCALE=2` draws at double size and `PASTEL_THEME=dark` in the dark theme.

@@ -26,7 +26,7 @@ Pastel aims to be the missing piece: free, open source, modern, and easy to set 
 
 ## Try it today
 
-**New here? Start with [docs/getting-started.md](docs/getting-started.md)**: from installing to a packaged program in fifteen minutes. Then [docs/guide-cli.md](docs/guide-cli.md) builds a real tool step by step, and [`examples/`](examples) has complete programs.
+**New here? Start with [docs/getting-started.md](docs/getting-started.md)**: from installing to a packaged program in fifteen minutes. [All the documentation](docs/README.md) is ordered by topic, with examples on every page: guides that build a whole program step by step, [every control](docs/controls.md) and [every command](docs/commands.md) with an example, and [`examples/`](examples) with complete programs.
 
 You need [Free Pascal](https://www.freepascal.org/) 3.2 or newer (on Linux Mint / Ubuntu: `sudo apt install fpc fpc-source`). GUI apps also use SDL2 and FreeType, which most Linux desktops already have (`sudo apt install libsdl2-2.0-0 libfreetype6`); Windows programs get `SDL2.dll` and `freetype.dll` next to them automatically.
 

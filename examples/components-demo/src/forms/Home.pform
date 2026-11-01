@@ -1,0 +1,92 @@
+object HomeForm: THomeForm
+  Title = 'Order Form'
+  Width = 880
+  Height = 560
+  OnCreate = FormCreate
+  OnClose = FormClose
+  object Memory: TFormMemory
+    Fields = ('CustomerEdit', 'PriceEdit')
+    FileName = 'order-form.json'
+  end
+  object Body: TRow
+    Grow = 1
+    Align = Stretch
+    Gap = 20
+    object OrderCard: TCard
+      Width = 360
+      Gap = 8
+      object Heading: TLabel
+        Text = 'New order'
+        FontSize = 20
+        Bold = True
+      end
+      object CustomerLabel: TLabel
+        Text = 'Customer'
+      end
+      object CustomerEdit: TEdit
+        Placeholder = 'Name of the customer'
+      end
+      object PriceLabel: TLabel
+        Text = 'Unit price'
+      end
+      object PriceEdit: TCurrencyEdit
+        Symbol = '₺'
+        Placeholder = '0,00'
+        OnChange = AmountChange
+      end
+      object QuantityLabel: TLabel
+        Text = 'Quantity: 1'
+      end
+      object QuantitySlider: TSlider
+        Min = 1
+        Max = 20
+        Position = 1
+        OnChange = AmountChange
+      end
+      object DueLabel: TLabel
+        Text = 'Delivery date'
+      end
+      object DuePicker: TDatePicker
+        Placeholder = 'Choose a date'
+      end
+      object RatingLabel: TLabel
+        Text = 'How important is the customer?'
+      end
+      object Rating: TStarRating
+        Value = 3
+      end
+      object TotalLabel: TLabel
+        Text = 'Total: 0,00 ₺'
+        FontSize = 18
+        Bold = True
+      end
+      object Buttons: TRow
+        Justify = End
+        object AddButton: TButton
+          Text = 'Add order'
+          Default = True
+          OnClick = AddClick
+        end
+      end
+    end
+    object Orders: TListView
+      Grow = 1
+      object CustomerColumn: TGridColumn
+        Title = 'Customer'
+      end
+      object TotalColumn: TGridColumn
+        Title = 'Total'
+        Width = 130
+        Alignment = Right
+      end
+      object DueColumn: TGridColumn
+        Title = 'Delivery'
+        Width = 110
+      end
+      object StarsColumn: TGridColumn
+        Title = 'Priority'
+        Width = 90
+      end
+    end
+  end
+end
