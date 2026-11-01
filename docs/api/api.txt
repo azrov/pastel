@@ -528,7 +528,10 @@ Pastel.Http: type THttpProgressEvent = procedure(Done: Int64; Total: Int64)
 Pastel.Http: type THttpResponse = record
 Pastel.Icons: function DrawIcon(C: TCanvas32; const Name: string; X: Integer; Y: Integer; Size: Integer; Color: TColor32): Boolean
 Pastel.Icons: function HasIcon(const Name: string): Boolean
+Pastel.Icons: function IconDrawing(const Name: string): string
 Pastel.Icons: function IconNames: TStringArray
+Pastel.Icons: function IsPictureName(const Name: string): Boolean
+Pastel.Icons: function LoadAppPicture(const FileName: string; Bitmap: TBitmap32): Boolean
 Pastel.Icons: procedure RegisterIcon(const Name: string; const Drawing: string)
 Pastel.Inputs: TCalendarView.constructor Create(AOwner: TComponent)
 Pastel.Inputs: TCalendarView.procedure NextMonth

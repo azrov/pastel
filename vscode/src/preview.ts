@@ -23,11 +23,16 @@ export interface DesignerServices {
  * edit of the .pform file, so Undo works in the editor.
  */
 /** The pictures in the project's assets/ folder, as a .pform names them ('logo.png', 'icons/save.png'). */
-export function assetImages(pformPath: string): string[] {
+function projectRootOf(pformPath: string): string {
   let dir = path.dirname(pformPath);
   for (let i = 0; i < 6 && !fs.existsSync(path.join(dir, 'pastel.toml')); i++) {
     dir = path.dirname(dir);
   }
+  return dir;
+}
+
+export function assetImages(pformPath: string): string[] {
+  const dir = projectRootOf(pformPath);
   const assets = path.join(dir, 'assets');
   const out: string[] = [];
   const walk = (d: string, prefix: string) => {
@@ -131,8 +136,58 @@ export class FormPreview {
           name: c.name, container: c.container, project: !!c.project, nonvisual: !!c.nonvisual,
           platforms: c.platforms ?? ['Windows', 'Linux'], android: c.android ?? 'planned',
         })),
+        icons: schema.icons ?? [],
       });
     }
+    this.sendPictures();
+  }
+
+  /** The pictures in assets/, small enough to show in the icon and picture picker. */
+  private sendPictures(): void {
+    const root = projectRootOf(this.document.uri.fsPath);
+    const pictures = assetImages(this.document.uri.fsPath).slice(0, 80).map(name => {
+      const file = path.join(root, 'assets', ...name.split('/'));
+      let data = '';
+      try {
+        if (fs.statSync(file).size <= 256 * 1024) {
+          const ext = path.extname(file).slice(1).toLowerCase();
+          data = `data:image/${ext === 'jpg' ? 'jpeg' : ext};base64,` + fs.readFileSync(file).toString('base64');
+        }
+      } catch {
+        data = '';
+      }
+      return { name, data };
+    });
+    this.panel.webview.postMessage({ type: 'pictures', items: pictures });
+  }
+
+  /** "Choose a picture file…": copied into assets/ (icons/ for icons) and set on the controls. */
+  private async pickPicture(m: { name: string; names?: string[]; prop: string }): Promise<void> {
+    const r = await vscode.window.showOpenDialog({
+      canSelectMany: false, openLabel: 'Use this picture', filters: { Pictures: ['png', 'jpg', 'jpeg', 'bmp'] },
+    });
+    if (!r || !r.length) {
+      return;
+    }
+    const root = projectRootOf(this.document.uri.fsPath);
+    const assets = path.join(root, 'assets');
+    let file = r[0].fsPath;
+    if (!path.resolve(file).toLowerCase().startsWith(path.resolve(assets).toLowerCase() + path.sep)) {
+      const dir = m.prop === 'Icon' ? path.join(assets, 'icons') : assets;
+      fs.mkdirSync(dir, { recursive: true });
+      const target = path.join(dir, path.basename(file));
+      if (path.resolve(target) !== path.resolve(file)) {
+        fs.copyFileSync(file, target);
+      }
+      file = target;
+    }
+    const value = path.relative(assets, file).split(path.sep).join('/');
+    let out = this.document.getText();
+    for (const n of (Array.isArray(m.names) && m.names.length ? m.names : [m.name])) {
+      out = setProperty(out, n, m.prop, formatValue('string', value));
+    }
+    await this.applyText(out);
+    this.sendPictures();
   }
 
   private schedule(delay: number): void {
@@ -261,7 +316,9 @@ export class FormPreview {
     const props = (cls?.properties ?? []).map(p => {
       const line = block.props.find(x => x.name.toLowerCase() === p.name.toLowerCase());
       // the pictures in assets/ for FileName and BackgroundImage
-      const suggest = p.type === 'string' && /^(FileName|BackgroundImage)$/i.test(p.name) && images.length ? images : p.suggest;
+      const suggest = p.type !== 'string' ? p.suggest
+        : /^(FileName|BackgroundImage)$/i.test(p.name) && images.length ? images
+          : /^Icon$/i.test(p.name) ? [...(p.suggest ?? []), ...images] : p.suggest;
       return { ...p, suggest, value: line ? parseValue(line.value) : undefined };
     });
     this.panel.webview.postMessage({
@@ -389,6 +446,9 @@ export class FormPreview {
         }
         break;
       }
+      case 'pickPicture':
+        await this.pickPicture(m);
+        break;
       case 'makeFree':
         // a Flow form or container becomes freely placed, its controls staying where they are
         await this.applyText(makeFree(text, m.name, Array.isArray(m.items) ? m.items : []));

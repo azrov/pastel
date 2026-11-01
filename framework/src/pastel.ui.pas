@@ -761,7 +761,7 @@ function NonVisualClassAt(Index: Integer): TComponentClass;
 implementation
 
 uses
-  Math, Pastel.Icons, Pastel.Assets;
+  Math, Pastel.Icons;
 
 var
   ControlClasses: TStringList = nil;
@@ -1814,37 +1814,14 @@ begin
 end;
 
 procedure TBox.SetBackgroundImage(const AValue: string);
-var
-  S: TStream;
-  Dir, F: string;
 begin
   FBackgroundImage := AValue;
   FreeAndNil(FBackground);
   if AValue <> '' then
   begin
     FBackground := TBitmap32.Create;
-    try
-      Dir := ExtractFilePath(ParamStr(0));
-      F := '';
-      for F in [AValue, Dir + AValue, Dir + 'assets' + PathDelim + AValue, 'assets' + PathDelim + AValue] do
-        if FileExists(F) then
-          Break;
-      if FileExists(F) then
-        FBackground.LoadFromFile(F)
-      else if AssetExists(AValue) then
-      begin
-        S := OpenAsset(AValue);
-        try
-          FBackground.LoadFromStream(S);
-        finally
-          S.Free;
-        end;
-      end
-      else
-        FreeAndNil(FBackground);
-    except
+    if not LoadAppPicture(AValue, FBackground) then
       FreeAndNil(FBackground);      { a picture that cannot be read is not drawn }
-    end;
   end;
   Invalidate;
 end;

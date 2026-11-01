@@ -348,4 +348,44 @@ test('the inspector: events on their own tab, Anchors as check boxes, search', (
   q.dispatchEvent(new w.Event('input'));
 });
 
+test('the icon picker: built-in icons drawn as pictures, pictures in assets/, a new file', () => {
+  post({ type: 'schema', controls: [{ name: 'TButton' }], icons: [
+    { name: 'add', drawing: 'l 12 5 12 19; l 5 12 19 12' }, { name: 'clock', drawing: 'o 12 12 9; l 12 7 12 12 15 14' },
+    { name: 'search', drawing: 'a 10 10 6 0 360; l 15 15 20 20' } ] });
+  post({ type: 'pictures', items: [{ name: 'icons/logo.png', data: 'data:image/png;base64,iVBORw0KGgo=' }] });
+  post({ type: 'select', name: 'OkButton', names: ['OkButton'], className: 'TButton', isRoot: false, handlers: [],
+    props: [{ name: 'Icon', type: 'string', doc: '', value: 'add' }] });
+  const wrap = doc.querySelector('[data-prop="Icon"]');
+  assert.ok(wrap.querySelector('.pv svg polyline'), 'the inspector shows the icon');
+  wrap.querySelector('button').click();
+  assert.ok(!doc.getElementById('picker').hidden, 'the picker opens');
+  const tiles = [...doc.querySelectorAll('#pkGrid .tile')];
+  assert.deepStrictEqual(tiles.map((t: any) => t.dataset.value), ['add', 'clock', 'search']);
+  assert.ok(tiles[0].classList.contains('on'), 'the present icon is marked');
+  assert.ok(tiles[1].querySelector('svg circle') && tiles[2].querySelector('svg circle'), 'circles; a whole arc is a circle');
+  const q = doc.getElementById('pkSearch');
+  q.value = 'clo';
+  q.dispatchEvent(new w.Event('input'));
+  assert.deepStrictEqual([...doc.querySelectorAll('#pkGrid .tile')].map((t: any) => t.dataset.value), ['clock']);
+  doc.querySelector('#pkGrid .tile').click();
+  assert.deepStrictEqual(last('setProp'), { type: 'setProp', name: 'OkButton', names: ['OkButton'], prop: 'Icon', propType: 'string', value: 'clock' });
+  assert.ok(doc.getElementById('picker').hidden, 'and closes');
+  wrap.querySelector('button').click();
+  doc.querySelector('#pkTabs [data-t="pictures"]').click();
+  const pic = doc.querySelector('#pkGrid .tile');
+  assert.strictEqual(pic.dataset.value, 'icons/logo.png');
+  assert.ok(pic.querySelector('img'));
+  pic.click();
+  assert.strictEqual(last('setProp').value, 'icons/logo.png');
+  wrap.querySelector('button').click();
+  doc.getElementById('pkFile').click();
+  assert.deepStrictEqual(last('pickPicture'), { type: 'pickPicture', name: 'OkButton', names: ['OkButton'], prop: 'Icon' });
+  wrap.querySelector('button').click();
+  w.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Delete' }));
+  assert.ok(!doc.getElementById('picker').hidden, 'Delete does not delete the control while the picker is open');
+  w.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Escape' }));
+  assert.ok(doc.getElementById('picker').hidden, 'Escape closes it');
+  doc.getElementById('pkNone');
+});
+
 console.log(`designer: ${passed} passed`);

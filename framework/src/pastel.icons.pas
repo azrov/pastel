@@ -16,6 +16,13 @@
 
     RegisterIcon('bell', 'l 6 17 6 10; a 12 10 6 180 360; l 18 10 18 17; l 4 17 20 17; f 12 20 1.5');
 
+  An icon can also be a picture: a PNG, JPEG or BMP file in assets/ (or next to the
+  program), drawn in its own colors and fitted into the icon's square:
+
+    object LogoButton: TButton
+      Icon = 'icons/logo.png'
+    end
+
   Part of the Pastel project, MIT License. }
 unit Pastel.Icons;
 
@@ -34,14 +41,93 @@ function HasIcon(const Name: string): Boolean;
 procedure RegisterIcon(const Name, Drawing: string);
 { The names of all icons, sorted. }
 function IconNames: TStringArray;
+{ The drawing commands of a built-in or registered icon, '' when there is none. }
+function IconDrawing(const Name: string): string;
+{ Name is a picture file ('icons/logo.png'): .png, .jpg, .jpeg or .bmp. }
+function IsPictureName(const Name: string): Boolean;
+{ Loads a picture of the app: a full path, a file next to the program or in its assets/
+  folder, or an asset compiled into the program. False when it cannot be found or read. }
+function LoadAppPicture(const FileName: string; Bitmap: TBitmap32): Boolean;
 
 implementation
 
 uses
-  Math;
+  Math, Pastel.Assets;
 
 var
   Icons: TStringList = nil;
+  Pictures: TStringList = nil;     { file name -> TBitmap32 (nil: could not be read) }
+
+function IsPictureName(const Name: string): Boolean;
+var
+  Ext: string;
+begin
+  Ext := LowerCase(ExtractFileExt(Name));
+  Result := (Ext = '.png') or (Ext = '.jpg') or (Ext = '.jpeg') or (Ext = '.bmp');
+end;
+
+function LoadAppPicture(const FileName: string; Bitmap: TBitmap32): Boolean;
+var
+  Dir, F, Found: string;
+  S: TStream;
+begin
+  Result := False;
+  if FileName = '' then
+    Exit;
+  Dir := ExtractFilePath(ParamStr(0));
+  Found := '';
+  for F in [FileName, Dir + FileName, Dir + 'assets' + PathDelim + FileName, 'assets' + PathDelim + FileName] do
+    if FileExists(F) then
+    begin
+      Found := F;
+      Break;
+    end;
+  try
+    if Found <> '' then
+      Bitmap.LoadFromFile(Found)
+    else if AssetExists(FileName) then
+    begin
+      S := OpenAsset(FileName);
+      try
+        Bitmap.LoadFromStream(S);
+      finally
+        S.Free;
+      end;
+    end
+    else
+      Exit;
+    Result := not Bitmap.Empty;
+  except
+    Result := False;      { a picture that cannot be read is not drawn }
+  end;
+end;
+
+{ the picture of a picture icon, loaded once; nil when it cannot be read }
+function IconPicture(const Name: string): TBitmap32;
+var
+  I: Integer;
+  B: TBitmap32;
+begin
+  I := Pictures.IndexOf(Name);
+  if I >= 0 then
+    Exit(TBitmap32(Pictures.Objects[I]));
+  B := TBitmap32.Create;
+  if not LoadAppPicture(StringReplace(Name, '/', PathDelim, [rfReplaceAll]), B) and
+     not LoadAppPicture(Name, B) then
+    FreeAndNil(B);
+  Pictures.AddObject(Name, B);
+  Result := B;
+end;
+
+function IconDrawing(const Name: string): string;
+var
+  I: Integer;
+begin
+  I := Icons.IndexOfName(LowerCase(Name));
+  if (Name = '') or (I < 0) then
+    Exit('');
+  Result := Icons.ValueFromIndex[I];
+end;
 
 procedure RegisterIcon(const Name, Drawing: string);
 begin
@@ -50,7 +136,8 @@ end;
 
 function HasIcon(const Name: string): Boolean;
 begin
-  Result := (Name <> '') and (Icons.IndexOfName(LowerCase(Name)) >= 0);
+  Result := (Name <> '') and ((Icons.IndexOfName(LowerCase(Name)) >= 0) or
+    (IsPictureName(Name) and (IconPicture(Name) <> nil)));
 end;
 
 function IconNames: TStringArray;
@@ -71,6 +158,7 @@ var
   Thick: Single;
   I, N: Integer;
   Nums: array of Single;
+  Pic: TBitmap32;
 
   function PX(V: Single): Single;
   begin
@@ -98,6 +186,18 @@ var
 
 begin
   I := Icons.IndexOfName(LowerCase(Name));
+  if (Name <> '') and (I < 0) and IsPictureName(Name) then
+  begin
+    { a picture: in its own colors, as big as fits into the square }
+    Pic := IconPicture(Name);
+    if Pic = nil then
+      Exit(False);
+    K := Min(Size / Pic.Width, Size / Pic.Height);
+    N := Max(1, Round(Pic.Width * K));
+    I := Max(1, Round(Pic.Height * K));
+    C.DrawBitmap(Pic, X + (Size - N) div 2, Y + (Size - I) div 2, N, I, True);
+    Exit(True);
+  end;
   if (Name = '') or (I < 0) then
     Exit(False);
   Result := True;
@@ -171,7 +271,18 @@ begin
   RegisterIcon('sync', 'a 12 12 7.5 200 340; l 19.5 6 19.5 10 15.5 10; a 12 12 7.5 20 160; l 4.5 18 4.5 14 8.5 14');
 end;
 
+procedure FreePictures;
+var
+  I: Integer;
+begin
+  for I := 0 to Pictures.Count - 1 do
+    Pictures.Objects[I].Free;
+  Pictures.Free;
+end;
+
 initialization
+  Pictures := TStringList.Create;
+  Pictures.Sorted := True;
   Icons := TStringList.Create;
   Icons.Sorted := True;
   Icons.Duplicates := dupIgnore;
@@ -179,5 +290,6 @@ initialization
 
 finalization
   Icons.Free;
+  FreePictures;
 
 end.

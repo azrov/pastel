@@ -896,7 +896,9 @@ end
 
 ## Icons
 
-Buttons can show an icon: a small line drawing, sharp at every size and in the color of the button's text (so it is right in the dark theme too). The designer offers the names in the `Icon` field.
+Buttons, menu items, actions and grid icon columns can show an icon: a built-in line drawing, sharp at every size and in the color of the text (so it is right in the dark theme too), or a picture of your own. In the designer, the **…** button next to `Icon` opens the icon picker: the built-in icons drawn as they look, the pictures in `assets/`, and *Choose a picture file…*, which copies a PNG, JPEG or BMP into `assets/icons/` and uses it.
+
+![The icon picker: the built-in icons with their names, a search box, the pictures in assets/ and Choose a picture file](images/icon-picker.png)
 
 ```
 object SaveButton: TButton
@@ -914,7 +916,16 @@ end
 
 `add` `remove` `close` `check` `file` `folder` `save` `edit` `delete` `search` `refresh` `print` `settings` `user` `users` `calendar` `clock` `home` `left` `right` `up` `down` `info` `warning` `help` `copy` `menu` `mail` `play` `stop` `download` `upload` `star` `lock` `link` `chart` `money` `sync`
 
-Your own icons are drawn on a 24 × 24 grid with four commands, the parts separated by `;` — `l x1 y1 x2 y2 ...` (lines through the points), `o cx cy r` (a circle), `f cx cy r` (a dot), `a cx cy r from to` (an arc; degrees, 0 = right, 90 = down). Register them once, for example in the `initialization` of a unit, and use them like the built-in ones:
+A picture as an icon: its file name in `assets/` (or next to the program). It keeps its own colors and is fitted into the icon's square; release builds carry it inside the program like every asset.
+
+```
+object LogoButton: TButton
+  Icon = 'icons/logo.png'
+  Text = 'Shop'
+end
+```
+
+Line icons of your own are drawn on a 24 × 24 grid with four commands, the parts separated by `;` — `l x1 y1 x2 y2 ...` (lines through the points), `o cx cy r` (a circle), `f cx cy r` (a dot), `a cx cy r from to` (an arc; degrees, 0 = right, 90 = down). Register them once, for example in the `initialization` of a unit, and use them like the built-in ones:
 
 ```pascal
 uses
@@ -924,7 +935,7 @@ initialization
   RegisterIcon('bell', 'l 6 17 6 10; a 12 10 6 180 360; l 18 10 18 17; l 4 17 20 17; f 12 20 1.5');
 ```
 
-From code: `HasIcon(Name)`, `IconNames`, and `DrawIcon(Canvas, Name, X, Y, Size, Color)` in a control of your own ([components.md](components.md)).
+From code: `HasIcon(Name)`, `IconNames`, `IconDrawing(Name)`, `IsPictureName(Name)`, `LoadAppPicture(FileName, Bitmap)`, and `DrawIcon(Canvas, Name, X, Y, Size, Color)` in a control of your own ([components.md](components.md)).
 
 ## Without a place on the form
 

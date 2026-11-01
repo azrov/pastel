@@ -579,6 +579,7 @@ end;
 function SchemaJson: string;
 var
   I: Integer;
+  Names: TStringArray;
 begin
   Result := '{"version":' + JsonStr(PastelVersion) + ',"frameworkDir":' + JsonStr(FrameworkDir) +
     ',"fpcSourceDir":' + JsonStr(FpcSourceDir) +
@@ -592,6 +593,15 @@ begin
   end;
   for I := 0 to NonVisualClassCount - 1 do
     Result := Result + ',' + ClassJson(NonVisualClassAt(I), False);
+  { the built-in icons with their drawings: the designer shows them in its icon picker }
+  Result := Result + '],"icons":[';
+  Names := IconNames;
+  for I := 0 to High(Names) do
+  begin
+    if I > 0 then
+      Result := Result + ',';
+    Result := Result + Format('{"name":%s,"drawing":%s}', [JsonStr(Names[I]), JsonStr(IconDrawing(Names[I]))]);
+  end;
   Result := Result + ']}';
 end;
 

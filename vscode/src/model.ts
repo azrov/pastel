@@ -33,6 +33,8 @@ export interface Schema {
   fpcSourceDir?: string;
   form: SchemaClass;
   controls: SchemaClass[];
+  /** The built-in icons and their drawings (Pastel.Icons commands). */
+  icons?: { name: string; drawing: string }[];
 }
 
 const objectRe = /^\s*object\s+([A-Za-z_]\w*)\s*:\s*([A-Za-z_]\w*)/i;

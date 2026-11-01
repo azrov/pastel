@@ -18,7 +18,16 @@ Icons: small line drawings for buttons, drawn at any size and in
 
     RegisterIcon('bell', 'l 6 17 6 10; a 12 10 6 180 360; l 18 10 18 17; l 4 17 20 17; f 12 20 1.5');
 
+  An icon can also be a picture: a PNG, JPEG or BMP file in assets/ (or next to the
+  program), drawn in its own colors and fitted into the icon's square:
+
+    object LogoButton: TButton
+      Icon = 'icons/logo.png'
+    end
+
 `uses Pastel.Icons;` · source: [framework/src/pastel.icons.pas](../../framework/src/pastel.icons.pas)
+
+**Contents:** [DrawIcon](#drawicon) · [HasIcon](#hasicon) · [RegisterIcon](#registericon) · [IconNames](#iconnames) · [IconDrawing](#icondrawing) · [IsPictureName](#ispicturename) · [LoadAppPicture](#loadapppicture)
 
 ## Routines
 
@@ -53,4 +62,29 @@ function IconNames: TStringArray
 ```
 
 The names of all icons, sorted.
+
+### IconDrawing
+
+```pascal
+function IconDrawing(const Name: string): string
+```
+
+The drawing commands of a built-in or registered icon, '' when there is none.
+
+### IsPictureName
+
+```pascal
+function IsPictureName(const Name: string): Boolean
+```
+
+Name is a picture file ('icons/logo.png'): .png, .jpg, .jpeg or .bmp.
+
+### LoadAppPicture
+
+```pascal
+function LoadAppPicture(const FileName: string; Bitmap: TBitmap32): Boolean
+```
+
+Loads a picture of the app: a full path, a file next to the program or in its assets/
+folder, or an asset compiled into the program. False when it cannot be found or read.
 

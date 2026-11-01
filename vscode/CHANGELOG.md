@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.0
+
+- The icon picker (… next to `Icon`): the built-in icons drawn as they look, with a search box; the pictures in `assets/`; *Choose a picture file…* copies one into `assets/icons/`. `FileName` and `BackgroundImage` get the picture picker
+
 ## 1.2.0
 
 - A Welcome page like Android Studio's: recent projects, New Project, Open; shown when VS Code opens without a folder (`pastel.showWelcome`), or with **Pastel: Welcome**

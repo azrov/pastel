@@ -129,6 +129,26 @@ export function designerHtml(nonce: string): string {
   .chip.nonvisual::before { content: '◇ '; opacity: .7; }
   .chip.hidden { display: none; }
   .chip.desktop::after { content: ' 🖥'; font-size: 10px; opacity: .6; }
+  .pickwrap .pv { width: 20px; height: 20px; flex: none; display: grid; place-items: center; margin-left: 4px; }
+  .pickwrap .pv img { max-width: 20px; max-height: 20px; }
+  .picker { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: grid; place-items: center; z-index: 50; }
+  .picker[hidden] { display: none; }
+  .pk { width: min(640px, 92vw); max-height: 80vh; display: flex; flex-direction: column; border-radius: 8px;
+    background: var(--vscode-editorWidget-background, var(--vscode-editor-background)); border: 1px solid var(--vscode-panel-border);
+    box-shadow: 0 8px 30px rgba(0,0,0,.45); }
+  .pk-head { display: flex; gap: 8px; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--vscode-panel-border); }
+  .pk-head b { white-space: nowrap; }
+  .pk-tabs { display: flex; padding: 0 8px; border-bottom: 1px solid var(--vscode-panel-border); }
+  .pk-tabs button { background: none; color: var(--vscode-foreground); border-bottom: 2px solid transparent; opacity: .75; }
+  .pk-tabs button.on { border-bottom-color: var(--vscode-focusBorder); opacity: 1; }
+  .pk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 6px; padding: 10px 12px; overflow: auto; }
+  .pk-grid .tile { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 4px; border-radius: 6px; cursor: pointer;
+    border: 1px solid transparent; font-size: 11px; text-align: center; word-break: break-all; }
+  .pk-grid .tile:hover { background: var(--vscode-list-hoverBackground); }
+  .pk-grid .tile.on { border-color: var(--vscode-focusBorder); }
+  .pk-grid .tile img { max-width: 32px; max-height: 32px; }
+  .pk-grid .none { grid-column: 1 / -1; opacity: .7; padding: 12px 0; }
+  .pk-foot { display: flex; gap: 8px; justify-content: flex-end; padding: 10px 12px; border-top: 1px solid var(--vscode-panel-border); }
   .insp-head .plat { font-size: 11px; opacity: .65; margin-top: 2px; }
 </style>
 </head>
@@ -185,6 +205,14 @@ export function designerHtml(nonce: string): string {
       <div class="scroll"><div id="toolbox"></div></div>
     </aside>
   </div>
+  <div class="picker" id="picker" hidden>
+    <div class="pk">
+      <div class="pk-head"><b id="pkTitle">Icon</b><input id="pkSearch" placeholder="Search"><button class="secondary small" id="pkClose" title="Close (Esc)">×</button></div>
+      <div class="pk-tabs" id="pkTabs"><button data-t="builtin" class="on">Built-in icons</button><button data-t="pictures">Pictures in assets/</button></div>
+      <div class="pk-grid" id="pkGrid"></div>
+      <div class="pk-foot"><button class="secondary" id="pkNone">None</button><button class="secondary" id="pkFile">Choose a picture file…</button></div>
+    </div>
+  </div>
 <script nonce="${nonce}">
   const vscode = acquireVsCodeApi();
   const img = document.getElementById('img');
@@ -200,6 +228,94 @@ export function designerHtml(nonce: string): string {
   const issuesEl = document.getElementById('issues');
   const treeEl = document.getElementById('tree');
   const GRID = 8;
+  let icons = [], pictures = [], picker = null;
+
+  // a built-in icon as SVG, from its Pastel.Icons drawing (lines, circles, dots, arcs on a 24 x 24 grid)
+  function iconSvg(drawing, size) {
+    const NS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('width', size); svg.setAttribute('height', size);
+    svg.setAttribute('fill', 'none'); svg.setAttribute('stroke', 'currentColor'); svg.setAttribute('stroke-width', '1.85');
+    svg.setAttribute('stroke-linecap', 'round'); svg.setAttribute('stroke-linejoin', 'round');
+    const add = (tag, attrs) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); svg.appendChild(e); };
+    for (const part of (drawing || '').split(';')) {
+      const w = part.trim().split(/\\s+/);
+      const n = w.slice(1).map(Number);
+      if (w[0] === 'l' && n.length >= 4) add('polyline', { points: n.join(' ') });
+      else if (w[0] === 'o' && n.length >= 3) add('circle', { cx: n[0], cy: n[1], r: n[2] });
+      else if (w[0] === 'f' && n.length >= 3) add('circle', { cx: n[0], cy: n[1], r: n[2], fill: 'currentColor', stroke: 'none' });
+      else if (w[0] === 'a' && n.length >= 5) {
+        const [cx, cy, r, a1, a2] = n;
+        if (Math.abs(a2 - a1) >= 360) { add('circle', { cx, cy, r }); continue; }
+        const pt = a => [cx + r * Math.cos(a * Math.PI / 180), cy + r * Math.sin(a * Math.PI / 180)];
+        const [x1, y1] = pt(a1), [x2, y2] = pt(a2);
+        add('path', { d: 'M' + x1 + ' ' + y1 + ' A' + r + ' ' + r + ' 0 ' + (Math.abs(a2 - a1) > 180 ? 1 : 0) + ' ' + (a2 > a1 ? 1 : 0) + ' ' + x2 + ' ' + y2 });
+      }
+    }
+    return svg;
+  }
+  function isPicture(v) { return /\\.(png|jpe?g|bmp)$/i.test(v || ''); }
+  // a small picture of an Icon or picture value, for the inspector and the picker
+  function preview(value, size) {
+    const icon = icons.find(i => i.name === (value || '').toLowerCase());
+    if (icon) return iconSvg(icon.drawing, size);
+    const pic = isPicture(value) && pictures.find(p => p.name === value);
+    if (pic && pic.data) { const im = document.createElement('img'); im.src = pic.data; im.alt = ''; return im; }
+    return document.createTextNode('');
+  }
+
+  // the icon and picture picker: built-in icons, the pictures in assets/, or a new picture file
+  function openPicker(p) {
+    picker = { prop: p.name, kind: p.name === 'Icon' ? 'icon' : 'picture', tab: p.name === 'Icon' && !isPicture(p.value) ? 'builtin' : 'pictures',
+      value: p.value || '' };
+    $id('pkTitle').textContent = p.name === 'Icon' ? 'Icon' : p.name;
+    $id('pkTabs').querySelector('[data-t="builtin"]').hidden = picker.kind !== 'icon';
+    $id('pkNone').textContent = picker.kind === 'icon' ? 'No icon' : 'No picture';
+    $id('pkSearch').value = '';
+    $id('picker').hidden = false;
+    drawPicker();
+    $id('pkSearch').focus();
+  }
+  function closePicker() { picker = null; $id('picker').hidden = true; }
+  function choosePicture(value) {
+    const p = picker;
+    closePicker();
+    send(p.prop, 'string', value);
+  }
+  function drawPicker() {
+    if (!picker) return;
+    $id('pkTabs').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.t === picker.tab));
+    const q = $id('pkSearch').value.trim().toLowerCase();
+    const grid = $id('pkGrid');
+    grid.innerHTML = '';
+    const list = picker.tab === 'builtin' ? icons.map(i => i.name) : pictures.map(p => p.name);
+    const shown = list.filter(n => !q || n.toLowerCase().includes(q));
+    for (const n of shown) {
+      const t = document.createElement('div');
+      t.className = 'tile' + (n === picker.value ? ' on' : '');
+      t.dataset.value = n;
+      t.title = n;
+      t.append(preview(n, 26), document.createTextNode(n));
+      t.addEventListener('click', () => choosePicture(n));
+      grid.appendChild(t);
+    }
+    if (!shown.length) {
+      const e = document.createElement('div'); e.className = 'none';
+      e.textContent = picker.tab === 'builtin' ? 'No icon has this name.' : 'No pictures in assets/ yet: "Choose a picture file…" copies one there.';
+      grid.appendChild(e);
+    }
+  }
+  function $id(id) { return document.getElementById(id); }
+  $id('pkClose').addEventListener('click', closePicker);
+  $id('picker').addEventListener('click', e => { if (e.target === $id('picker')) closePicker(); });
+  $id('pkSearch').addEventListener('input', drawPicker);
+  $id('pkTabs').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { picker.tab = b.dataset.t; drawPicker(); }));
+  $id('pkNone').addEventListener('click', () => choosePicture(null));
+  $id('pkFile').addEventListener('click', () => {
+    const p = picker;
+    closePicker();
+    vscode.postMessage({ type: 'pickPicture', name: selection.name, names: selection.names, prop: p.prop });
+  });
 
   // the Tool Palette's groups, like Delphi's Standard, Additional...
   const CATEGORIES = [
@@ -576,6 +692,8 @@ export function designerHtml(nonce: string): string {
   }
 
   window.addEventListener('keydown', e => {
+    // the picker is open: Escape closes it, other keys are for its search box
+    if (picker) { if (e.key === 'Escape') closePicker(); return; }
     const typing = document.activeElement && ['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName);
     const arrow = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key);
     if ((e.key === 'Delete' || e.key === 'Backspace') && selected && !typing) {
@@ -810,6 +928,17 @@ export function designerHtml(nonce: string): string {
       go.addEventListener('click', () => vscode.postMessage({ type: 'code', name: selection.name, prop: p.name,
         handler: t.value.trim(), signature: p.signature }));
       el.append(t, go);
+    } else if (p.type === 'string' && /^(Icon|FileName|BackgroundImage)$/.test(p.name)) {
+      // an icon or a picture: a preview, the name (it can be typed) and the picker
+      el = document.createElement('span'); el.className = 'inline pickwrap';
+      const pv = document.createElement('span'); pv.className = 'pv'; pv.appendChild(preview(cur, 18));
+      const t = document.createElement('input'); t.value = cur; t.placeholder = '(none)';
+      t.addEventListener('change', () => send(p.name, p.type, t.value.trim() === '' ? null : t.value.trim()));
+      t.addEventListener('keydown', e => { if (e.key === 'Enter') t.blur(); });
+      const more = document.createElement('button'); more.className = 'secondary small'; more.textContent = '…';
+      more.title = p.name === 'Icon' ? 'Choose a built-in icon or a picture' : 'Choose a picture';
+      more.addEventListener('click', () => openPicker({ name: p.name, value: t.value.trim() }));
+      el.append(pv, t, more);
     } else {
       el = document.createElement('input');
       el.value = cur;
@@ -848,6 +977,10 @@ export function designerHtml(nonce: string): string {
         const el = propsEl.querySelector('[data-prop="' + p.name + '"]');
         if (el && before && before.value !== p.value && el.tagName === 'INPUT' && el.type !== 'checkbox' && document.activeElement !== el) {
           el.value = p.value === undefined ? '' : p.value;
+        }
+        if (el && before && before.value !== p.value && el.classList.contains('pickwrap')) {
+          el.querySelector('input').value = p.value === undefined ? '' : p.value;
+          const pv = el.querySelector('.pv'); pv.innerHTML = ''; pv.appendChild(preview(p.value, 18));
         }
       }
       return;
@@ -937,7 +1070,8 @@ export function designerHtml(nonce: string): string {
 
   window.addEventListener('message', e => {
     const m = e.data;
-    if (m.type === 'schema') { controlsInfo = m.controls; buildToolbox(); }
+    if (m.type === 'schema') { controlsInfo = m.controls; icons = m.icons || []; buildToolbox(); }
+    else if (m.type === 'pictures') { pictures = m.items || []; drawPicker(); }
     else if (m.type === 'render') {
       img.onload = () => drawBoxes();
       img.src = 'data:image/png;base64,' + m.data;

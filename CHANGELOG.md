@@ -2,6 +2,10 @@
 
 The `pastel` tool and the framework. The VS Code extension has its own list: [vscode/CHANGELOG.md](vscode/CHANGELOG.md). What is planned is in [ROADMAP.md](ROADMAP.md).
 
+## 1.4.2
+
+- Icons can be pictures: `Icon = 'icons/logo.png'` on buttons, menu items, actions and grid icon columns, in their own colors; `LoadAppPicture`, `IconDrawing`, `IsPictureName`
+
 ## 1.4.1
 
 - `pastel new form` and `pastel new control` refuse projects that have no windows (console, service, API) and say what to do instead
