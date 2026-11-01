@@ -97,6 +97,11 @@ With the Pastel extension, open a `.pform` file and press the designer button in
 - `F2` or the name at the top of the properties panel renames a control, and the form's `.pas` code is renamed with it
 - `Ctrl+Z` / `Ctrl+Y` undo and redo designer changes (every change is also an ordinary edit of the `.pform` text)
 - the size box shows the form at phone, tablet and desktop sizes; *Dark* shows it in the dark theme
+- `Ctrl+click` selects several controls: change a property of all of them at once (`Style = Secondary` for three buttons), delete, copy or cut them together
+- **⊞ Row**, **⊞ Column** and **⊞ Card** put the selected controls into a new container — the way to lay out a form, since controls are placed by rows and columns, not by coordinates; **Unwrap** takes them out again
+- `Alt+Up` / `Alt+Down` (or the ↑ ↓ buttons) move a control before or after its neighbour; `Escape` selects the container it is in
+- **Structure** under the properties lists every object, also timers, actions, data bindings and other components that are not drawn
+- what `pastel check` finds is outlined on the form (a row whose controls are cut off, an unknown property) and listed under it
 
 Controls of your own (`pastel new control StarRating`, in `src/controls/`) are in the toolbox too, at the front in italics.
 

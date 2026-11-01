@@ -336,3 +336,103 @@ export function renameIdentifier(pas: string, oldName: string, newName: string):
   }
   return lines.join('\n');
 }
+
+/**
+ * Puts controls that have the same parent into a new container (TRow,
+ * TColumn, TCard...) at the place of the first one. Returns the new text and
+ * the container's name; undefined when they do not share a parent.
+ */
+export function wrapObjects(text: string, names: string[], className: string):
+  { text: string; name: string } | undefined {
+  const root = parseBlocks(text);
+  if (!root || names.length === 0) {
+    return undefined;
+  }
+  const blocks = names.map(n => findBlock(root, n));
+  if (blocks.some(b => !b || b === root)) {
+    return undefined;
+  }
+  const parent = blocks[0]!.parent!;
+  if (blocks.some(b => b!.parent !== parent)) {
+    return undefined;
+  }
+  // in the order they have in the file
+  const ordered = (blocks as Block[]).sort((a, b) => a.start - b.start);
+  const index = parent.children.indexOf(ordered[0]);
+  const added = insertObject(text, parent.name, index, className);
+  if (!added) {
+    return undefined;
+  }
+  let out = added.text;
+  ordered.forEach((b, i) => {
+    out = moveObject(out, b.name, added.name, i);
+  });
+  return { text: out, name: added.name };
+}
+
+/** Takes the children out of a container (to its place in its parent) and removes it. */
+export function unwrapObject(text: string, name: string): string {
+  const root = parseBlocks(text);
+  const block = root && findBlock(root, name);
+  if (!root || !block || block === root || !block.parent) {
+    return text;
+  }
+  const parentName = block.parent.name;
+  let index = block.parent.children.indexOf(block);
+  const kids = block.children.map(c => c.name);
+  let out = text;
+  for (const k of kids) {
+    out = moveObject(out, k, parentName, index);
+    index++;
+  }
+  return deleteObject(out, name);
+}
+
+/** Moves a control one place earlier (-1) or later (+1) among its siblings. */
+export function moveSibling(text: string, name: string, delta: number): string {
+  const root = parseBlocks(text);
+  const block = root && findBlock(root, name);
+  if (!root || !block || !block.parent) {
+    return text;
+  }
+  const i = block.parent.children.indexOf(block) + delta;
+  if (i < 0 || i >= block.parent.children.length) {
+    return text;
+  }
+  return moveObject(text, name, block.parent.name, i);
+}
+
+/** Several controls as clipboard text, in the order of the file; ones inside another are left out. */
+export function extractObjects(text: string, names: string[]): string | undefined {
+  const root = parseBlocks(text);
+  if (!root) {
+    return undefined;
+  }
+  const blocks = names.map(n => findBlock(root, n)).filter((b): b is Block => !!b && b !== root);
+  const top = blocks.filter(b => !blocks.some(o => o !== b && contains(o, b)));
+  const parts = top.sort((a, b) => a.start - b.start).map(b => extractObject(text, b.name)!);
+  return parts.length ? parts.join('\n') : undefined;
+}
+
+/** Removes several controls. */
+export function deleteObjects(text: string, names: string[]): string {
+  let out = text;
+  for (const n of names) {
+    out = deleteObject(out, n);
+  }
+  return out;
+}
+
+/** The objects of the form as a list for the structure view: name, class, depth. */
+export function outline(text: string): { name: string; className: string; depth: number }[] {
+  const root = parseBlocks(text);
+  const out: { name: string; className: string; depth: number }[] = [];
+  const walk = (b: Block, d: number) => {
+    out.push({ name: b.name, className: b.className, depth: d });
+    b.children.forEach(c => walk(c, d + 1));
+  };
+  if (root) {
+    walk(root, 0);
+  }
+  return out;
+}

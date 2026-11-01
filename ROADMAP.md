@@ -224,7 +224,7 @@ The things every business app needs, built in instead of written again in every 
 - [ ] Icons in menu items and list rows
 - [ ] Layout: a growing control gives up width when a row is too narrow; `pastel check` warns when controls are still cut off (done in 1.0.0-rc.4); `TFlow` (a row that wraps)
 - [ ] Grid: number and date columns that format and sort right, a check box column, filtering, export to CSV
-- [ ] Designer: the warnings of `pastel check` drawn on the form; align and distribute several selected controls
+- [x] Designer: the warnings of `pastel check` drawn on the form; several selected controls (common properties, put into a row, column or card); a structure list — done in 1.0.0-rc.7
 - [ ] F9 runs the right program when the open file belongs to a library (done in 1.0.0-rc.4)
 
 ### 1.2 — Reports and documents
@@ -273,7 +273,7 @@ The same Pascal code and `.pform` forms on an Android phone or tablet. The frame
 ### 1.7 — Tooling
 
 - [ ] `pastel test --coverage`, and a profiler view in VS Code
-- [ ] The debugger shows JSON, lists and records readably
+- [x] The debugger shows objects as their real class, lists with their items and JSON as JSON — done in 1.0.0-rc.7
 - [ ] Refactorings: extract method, rename a unit, move a class
 - [ ] Hot reload of code changes for desktop apps (reload the window's code without restarting)
 

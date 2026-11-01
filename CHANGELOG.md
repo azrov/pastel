@@ -2,6 +2,10 @@
 
 The `pastel` tool and the framework. The VS Code extension has its own list: [vscode/CHANGELOG.md](vscode/CHANGELOG.md). What is planned is in [ROADMAP.md](ROADMAP.md).
 
+## 1.0.0-rc.7
+
+- VS Code 1.0.4: several controls selected at once in the designer, put into a row, column or card; a structure list; `pastel check` findings on the form; readable objects, lists and JSON in the debugger (`vscode/gdb/pastel.py`, also for gdb in a terminal)
+
 ## 1.0.0-rc.6
 
 Packages, like Composer for PHP.

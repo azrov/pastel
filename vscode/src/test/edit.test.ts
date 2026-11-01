@@ -3,6 +3,7 @@ import * as assert from 'assert';
 import {
   deleteObject, extractObject, findBlock, formatValue, insertObject, isObjectText, moveObject, parseBlocks,
   parseValue, pasteObjects, renameIdentifier, renameObject, setProperty,
+  wrapObjects, unwrapObject, moveSibling, extractObjects, deleteObjects, outline,
 } from '../edit';
 
 let passed = 0;
@@ -167,6 +168,35 @@ test('rename an identifier in code, not in strings or comments', () => {
   const pas = "procedure THomeForm.X;\nbegin\n  Ok.Text := 'Ok'; // Ok\n  ok.SetFocus; { Ok }\n  OkDone := True;\nend;";
   assert.strictEqual(renameIdentifier(pas, 'Ok', 'SaveButton'),
     "procedure THomeForm.X;\nbegin\n  SaveButton.Text := 'Ok'; // Ok\n  SaveButton.SetFocus; { Ok }\n  OkDone := True;\nend;");
+});
+
+test('wrap siblings in a row, and unwrap them again', () => {
+  const two = form.replace("  object Info: TLabel\n  end", "  object Info: TLabel\n  end\n  object More: TLabel\n  end");
+  const r = wrapObjects(two, ['More', 'Info'], 'TRow')!;
+  const root = parseBlocks(r.text)!;
+  assert.strictEqual(r.name, 'Row1');
+  assert.deepStrictEqual(root.children.map(c => c.name), ['Card', 'Row1']);
+  assert.deepStrictEqual(findBlock(root, 'Row1')!.children.map(c => c.name), ['Info', 'More'], 'in file order');
+  assert.ok(r.text.includes('  object Row1: TRow\n    Gap = 8\n    object Info: TLabel\n    end'), r.text);
+  assert.strictEqual(wrapObjects(form, ['Ok', 'Info'], 'TRow'), undefined, 'different parents');
+  const back = unwrapObject(r.text, 'Row1');
+  assert.strictEqual(back, two);
+});
+
+test('move among siblings', () => {
+  const root = parseBlocks(moveSibling(form, 'Info', -1))!;
+  assert.deepStrictEqual(root.children.map(c => c.name), ['Info', 'Card']);
+  assert.strictEqual(moveSibling(form, 'Card', -1), form, 'already first');
+  assert.strictEqual(moveSibling(form, 'Info', 1), form, 'already last');
+});
+
+test('several controls: copy, delete, outline', () => {
+  const clip = extractObjects(form, ['Info', 'Ok', 'Buttons'])!;
+  assert.strictEqual(clip, "object Buttons: TRow\n  object Ok: TButton\n    Text = 'OK'\n  end\nend\nobject Info: TLabel\nend");
+  const root = parseBlocks(deleteObjects(form, ['Info', 'NameEdit']))!;
+  assert.deepStrictEqual(outline(deleteObjects(form, ['Info', 'NameEdit'])).map(o => o.name), ['HomeForm', 'Card', 'Buttons', 'Ok']);
+  assert.strictEqual(root.children.length, 1);
+  assert.deepStrictEqual(outline(form).map(o => o.depth), [0, 1, 2, 2, 3, 1]);
 });
 
 console.log(`edit: ${passed} passed`);

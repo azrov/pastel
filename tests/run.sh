@@ -362,6 +362,43 @@ out="$("$PASTEL" add hi --git "$PK/extras" --path greet --branch master 2>&1)"
 expect "a package from a git branch"       'grep -q "^hi = { git = \".*extras\", path = \"greet\", branch = \"master\" }$" pastel.toml'
 unset PASTEL_CACHE PASTEL_REGISTRY
 
+# --- the debugger shows values readably (vscode/gdb/pastel.py) ---
+if command -v gdb >/dev/null 2>&1; then
+  cd "$WORK" && rm -rf dbg && "$PASTEL" new console dbg >/dev/null && cd dbg
+  cat > src/main.pas <<'PAS'
+program dbg;
+{$mode objfpc}{$H+}
+uses
+  Classes, SysUtils, fpjson, Pastel.Json;
+type
+  TCustomer = class
+  private
+    FName: string;
+  public
+    Tags: TStringList;
+    property Name: string read FName write FName;
+  end;
+var
+  Base: TStrings;
+  C: TCustomer;
+  J: TJSONData;
+begin
+  Base := TStringList.Create;
+  Base.Add('şeftali');
+  C := TCustomer.Create;
+  C.Name := 'Ayşe';
+  J := GetJSON('{"items": [1, 2.5, true, null, "x"]}');
+  WriteLn(Base.Count, C.Name, J.Count);
+end.
+PAS
+  "$PASTEL" build >/dev/null 2>&1
+  printf 'source %s/vscode/gdb/pastel.py\nbreak main.pas:24\nrun\nprint Base\nprint C\nprint J\n' "$ROOT" > g.txt
+  out="$(gdb -q -batch -x g.txt build/*/debug/dbg 2>&1)"
+  expect "gdb: a string list with its items"  'echo "$out" | grep -q "= TStringList (1) = {.şeftali.}"'
+  expect "gdb: an object as its class, properties" 'echo "$out" | grep -q "= TCustomer = {Tags = nil, Name = .Ayşe.}"'
+  expect "gdb: JSON as JSON"                  'echo "$out" | grep -q "= TJSONObject {\"items\": \[1, 2.5, true, null, \"x\"\]}"'
+fi
+
 # --- pastel fmt ---
 cd "$WORK/demo-app"
 cat > src/messy.pas <<'PAS'

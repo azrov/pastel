@@ -58,7 +58,7 @@ test('toolbox shows the controls', () => {
 test('clicking a control selects it', () => {
   mouse(stage, 'mousedown', 50, 30);
   mouse(w, 'mouseup', 50, 30);
-  assert.deepStrictEqual(last('select'), { type: 'select', name: 'Ok' });
+  assert.deepStrictEqual(last('select'), { type: 'select', name: 'Ok', names: ['Ok'] });
 });
 
 test('dragging a control moves it (into the form, after Info)', () => {
@@ -85,12 +85,12 @@ test('a small mouse movement is a click, not a move', () => {
   mouse(stage, 'mousemove', 152, 31);
   mouse(w, 'mouseup', 152, 31);
   assert.strictEqual(last('move'), undefined);
-  assert.deepStrictEqual(last('select'), { type: 'select', name: 'Cancel' });
+  assert.deepStrictEqual(last('select'), { type: 'select', name: 'Cancel', names: ['Cancel'] });
 });
 
 test('property panel sends edits', () => {
   post({
-    type: 'select', name: 'Cancel', className: 'TButton', isRoot: false, handlers: ['OkClick'],
+    type: 'select', name: 'Cancel', names: ['Cancel'], className: 'TButton', isRoot: false, handlers: ['OkClick'],
     props: [
       { name: 'Text', type: 'string', doc: '', value: 'Cancel' },
       { name: 'Style', type: 'enum', values: ['Primary', 'Secondary'], doc: '' },
@@ -102,7 +102,7 @@ test('property panel sends edits', () => {
   assert.strictEqual(text.value, 'Cancel');
   text.value = 'Close';
   text.dispatchEvent(new w.Event('change'));
-  assert.deepStrictEqual(last('setProp'), { type: 'setProp', name: 'Cancel', prop: 'Text', propType: 'string', value: 'Close' });
+  assert.deepStrictEqual(last('setProp'), { type: 'setProp', name: 'Cancel', names: ['Cancel'], prop: 'Text', propType: 'string', value: 'Close' });
 
   const style = doc.querySelector('[data-prop="Style"]');
   style.value = 'Secondary';
@@ -129,7 +129,62 @@ test('clicking a toolbox chip adds after the selected control', () => {
 test('Delete key removes the selected control', () => {
   doc.body.focus();
   w.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Delete' }));
-  assert.deepStrictEqual(last('delete'), { type: 'delete', name: 'Cancel' });
+  assert.deepStrictEqual(last('delete'), { type: 'delete', name: 'Cancel', names: ['Cancel'] });
+});
+
+test('Ctrl+click selects several; their common properties go to all', () => {
+  sent.length = 0;
+  mouse(stage, 'mousedown', 50, 30);
+  mouse(w, 'mouseup', 50, 30);
+  stage.dispatchEvent(new w.MouseEvent('mousedown', { clientX: 150, clientY: 30, button: 0, ctrlKey: true, bubbles: true }));
+  mouse(w, 'mouseup', 150, 30);
+  assert.deepStrictEqual(last('select'), { type: 'select', name: 'Cancel', names: ['Ok', 'Cancel'] });
+  assert.strictEqual(doc.querySelectorAll('.selected').length, 2);
+  post({
+    type: 'select', name: 'Cancel', names: ['Ok', 'Cancel'], className: '', isRoot: false, handlers: [], sameParent: true,
+    props: [{ name: 'Style', type: 'enum', values: ['Primary', 'Secondary'], doc: '', mixed: true }],
+  });
+  assert.ok(doc.querySelector('#props h3').textContent.includes('2 controls'));
+  const style = doc.querySelector('[data-prop="Style"]');
+  assert.strictEqual(style.options[0].text, '(several values)');
+  style.value = 'Secondary';
+  style.dispatchEvent(new w.Event('change'));
+  assert.deepStrictEqual(last('setProp').names, ['Ok', 'Cancel']);
+  const row = [...doc.querySelectorAll('#props button')].find((b: any) => b.textContent.includes('Row'));
+  row.click();
+  assert.deepStrictEqual(last('wrap'), { type: 'wrap', names: ['Ok', 'Cancel'], className: 'TRow' });
+  w.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'c', ctrlKey: true }));
+  assert.deepStrictEqual(last('copy'), { type: 'copy', name: 'Cancel', names: ['Ok', 'Cancel'] });
+  w.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Escape' }));
+  assert.deepStrictEqual(last('select').names, ['Cancel'], 'Escape keeps one');
+});
+
+test('Alt+Up moves the control earlier', () => {
+  w.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'ArrowUp', altKey: true }));
+  assert.deepStrictEqual(last('moveSibling'), { type: 'moveSibling', name: 'Cancel', delta: -1 });
+});
+
+test('the structure lists every object, also the non-visual ones', () => {
+  post({ type: 'tree', items: [
+    { name: 'HomeForm', className: 'THomeForm', depth: 0 },
+    { name: 'Tick', className: 'TTimer', depth: 1, nonvisual: true },
+    { name: 'Buttons', className: 'TRow', depth: 1 },
+  ] });
+  const items = [...doc.querySelectorAll('#tree .item')];
+  assert.strictEqual(items.length, 3);
+  assert.ok(items[1].classList.contains('nv'));
+  items[1].click();
+  assert.deepStrictEqual(last('select'), { type: 'select', name: 'Tick', names: ['Tick'] });
+});
+
+test('what pastel check says is drawn on the control', () => {
+  post({ type: 'issues', items: [{ name: 'Buttons', severity: 'warning', message: 'Buttons: its controls need 500 pixels', line: 7 }] });
+  assert.ok(doc.querySelector('.box.issue.warning'), 'outlined on the form');
+  const item = doc.querySelector('#issues .warning');
+  assert.ok(item.textContent.includes('line 7: Buttons: its controls need'));
+  item.click();
+  assert.deepStrictEqual(last('select'), { type: 'select', name: 'Buttons', names: ['Buttons'] });
+  assert.ok(doc.querySelector('#tree .bad'), 'marked in the structure');
 });
 
 test('errors are shown', () => {

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.4
+
+- Designer: select several controls (`Ctrl+click`) and change their common properties, delete, copy or cut them together
+- Designer: put controls into a new row, column or card (⊞), take them out again (*Unwrap*); `Alt+Up`/`Down` moves a control among its neighbours
+- Designer: a *Structure* list of every object, also the non-visual ones (timers, actions...)
+- Designer: what `pastel check` finds is outlined on the form and listed under it
+- Debugging: objects are shown as their real class with their properties; `TStringList`, `TList`, `TFPList` with their items; JSON values as JSON
+- F5 in a library's file debugs the program that uses it, like F9
+
 ## 1.0.3
 
 - Completion and go to definition know the units of packages (`pastel add`), read from the cache

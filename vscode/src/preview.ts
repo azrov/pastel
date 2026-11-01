@@ -5,8 +5,9 @@ import * as vscode from 'vscode';
 import { findProjectRoot, runPastel } from './cli';
 import { designerHtml } from './designerHtml';
 import {
-  deleteObject, extractObject, findBlock, formatValue, insertObject, isObjectText, moveObject, parseBlocks,
-  parseValue, pasteObjects, renameIdentifier, renameObject, setProperty,
+  deleteObjects, extractObject, extractObjects, findBlock, formatValue, insertObject, isObjectText, moveObject,
+  moveSibling, outline, parseBlocks, parseValue, pasteObjects, renameIdentifier, renameObject, setProperty,
+  unwrapObject, wrapObjects,
 } from './edit';
 import { declaredProcedures, enclosingObjects, findProcedure, Schema, SchemaClass } from './model';
 
@@ -29,6 +30,8 @@ export class FormPreview {
   private running = false;
   private pending = false;
   private selected: string | undefined;
+  // all selected controls (Ctrl+click); selected is the last one
+  private selectedAll: string[] = [];
   private ignoreSelectionUntil = 0;
   private readonly imageFile: string;
   private readonly layoutFile: string;
@@ -140,6 +143,8 @@ export class FormPreview {
         }
         this.panel.webview.postMessage({ type: 'render', data, layout, file: path.basename(file) });
         await this.sendSelection();
+        await this.sendTree();
+        this.sendIssues(cwd, rel);
       } else {
         const message = (result.stderr || result.stdout || 'The form could not be drawn.').trim();
         this.panel.webview.postMessage({ type: 'error', message });
@@ -153,15 +158,70 @@ export class FormPreview {
     }
   }
 
+  /** The objects of the form, for the structure list (non-visual ones are only there). */
+  private async sendTree(): Promise<void> {
+    const schema = await this.services.loadSchema();
+    const items = outline(this.document.getText()).map(o => ({
+      ...o,
+      nonvisual: !!schema?.controls.find(c => c.name.toLowerCase() === o.className.toLowerCase())?.nonvisual,
+    }));
+    this.panel.webview.postMessage({ type: 'tree', items });
+  }
+
+  /** What "pastel check" says about the form, drawn on the controls it is about. */
+  private async sendIssues(cwd: string, rel: string): Promise<void> {
+    const text = this.document.getText();
+    const r = await runPastel(['check', rel, '--stdin', '--json'], cwd, text);
+    let found: { line: number; severity: string; message: string }[] = [];
+    try {
+      found = JSON.parse(r.stdout || '[]');
+    } catch {
+      found = [];
+    }
+    const lines = text.split(/\r?\n/);
+    const items = found.map(i => {
+      const chain = enclosingObjects(lines, i.line);
+      return { name: chain.length ? chain[chain.length - 1].name : undefined, severity: i.severity, message: i.message, line: i.line };
+    });
+    if (text === this.document.getText()) {
+      this.panel.webview.postMessage({ type: 'issues', items });
+    }
+  }
+
   private async sendSelection(): Promise<void> {
     const schema = await this.services.loadSchema();
     const root = parseBlocks(this.document.getText());
     const block = root && this.selected ? findBlock(root, this.selected) : undefined;
     if (!schema || !root || !block) {
       this.selected = undefined;
+      this.selectedAll = [];
       this.panel.webview.postMessage({ type: 'select', name: null });
       return;
     }
+    const blocks = this.selectedAll.map(n => findBlock(root, n)).filter(b => !!b && b !== root) as NonNullable<typeof block>[];
+    if (blocks.length > 1) {
+      // several: the properties they all have, with the value when it is the same
+      const classes = blocks.map(b => schema.controls.find(c => c.name.toLowerCase() === b.className.toLowerCase()));
+      const first = classes[0]?.properties ?? [];
+      const common = first.filter(p => p.type !== 'event' &&
+        classes.every(c => c?.properties.some(q => q.name === p.name && q.type === p.type)));
+      const props = common.map(p => {
+        const values = blocks.map(b => {
+          const line = b.props.find(x => x.name.toLowerCase() === p.name.toLowerCase());
+          return line ? parseValue(line.value) : undefined;
+        });
+        const same = values.every(v => v === values[0]);
+        return { ...p, value: same ? values[0] : undefined, mixed: !same };
+      });
+      const sameParent = blocks.every(b => b.parent === blocks[0].parent);
+      this.selectedAll = blocks.map(b => b.name);
+      this.panel.webview.postMessage({
+        type: 'select', name: block.name, names: this.selectedAll, className: '', isRoot: false, props, handlers: [],
+        sameParent,
+      });
+      return;
+    }
+    this.selectedAll = [block.name];
     const cls: SchemaClass | undefined = block === root ? schema.form :
       schema.controls.find(c => c.name.toLowerCase() === block.className.toLowerCase());
     const pas = this.formUnitText();
@@ -171,8 +231,8 @@ export class FormPreview {
       return { ...p, value: line ? parseValue(line.value) : undefined };
     });
     this.panel.webview.postMessage({
-      type: 'select', name: block.name, className: block.className, isRoot: block === root,
-      props, handlers,
+      type: 'select', name: block.name, names: [block.name], className: block.className, isRoot: block === root,
+      props, handlers, children: block.children.length,
     });
   }
 
@@ -230,6 +290,7 @@ export class FormPreview {
     const name = chain.length > 0 ? chain[chain.length - 1].name : undefined;
     if (name && name !== this.selected) {
       this.selected = name;
+      this.selectedAll = [name];
       this.sendSelection();
     }
   }
@@ -239,14 +300,43 @@ export class FormPreview {
     switch (m.type) {
       case 'select':
         this.selected = m.name ?? undefined;
+        this.selectedAll = Array.isArray(m.names) && m.names.length ? m.names : (m.name ? [m.name] : []);
         await this.sendSelection();
         if (m.name) {
           this.revealInEditor(m.name);
         }
         break;
-      case 'setProp':
-        await this.applyText(setProperty(text, m.name, m.prop,
-          m.value === null ? undefined : formatValue(m.propType, String(m.value))));
+      case 'setProp': {
+        const value = m.value === null ? undefined : formatValue(m.propType, String(m.value));
+        let out = text;
+        for (const n of (Array.isArray(m.names) && m.names.length ? m.names : [m.name])) {
+          out = setProperty(out, n, m.prop, value);
+        }
+        await this.applyText(out);
+        break;
+      }
+      case 'wrap': {
+        const r = wrapObjects(text, m.names, m.className);
+        if (r) {
+          this.selected = r.name;
+          this.selectedAll = [r.name];
+          await this.applyText(r.text);
+          this.revealInEditor(r.name);
+        } else {
+          vscode.window.showWarningMessage('Pastel: only controls in the same container can be put together.');
+        }
+        break;
+      }
+      case 'unwrap': {
+        const root = parseBlocks(text);
+        const first = root && findBlock(root, m.name)?.children[0];
+        this.selected = first?.name ?? findBlock(root!, m.name)?.parent?.name;
+        this.selectedAll = this.selected ? [this.selected] : [];
+        await this.applyText(unwrapObject(text, m.name));
+        break;
+      }
+      case 'moveSibling':
+        await this.applyText(moveSibling(text, m.name, m.delta));
         break;
       case 'add': {
         const r = insertObject(text, m.parent, m.index, m.className);
@@ -282,13 +372,15 @@ export class FormPreview {
       }
       case 'copy':
       case 'cut': {
-        const obj = m.name ? extractObject(text, m.name) : undefined;
+        const names: string[] = Array.isArray(m.names) && m.names.length ? m.names : (m.name ? [m.name] : []);
+        const obj = names.length > 1 ? extractObjects(text, names) : (m.name ? extractObject(text, m.name) : undefined);
         if (obj) {
           await vscode.env.clipboard.writeText(obj);
           if (m.type === 'cut') {
             const root = parseBlocks(text);
-            this.selected = (root && findBlock(root, m.name))?.parent?.name;
-            await this.applyText(deleteObject(text, m.name));
+            this.selected = (root && findBlock(root, names[0]))?.parent?.name;
+            this.selectedAll = this.selected ? [this.selected] : [];
+            await this.applyText(deleteObjects(text, names));
           }
         }
         break;
@@ -352,10 +444,12 @@ export class FormPreview {
         this.schedule(0);
         break;
       case 'delete': {
+        const names: string[] = Array.isArray(m.names) && m.names.length ? m.names : [m.name];
         const root = parseBlocks(text);
-        const block = root && findBlock(root, m.name);
+        const block = root && findBlock(root, names[0]);
         this.selected = block?.parent?.name;
-        await this.applyText(deleteObject(text, m.name));
+        this.selectedAll = this.selected ? [this.selected] : [];
+        await this.applyText(deleteObjects(text, names));
         break;
       }
       case 'code': {

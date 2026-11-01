@@ -14,6 +14,11 @@ Build cross-platform apps in Object Pascal with Pastel. This extension connects 
 
 **Form designer.** Open a `.pform` file and press the designer button in the editor title. The form is drawn beside the editor and updates as you type. Click a control to select it and edit its properties; drag controls to move them; drag new ones in from the toolbox; press `Delete` to remove one. `Ctrl+C`/`X`/`V`/`D` copy, cut, paste and duplicate controls, `F2` renames one (its uses in the `.pas` code too), `Ctrl+Z`/`Ctrl+Y` undo and redo. Show the form at other sizes or in the dark theme from the designer's toolbar. Selection follows the cursor in the editor and the other way round. **Pastel: New Form…** adds a dialog form to the project.
 
+- `Ctrl+click` (or `Shift+click`) selects several controls: the properties they all have are edited at once; delete, copy and cut work on all of them.
+- **⊞ Row**, **⊞ Column**, **⊞ Card** put the selected controls into a new container; **Unwrap** takes them out again. `Alt+Up`/`Down` (or ↑ ↓) moves a control earlier or later; `Escape` selects its container.
+- **Structure** lists every object of the form, also timers, actions and other components that are not drawn; click one to select it.
+- What `pastel check` finds (a row whose controls do not fit, an unknown property) is outlined on the form and listed under it; click to select the control.
+
 **Writing forms.** In `.pform` files you get:
 
 - completion for control types (`object SaveButton: T…`), properties, and their values (`Align = Center`, `Style = Secondary`, event handler names from the form's `.pas` file)
@@ -22,6 +27,8 @@ Build cross-platform apps in Object Pascal with Pastel. This extension connects 
 - a quick fix that adds a missing event handler to the form's code, ready to fill in
 - `Ctrl+click` on an event handler (`OnClick = SaveClick`) to open its code
 - the outline of the form in the Outline view, and snippets: `button`, `edit`, `label`, `row`, `column`, `card`
+
+**Debugging.** Press F5 (no `launch.json` needed; in a library's file the program that uses it is debugged). Values are shown readably: strings as text (`'Ayşe'`), objects as their real class with their properties (`TCustomer = {Name = 'Ayşe', Age = 30}`), string lists and lists with their items (`TStringList (2) = {'elma', 'şeftali'}`), JSON values as JSON (`TJSONObject {"name": "Ayşe", "age": 30}`).
 
 **New projects.** *Pastel: New Project…* creates an app, console, service, API or library project and opens it. New projects come with VS Code settings, so `Ctrl+Shift+B` builds and `F5` starts debugging.
 

@@ -113,8 +113,11 @@ More in [testing.md](testing.md).
 
 Click left of a line number in `src/main.pas` to set a breakpoint, then press
 **F5**. Pastel builds the program and starts it in the debugger; it stops at
-the breakpoint. Hover over a variable to see its value (strings are shown as
-text, `'Ayşe'`), and use the buttons at the top to step through the code.
+the breakpoint. Hover over a variable to see its value, and use the buttons at
+the top to step through the code. Values are shown readably: strings as text
+(`'Ayşe'`), objects as their real class with their properties, lists with their
+items (`TStringList (2) = {'elma', 'şeftali'}`), JSON as JSON
+(`TJSONObject {"name": "Ayşe", "age": 30}`).
 
 No `launch.json` is needed. To give your program arguments while
 debugging, add `"args": ["Ali"]` to the configuration in

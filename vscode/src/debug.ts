@@ -3,7 +3,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { currentProjectRoot, findProjectRoot, runPastel } from './cli';
+import { currentProjectRoot, findProjectRoot, runnableProjectRoot, runPastel } from './cli';
 
 export interface ProjectInfo {
   name: string;
@@ -100,6 +100,10 @@ export function registerDebugging(context: vscode.ExtensionContext): void {
         root = path.resolve(folder?.uri.fsPath ?? '', String(config.project));
       } else {
         root = (await currentProjectRoot()) ?? (folder ? findProjectRoot(folder.uri.fsPath) : undefined);
+        // in a library: the program that uses it, like F9
+        if (root && readProjectInfo(root).kind === 'lib') {
+          root = (await runnableProjectRoot(context.workspaceState)) ?? root;
+        }
       }
       if (!root) {
         vscode.window.showWarningMessage('Pastel: no pastel.toml found to debug. Create a project with "Pastel: New Project".');
@@ -107,7 +111,7 @@ export function registerDebugging(context: vscode.ExtensionContext): void {
       }
       const info = readProjectInfo(root);
       if (info.kind === 'lib') {
-        vscode.window.showInformationMessage('A library has no program of its own. Debug one of its tests from the Testing view instead.');
+        vscode.window.showInformationMessage('A library has no program of its own, and no program in this workspace uses it. Debug one of its tests from the Testing view instead.');
         return undefined;
       }
       if (!(await hasNativeDebugger())) {
