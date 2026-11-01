@@ -48,7 +48,7 @@ object HomeForm: THomeForm
     Grow = 1
     Align = Stretch
     Padding = 16
-    Gap = 16
+    Gap = 4
     object Side: TColumn
       Width = 380
       Gap = 8
@@ -74,6 +74,9 @@ object HomeForm: THomeForm
         Text = 'no contacts'
         FontSize = 12
       end
+    end
+    object SideSplitter: TSplitter
+      MinSize = 240
     end
     object Details: TColumn
       Grow = 1

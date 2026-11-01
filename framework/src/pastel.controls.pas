@@ -1,6 +1,6 @@
 { Pastel - more controls: check boxes, radio buttons, switches, lists,
-  drop-downs, pictures, scrolling areas, tabs, progress bars, sliders and
-  spinners. They are registered for .pform files like the basic ones.
+  drop-downs, pictures, scrolling areas, tabs, progress bars, sliders,
+  spinners, splitters, tool bars and status bars. They are registered for .pform files like the basic ones.
   Part of the Pastel project, MIT License. }
 unit Pastel.Controls;
 
@@ -301,6 +301,63 @@ type
     constructor Create(AOwner: TComponent); override;
   published
     property Active: Boolean read FActive write SetActive default True;
+  end;
+
+  { A bar between two controls of a TRow (or a TColumn) that the user drags
+    to share the room between them. It changes the Width (in a column: the
+    Height) of the control before it; give that one a Width and the one after
+    it Grow = 1. }
+  TSplitter = class(TControl)
+  private
+    FMinSize: Integer;
+    FDragging: Boolean;
+    FStartPos, FStartSize: Integer;
+    FOnMoved: TNotifyEvent;
+    function Vertical: Boolean;
+  protected
+    procedure Measure(AvailWidth: Integer; out W, H: Integer); override;
+    procedure Paint(C: TCanvas32); override;
+    function FillsAcross: Boolean; override;
+    function Cursor: TCursorKind; override;
+    procedure MouseDown(X, Y: Integer); override;
+    procedure MouseMove(X, Y: Integer); override;
+    procedure MouseUp(X, Y: Integer; Inside: Boolean); override;
+  public
+    constructor Create(AOwner: TComponent); override;
+    { The control it resizes: the visible one before it; nil when there is none. }
+    function Target: TControl;
+    { Gives the target this size (clamped between MinSize and the room there is). }
+    procedure MoveTo(Size: Integer);
+  published
+    { The smallest size of the controls on both sides. }
+    property MinSize: Integer read FMinSize write FMinSize default 80;
+    { The user let go of it at a new place. }
+    property OnMoved: TNotifyEvent read FOnMoved write FOnMoved;
+  end;
+
+  { A row of buttons at the top of a form, under the menu: put TButtons with
+    Style = Flat in it (and a TSpacer to push the rest to the right). }
+  TToolBar = class(TRow)
+  protected
+    procedure Paint(C: TCanvas32); override;
+  public
+    constructor Create(AOwner: TComponent); override;
+  end;
+
+  { A line at the bottom of a form that says what is going on. Text is shown
+    when it has no children; otherwise put TLabels in it (a TSpacer between
+    them pushes the next ones to the right). }
+  TStatusBar = class(TRow)
+  private
+    FText: string;
+    procedure SetText(const AValue: string);
+  protected
+    procedure Measure(AvailWidth: Integer; out W, H: Integer); override;
+    procedure Paint(C: TCanvas32); override;
+  public
+    constructor Create(AOwner: TComponent); override;
+  published
+    property Text: string read FText write SetText;
   end;
 
 { Where a file named in a .pform (pictures) is: a full path, next to the
@@ -1740,6 +1797,177 @@ begin
     RequestAnimation(Self);
 end;
 
+{ ---- TSplitter ---- }
+
+constructor TSplitter.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FMinSize := 80;
+end;
+
+function TSplitter.Vertical: Boolean;
+begin
+  Result := not ((Parent is TBox) and TBox(Parent).Horizontal);
+end;
+
+procedure TSplitter.Measure(AvailWidth: Integer; out W, H: Integer);
+begin
+  W := 8;
+  H := 8;
+end;
+
+function TSplitter.FillsAcross: Boolean;
+begin
+  Result := True;
+end;
+
+function TSplitter.Cursor: TCursorKind;
+begin
+  if Vertical then Result := ckSizeNS else Result := ckSizeWE;
+end;
+
+procedure TSplitter.Paint(C: TCanvas32);
+var
+  Col: TColor32;
+begin
+  if FDragging or IsHovered then Col := Theme.Accent else Col := Theme.Border;
+  if Vertical then
+    C.FillRect(Bounds.X, Bounds.Y + Bounds.H div 2, Bounds.W, 1, Col)
+  else
+    C.FillRect(Bounds.X + Bounds.W div 2, Bounds.Y, 1, Bounds.H, Col);
+end;
+
+function TSplitter.Target: TControl;
+var
+  I: Integer;
+begin
+  Result := nil;
+  if Parent = nil then
+    Exit;
+  for I := Parent.IndexOfChild(Self) - 1 downto 0 do
+    if Parent.Children[I].Visible then
+      Exit(Parent.Children[I]);
+end;
+
+procedure TSplitter.MoveTo(Size: Integer);
+var
+  T: TControl;
+  Room: Integer;
+begin
+  T := Target;
+  if T = nil then
+    Exit;
+  if Vertical then
+    Room := Parent.Bounds.Y + Parent.Bounds.H - T.Bounds.Y - Bounds.H - FMinSize
+  else
+    Room := Parent.Bounds.X + Parent.Bounds.W - T.Bounds.X - Bounds.W - FMinSize;
+  if (Room > 0) and (Size > Room) then
+    Size := Room;
+  if Size < FMinSize then
+    Size := FMinSize;
+  if Vertical then
+    T.Height := Size
+  else
+    T.Width := Size;
+end;
+
+procedure TSplitter.MouseDown(X, Y: Integer);
+var
+  T: TControl;
+begin
+  T := Target;
+  if T = nil then
+    Exit;
+  FDragging := True;
+  if Vertical then
+  begin
+    FStartPos := Y;
+    FStartSize := T.Bounds.H;
+  end
+  else
+  begin
+    FStartPos := X;
+    FStartSize := T.Bounds.W;
+  end;
+  Invalidate;
+end;
+
+procedure TSplitter.MouseMove(X, Y: Integer);
+begin
+  if not FDragging then
+    Exit;
+  if Vertical then
+    MoveTo(FStartSize + Y - FStartPos)
+  else
+    MoveTo(FStartSize + X - FStartPos);
+end;
+
+procedure TSplitter.MouseUp(X, Y: Integer; Inside: Boolean);
+begin
+  if not FDragging then
+    Exit;
+  FDragging := False;
+  Invalidate;
+  if Assigned(FOnMoved) then
+    FOnMoved(Self);
+end;
+
+{ ---- TToolBar ---- }
+
+constructor TToolBar.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  Padding := 6;
+  Gap := 4;
+end;
+
+procedure TToolBar.Paint(C: TCanvas32);
+begin
+  C.FillRect(Bounds.X, Bounds.Y, Bounds.W, Bounds.H, Theme.Surface);
+  C.FillRect(Bounds.X, Bounds.Y + Bounds.H - 1, Bounds.W, 1, Theme.Border);
+  PaintChildren(C);
+end;
+
+{ ---- TStatusBar ---- }
+
+constructor TStatusBar.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  Padding := 6;
+  Gap := 16;
+end;
+
+procedure TStatusBar.SetText(const AValue: string);
+begin
+  if FText = AValue then
+    Exit;
+  FText := AValue;
+  Invalidate;
+end;
+
+procedure TStatusBar.Measure(AvailWidth: Integer; out W, H: Integer);
+begin
+  inherited Measure(AvailWidth, W, H);
+  if H < GetFont(Theme.FontSize, False).LineHeight + 2 * Padding then
+    H := GetFont(Theme.FontSize, False).LineHeight + 2 * Padding;
+end;
+
+procedure TStatusBar.Paint(C: TCanvas32);
+var
+  F: TPastelFont;
+begin
+  C.FillRect(Bounds.X, Bounds.Y, Bounds.W, Bounds.H, Theme.Surface);
+  C.FillRect(Bounds.X, Bounds.Y, Bounds.W, 1, Theme.Border);
+  if (ChildCount = 0) and (FText <> '') then
+  begin
+    F := GetFont(Theme.FontSize, False);
+    C.PushClip(Bounds);
+    C.DrawText(F, Bounds.X + Padding + 4, Bounds.Y + (Bounds.H - F.LineHeight) div 2, FText, Theme.TextMuted);
+    C.PopClip;
+  end;
+  PaintChildren(C);
+end;
+
 initialization
   RegisterControl(TCheckBox);
   RegisterControl(TRadioButton);
@@ -1753,4 +1981,7 @@ initialization
   RegisterControl(TProgressBar);
   RegisterControl(TSlider);
   RegisterControl(TSpinner);
+  RegisterControl(TSplitter);
+  RegisterControl(TToolBar);
+  RegisterControl(TStatusBar);
 end.

@@ -2,6 +2,13 @@
 
 The `pastel` tool and the framework. The VS Code extension has its own list: [vscode/CHANGELOG.md](vscode/CHANGELOG.md). What is planned is in [ROADMAP.md](ROADMAP.md).
 
+## 1.0.0-rc.5
+
+- `TSplitter`: a bar the user drags to share the room between two controls; `TToolBar` and `TStatusBar`
+- Buttons: `Icon` (38 built-in line icons, `Pastel.Icons`; your own with `RegisterIcon`) and `Style = Flat`
+- UI scripts: `drag Name dx dy`
+- Examples: notepad has a tool bar with icons and a status bar; contacts a splitter
+
 ## 1.0.0-rc.4
 
 - F9 in VS Code runs the right program: with a library's file open, the program that uses it (or a choice, remembered; *Pastel: Choose the Program to Run* changes it), or its tests when nothing uses it; `pastel run` in a library names the programs that use it

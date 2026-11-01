@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.2
+
+- The designer offers the icon names in a button's `Icon` field
+
 ## 1.0.1
 
 - F9 (Run) in a library's file runs a program that uses it; with several, it asks once and remembers (*Pastel: Choose the Program to Run* asks again); with none, it offers the library's tests

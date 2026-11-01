@@ -481,6 +481,8 @@ begin
   FCursors[ckArrow] := SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
   FCursors[ckIBeam] := SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_IBEAM);
   FCursors[ckHand] := SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND);
+  FCursors[ckSizeWE] := SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZEWE);
+  FCursors[ckSizeNS] := SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZENS);
   ClipboardGetText := @SdlClipboardGet;
   ClipboardSetText := @SdlClipboardSet;
   SDL_StartTextInput;
@@ -913,7 +915,7 @@ var
   Line, Cmd, Arg1, Rest, Prop, Want, Got: string;
   C: TControl;
   R: TRectI;
-  X, Y, N, I: Integer;
+  X, Y, N, I, DX, DY: Integer;
   Parts: TStringArray;
   Until_: QWord;
 
@@ -1081,6 +1083,19 @@ begin
           if (C is TMenuItem) and not (C.Parent is TMenuBar) and not MenuItemRect(TMenuItem(C), R) then
             Fatal(Format('%s:%d: the menu with "%s" is not open', [FScriptFile, FScriptPos, Arg1]));
           FMainForm.HandleMouseMove(R.X + R.W div 2, R.Y + R.H div 2);
+        end;
+      'drag':     { drag Name 120 0: press in its middle, move by 120, 0 and let go }
+        begin
+          C := Ctl(Arg1);
+          X := C.Bounds.X + C.Bounds.W div 2;
+          Y := C.Bounds.Y + C.Bounds.H div 2;
+          DX := StrToIntDef(TakeWord(Rest), 0);
+          DY := StrToIntDef(Rest, 0);
+          FMainForm.HandleMouseMove(X, Y);
+          FMainForm.HandleMouseDown(X, Y, 1, 1);
+          for I := 1 to 4 do
+            FMainForm.HandleMouseMove(X + DX * I div 4, Y + DY * I div 4);
+          FMainForm.HandleMouseUp(X + DX, Y + DY, 1);
         end;
       'wheel':
         begin

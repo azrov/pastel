@@ -45,21 +45,26 @@ type TTextAlign = (taLeft, taCenter, taRight)
 ### TButtonStyle
 
 ```pascal
-type TButtonStyle = (bsPrimary, bsSecondary, bsDanger)
+type TButtonStyle = (bsPrimary, bsSecondary, bsDanger, bsFlat)
 ```
 
-- `bsPrimary`
-- `bsSecondary`
-- `bsDanger`
+bsFlat: no background until the mouse is on it (tool bars).
+
+- `bsPrimary` bsFlat: no background until the mouse is on it (tool bars).
+- `bsSecondary` bsFlat: no background until the mouse is on it (tool bars).
+- `bsDanger` bsFlat: no background until the mouse is on it (tool bars).
+- `bsFlat` bsFlat: no background until the mouse is on it (tool bars).
 ### TCursorKind
 
 ```pascal
-type TCursorKind = (ckArrow, ckIBeam, ckHand)
+type TCursorKind = (ckArrow, ckIBeam, ckHand, ckSizeWE, ckSizeNS)
 ```
 
 - `ckArrow`
 - `ckIBeam`
 - `ckHand`
+- `ckSizeWE`
+- `ckSizeNS`
 ### TWindowState
 
 ```pascal
@@ -220,6 +225,7 @@ type TButton = class(TControl)
 | `procedure Click` |  |
 | `property Text: string` |  |
 | `property Style: TButtonStyle` |  |
+| `property Icon: string` | A built-in icon ('save', 'add', 'delete'...; see Pastel.Icons) before the text, or alone. |
 | `property Action: TBasicAction` | A click runs the action (and Text, Enabled come from it when not set). |
 | `property ModalResult: Integer` | In a dialog: a click closes it with this result (mrOk, mrCancel...). |
 | `property Default: Boolean` | Enter in the dialog clicks it. |

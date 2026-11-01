@@ -149,7 +149,7 @@ expect "lang without languages says how"  'echo "$out" | grep -q "pastel lang ad
 expect "lang add collects the .pform texts" 'grep -q "\"Word wrap\": \"\"" assets/lang/tr.json && grep -q "\"Start typing...\"" assets/lang/tr.json'
 sed -i 's/"File": ""/"File": "Dosya"/; s/"Word wrap": ""/"Word wrap": "Satır kaydır"/' assets/lang/tr.json
 out="$("$PASTEL" lang)"
-expect "lang counts what is missing"      'echo "$out" | grep -q "tr.json: 21 of 23 text(s) not translated"'
+expect "lang counts what is missing"      'echo "$out" | grep -q "tr.json: 25 of 27 text(s) not translated"'
 expect "lang keeps translations"          'grep -q "Satır kaydır" assets/lang/tr.json'
 "$PASTEL" build >/dev/null
 printf 'expect FileMenu.Caption Dosya\nexpect WrapItem.Caption Satır kaydır\ntype Editor x\nkey ctrl+n\nexpect NoButton Hayır\nclick NoButton\nquit\n' > tr.txt

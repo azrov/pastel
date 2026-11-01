@@ -133,7 +133,7 @@ All controls have `Width`, `Height`, `Grow`, `Visible`, `Enabled`, `Hint` (a too
 | `TTabControl`, `TTabSheet` | Pages with tabs: `TabIndex`; a sheet has a `Caption` | `OnChange` |
 | `TSpacer` | Empty space with `Grow = 1` | |
 | `TLabel` | `Text`, `FontSize` (14), `Bold`, `Color`, `TextAlign` (`Left`, `Center`, `Right`), `WordWrap` | |
-| `TButton` | `Text`, `Style` (`Primary`, `Secondary`, `Danger`), `Action`, `ModalResult`, `Default`, `Cancel` | `OnClick` |
+| `TButton` | `Text`, `Icon` (`'save'`, `'add'`...), `Style` (`Primary`, `Secondary`, `Danger`, `Flat`), `Action`, `ModalResult`, `Default`, `Cancel` | `OnClick` |
 | `TEdit` | `Text`, `Placeholder`, `Password`, `ReadOnly`, `MaxLength` | `OnChange`, `OnSubmit` (Enter key) |
 | `TMemo` | Several lines: `Text`, `Lines`, `WordWrap`, `Placeholder`, `ReadOnly` | `OnChange` |
 | `TCheckBox`, `TSwitch`, `TRadioButton` | `Text`, `Checked`; radio buttons with the same parent are one group | `OnChange` |
@@ -143,6 +143,8 @@ All controls have `Width`, `Height`, `Grow`, `Visible`, `Enabled`, `Hint` (a too
 | `TProgressBar` | `Position`, `Max`, `Indeterminate` | |
 | `TSlider` | `Position`, `Min`, `Max`, `Step` | `OnChange` |
 | `TSpinner` | `Active` | |
+| `TSplitter` | Between two controls of a row or column; dragging it changes the `Width`/`Height` of the one before it; `MinSize` | `OnMoved` |
+| `TToolBar`, `TStatusBar` | Rows at the top and bottom of a form: flat buttons (`Style = Flat`); `Text` or labels | |
 | `TDatePicker`, `TCalendarView` | A date: `DateText = '2026-11-01'`, `Placeholder`; `Date`, `HasDate`, `Clear` from code | `OnChange`, `OnPick` |
 | `TTimeEdit`, `TNumberEdit`, `TCurrencyEdit` | A time (`Step` minutes), a whole number (`Min`, `Max`, `Step`, `Value`), an amount (`Symbol`, `Decimals`, `Value`) — [controls.md](controls.md#dates-numbers-and-money) | `OnChange` |
 | `TGrid`, `TListView` | A table: `TGridColumn` children (`Title`, `Field`, `Width`), `Editable`, `Sortable`; `LoadJson` from code | `OnChange`, `OnDblClick`, `OnCellEdit` |
@@ -171,7 +173,7 @@ PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT=ui.txt ./build/linux/debug/myapp
 
 Commands:
 
-- `click <name> [x y]`, `doubleclick`, `rightclick`, `hover <name>`, `wheel <name> <dy>` – menu items and tab sheets can be clicked by name too
+- `click <name> [x y]`, `doubleclick`, `rightclick`, `hover <name>`, `wheel <name> <dy>`, `drag <name> <dx> <dy>` (press in its middle, move, let go: splitters, sliders) – menu items and tab sheets can be clicked by name too
 - `type <name> <text>` – `\n` presses Enter
 - `key ctrl+a`, `key shift+down`, `key f10`, `key enter|tab|escape|backspace|delete|up|down|left|right|home|end|space`
 - `expect <name> <text>` checks the text; `expect <name>.<property> <value>` any property (`expect Agree.Checked True`, `expect HomeForm.Title Notes`)

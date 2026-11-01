@@ -1,6 +1,12 @@
 # The address book, driven like a user would (run by tests/run.sh):
 #   CONTACTS_DB=/tmp/c.db PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT=tests/ui.txt ./build/linux/debug/contacts
 expect CountLabel no contacts
+drag SideSplitter 40 0
+expect Side.Width 420
+drag SideSplitter -400 0
+expect Side.Width 240
+drag SideSplitter 140 0
+expect Side.Width 380
 type NameEdit Ayşe Yılmaz
 type PhoneEdit 0532 111 22 33
 type EmailEdit ayse@example.com

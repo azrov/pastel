@@ -326,6 +326,16 @@ export function designerHtml(nonce: string): string {
       el = document.createElement('input');
       el.value = cur;
       if (p.type === 'integer' || p.type === 'number') el.inputMode = 'numeric';
+      if (p.suggest) {
+        // a list to choose from (icon names), typing something else stays possible
+        const id = 'suggest-' + p.name;
+        if (!document.getElementById(id)) {
+          const dl = document.createElement('datalist'); dl.id = id;
+          for (const v of p.suggest) dl.appendChild(new Option(v, v));
+          document.body.appendChild(dl);
+        }
+        el.setAttribute('list', id);
+      }
       el.addEventListener('change', () => send(p.name, p.type, el.value === '' ? null : el.value));
       el.addEventListener('keydown', e => { if (e.key === 'Enter') el.blur(); });
     }

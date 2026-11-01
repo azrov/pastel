@@ -43,7 +43,7 @@ implementation
 
 uses
   TypInfo, Pastel.Console, Pastel.PForm, Pastel.UI, Pastel.Forms, Pastel.Graphics, Pastel.Controls,
-  Pastel.Project, Pastel.Builder;
+  Pastel.Icons, Pastel.Project, Pastel.Builder;
 
 function JsonStr(const S: string): string;
 var
@@ -483,7 +483,22 @@ begin
             end;
             Extra := Extra + ']';
           end;
-        tkSString, tkLString, tkAString, tkUString, tkWString: Kind := 'string';
+        tkSString, tkLString, tkAString, tkUString, tkWString:
+          begin
+            Kind := 'string';
+            if Props^[I]^.Name = 'Icon' then
+            begin
+              { the designer offers the icon names }
+              Extra := ',"suggest":[';
+              for V := 0 to High(IconNames) do
+              begin
+                if V > 0 then
+                  Extra := Extra + ',';
+                Extra := Extra + JsonStr(IconNames[V]);
+              end;
+              Extra := Extra + ']';
+            end;
+          end;
         tkFloat: Kind := 'number';
         tkMethod:
           begin

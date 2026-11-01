@@ -160,6 +160,13 @@ Pastel.Controls: TSlider.property Position: Integer
 Pastel.Controls: TSlider.property Step: Integer
 Pastel.Controls: TSpinner.constructor Create(AOwner: TComponent)
 Pastel.Controls: TSpinner.property Active: Boolean
+Pastel.Controls: TSplitter.constructor Create(AOwner: TComponent)
+Pastel.Controls: TSplitter.function Target: TControl
+Pastel.Controls: TSplitter.procedure MoveTo(Size: Integer)
+Pastel.Controls: TSplitter.property MinSize: Integer
+Pastel.Controls: TSplitter.property OnMoved: TNotifyEvent
+Pastel.Controls: TStatusBar.constructor Create(AOwner: TComponent)
+Pastel.Controls: TStatusBar.property Text: string
 Pastel.Controls: TTabControl.constructor Create(AOwner: TComponent)
 Pastel.Controls: TTabControl.function ActiveSheet: TTabSheet
 Pastel.Controls: TTabControl.function TabRect(ASheet: TTabSheet): TRectI
@@ -168,6 +175,7 @@ Pastel.Controls: TTabControl.property OnChange: TNotifyEvent
 Pastel.Controls: TTabControl.property TabIndex: Integer
 Pastel.Controls: TTabSheet.constructor Create(AOwner: TComponent)
 Pastel.Controls: TTabSheet.property Caption: string
+Pastel.Controls: TToolBar.constructor Create(AOwner: TComponent)
 Pastel.Controls: function FindAppFile(const FileName: string): string
 Pastel.Controls: type TCheckBox = class(TControl)
 Pastel.Controls: type TComboBox = class(TControl)
@@ -179,9 +187,12 @@ Pastel.Controls: type TRadioButton = class(TCheckBox)
 Pastel.Controls: type TScrollBox = class(TColumn)
 Pastel.Controls: type TSlider = class(TControl)
 Pastel.Controls: type TSpinner = class(TControl)
+Pastel.Controls: type TSplitter = class(TControl)
+Pastel.Controls: type TStatusBar = class(TRow)
 Pastel.Controls: type TSwitch = class(TCheckBox)
 Pastel.Controls: type TTabControl = class(TControl)
 Pastel.Controls: type TTabSheet = class(TColumn)
+Pastel.Controls: type TToolBar = class(TRow)
 Pastel.Crypto: function Base64UrlDecode(const Text: string): RawByteString
 Pastel.Crypto: function Base64UrlEncode(const Data: RawByteString): string
 Pastel.Crypto: function HashPassword(const Password: string; Iterations: Integer = 210000): string
@@ -458,6 +469,10 @@ Pastel.Http: type EHttpError = class(Exception)
 Pastel.Http: type THttpClient = class
 Pastel.Http: type THttpProgressEvent = procedure(Done: Int64; Total: Int64)
 Pastel.Http: type THttpResponse = record
+Pastel.Icons: function DrawIcon(C: TCanvas32; const Name: string; X: Integer; Y: Integer; Size: Integer; Color: TColor32): Boolean
+Pastel.Icons: function HasIcon(const Name: string): Boolean
+Pastel.Icons: function IconNames: TStringArray
+Pastel.Icons: procedure RegisterIcon(const Name: string; const Drawing: string)
 Pastel.Inputs: TCalendarView.constructor Create(AOwner: TComponent)
 Pastel.Inputs: TCalendarView.procedure NextMonth
 Pastel.Inputs: TCalendarView.procedure PreviousMonth
@@ -815,11 +830,13 @@ Pastel.UI: TButton.procedure Notification(AComponent: TComponent; Operation: TOp
 Pastel.UI: TButton.property Action: TBasicAction
 Pastel.UI: TButton.property Cancel: Boolean
 Pastel.UI: TButton.property Default: Boolean
+Pastel.UI: TButton.property Icon: string
 Pastel.UI: TButton.property ModalResult: Integer
 Pastel.UI: TButton.property OnClick: TNotifyEvent
 Pastel.UI: TButton.property Style: TButtonStyle
 Pastel.UI: TButton.property Text: string
 Pastel.UI: TButtonStyle.bsDanger
+Pastel.UI: TButtonStyle.bsFlat
 Pastel.UI: TButtonStyle.bsPrimary
 Pastel.UI: TButtonStyle.bsSecondary
 Pastel.UI: TCard.constructor Create(AOwner: TComponent)
@@ -846,6 +863,8 @@ Pastel.UI: TControl.property Width: Integer
 Pastel.UI: TCursorKind.ckArrow
 Pastel.UI: TCursorKind.ckHand
 Pastel.UI: TCursorKind.ckIBeam
+Pastel.UI: TCursorKind.ckSizeNS
+Pastel.UI: TCursorKind.ckSizeWE
 Pastel.UI: TCustomEdit.constructor Create(AOwner: TComponent)
 Pastel.UI: TCustomEdit.destructor Destroy
 Pastel.UI: TCustomEdit.function CanUndo: Boolean
@@ -1060,13 +1079,13 @@ Pastel.UI: type TAction = class(TBasicAction)
 Pastel.UI: type TAlignItems = (aiStretch, aiStart, aiCenter, aiEnd)
 Pastel.UI: type TBox = class(TControl)
 Pastel.UI: type TButton = class(TControl)
-Pastel.UI: type TButtonStyle = (bsPrimary, bsSecondary, bsDanger)
+Pastel.UI: type TButtonStyle = (bsPrimary, bsSecondary, bsDanger, bsFlat)
 Pastel.UI: type TCard = class(TBox)
 Pastel.UI: type TCloseQueryEvent = procedure(Sender: TObject; CanClose: Boolean)
 Pastel.UI: type TColumn = class(TBox)
 Pastel.UI: type TControl = class(TComponent)
 Pastel.UI: type TControlClass = class of TControl
-Pastel.UI: type TCursorKind = (ckArrow, ckIBeam, ckHand)
+Pastel.UI: type TCursorKind = (ckArrow, ckIBeam, ckHand, ckSizeWE, ckSizeNS)
 Pastel.UI: type TCustomEdit = class(TControl)
 Pastel.UI: type TEdit = class(TCustomEdit)
 Pastel.UI: type TEditState = record

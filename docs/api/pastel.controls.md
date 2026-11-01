@@ -1,12 +1,12 @@
 # Pastel.Controls
 
 More controls: check boxes, radio buttons, switches, lists,
-  drop-downs, pictures, scrolling areas, tabs, progress bars, sliders and
-  spinners. They are registered for .pform files like the basic ones.
+  drop-downs, pictures, scrolling areas, tabs, progress bars, sliders,
+  spinners, splitters, tool bars and status bars. They are registered for .pform files like the basic ones.
 
 `uses Pastel.Controls;` · source: [framework/src/pastel.controls.pas](../../framework/src/pastel.controls.pas)
 
-**Contents:** [TCheckBox](#tcheckbox) · [TRadioButton](#tradiobutton) · [TSwitch](#tswitch) · [TListBox](#tlistbox) · [TComboBox](#tcombobox) · [TImageFit](#timagefit) · [TImage](#timage) · [TScrollBox](#tscrollbox) · [TTabSheet](#ttabsheet) · [TTabControl](#ttabcontrol) · [TProgressBar](#tprogressbar) · [TSlider](#tslider) · [TSpinner](#tspinner) · [FindAppFile](#findappfile)
+**Contents:** [TCheckBox](#tcheckbox) · [TRadioButton](#tradiobutton) · [TSwitch](#tswitch) · [TListBox](#tlistbox) · [TComboBox](#tcombobox) · [TImageFit](#timagefit) · [TImage](#timage) · [TScrollBox](#tscrollbox) · [TTabSheet](#ttabsheet) · [TTabControl](#ttabcontrol) · [TProgressBar](#tprogressbar) · [TSlider](#tslider) · [TSpinner](#tspinner) · [TSplitter](#tsplitter) · [TToolBar](#ttoolbar) · [TStatusBar](#tstatusbar) · [FindAppFile](#findappfile)
 
 ## Types
 
@@ -202,6 +202,53 @@ A turning circle of dots: something is happening.
 |---|---|
 | `constructor Create(AOwner: TComponent)` |  |
 | `property Active: Boolean` |  |
+
+### TSplitter
+
+```pascal
+type TSplitter = class(TControl)
+```
+
+A bar between two controls of a TRow (or a TColumn) that the user drags
+to share the room between them. It changes the Width (in a column: the
+Height) of the control before it; give that one a Width and the one after
+it Grow = 1.
+
+| | |
+|---|---|
+| `constructor Create(AOwner: TComponent)` |  |
+| `function Target: TControl` | The control it resizes: the visible one before it; nil when there is none. |
+| `procedure MoveTo(Size: Integer)` | Gives the target this size (clamped between MinSize and the room there is). |
+| `property MinSize: Integer` | The smallest size of the controls on both sides. |
+| `property OnMoved: TNotifyEvent` | The user let go of it at a new place. |
+
+### TToolBar
+
+```pascal
+type TToolBar = class(TRow)
+```
+
+A row of buttons at the top of a form, under the menu: put TButtons with
+Style = Flat in it (and a TSpacer to push the rest to the right).
+
+| | |
+|---|---|
+| `constructor Create(AOwner: TComponent)` |  |
+
+### TStatusBar
+
+```pascal
+type TStatusBar = class(TRow)
+```
+
+A line at the bottom of a form that says what is going on. Text is shown
+when it has no children; otherwise put TLabels in it (a TSpacer between
+them pushes the next ones to the right).
+
+| | |
+|---|---|
+| `constructor Create(AOwner: TComponent)` |  |
+| `property Text: string` |  |
 
 ## Routines
 

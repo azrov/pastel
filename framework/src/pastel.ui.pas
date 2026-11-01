@@ -18,8 +18,9 @@ type
   TAlignItems = (aiStretch, aiStart, aiCenter, aiEnd);
   TJustify = (jsStart, jsCenter, jsEnd, jsSpaceBetween);
   TTextAlign = (taLeft, taCenter, taRight);
-  TButtonStyle = (bsPrimary, bsSecondary, bsDanger);
-  TCursorKind = (ckArrow, ckIBeam, ckHand);
+  { bsFlat: no background until the mouse is on it (tool bars). }
+  TButtonStyle = (bsPrimary, bsSecondary, bsDanger, bsFlat);
+  TCursorKind = (ckArrow, ckIBeam, ckHand, ckSizeWE, ckSizeNS);
   TWindowState = (wsNormal, wsMaximized, wsMinimized, wsFullScreen);
   { Light, dark, or what the computer is set to. }
   TThemeMode = (tmLight, tmDark, tmSystem);
@@ -54,6 +55,8 @@ type
     procedure Paint(C: TCanvas32); virtual;
     procedure PaintChildren(C: TCanvas32);
     function Focusable: Boolean; virtual;
+    { True: takes the whole height in a row (width in a column), whatever its Align (splitters). }
+    function FillsAcross: Boolean; virtual;
     { The keyboard focus went to another control (or none). }
     procedure FocusLost; virtual;
     function Cursor: TCursorKind; virtual;
@@ -224,7 +227,10 @@ type
     FModalResult: Integer;
     FDefault, FCancel: Boolean;
     FAction: TBasicAction;
+    FIcon: string;
     procedure SetText(const AValue: string);
+    procedure SetIcon(const AValue: string);
+    function IconSize: Integer;
     procedure SetStyle(AValue: TButtonStyle);
     procedure SetAction(AValue: TBasicAction);
     function GetText: string;
@@ -243,6 +249,8 @@ type
   published
     property Text: string read FText write SetText;
     property Style: TButtonStyle read FStyle write SetStyle default bsPrimary;
+    { A built-in icon ('save', 'add', 'delete'...; see Pastel.Icons) before the text, or alone. }
+    property Icon: string read FIcon write SetIcon;
     { A click runs the action (and Text, Enabled come from it when not set). }
     property Action: TBasicAction read FAction write SetAction;
     { In a dialog: a click closes it with this result (mrOk, mrCancel...). }
@@ -669,7 +677,7 @@ function NonVisualClassAt(Index: Integer): TComponentClass;
 implementation
 
 uses
-  Math;
+  Math, Pastel.Icons;
 
 var
   ControlClasses: TStringList = nil;
@@ -1192,6 +1200,11 @@ begin
   Result := False;
 end;
 
+function TControl.FillsAcross: Boolean;
+begin
+  Result := False;
+end;
+
 procedure TControl.FocusLost;
 begin
 end;
@@ -1512,8 +1525,8 @@ begin
       Child := TControl(Items[I]);
       if FRow then CrossSize := Inner.H else CrossSize := Inner.W;
       { Stretch fills the cross axis unless the child has a fixed size there. }
-      if (FAlign = aiStretch) and
-         ((FRow and (Child.Height = 0)) or (not FRow and (Child.Width = 0))) then
+      if Child.FillsAcross or ((FAlign = aiStretch) and
+         ((FRow and (Child.Height = 0)) or (not FRow and (Child.Width = 0)))) then
         Cross[I] := CrossSize
       else
         Cross[I] := Min(Cross[I], CrossSize);
@@ -1784,14 +1797,47 @@ var
   F: TPastelFont;
 begin
   F := GetFont(Theme.FontSize, True);
-  W := F.TextWidth(GetText) + 36;
-  H := F.LineHeight + 20;
+  W := F.TextWidth(GetText);
+  if HasIcon(FIcon) then
+  begin
+    if GetText <> '' then
+      Inc(W, 6);
+    Inc(W, IconSize);
+  end;
+  if FStyle = bsFlat then
+  begin
+    if GetText = '' then
+      Inc(W, 12)          { an icon alone: nearly square }
+    else
+      Inc(W, 20);
+    H := Max(F.LineHeight, IconSize) + 12;
+    Exit;
+  end;
+  if GetText = '' then
+    Inc(W, 20)
+  else
+    Inc(W, 36);
+  H := Max(F.LineHeight, IconSize) + 20;
+end;
+
+function TButton.IconSize: Integer;
+begin
+  Result := Round(Theme.FontSize * 1.4);
+end;
+
+procedure TButton.SetIcon(const AValue: string);
+begin
+  if FIcon = AValue then
+    Exit;
+  FIcon := AValue;
+  Changed;
 end;
 
 procedure TButton.Paint(C: TCanvas32);
 var
   F: TPastelFont;
   Bg, Fg: TColor32;
+  IW, IS_, X: Integer;
   S: string;
 begin
   F := GetFont(Theme.FontSize, True);
@@ -1802,6 +1848,13 @@ begin
         if IsPressed then Bg := Theme.SecondaryPressed
         else if IsHovered then Bg := Theme.SecondaryHover
         else Bg := Theme.Secondary;
+        Fg := Theme.Text;
+      end;
+    bsFlat:
+      begin
+        if IsPressed then Bg := Theme.SecondaryPressed
+        else if IsHovered then Bg := Theme.SecondaryHover
+        else Bg := 0;
         Fg := Theme.Text;
       end;
     bsDanger:
@@ -1819,16 +1872,30 @@ begin
   end;
   if not IsEnabled then
   begin
-    Bg := Theme.Secondary;
+    if FStyle <> bsFlat then
+      Bg := Theme.Secondary;
     Fg := Theme.Disabled;
   end;
   if IsFocused and ParentForm.FocusVisible then
     C.FillRoundRect(Bounds.X - 3, Bounds.Y - 3, Bounds.W + 6, Bounds.H + 6,
       Theme.Radius + 3, Theme.FocusRing);
-  C.FillRoundRect(Bounds.X, Bounds.Y, Bounds.W, Bounds.H, Theme.Radius, Bg);
+  if (Bg = 0) and IsFocused and ParentForm.FocusVisible then
+    Bg := Theme.Secondary;
+  if Bg <> 0 then
+    C.FillRoundRect(Bounds.X, Bounds.Y, Bounds.W, Bounds.H, Theme.Radius, Bg);
   C.PushClip(Bounds);
-  C.DrawText(F, Bounds.X + (Bounds.W - F.TextWidth(S)) div 2,
-    Bounds.Y + (Bounds.H - F.LineHeight) div 2, S, Fg);
+  IW := 0;
+  if HasIcon(FIcon) then
+  begin
+    IS_ := IconSize;
+    IW := IS_;
+    if S <> '' then
+      Inc(IW, 6);
+  end;
+  X := Bounds.X + (Bounds.W - IW - F.TextWidth(S)) div 2;
+  if IW > 0 then
+    DrawIcon(C, FIcon, X, Bounds.Y + (Bounds.H - IS_) div 2, IS_, Fg);
+  C.DrawText(F, X + IW, Bounds.Y + (Bounds.H - F.LineHeight) div 2, S, Fg);
   C.PopClip;
 end;
 

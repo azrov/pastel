@@ -342,7 +342,7 @@ Editing: mouse and `Shift` selection, double-click selects a word, `Ctrl+A`, cut
 
 | Control | Properties | Events |
 |---|---|---|
-| `TButton` | `Text`, `Style` (`Primary`, `Secondary`, `Danger`), `Action`, `ModalResult`, `Default`, `Cancel` | `OnClick` |
+| `TButton` | `Text`, `Icon` (`'save'`, `'add'`...), `Style` (`Primary`, `Secondary`, `Danger`, `Flat`), `Action`, `ModalResult`, `Default`, `Cancel` | `OnClick` |
 | `TCheckBox` | `Text`, `Checked` | `OnChange` |
 | `TSwitch` | An on/off switch: `Text`, `Checked` | `OnChange` |
 | `TRadioButton` | `Text`, `Checked`; one per parent is checked | `OnChange` |

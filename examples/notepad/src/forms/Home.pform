@@ -51,15 +51,36 @@ object HomeForm: THomeForm
       end
     end
   end
+  object Tools: TToolBar
+    object NewButton: TButton
+      Text = 'New'
+      Icon = 'file'
+      Style = Flat
+      Hint = 'Ctrl+N'
+      OnClick = NewClick
+    end
+    object OpenButton: TButton
+      Text = 'Open'
+      Icon = 'folder'
+      Style = Flat
+      Hint = 'Ctrl+O'
+      OnClick = OpenClick
+    end
+    object SaveButton: TButton
+      Text = 'Save'
+      Icon = 'save'
+      Style = Flat
+      Hint = 'Ctrl+S'
+      OnClick = SaveClick
+    end
+  end
   object Editor: TMemo
     Grow = 1
     WordWrap = True
     Placeholder = 'Start typing...'
     OnChange = EditorChange
   end
-  object StatusBar: TRow
-    Padding = 6
-    Gap = 16
+  object StatusBar: TStatusBar
     object StatusLabel: TLabel
       Text = 'new file'
       FontSize = 12

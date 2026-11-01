@@ -5,6 +5,8 @@ export interface SchemaProperty {
   name: string;
   type: 'string' | 'integer' | 'boolean' | 'enum' | 'color' | 'event' | 'number';
   values?: string[];
+  /** Values to offer for a string property (icon names). */
+  suggest?: string[];
   doc: string;
 }
 

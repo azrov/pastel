@@ -217,8 +217,9 @@ Everything in 1.x stays compatible with 1.0 (see [compatibility.md](docs/compati
 The things every business app needs, built in instead of written again in every project.
 
 - [x] Controls in the framework (`Pastel.Inputs`): `TDatePicker` and `TCurrencyEdit` (from the components example), `TNumberEdit` (a number with up/down), `TTimeEdit` — done in 1.0.0-rc.4
-- [ ] `TSplitter` (two panes the user resizes), `TStatusBar`, `TToolBar` with buttons and icons
-- [ ] A set of built-in icons (save, open, delete, search, add...) for buttons, menus and toolbars
+- [x] `TSplitter` (two panes the user resizes), `TStatusBar`, `TToolBar` with flat buttons and icons — done in 1.0.0-rc.5
+- [x] A set of built-in icons (save, open, delete, search, add...) for buttons and toolbars; your own with `RegisterIcon` — done in 1.0.0-rc.5
+- [ ] Icons in menu items and list rows
 - [ ] Layout: a growing control gives up width when a row is too narrow; `pastel check` warns when controls are still cut off (done in 1.0.0-rc.4); `TFlow` (a row that wraps)
 - [ ] Grid: number and date columns that format and sort right, a check box column, filtering, export to CSV
 - [ ] Designer: the warnings of `pastel check` drawn on the form; align and distribute several selected controls

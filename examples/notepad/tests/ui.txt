@@ -15,7 +15,7 @@ expect MessageText Save the changes?
 click NoButton
 expect Editor 
 expect HomeForm.Title Untitled - Notepad
-key ctrl+o
+click OpenButton
 type FileNameEdit hello.txt\n
 expect StatusLabel opened hello.txt
 expect CountLabel 4 words, 2 lines

@@ -2,13 +2,14 @@
 
 Every control and component of Pastel, each with an example for the `.pform` file and for the code. Properties that every control has (`Width`, `Height`, `Grow`, `Visible`, `Enabled`, `Hint`, `PopupMenu`) are explained once, under [Common properties](#common-properties). How forms work in general: [forms.md](forms.md); a whole app step by step: [guide-desktop.md](guide-desktop.md); writing controls of your own: [components.md](components.md).
 
-**Layout:** [TColumn](#tcolumn) · [TRow](#trow) · [TCard](#tcard) · [TScrollBox](#tscrollbox) · [TTabControl](#ttabcontrol) · [TTabSheet](#ttabsheet) · [TSpacer](#tspacer)
+**Layout:** [TColumn](#tcolumn) · [TRow](#trow) · [TCard](#tcard) · [TScrollBox](#tscrollbox) · [TTabControl](#ttabcontrol) · [TTabSheet](#ttabsheet) · [TSpacer](#tspacer) · [TSplitter](#tsplitter) · [TToolBar](#ttoolbar) · [TStatusBar](#tstatusbar)
 **Text:** [TLabel](#tlabel) · [TEdit](#tedit) · [TMemo](#tmemo)
 **Dates, numbers and money:** [TDatePicker](#tdatepicker) · [TCalendarView](#tcalendarview) · [TTimeEdit](#ttimeedit) · [TNumberEdit](#tnumberedit) · [TCurrencyEdit](#tcurrencyedit)
 **Choices:** [TButton](#tbutton) · [TCheckBox](#tcheckbox) · [TSwitch](#tswitch) · [TRadioButton](#tradiobutton) · [TComboBox](#tcombobox) · [TListBox](#tlistbox) · [TSlider](#tslider)
 **Tables and trees:** [TGrid](#tgrid) · [TGridColumn](#tgridcolumn) · [TListView](#tlistview) · [TTreeView](#ttreeview)
 **Pictures and progress:** [TImage](#timage) · [TProgressBar](#tprogressbar) · [TSpinner](#tspinner)
 **Menus:** [TMenuBar](#tmenubar) · [TMenuItem](#tmenuitem) · [TPopupMenu](#tpopupmenu)
+**Icons:** [the built-in icons, your own](#icons)
 **Without a place on the form:** [TAction](#taction) · [TTimer](#ttimer) · [TDataBinding](#tdatabinding)
 
 ## Common properties
@@ -128,7 +129,7 @@ One page of a [TTabControl](#ttabcontrol): `Caption` is the text of its tab; oth
 Empty space that takes what is free (`Grow = 1`): pushes the controls after it to the end of a row.
 
 ```
-object StatusBar: TRow
+object StatusBar: TStatusBar
   object StatusLabel: TLabel
   end
   object Space: TSpacer
@@ -137,6 +138,94 @@ object StatusBar: TRow
   end
 end
 ```
+
+### TSplitter
+
+A bar between two controls of a row (or a column) that the user drags to share the room between them; the mouse pointer becomes ↔ (↕ in a column). It changes the `Width` (`Height`) of the control **before** it, so give that one a `Width`, and the one after it `Grow = 1`.
+
+```
+object Body: TRow
+  Grow = 1
+  Align = Stretch
+  object Side: TColumn
+    Width = 380
+    ...
+  end
+  object SideSplitter: TSplitter
+    MinSize = 240          // neither side gets smaller
+    OnMoved = SplitterMoved
+  end
+  object Details: TColumn
+    Grow = 1
+    ...
+  end
+end
+```
+
+```pascal
+procedure THomeForm.SplitterMoved(Sender: TObject);
+begin
+  StatusBar.Text := Format('%d pixels', [Side.Width]);
+end;
+
+SideSplitter.MoveTo(300);               // from code
+```
+
+`MinSize` (default 80), `Target` (the control it resizes), `MoveTo(Size)`, `OnMoved`. In a UI script: `drag SideSplitter 40 0`. Example: [`examples/contacts`](../examples/contacts/README.md).
+
+### TToolBar
+
+A row of buttons under the menu. Put `TButton`s with `Style = Flat` in it (no background until the mouse is on them), and a [TSpacer](#tspacer) to push the rest to the right. The form usually has `Padding = 0`, so the bar goes from edge to edge; put the rest of the form in a `TColumn` with its own `Padding`.
+
+```
+object Tools: TToolBar
+  object NewButton: TButton
+    Text = 'New'
+    Style = Flat
+    Hint = 'Ctrl+N'
+    Action = NewAction       // the same command as the menu item
+  end
+  object SaveButton: TButton
+    Text = 'Save'
+    Style = Flat
+    OnClick = SaveClick
+  end
+end
+```
+
+A [TRow](#trow) with `Padding = 6`, `Gap = 4`, a background and a line under it. Example: [`examples/notepad`](../examples/notepad/README.md).
+
+### TStatusBar
+
+A line at the bottom of the form that says what is going on: its `Text`, or the labels in it.
+
+```
+object StatusBar: TStatusBar
+  Text = 'Ready'
+end
+```
+
+```pascal
+StatusBar.Text := Format(_('%d contacts'), [Count]);
+```
+
+With more than one part, put labels in it (`Text` is then not shown):
+
+```
+object StatusBar: TStatusBar
+  object StatusLabel: TLabel
+    Text = 'new file'
+    FontSize = 12
+  end
+  object Space: TSpacer
+  end
+  object CountLabel: TLabel
+    FontSize = 12
+  end
+end
+```
+
+A [TRow](#trow) with `Padding = 6`, `Gap = 16`, a background and a line over it.
 
 ## Text
 
@@ -334,7 +423,7 @@ TotalLabel.Text := FormatMoney(Total, 2, '₺');
 ```
 object SaveButton: TButton
   Text = 'Save'
-  Style = Primary          // Primary (default), Secondary, Danger
+  Style = Primary          // Primary (default), Secondary, Danger, Flat (for tool bars)
   OnClick = SaveClick
 end
 ```
@@ -349,6 +438,7 @@ end;
 | | |
 |---|---|
 | `Text`, `Style` | |
+| `Icon` | A built-in [icon](#icons) before the text (`Icon = 'save'`), or alone when `Text` is empty — then give it a `Hint` |
 | `Action` | A [TAction](#taction): its caption, shortcut and `Enabled` are used |
 | `Default` | Enter presses it (in a dialog or form) |
 | `Cancel` | Escape presses it |
@@ -682,6 +772,38 @@ object NotesMemo: TMemo
   PopupMenu = EditMenu
 end
 ```
+
+## Icons
+
+Buttons can show an icon: a small line drawing, sharp at every size and in the color of the button's text (so it is right in the dark theme too). The designer offers the names in the `Icon` field.
+
+```
+object SaveButton: TButton
+  Icon = 'save'
+  Text = 'Save'
+end
+object DeleteButton: TButton
+  Icon = 'delete'            // an icon alone: a small square button
+  Style = Danger
+  Hint = 'Delete the contact'
+end
+```
+
+![The built-in icons](images/icons.png)
+
+`add` `remove` `close` `check` `file` `folder` `save` `edit` `delete` `search` `refresh` `print` `settings` `user` `users` `calendar` `clock` `home` `left` `right` `up` `down` `info` `warning` `help` `copy` `menu` `mail` `play` `stop` `download` `upload` `star` `lock` `link` `chart` `money` `sync`
+
+Your own icons are drawn on a 24 × 24 grid with four commands, the parts separated by `;` — `l x1 y1 x2 y2 ...` (lines through the points), `o cx cy r` (a circle), `f cx cy r` (a dot), `a cx cy r from to` (an arc; degrees, 0 = right, 90 = down). Register them once, for example in the `initialization` of a unit, and use them like the built-in ones:
+
+```pascal
+uses
+  Pastel.Icons;
+
+initialization
+  RegisterIcon('bell', 'l 6 17 6 10; a 12 10 6 180 360; l 18 10 18 17; l 4 17 20 17; f 12 20 1.5');
+```
+
+From code: `HasIcon(Name)`, `IconNames`, and `DrawIcon(Canvas, Name, X, Y, Size, Color)` in a control of your own ([components.md](components.md)).
 
 ## Without a place on the form
 
