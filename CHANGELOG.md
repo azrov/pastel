@@ -16,6 +16,7 @@ Data made easier.
 - Buttons in any color: `TButton.Color` and `TextColor`
 - New forms have `Pastel.Dialogs` in their `uses`, so `ShowMessage`, `MessageDlg` and `InputBox` work at once; when an everyday routine (`ShowMessage`, `IntToStr`, `TStringList`, `Min`...) is missing, `pastel build` says which unit has it
 - The designer schema tells each property's default
+- Builds are quieter: the "marked as inline is not inlined" notes are left out; [docs/packages.md](docs/packages.md) shows Free Pascal's own packages
 - Documentation: [docs/sync.md](docs/sync.md), [docs/auth.md](docs/auth.md); models and backups in [docs/database.md](docs/database.md)
 
 ## 1.2.0

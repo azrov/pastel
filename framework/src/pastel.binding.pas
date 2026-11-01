@@ -99,7 +99,7 @@ type
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   published
     { 'ControlName=rule, rule', one per control: required, email, number,
-      integer, range 1..10, min 3 (characters), max 50, pattern ^[A-Z]{2}\d+$
+      integer, range 1..10, min 3 (characters), max 50, pattern ^[A-Z][A-Z]\d+$
       (last, as it may have commas). }
     property Rules: TStrings read GetRules write SetRules;
     { A label that shows the first problem (and is emptied when all is fine). }

@@ -1208,6 +1208,7 @@ begin
 
     { -vb: full file paths in messages; shortened below to project-relative. }
     Args.Add('-vewnb');
+    Args.Add('-vm6058');   { "marked as inline is not inlined": only a missed speed-up, says nothing about the code }
     if Opts.CheckOnly then
       Args.Add('-Cn');
     if OverlayMain <> '' then

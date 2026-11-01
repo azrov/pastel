@@ -67,7 +67,7 @@ type TDataBinding = class(TComponent)
 | `function Validate: Boolean` | Checks every control that has Rules (and OnValidate): the wrong ones get a red border and the problem as their tooltip, the first one the focus, and ErrorLabel its message. False when something is wrong. |
 | `property Problems: TStringList` | After Validate: ControlName=message for every problem. |
 | `procedure Notification(AComponent: TComponent; Operation: TOperation)` |  |
-| `property Rules: TStrings` | 'ControlName=rule, rule', one per control: required, email, number, integer, range 1..10, min 3 (characters), max 50, pattern ^[A-Z]{2}\d+$ (last, as it may have commas). |
+| `property Rules: TStrings` | 'ControlName=rule, rule', one per control: required, email, number, integer, range 1..10, min 3 (characters), max 50, pattern ^[A-Z][A-Z]\d+$ (last, as it may have commas). |
 | `property ErrorLabel: TControl` | A label that shows the first problem (and is emptied when all is fine). |
 | `property OnValidate: TValidateEvent` |  |
 | `property Fields: TStrings` | 'ControlName' or 'ControlName=field', one per line. |

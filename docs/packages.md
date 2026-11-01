@@ -19,6 +19,43 @@ pastel build                 # its units can now be used: uses Serial;
 | Packagist | the registry: [github.com/azrov/pastel-packages](https://github.com/azrov/pastel-packages) |
 | `vendor/` | one cache for all projects: `~/.cache/pastel` |
 
+## Free Pascal's own packages
+
+Free Pascal comes with about 140 packages, and a Pastel project can use all of them without adding anything: write the unit in `uses` and build. Pastel itself is built on several (`fpjson`, `fphttpclient`, `sqldb`, `process`).
+
+```pascal
+uses
+  zipper, RegExpr, md5, base64, DOM, XMLRead, fpimage, fpreadpng, Generics.Collections, IniFiles;
+
+var
+  R: TRegExpr;
+begin
+  R := TRegExpr.Create('\d+');
+  if R.Exec('order 123') then
+    ShowMessage(R.Match[0]);      // 123
+  R.Free;
+end;
+```
+
+Some useful ones:
+
+| Package | Units | For |
+|---|---|---|
+| `paszlib` | `zipper`, `zstream` | Zip files, compressed streams |
+| `regexpr` | `RegExpr` | Regular expressions |
+| `hash` | `md5`, `sha1`, `crc` | Checksums |
+| `fcl-base` | `base64`, `IniFiles`, `CustApp`, `uriparser` | Everyday helpers |
+| `fcl-xml` | `DOM`, `XMLRead`, `XMLWrite`, `XPath` | XML |
+| `fcl-image` | `fpimage`, `fpreadpng`, `fpwritejpeg`... | Reading and writing pictures |
+| `rtl-generics`, `fcl-stl` | `Generics.Collections`, `gmap`, `ghashmap` | Lists and dictionaries of any type |
+| `fcl-db` | `sqldb`, `sqlite3conn`, `pqconnection`, `mysql80conn` | Databases directly (Pastel.Db is easier) |
+| `fcl-net`, `fcl-web` | `ssockets`, `fphttpclient`, `fphttpserver` | Network (Pastel.Http and Pastel.Web are easier) |
+| `numlib`, `symbolic` | `typ`, `inv`, `symbolic` | Mathematics |
+
+Packages that wrap a C library (`libcurl`, `openssl`, `sdl`, `cairo`, `gtk2`, `libvlc`...) also need that library on the computer the program runs on.
+
+Building for another system (`pastel build --target win64`) needs Free Pascal's packages for that system too; `pastel doctor --install win64` sets them up.
+
 ## Adding a package
 
 ```sh
