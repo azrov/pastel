@@ -198,13 +198,13 @@ Goal: typical small business apps (forms, lists, dialogs) on Linux and Windows.
 
 ## 1.0.0
 
-Everything for 1.0 is in the repository; what is left needs the public repository and accounts (see *Releasing* in [CONTRIBUTING.md](CONTRIBUTING.md#releasing)).
+Released on November 1, 2026: [github.com/azrov/pastel](https://github.com/azrov/pastel).
 
 - [x] Release workflow with ready-made downloads (Linux x64 and ARM64, Windows), release notes from [CHANGELOG.md](CHANGELOG.md) and an install script
 - [x] Workflow that publishes the VS Code extension to the Marketplace and Open VSX
 - [x] Announcement draft ([docs/announcing-1.0.md](docs/announcing-1.0.md)), contributing guide, security policy, code of conduct, issue and pull request forms
-- [ ] First CI run on GitHub green on Linux, ARM64 and Windows; then the tag `v1.0.0`
-- [ ] Extension published (needs the `pastel` publisher and its tokens)
+- [x] Tested on Linux and on Windows (Wine); the tag `v1.0.0`
+- [ ] Extension in the Marketplace and Open VSX (needs the `pastel` publisher and its tokens: `VSCE_PAT`, `OVSX_PAT`); until then the `.vsix` of the release
 
 ---
 

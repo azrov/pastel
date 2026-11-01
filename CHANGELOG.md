@@ -2,6 +2,15 @@
 
 The `pastel` tool and the framework. The VS Code extension has its own list: [vscode/CHANGELOG.md](vscode/CHANGELOG.md). What is planned is in [ROADMAP.md](ROADMAP.md).
 
+## 1.0.0
+
+The first stable version: what the release candidates below brought, tested on Linux and Windows. From now on the framework API in `docs/api/stable.txt`, `pastel.toml`, `.pform` files and the `pastel` commands stay compatible for all of 1.x ([docs/compatibility.md](docs/compatibility.md)).
+
+- Desktop apps: about 40 controls with dates, money, numbers and times (`Pastel.Inputs`), tool bars, status bars, splitters and 38 icons; the designer in VS Code with several controls at once and a structure list
+- Packages: `pastel add`, `update`, `remove`, `search`; `pastel.lock`; the registry [pastel-packages](https://github.com/azrov/pastel-packages) and [pastel-extras](https://github.com/azrov/pastel-extras)
+- Examples: a business system (salon: desktop app, server and a shared library), an address book, a text editor, a web API, command-line tools
+- VS Code extension 1.0.4
+
 ## 1.0.0-rc.7
 
 - VS Code 1.0.4: several controls selected at once in the designer, put into a row, column or card; a structure list; `pastel check` findings on the form; readable objects, lists and JSON in the debugger (`vscode/gdb/pastel.py`, also for gdb in a terminal)
