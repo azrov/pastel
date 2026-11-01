@@ -115,7 +115,14 @@ end;
 
 ## 5. Dialogs
 
-All dialogs wait for the answer and return it:
+All dialogs wait for the answer and return it. They are in `Pastel.Dialogs`, which new forms already have in their `uses`; in an older form add it yourself. When a routine is missing from the `uses`, `pastel build` says where it is:
+
+```
+src/forms/Home.pas(37,3) Error: Identifier not found "ShowMessage"
+hint: ShowMessage is in Pastel.Dialogs: add it to the uses clause of the unit
+```
+
+The same works for the everyday routines Delphi programs use: `IntToStr`, `Format`, `FormatDateTime` (SysUtils), `TStringList` (Classes), `Min`, `Max` (Math), `IncDay` (DateUtils).
 
 ```pascal
 ShowMessage('Saved.');

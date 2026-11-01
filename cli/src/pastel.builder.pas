@@ -54,6 +54,8 @@ function LibraryUnits(Project: TPastelProject): TStringArray;
 { Folder with the Pastel framework units, '' if it cannot be found. }
 function FrameworkDir: string;
 function BinutilsHint(const T: TTarget): string;
+{ the unit to add to "uses" for a routine Delphi programs know (ShowMessage: Pastel.Dialogs), '' if unknown }
+function UnitForIdentifier(const Name: string): string;
 function SplitOptions(const S: string): TStringArray;
 
 implementation
@@ -424,6 +426,32 @@ begin
   finally
     L.Free;
   end;
+end;
+
+function UnitForIdentifier(const Name: string): string;
+const
+  Known: array[0..47] of array[0..1] of string = (
+    ('ShowMessage', 'Pastel.Dialogs'), ('MessageDlg', 'Pastel.Dialogs'), ('InputBox', 'Pastel.Dialogs'),
+    ('InputQuery', 'Pastel.Dialogs'), ('Ask', 'Pastel.Dialogs'), ('OpenFileDialog', 'Pastel.Dialogs'),
+    ('SaveFileDialog', 'Pastel.Dialogs'), ('SelectFolderDialog', 'Pastel.Dialogs'), ('mrOk', 'Pastel.Dialogs'),
+    ('mrYes', 'Pastel.Dialogs'), ('mrNo', 'Pastel.Dialogs'), ('mrCancel', 'Pastel.Dialogs'),
+    ('IntToStr', 'SysUtils'), ('StrToInt', 'SysUtils'), ('StrToIntDef', 'SysUtils'), ('FloatToStr', 'SysUtils'),
+    ('StrToFloat', 'SysUtils'), ('Format', 'SysUtils'), ('Trim', 'SysUtils'), ('UpperCase', 'SysUtils'),
+    ('LowerCase', 'SysUtils'), ('Now', 'SysUtils'), ('Date', 'SysUtils'), ('Time', 'SysUtils'),
+    ('FormatDateTime', 'SysUtils'), ('DateToStr', 'SysUtils'), ('FileExists', 'SysUtils'),
+    ('DirectoryExists', 'SysUtils'), ('Exception', 'SysUtils'), ('FreeAndNil', 'SysUtils'),
+    ('QuotedStr', 'SysUtils'), ('CompareText', 'SysUtils'), ('Sleep', 'SysUtils'), ('BoolToStr', 'SysUtils'),
+    ('TStringList', 'Classes'), ('TStrings', 'Classes'), ('TList', 'Classes'), ('TStream', 'Classes'),
+    ('TFileStream', 'Classes'), ('TMemoryStream', 'Classes'), ('Min', 'Math'), ('Max', 'Math'),
+    ('Power', 'Math'), ('RoundTo', 'Math'), ('IncDay', 'DateUtils'), ('DaysBetween', 'DateUtils'),
+    ('YearOf', 'DateUtils'), ('EncodeDate', 'SysUtils'));
+var
+  I: Integer;
+begin
+  Result := '';
+  for I := Low(Known) to High(Known) do
+    if SameText(Known[I][0], Name) then
+      Exit(Known[I][1]);
 end;
 
 function BinutilsHint(const T: TTarget): string;
@@ -897,6 +925,8 @@ var
   Code, Errors, Warnings, I: Integer;
   Started: QWord;
   Host, MissingTarget, MissingPackages, HaveBinutils: Boolean;
+  UnitHints: TStringList;
+  NotFound, KnownUnit: string;
   BinPrefix, GenDir, Framework, LibMain, OverlayDir, OverlayMain, MainSrc: string;
   LibCheck, HasAssets: Boolean;
   LibUnits: Integer;
@@ -1050,6 +1080,7 @@ begin
   Args := TStringList.Create;
   Dirs := TStringList.Create;
   Lines := TStringList.Create;
+  UnitHints := TStringList.Create;
   try
     Args.Add('-P' + Opts.Target.CPU);
     Args.Add('-T' + Opts.Target.OS);
@@ -1296,6 +1327,15 @@ begin
       begin
         Inc(Errors);
         WriteLn(Red(Line));
+        { Identifier not found "ShowMessage": say which unit has it }
+        if Pos('Identifier not found "', Line) > 0 then
+        begin
+          NotFound := Copy(Line, Pos('Identifier not found "', Line) + 22, MaxInt);
+          NotFound := Copy(NotFound, 1, Pos('"', NotFound) - 1);
+          KnownUnit := UnitForIdentifier(NotFound);
+          if (KnownUnit <> '') and (UnitHints.IndexOf(NotFound + ' is in ' + KnownUnit) < 0) then
+            UnitHints.Add(NotFound + ' is in ' + KnownUnit);
+        end;
       end
       else if Pos('Warning:', Line) > 0 then
       begin
@@ -1312,6 +1352,8 @@ begin
         Fail('could not start the compiler: ' + CompilerOut)
       else
         Fail(Format('could not compile %s (%d error(s))', [Project.Name, Errors]));
+      for I := 0 to UnitHints.Count - 1 do
+        Hint(Format('%s: add it to the uses clause of the unit', [UnitHints[I]]));
       if not HaveBinutils then
         Hint(BinutilsHint(Opts.Target))
       else if MissingPackages and not Host then
@@ -1355,6 +1397,7 @@ begin
     Args.Free;
     Dirs.Free;
     Lines.Free;
+    UnitHints.Free;
   end;
 end;
 

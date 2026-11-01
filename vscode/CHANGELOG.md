@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.5
+
+- Designer: properties the `.pform` does not set show their default — `Enabled`, `Visible` and a form's `Resizable` are ticked, `Style` says *(default: Primary)*; choosing the default again removes the line
+- Designer: a **Name** row at the top of the properties, like Delphi's Object Inspector (the `.pas` code is renamed too)
+- Designer: `BackgroundImage` and `FileName` offer the pictures in `assets/`
+- Designer: changes are made one after the other, and a change that would leave the form's `object`/`end` lines unbalanced is refused
+- A handler is created once, also after a quick second double-click, and before `initialization` in the unit
+
 ## 1.0.4
 
 - Designer: select several controls (`Ctrl+click`) and change their common properties, delete, copy or cut them together

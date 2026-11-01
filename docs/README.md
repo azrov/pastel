@@ -37,7 +37,9 @@ Everything about Pastel, by topic. Every page has examples you can copy; the [ex
 | [Files, programs, HTTP](system.md) | `Pastel.Files`, `Pastel.Process`, `Pastel.Http`, `Pastel.Env` |
 | [Services](services.md) | Programs that keep running: jobs, signals, systemd |
 | [Web APIs and sites](web.md) | Routes, JSON, validation, API keys, JWT, CORS, limits |
-| [Databases](database.md) | SQLite, PostgreSQL, MySQL; queries, transactions, migrations |
+| [Databases](database.md) | SQLite, PostgreSQL, MySQL; queries, transactions, migrations, models (`pastel new model`), backups |
+| [Data that works offline](sync.md) | `Pastel.Sync`: a SQLite file on every computer, synced with the server |
+| [Users and login](auth.md) | `Pastel.Auth`: users, passwords, roles, tokens; a login dialog for apps |
 | [Security](security.md) | Passwords, tokens, signatures; what the server protects against |
 | [Deploying](deploy.md) | `.deb`, Docker, systemd, HTTPS behind nginx or Caddy |
 

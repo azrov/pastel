@@ -843,7 +843,7 @@ begin
     'interface',
     '',
     'uses',
-    '  SysUtils, Pastel.UI, Home.g;',
+    '  SysUtils, Pastel.UI, Pastel.Dialogs, Home.g;',
     '',
     'type',
     '  THomeForm = class(THomeFormBase)',
@@ -1787,7 +1787,7 @@ begin
     '{$mode objfpc}{$H+}' + LineEnding + LineEnding +
     'interface' + LineEnding + LineEnding +
     'uses' + LineEnding +
-    '  SysUtils, Pastel.UI, ' + Base + '.g;' + LineEnding + LineEnding +
+    '  SysUtils, Pastel.UI, Pastel.Dialogs, ' + Base + '.g;' + LineEnding + LineEnding +
     'type' + LineEnding +
     '  ' + Cls + ' = class(' + Cls + 'Base)' + LineEnding +
     '  end;' + LineEnding + LineEnding +

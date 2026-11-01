@@ -8,7 +8,7 @@ uses
   Classes, SysUtils,
   Pastel.Console, Pastel.Toml, Pastel.Project, Pastel.Targets,
   Pastel.Builder, Pastel.Templates, Pastel.Doctor, Pastel.Inspect, Pastel.TestCmd,
-  Pastel.Watch, Pastel.FmtCmd, Pastel.Package, Pastel.MigrateCmd, Pastel.LangCmd, Pastel.Runtime, Pastel.CustomCtl, Pastel.Upgrade, Pastel.Packages, Pastel.UI, RegExpr;
+  Pastel.Watch, Pastel.FmtCmd, Pastel.Package, Pastel.MigrateCmd, Pastel.LangCmd, Pastel.Runtime, Pastel.CustomCtl, Pastel.Upgrade, Pastel.Packages, Pastel.ModelGen, Pastel.UI, RegExpr;
 
 const
   ExitOk = 0;
@@ -43,6 +43,7 @@ begin
   WriteLn('  new <kind> <name>      Create a new project (kinds: console, app, lib, service, api)');
   WriteLn('  new form <Name>        Add a window to an app');
   WriteLn('  new control <Name>     Add a control of your own (src/controls/)');
+  WriteLn('  new model <Name> f:type  A table: migration, unit, tests (name:string! age:integer)');
   WriteLn('  build                  Compile the project');
   WriteLn('  run [-- args]          Compile and run on this computer (--watch: again on every save)');
   WriteLn('  test [filter]          Run the tests in tests/ (only names matching filter; --watch, --json)');
@@ -211,6 +212,19 @@ begin
       Exit(ExitError);
     end;
     if CreateFormFiles(Root, CL.Positional[1]) then Exit(ExitOk) else Exit(ExitError);
+  end;
+  if (Length(CL.Positional) >= 2) and SameText(CL.Positional[0], 'model') then
+  begin
+    Root := TPastelProject.FindRoot(GetCurrentDir);
+    if Root = '' then
+    begin
+      Fail('"pastel new model" adds a table to a project: run it in the project''s folder');
+      Exit(ExitError);
+    end;
+    if CreateModel(IncludeTrailingPathDelimiter(Root), CL.Positional[1], Copy(CL.Positional, 2, MaxInt)) then
+      Exit(ExitOk)
+    else
+      Exit(ExitError);
   end;
   if (Length(CL.Positional) = 2) and SameText(CL.Positional[0], 'control') then
   begin

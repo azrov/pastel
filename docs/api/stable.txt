@@ -66,28 +66,68 @@ Pastel.Assets: function OpenAsset(const Name: string): TStream
 Pastel.Assets: procedure RegisterAsset(const Name: string; Data: Pointer; Size: Integer)
 Pastel.Assets: procedure RegisterAssetFile(const Name: string; const FileName: string)
 Pastel.Assets: type EAssetNotFound = class(Exception)
+Pastel.Auth: TAuthClient.constructor Create(const BaseUrl: string; const Prefix: string = '/api/auth')
+Pastel.Auth: TAuthClient.destructor Destroy
+Pastel.Auth: TAuthClient.function Delete(const Path: string): THttpResponse
+Pastel.Auth: TAuthClient.function Get(const Path: string): THttpResponse
+Pastel.Auth: TAuthClient.function LoggedIn: Boolean
+Pastel.Auth: TAuthClient.function Login(const Email: string; const Password: string): Boolean
+Pastel.Auth: TAuthClient.function PostJson(const Path: string; Json: TJSONData): THttpResponse
+Pastel.Auth: TAuthClient.function ResumeWith(const ARefreshToken: string): Boolean
+Pastel.Auth: TAuthClient.procedure Logout
+Pastel.Auth: TAuthClient.property Error: string
+Pastel.Auth: TAuthClient.property Http: THttpClient
+Pastel.Auth: TAuthClient.property RefreshToken: string
+Pastel.Auth: TAuthClient.property User: TJSONObject
+Pastel.Auth: TUserStore.constructor Create(ADb: TDatabase)
+Pastel.Auth: TUserStore.function Add(const Email: string; const Password: string; const Name: string; const Role: string = 'user'): Int64
+Pastel.Auth: TUserStore.function Check(const Email: string; const Password: string): TJSONObject
+Pastel.Auth: TUserStore.function Count: Integer
+Pastel.Auth: TUserStore.function Find(Id: Int64): TJSONObject
+Pastel.Auth: TUserStore.function FindByEmail(const Email: string): TJSONObject
+Pastel.Auth: TUserStore.function List: TJSONArray
+Pastel.Auth: TUserStore.function NewRefreshToken(UserId: Int64; Days: Integer = 30): string
+Pastel.Auth: TUserStore.function UseRefreshToken(const Token: string): Int64
+Pastel.Auth: TUserStore.procedure CreateTables
+Pastel.Auth: TUserStore.procedure RevokeRefreshToken(const Token: string)
+Pastel.Auth: TUserStore.procedure SetActive(Id: Int64; Active: Boolean)
+Pastel.Auth: TUserStore.procedure SetPassword(Id: Int64; const Password: string)
+Pastel.Auth: TUserStore.procedure SetRole(Id: Int64; const Role: string)
+Pastel.Auth: TUserStore.property Db: TDatabase
+Pastel.Auth: procedure AddAuthRoutes(Web: TWebServer; Users: TUserStore; const Secret: string; const Prefix: string = '/api/auth'; TokenMinutes: Integer = 15)
+Pastel.Auth: procedure RequireRole(Req: TWebRequest; const Roles: array of string)
+Pastel.Auth: type EAuthError = class(Exception)
+Pastel.Auth: type TAuthClient = class
+Pastel.Auth: type TUserStore = class
 Pastel.Binding: TDataBinding.constructor Create(AOwner: TComponent)
 Pastel.Binding: TDataBinding.destructor Destroy
 Pastel.Binding: TDataBinding.function ControlOf(Index: Integer): TControl
 Pastel.Binding: TDataBinding.function FieldOf(Index: Integer): string
 Pastel.Binding: TDataBinding.function GetValue(Control: TControl): string
 Pastel.Binding: TDataBinding.function ToJson: TJSONObject
+Pastel.Binding: TDataBinding.function Validate: Boolean
 Pastel.Binding: TDataBinding.procedure Bind(Control: TControl; const Field: string = '')
 Pastel.Binding: TDataBinding.procedure Clear
 Pastel.Binding: TDataBinding.procedure Load(Data: TJSONObject)
 Pastel.Binding: TDataBinding.procedure LoadObject(Obj: TObject)
 Pastel.Binding: TDataBinding.procedure LoadRow(Grid: TControl; Row: Integer)
 Pastel.Binding: TDataBinding.procedure MarkSaved
+Pastel.Binding: TDataBinding.procedure Notification(AComponent: TComponent; Operation: TOperation)
 Pastel.Binding: TDataBinding.procedure Save(Data: TJSONObject)
 Pastel.Binding: TDataBinding.procedure SaveObject(Obj: TObject)
 Pastel.Binding: TDataBinding.procedure SaveRow(Grid: TControl; Row: Integer)
 Pastel.Binding: TDataBinding.procedure SetValue(Control: TControl; const Value: string)
+Pastel.Binding: TDataBinding.property ErrorLabel: TControl
 Pastel.Binding: TDataBinding.property Fields: TStrings
 Pastel.Binding: TDataBinding.property Modified: Boolean
 Pastel.Binding: TDataBinding.property OnLoad: TNotifyEvent
+Pastel.Binding: TDataBinding.property OnValidate: TValidateEvent
+Pastel.Binding: TDataBinding.property Problems: TStringList
+Pastel.Binding: TDataBinding.property Rules: TStrings
 Pastel.Binding: function FieldFromControlName(const Name: string): string
 Pastel.Binding: type EBindingError = class(Exception)
 Pastel.Binding: type TDataBinding = class(TComponent)
+Pastel.Binding: type TValidateEvent = procedure(Sender: TObject; Control: TControl; Value: string; Message: string)
 Pastel.Config: TConfig.constructor Create(const AAppName: string = '')
 Pastel.Config: TConfig.destructor Destroy
 Pastel.Config: TConfig.function Get(const Key: string; const Default: string = ''): string
@@ -131,10 +171,6 @@ Pastel.Controls: TImage.property FileName: string
 Pastel.Controls: TImage.property Fit: TImageFit
 Pastel.Controls: TImage.property LoadError: string
 Pastel.Controls: TImage.property Picture: TBitmap32
-Pastel.Controls: TImageFit.ifCenter
-Pastel.Controls: TImageFit.ifContain
-Pastel.Controls: TImageFit.ifCover
-Pastel.Controls: TImageFit.ifStretch
 Pastel.Controls: TListBox.constructor Create(AOwner: TComponent)
 Pastel.Controls: TListBox.destructor Destroy
 Pastel.Controls: TListBox.function Font: TPastelFont
@@ -182,7 +218,7 @@ Pastel.Controls: function FindAppFile(const FileName: string): string
 Pastel.Controls: type TCheckBox = class(TControl)
 Pastel.Controls: type TComboBox = class(TControl)
 Pastel.Controls: type TImage = class(TControl)
-Pastel.Controls: type TImageFit = (ifContain, ifCover, ifStretch, ifCenter)
+Pastel.Controls: type TImageFit = Pastel.UI.TImageFit
 Pastel.Controls: type TListBox = class(TControl)
 Pastel.Controls: type TProgressBar = class(TControl)
 Pastel.Controls: type TRadioButton = class(TCheckBox)
@@ -211,10 +247,13 @@ Pastel.Crypto: function VerifyPassword(const Password: string; const Hash: strin
 Pastel.Db: TDatabase.class function Open(const Url: string; MaxConnections: Integer = 10): TDatabase
 Pastel.Db: TDatabase.constructor Create(const Url: string; MaxConnections: Integer = 10)
 Pastel.Db: TDatabase.destructor Destroy
+Pastel.Db: TDatabase.function BackupTo(const Dir: string; Keep: Integer = 10): string
 Pastel.Db: TDatabase.function BeginTransaction: TDbTransaction
 Pastel.Db: TDatabase.function Migrate(const Dir: string = ''): Integer
 Pastel.Db: TDatabase.function MigrationStatus(const Dir: string = ''): TStringList
 Pastel.Db: TDatabase.function SafeUrl: string
+Pastel.Db: TDatabase.procedure Backup(const FileName: string)
+Pastel.Db: TDatabase.procedure Restore(const FileName: string)
 Pastel.Db: TDatabase.property Kind: TDbKind
 Pastel.Db: TDbKind.dbMySQL
 Pastel.Db: TDbKind.dbPostgres
@@ -240,6 +279,7 @@ Pastel.Db: type TDbTransaction = class(TDbSession)
 Pastel.Dialogs: function Ask(const Msg: string; const Title: string = ''): Boolean
 Pastel.Dialogs: function InputBox(const Title: string; const Prompt: string; const Default: string): string
 Pastel.Dialogs: function InputQuery(const Title: string; const Prompt: string; var Value: string): Boolean
+Pastel.Dialogs: function LoginDialog(const Title: string; var User: string; var Password: string; const Error: string = ''): Boolean
 Pastel.Dialogs: function MessageDlg(const Msg: string; const Title: string; const Buttons: array of Integer; Danger: Boolean = False): Integer
 Pastel.Dialogs: function ModalResultCaption(R: Integer): string
 Pastel.Dialogs: function OpenFileDialog(var FileName: string; const Filter: string = ''; const Title: string = 'Open'): Boolean
@@ -818,6 +858,36 @@ Pastel.Sheets: procedure WriteCsv(const FileName: string; const Rows: TSheetRows
 Pastel.Sheets: type ESheetError = class(Exception)
 Pastel.Sheets: type TSheetRows = array of TStringArray
 Pastel.Sheets: type TSpreadsheet = class
+Pastel.Sync: TSyncResult.Received: Integer
+Pastel.Sync: TSyncResult.Sent: Integer
+Pastel.Sync: TSyncStore.constructor Create(ADb: TDatabase; OwnsDb: Boolean = False)
+Pastel.Sync: TSyncStore.destructor Destroy
+Pastel.Sync: TSyncStore.function Apply(Data: TJSONObject): Integer
+Pastel.Sync: TSyncStore.function Changes(const Since: string; Dirty: Boolean): TJSONObject
+Pastel.Sync: TSyncStore.function Count(const Table: string): Integer
+Pastel.Sync: TSyncStore.function Fields(const Table: string): TStringArray
+Pastel.Sync: TSyncStore.function Get(const Table: string; const Id: string): TJSONObject
+Pastel.Sync: TSyncStore.function List(const Table: string): TJSONArray
+Pastel.Sync: TSyncStore.function List(const Table: string; const Where: string = ''; const Params: array of const; const OrderBy: string = ''): TJSONArray
+Pastel.Sync: TSyncStore.function Pending: Integer
+Pastel.Sync: TSyncStore.function Save(const Table: string; Data: TJSONObject): string
+Pastel.Sync: TSyncStore.function Tables: TStringArray
+Pastel.Sync: TSyncStore.procedure AddTable(const Name: string; const Columns: string)
+Pastel.Sync: TSyncStore.procedure CreateTables
+Pastel.Sync: TSyncStore.procedure Delete(const Table: string; const Id: string)
+Pastel.Sync: TSyncStore.procedure MarkSent(Data: TJSONObject)
+Pastel.Sync: TSyncStore.property Db: TDatabase
+Pastel.Sync: TSyncStore.property IsServer: Boolean
+Pastel.Sync: TSyncStore.property OnCheck: TSyncCheckEvent
+Pastel.Sync: function AnswerSync(Store: TSyncStore; Request: TJSONObject): TJSONObject
+Pastel.Sync: function NewSyncId: string
+Pastel.Sync: function SyncStamp: string
+Pastel.Sync: function SyncWithServer(Store: TSyncStore; const Url: string; const ApiKey: string; var LastSync: string; const Path: string = '/api/sync'): TSyncResult
+Pastel.Sync: type ESyncInvalid = class(Exception)
+Pastel.Sync: type TSyncCheckEvent = procedure(Table: string; Data: TJSONObject)
+Pastel.Sync: type TSyncResult = record
+Pastel.Sync: type TSyncStore = class
+Pastel.SyncWeb: procedure AddSyncRoute(Web: TWebServer; Store: TSyncStore; const Path: string = '/api/sync')
 Pastel.Term: TProgress.constructor Create(ATotal: Int64; const ALabel: string = '')
 Pastel.Term: TProgress.destructor Destroy
 Pastel.Term: TProgress.procedure Finish
@@ -940,7 +1010,11 @@ Pastel.UI: TAlignItems.aiCenter
 Pastel.UI: TAlignItems.aiEnd
 Pastel.UI: TAlignItems.aiStart
 Pastel.UI: TAlignItems.aiStretch
+Pastel.UI: TBox.constructor Create(AOwner: TComponent)
+Pastel.UI: TBox.destructor Destroy
 Pastel.UI: TBox.property Align: TAlignItems
+Pastel.UI: TBox.property BackgroundFit: TImageFit
+Pastel.UI: TBox.property BackgroundImage: string
 Pastel.UI: TBox.property BorderColor: TColor32
 Pastel.UI: TBox.property BorderWidth: Integer
 Pastel.UI: TBox.property Color: TColor32
@@ -953,12 +1027,14 @@ Pastel.UI: TButton.procedure Click
 Pastel.UI: TButton.procedure Notification(AComponent: TComponent; Operation: TOperation)
 Pastel.UI: TButton.property Action: TBasicAction
 Pastel.UI: TButton.property Cancel: Boolean
+Pastel.UI: TButton.property Color: TColor32
 Pastel.UI: TButton.property Default: Boolean
 Pastel.UI: TButton.property Icon: string
 Pastel.UI: TButton.property ModalResult: Integer
 Pastel.UI: TButton.property OnClick: TNotifyEvent
 Pastel.UI: TButton.property Style: TButtonStyle
 Pastel.UI: TButton.property Text: string
+Pastel.UI: TButton.property TextColor: TColor32
 Pastel.UI: TButtonStyle.bsDanger
 Pastel.UI: TButtonStyle.bsFlat
 Pastel.UI: TButtonStyle.bsPrimary
@@ -1000,6 +1076,7 @@ Pastel.UI: TCustomEdit.procedure Redo
 Pastel.UI: TCustomEdit.procedure SelectAll
 Pastel.UI: TCustomEdit.procedure Undo
 Pastel.UI: TCustomEdit.property CaretPos: Integer
+Pastel.UI: TCustomEdit.property Error: string
 Pastel.UI: TCustomEdit.property MaxLength: Integer
 Pastel.UI: TCustomEdit.property OnChange: TNotifyEvent
 Pastel.UI: TCustomEdit.property Placeholder: string
@@ -1077,6 +1154,10 @@ Pastel.UI: TForm.property Resizable: Boolean
 Pastel.UI: TForm.property ShiftDown: Boolean
 Pastel.UI: TForm.property Title: string
 Pastel.UI: TForm.property WindowState: TWindowState
+Pastel.UI: TImageFit.ifCenter
+Pastel.UI: TImageFit.ifContain
+Pastel.UI: TImageFit.ifCover
+Pastel.UI: TImageFit.ifStretch
 Pastel.UI: TJustify.jsCenter
 Pastel.UI: TJustify.jsEnd
 Pastel.UI: TJustify.jsSpaceBetween
@@ -1218,6 +1299,7 @@ Pastel.UI: type TEditStates = array of TEditState
 Pastel.UI: type TFlow = class(TBox)
 Pastel.UI: type TForm = class(TBox)
 Pastel.UI: type TFormClass = class of TForm
+Pastel.UI: type TImageFit = (ifContain, ifCover, ifStretch, ifCenter)
 Pastel.UI: type TJustify = (jsStart, jsCenter, jsEnd, jsSpaceBetween)
 Pastel.UI: type TLabel = class(TControl)
 Pastel.UI: type TMemo = class(TCustomEdit)

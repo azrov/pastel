@@ -508,6 +508,15 @@ begin
       else
         Continue;
       end;
+      { the value it has when the .pform does not set it }
+      if (T^.Kind in [tkInteger, tkBool, tkEnumeration]) and (Props^[I]^.Default <> LongInt($80000000)) then
+        case T^.Kind of
+          tkBool: Extra := Extra + ',"default":' + JsonStr(BoolToStr(Props^[I]^.Default <> 0, 'True', 'False'));
+          tkEnumeration: Extra := Extra + ',"default":' + JsonStr(ShortEnumName(GetEnumName(T, Props^[I]^.Default)));
+        else
+          if T^.Name <> 'TColor32' then
+            Extra := Extra + ',"default":' + JsonStr(IntToStr(Props^[I]^.Default));
+        end;
       Names.Add(Format('{"name":%s,"type":%s%s,"doc":%s}',
         [JsonStr(Props^[I]^.Name), JsonStr(Kind), Extra,
          JsonStr(Describe(Cls.ClassName, Props^[I]^.Name))]));

@@ -93,6 +93,12 @@ test('handler inserts', () => {
   assert.ok(ins![1].text.startsWith('procedure THomeForm.ClearClick(Sender: TObject);'));
   assert.strictEqual(handlerInserts('unit X; end.', 'A'), undefined);
 });
+test('handlers go before initialization', () => {
+  const src = ['unit Home;', 'interface', 'type', '  THomeForm = class(THomeFormBase)', '  end;', 'implementation',
+    'initialization', '  RegisterIt;', 'end.'].join('\n');
+  const ins = handlerInserts(src, 'OkClick');
+  assert.strictEqual(ins![1].line, 6);
+});
 test('parse issues and handler names', () => {
   const issues = parseIssues('[{"file":"a","line":3,"severity":"error","message":"event handler \\"Go\\" is not declared in Home.pas"}]');
   assert.strictEqual(issues.length, 1);

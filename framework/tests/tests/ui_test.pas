@@ -51,11 +51,13 @@ type
     procedure GridColumnsOfNumbersDatesAndChecks;
     procedure GridFilterAndCsv;
     procedure AFlowWrapsItsChildren;
+    procedure BindingRulesCheckValues;
     procedure GridRowsAndSorting;
     procedure GridLoadsJson;
     procedure TreeFromLines;
     procedure ThemeValues;
     procedure BindingNames;
+    procedure BackgroundImageAndButtonColor;
     procedure BindingLoadsAndSaves;
   end;
 
@@ -633,6 +635,40 @@ begin
   end;
 end;
 
+procedure TUITests.BackgroundImageAndButtonColor;
+var
+  Pic: TCanvas32;
+  FileName: string;
+  B: TButton;
+begin
+  FileName := GetTempDir + 'pastel-bg-test.png';
+  Pic := TCanvas32.Create;
+  try
+    Pic.SetSize(20, 10);
+    Pic.Clear(RGB(0, 128, 0));
+    Pic.SaveToPNG(FileName);
+  finally
+    Pic.Free;
+  end;
+  try
+    Form.BackgroundImage := FileName;
+    AssertEquals(Ord(ifCover), Ord(Form.BackgroundFit), 'it fills the form by default');
+    B := TButton.Create(Form);
+    B.Parent := Form;
+    B.Text := 'Buy';
+    B.Color := RGB(200, 0, 0);
+    Render;
+    AssertEquals(Cardinal(RGB(0, 128, 0)), Cardinal(Canvas.GetPixel(395, 295)), 'the picture is behind the controls');
+    AssertEquals(Cardinal(RGB(200, 0, 0)), Cardinal(Canvas.GetPixel(B.Bounds.X + 3, B.Bounds.Y + B.Bounds.H div 2)),
+      'the button has its own color');
+    Form.BackgroundImage := 'no-such-picture.png';
+    Render;     { a missing picture is not drawn and does not stop the form }
+    AssertTrue(Canvas.GetPixel(395, 295) <> RGB(0, 128, 0));
+  finally
+    SysUtils.DeleteFile(FileName);
+  end;
+end;
+
 procedure TUITests.CanvasScales;
 var
   C: TCanvas32;
@@ -1001,6 +1037,61 @@ begin
   AssertTrue(F.Children[2].Bounds.Y > F.Children[1].Bounds.Y, 'the third on the next line');
   AssertEquals(F.Children[0].Bounds.X, F.Children[2].Bounds.X, 'from the left again');
   AssertTrue(F.Bounds.H >= 3 * F.Children[0].Bounds.H, 'three lines high');
+end;
+
+procedure TUITests.BindingRulesCheckValues;
+var
+  B: TDataBinding;
+  NameEdit, EmailEdit, AgeEdit, CodeEdit: TEdit;
+  Problem: TLabel;
+
+  function NewEdit(const N: string): TEdit;
+  begin
+    Result := TEdit.Create(Form);
+    Result.Name := N;
+    Result.Parent := Form;
+  end;
+
+begin
+  UseLanguage('en');
+  NameEdit := NewEdit('NameEdit');
+  EmailEdit := NewEdit('EmailEdit');
+  AgeEdit := NewEdit('AgeEdit');
+  CodeEdit := NewEdit('CodeEdit');
+  Problem := TLabel.Create(Form);
+  Problem.Parent := Form;
+  B := TDataBinding.Create(Form);
+  B.Bind(NameEdit);
+  B.Bind(EmailEdit);
+  B.Bind(AgeEdit);
+  B.Bind(CodeEdit);
+  B.Rules.Text := 'NameEdit=required, min 2' + LineEnding + 'EmailEdit=email' + LineEnding +
+    'AgeEdit=number, range 0..120' + LineEnding + 'CodeEdit=pattern ^[A-Z]{2}\d{1,3}$';
+  B.ErrorLabel := Problem;
+  AssertFalse(B.Validate, 'the name is missing');
+  AssertEquals('Fill this in', NameEdit.Error);
+  AssertEquals('Fill this in', Problem.Text);
+  AssertEquals('Fill this in', NameEdit.Hint, 'as its tooltip');
+  NameEdit.Text := 'Ayşe';
+  EmailEdit.Text := 'not-an-address';
+  AgeEdit.Text := '130';
+  CodeEdit.Text := 'tr12';
+  AssertFalse(B.Validate);
+  AssertEquals('', NameEdit.Error);
+  AssertEquals('This is not an e-mail address', EmailEdit.Error);
+  AssertEquals('Give a number from 0 to 120', AgeEdit.Error);
+  AssertEquals('This is not in the right form', CodeEdit.Error);
+  AssertEquals(3, B.Problems.Count);
+  EmailEdit.Text := '';
+  AgeEdit.Text := '34';
+  CodeEdit.Text := 'TR12';
+  AssertTrue(B.Validate, 'empty values are only checked by required');
+  AssertEquals('', Problem.Text);
+  UseLanguage('tr');
+  NameEdit.Text := '';
+  B.Validate;
+  AssertEquals('Bunu doldurun', NameEdit.Error, 'in the language');
+  UseLanguage('en');
 end;
 
 initialization

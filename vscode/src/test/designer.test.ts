@@ -88,6 +88,31 @@ test('a small mouse movement is a click, not a move', () => {
   assert.deepStrictEqual(last('select'), { type: 'select', name: 'Cancel', names: ['Cancel'] });
 });
 
+test('a property the .pform does not set shows its default; Name can be changed', () => {
+  post({
+    type: 'select', name: 'Ok', names: ['Ok'], className: 'TButton', isRoot: false, handlers: [],
+    props: [
+      { name: 'Enabled', type: 'boolean', doc: '', default: 'True' },
+      { name: 'Style', type: 'enum', values: ['Primary', 'Secondary'], doc: '', default: 'Primary' },
+      { name: 'Width', type: 'integer', doc: '', default: '0' },
+    ],
+  });
+  const en = doc.querySelector('[data-prop="Enabled"]');
+  assert.strictEqual(en.checked, true, 'not set: enabled, like the running app');
+  en.checked = true;
+  en.dispatchEvent(new w.Event('change'));
+  assert.strictEqual(last('setProp').value, null, 'the default is not written into the .pform');
+  en.checked = false;
+  en.dispatchEvent(new w.Event('change'));
+  assert.strictEqual(last('setProp').value, 'False');
+  assert.ok(doc.querySelector('[data-prop="Style"]').options[0].text.includes('Primary'));
+  assert.strictEqual(doc.querySelector('[data-prop="Width"]').placeholder, '0');
+  const nm = doc.querySelector('[data-prop="Name"]');
+  assert.strictEqual(nm.value, 'Ok');
+  nm.value = 'SaveButton';
+  nm.dispatchEvent(new w.Event('change'));
+  assert.deepStrictEqual(last('rename'), { type: 'rename', name: 'Ok', newName: 'SaveButton' });
+});
 test('property panel sends edits', () => {
   post({
     type: 'select', name: 'Cancel', names: ['Cancel'], className: 'TButton', isRoot: false, handlers: ['OkClick'],

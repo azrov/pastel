@@ -49,6 +49,19 @@ end
 | `Align` | Across the column: `Stretch` (default: as wide as the column), `Start`, `Center`, `End` |
 | `Justify` | Along the column: `Start` (default), `Center`, `End`, `SpaceBetween` |
 | `Color`, `BorderColor`, `BorderWidth`, `Radius` | Background, border and rounded corners (`Color = '#F3F4F8'`) |
+| `BackgroundImage` | A picture behind the children: a file in `assets/` (`BackgroundImage = 'paper.png'`), next to the program, or a full path. Rows, cards and the form have it too |
+| `BackgroundFit` | `Cover` (default: fills, cut at the edges), `Contain`, `Stretch`, `Center` |
+
+A form with a picture behind it:
+
+```
+object LoginForm: TLoginForm
+  BackgroundImage = 'login-background.jpg'
+  object Box: TCard
+    ...
+  end
+end
+```
 
 ### TRow
 
@@ -456,6 +469,12 @@ object SaveButton: TButton
   Style = Primary          // Primary (default), Secondary, Danger, Flat (for tool bars)
   OnClick = SaveClick
 end
+
+object BuyButton: TButton
+  Text = 'Buy'
+  Color = '#E91E63'        // any color; hovering and pressing shade it
+  TextColor = '#FFFFFF'
+end
 ```
 
 ```pascal
@@ -468,6 +487,7 @@ end;
 | | |
 |---|---|
 | `Text`, `Style` | |
+| `Color`, `TextColor` | Any background and text color instead of the style's (`Color = '#16A34A'`); from code `BuyButton.Color := $FF16A34A` |
 | `Icon` | A built-in [icon](#icons) before the text (`Icon = 'save'`), or alone when `Text` is empty — then give it a `Hint` |
 | `Action` | A [TAction](#taction): its caption, shortcut and `Enabled` are used |
 | `Default` | Enter presses it (in a dialog or form) |
@@ -937,3 +957,42 @@ CustomerData.Clear;                    // a new record
 ```
 
 `NameEdit` binds the field `name` (the control's name without its kind, in snake_case); `'CitySelect=city_name'` names the field.
+
+**Checking the values.** `Rules` say what a value must be; `Validate` checks them all before saving:
+
+```
+object CustomerData: TDataBinding
+  Fields = ('NameEdit', 'EmailEdit', 'AgeEdit', 'PostcodeEdit')
+  Rules = ('NameEdit=required, min 2', 'EmailEdit=email', 'AgeEdit=integer, range 0..120',
+    'PostcodeEdit=pattern ^\d{5}$')
+  ErrorLabel = ProblemLabel
+end
+```
+
+```pascal
+procedure THomeForm.SaveClick(Sender: TObject);
+begin
+  if not CustomerData.Validate then
+    Exit;                                 // the wrong fields are red, the first one has the focus
+  Customers.Save(CustomerData.ToJson);
+end;
+```
+
+| Rule | |
+|---|---|
+| `required` | Not empty (the other rules only check values that are there) |
+| `email`, `number`, `integer` | An e-mail address; a number the language's way (`1.380,5`); a whole number |
+| `range 0..120` | A number between |
+| `min 3`, `max 50` | At least, at most so many characters |
+| `pattern ^[A-Z]{2}\d+$` | A regular expression; it comes last, as it may hold commas |
+
+A wrong edit gets a red border and the problem as its tooltip (`Edit.Error`); typing clears it. `ErrorLabel` shows the first problem, `Problems` lists them all (`NameEdit=Fill this in`). The messages are in the app's language. For checks of your own, `OnValidate`:
+
+```pascal
+procedure THomeForm.CustomerDataValidate(Sender: TObject; Control: TControl; const Value: string;
+  var Message: string);
+begin
+  if (Control = EmailEdit) and Customers.EmailTaken(Value) then
+    Message := _('There is a customer with this e-mail already');
+end;
+```

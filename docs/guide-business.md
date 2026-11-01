@@ -72,6 +72,8 @@ POST /api/sync
      "changes": {"customers": [...], ...}}      what other computers sent since "since"
 ```
 
+All of it is [`Pastel.Sync`](sync.md): the store (`TSyncStore`, which `TSalonStore` uses for its tables), the client (`SyncWithServer`) and the server's route (`AddSyncRoute`). For a system of your own, start from it.
+
 The desktop side ([`SalonSync`](../examples/salon-core/src/salonsync.pas)):
 
 ```pascal
@@ -79,12 +81,10 @@ R := SyncWithServer(Store, SettingsForm.ServerUrl, SettingsForm.ApiKey, FLastSyn
 StatusLabel.Text := Format(_('Synced: %d sent, %d received.'), [R.Sent, R.Received]);
 ```
 
-The server side ([`saloncontroller.pas`](../examples/salon-api/src/controllers/saloncontroller.pas)) — the same store, three calls:
+The server side ([`saloncontroller.pas`](../examples/salon-api/src/controllers/saloncontroller.pas)) — the same store, one line:
 
 ```pascal
-Now_ := NowStamp;                                   // before anything is taken
-Applied := FStore.Apply(Changes, True);             // True: stamp them with the server's clock
-Theirs := FStore.Changes(Since, False);             // what was stored after "since"
+AddSyncRoute(Web, FStore.Sync);                     // POST /api/sync (Pastel.SyncWeb)
 ```
 
 When the same record was changed on two computers, **the newer change wins** (`updated_at`): `Apply` stores a record only when it is newer than the one there. That makes the sync safe to repeat — sending the same records twice changes nothing — and a failed sync loses nothing: the records stay dirty and go next time.

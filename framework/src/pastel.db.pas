@@ -98,6 +98,7 @@ type
     FLock: TCriticalSection;
     FMaxConnections: Integer;
     function NewConnection: TDbConnection;
+    function ToolOptions(out Env: SysUtils.TStringArray): SysUtils.TStringArray;
   protected
     function Acquire: TDbConnection; override;
     procedure Release(C: TDbConnection; Failed: Boolean); override;
@@ -119,6 +120,18 @@ type
     property Kind: TDbKind read FKind;
     { the address without the password }
     function SafeUrl: string;
+    { A copy of the whole database in FileName, while it is used. SQLite: a
+      database file (VACUUM INTO); PostgreSQL and MySQL: SQL text, made by
+      pg_dump or mysqldump (which must be installed). }
+    procedure Backup(const FileName: string);
+    { A backup into Dir named by the time (shop-2026-11-01-093015-120.db or .sql);
+      only the Keep newest backups there stay. Returns the file name. For a
+      daily job: Db.BackupTo('backups', 14). }
+    function BackupTo(const Dir: string; Keep: Integer = 10): string;
+    { Puts a backup back: the database becomes what it was then. SQLite: the
+      file replaces the database (nothing else may use it meanwhile);
+      PostgreSQL and MySQL: psql or mysql run the SQL. }
+    procedure Restore(const FileName: string);
   end;
 
 { the folder Migrate uses when given '' }
@@ -130,7 +143,7 @@ implementation
 
 uses
   StrUtils, DateUtils, sqlite3dyn, sqlite3conn, pqconnection, mysql57conn, mysql80conn,
-  mysql57dyn, mysql80dyn, Pastel.Json, Pastel.Log, Pastel.Files;
+  mysql57dyn, mysql80dyn, Pastel.Json, Pastel.Log, Pastel.Files, Pastel.Process;
 
 { ---------------- helpers ---------------- }
 
@@ -767,6 +780,174 @@ begin
   except
     Result.Free;
     raise;
+  end;
+end;
+
+{ ---------------- backups ---------------- }
+
+function DbTool(const Name, Package: string): string;
+begin
+  Result := Which(Name);
+  if Result = '' then
+    raise EDbError.CreateFmt('%s is needed for this (Debian/Ubuntu: sudo apt install %s)', [Name, Package]);
+end;
+
+function TDatabase.ToolOptions(out Env: SysUtils.TStringArray): SysUtils.TStringArray;
+begin
+  Env := nil;
+  Result := nil;
+  case FKind of
+    dbPostgres:
+      begin
+        Result := ['-h', FHost, '-U', FUser];
+        if FPort > 0 then
+          Result := Concat(Result, ['-p', IntToStr(FPort)]);
+        Env := ['PGPASSWORD=' + FPassword];
+      end;
+    dbMySQL:
+      begin
+        Result := ['-h', FHost, '-u', FUser];
+        if FPort > 0 then
+          Result := Concat(Result, ['-P', IntToStr(FPort)]);
+        Env := ['MYSQL_PWD=' + FPassword];
+      end;
+  end;
+end;
+
+procedure TDatabase.Backup(const FileName: string);
+var
+  C: TDbConnection;
+  O: TRunOptions;
+  R: TRunResult;
+  Env: TStringArray;
+  Args: TStringArray;
+begin
+  EnsureDir(ExtractFileDir(ExpandFileName(FileName)));
+  if FileExists(FileName) then
+    DeleteFile(FileName);
+  O := Default(TRunOptions);
+  case FKind of
+    dbSQLite:
+      begin
+        if FName = ':memory:' then
+          raise EDbError.Create('a database in memory has no backup');
+        { VACUUM cannot run in a transaction: straight on a connection }
+        C := Acquire;
+        try
+          try
+            TSQLiteAccess(C.Conn).execsql('VACUUM INTO ''' +
+              StringReplace(ExpandFileName(FileName), '''', '''''', [rfReplaceAll]) + '''');
+          except
+            on E: Exception do
+              raise EDbError.CreateFmt('the backup of %s failed: %s', [SafeUrl, CleanMessage(E.Message)]);
+          end;
+        finally
+          Release(C, False);
+        end;
+      end;
+    dbPostgres:
+      begin
+        Args := Concat(ToolOptions(Env), ['--no-owner', '--clean', '--if-exists', '-f', FileName, FName]);
+        O.Env := Env;
+        R := Run(DbTool('pg_dump', 'postgresql-client'), Args, O);
+        if not R.Ok then
+          raise EDbError.CreateFmt('the backup of %s failed: %s', [SafeUrl, Trim(R.Errors)]);
+      end;
+    dbMySQL:
+      begin
+        Args := Concat(ToolOptions(Env), ['--single-transaction', '--routines', '--result-file=' + FileName, FName]);
+        O.Env := Env;
+        R := Run(DbTool('mysqldump', 'mariadb-client'), Args, O);
+        if not R.Ok then
+          raise EDbError.CreateFmt('the backup of %s failed: %s', [SafeUrl, Trim(R.Errors)]);
+      end;
+  end;
+end;
+
+function TDatabase.BackupTo(const Dir: string; Keep: Integer): string;
+var
+  Base, Ext: string;
+  Files: TStringList;
+  F: string;
+begin
+  if FKind = dbSQLite then
+  begin
+    Base := ChangeFileExt(ExtractFileName(FName), '');
+    Ext := '.db';
+  end
+  else
+  begin
+    Base := FName;
+    Ext := '.sql';
+  end;
+  Result := JoinPath([Dir, Format('%s-%s%s', [Base, FormatDateTime('yyyy-mm-dd-hhnnss-zzz', Now), Ext])]);
+  Backup(Result);
+  if Keep > 0 then
+  begin
+    Files := TStringList.Create;
+    try
+      for F in ListFiles(Dir, Base + '-????-??-??-??????-???' + Ext) do
+        Files.Add(F);
+      Files.Sort;           { the time in the name sorts them }
+      while Files.Count > Keep do
+      begin
+        DeleteFile(Files[0]);
+        Files.Delete(0);
+      end;
+    finally
+      Files.Free;
+    end;
+  end;
+end;
+
+procedure TDatabase.Restore(const FileName: string);
+var
+  O: TRunOptions;
+  R: TRunResult;
+  Env, Args: TStringArray;
+  I: Integer;
+begin
+  if not FileExists(FileName) then
+    raise EDbError.CreateFmt('no backup %s', [FileName]);
+  O := Default(TRunOptions);
+  case FKind of
+    dbSQLite:
+      begin
+        if FName = ':memory:' then
+          raise EDbError.Create('a database in memory cannot be restored');
+        { closes the connections; the next query opens the restored file }
+        FLock.Acquire;
+        try
+          for I := 0 to FPool.Count - 1 do
+            if TDbConnection(FPool[I]).InUse then
+              raise EDbError.Create('the database is in use; restore it when nothing else uses it');
+          for I := 0 to FPool.Count - 1 do
+            TDbConnection(FPool[I]).Free;
+          FPool.Clear;
+          DeleteFile(FName + '-wal');
+          DeleteFile(FName + '-shm');
+          CopyFile(FileName, FName);
+        finally
+          FLock.Release;
+        end;
+      end;
+    dbPostgres:
+      begin
+        Args := Concat(ToolOptions(Env), ['-v', 'ON_ERROR_STOP=1', '-q', '-f', FileName, FName]);
+        O.Env := Env;
+        R := Run(DbTool('psql', 'postgresql-client'), Args, O);
+        if not R.Ok then
+          raise EDbError.CreateFmt('restoring %s failed: %s', [SafeUrl, Trim(R.Errors)]);
+      end;
+    dbMySQL:
+      begin
+        Args := Concat(ToolOptions(Env), [FName]);
+        O.Env := Env;
+        O.Input := ReadText(FileName);
+        R := Run(DbTool('mysql', 'mariadb-client'), Args, O);
+        if not R.Ok then
+          raise EDbError.CreateFmt('restoring %s failed: %s', [SafeUrl, Trim(R.Errors)]);
+      end;
   end;
 end;
 

@@ -199,4 +199,39 @@ test('several controls: copy, delete, outline', () => {
   assert.deepStrictEqual(outline(form).map(o => o.depth), [0, 1, 2, 2, 3, 1]);
 });
 
+test('any series of designer edits keeps every object closed by its own end', () => {
+  // a fixed seed: the same series each run
+  let seed = 7;
+  const rnd = (n: number) => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed % n; };
+  let text = form;
+  let clip = '';
+  for (let step = 0; step < 1500; step++) {
+    const root = parseBlocks(text)!;
+    assert.ok(root, `step ${step} broke the form:\n${text}`);
+    const all: { name: string; className: string; parent?: unknown; children: unknown[] }[] = [];
+    const walk = (b: any) => { all.push(b); b.children.forEach(walk); };
+    walk(root);
+    const kids = all.filter(b => b !== root);
+    const boxes = all.filter(b => b === root || /^(TCard|TRow|TColumn)$/.test(b.className));
+    const pick = <T>(xs: T[]) => xs[rnd(xs.length)];
+    const box = pick(boxes) as any;
+    const some = kids.length ? pick(kids) as any : undefined;
+    let next = text;
+    switch (rnd(9)) {
+      case 0: next = insertObject(text, box.name, rnd(box.children.length + 1), pick(['TButton', 'TRow', 'TCard', 'TLabel']))?.text ?? text; break;
+      case 1: if (some) next = deleteObjects(text, [some.name]); break;
+      case 2: if (some) next = moveObject(text, some.name, box.name, rnd(box.children.length + 1)); break;
+      case 3: if (some) next = moveSibling(text, some.name, rnd(2) ? 1 : -1); break;
+      case 4: if (some) next = wrapObjects(text, [some.name], pick(['TRow', 'TCard']))?.text ?? text; break;
+      case 5: if (some) next = unwrapObject(text, some.name); break;
+      case 6: if (some) clip = extractObjects(text, [some.name]) ?? clip; break;
+      case 7: if (clip) next = pasteObjects(text, clip, box.name, rnd(box.children.length + 1))?.text ?? text; break;
+      case 8: if (some) next = setProperty(text, some.name, 'Text', rnd(2) ? "'end'" : undefined); break;
+    }
+    if (kids.length > 40) next = deleteObjects(next, [kids[0].name]);
+    text = next;
+  }
+  assert.ok(parseBlocks(text));
+});
+
 console.log(`edit: ${passed} passed`);

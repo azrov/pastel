@@ -375,7 +375,9 @@ export function designerHtml(nonce: string): string {
   });
 
   // ---- property panel ----
-  function send(prop, propType, value) {
+  function send(prop, propType, value, def) {
+    // the default value is not written into the .pform
+    if (def !== undefined && value === def) value = null;
     vscode.postMessage({ type: 'setProp', name: selection.name, names: selection.names, prop, propType, value });
   }
   function input(p) {
@@ -383,14 +385,15 @@ export function designerHtml(nonce: string): string {
     let el;
     if (p.type === 'enum') {
       el = document.createElement('select');
-      el.appendChild(new Option('(default)', ''));
+      el.appendChild(new Option(p.default !== undefined ? '(default: ' + p.default + ')' : '(default)', ''));
       for (const v of p.values) el.appendChild(new Option(v, v));
       el.value = cur;
-      el.addEventListener('change', () => send(p.name, p.type, el.value === '' ? null : el.value));
+      el.addEventListener('change', () => send(p.name, p.type, el.value === '' ? null : el.value, p.default));
     } else if (p.type === 'boolean') {
       el = document.createElement('input'); el.type = 'checkbox';
-      el.checked = cur === 'True';
-      el.addEventListener('change', () => send(p.name, p.type, el.checked ? 'True' : 'False'));
+      // not set in the .pform: it has its default (Enabled, Visible, Resizable are True)
+      el.checked = (cur === '' ? p.default : cur) === 'True';
+      el.addEventListener('change', () => send(p.name, p.type, el.checked ? 'True' : 'False', p.default));
     } else if (p.type === 'color') {
       el = document.createElement('span'); el.className = 'inline';
       const c = document.createElement('input'); c.type = 'color';
@@ -413,6 +416,7 @@ export function designerHtml(nonce: string): string {
       el = document.createElement('input');
       el.value = cur;
       if (p.type === 'integer' || p.type === 'number') el.inputMode = 'numeric';
+      if (p.default !== undefined && cur === '') el.placeholder = p.default;
       if (p.suggest) {
         // a list to choose from (icon names), typing something else stays possible
         const id = 'suggest-' + p.name;
@@ -448,27 +452,34 @@ export function designerHtml(nonce: string): string {
     if (!sel) { propsEl.innerHTML = '<div class="empty">Click a control to edit it. Ctrl+click selects more.</div>'; return; }
     const several = sel.names && sel.names.length > 1;
     const h = document.createElement('h3');
-    if (several) {
-      h.textContent = sel.names.length + ' controls';
-    } else if (sel.isRoot) {
-      h.textContent = sel.name;
-    } else {
-      // the name can be changed here: the form's code follows
-      const nm = document.createElement('input'); nm.value = sel.name; nm.className = 'name'; nm.title = 'Rename (F2): the code in the .pas file is updated too';
-      nm.addEventListener('change', () => vscode.postMessage({ type: 'rename', name: sel.name, newName: nm.value.trim() }));
-      nm.addEventListener('keydown', e => { if (e.key === 'Enter') nm.blur(); if (e.key === 'Escape') { nm.value = sel.name; nm.blur(); } });
-      h.appendChild(nm);
-    }
+    h.textContent = several ? sel.names.length + ' controls' : sel.name;
     const cls = document.createElement('div'); cls.className = 'cls';
     cls.textContent = several ? sel.names.join(', ') + ' — what they all have' : sel.className;
     propsEl.append(h, cls);
     const dl = document.createElement('datalist'); dl.id = 'handlers';
     for (const n of sel.handlers) dl.appendChild(new Option(n));
     propsEl.appendChild(dl);
-    const groups = [['Properties', sel.props.filter(p => p.type !== 'event')], ['Events', sel.props.filter(p => p.type === 'event')]];
+    if (!several) {
+      // Name, like Delphi's Object Inspector: renaming changes the form's .pas code too
+      const s0 = document.createElement('div'); s0.className = 'section'; s0.textContent = 'Properties'; propsEl.appendChild(s0);
+      const row = document.createElement('div'); row.className = 'row';
+      const lab = document.createElement('label'); lab.textContent = 'Name'; lab.className = 'set';
+      const nm = document.createElement('input'); nm.value = sel.name; nm.dataset.prop = 'Name';
+      if (sel.isRoot) {
+        nm.readOnly = true;
+        nm.title = 'The name of the form goes with its class (T' + sel.name + ') and its unit; rename it in the code';
+      } else {
+        nm.title = 'Rename (F2): the code in the .pas file is updated too';
+        nm.addEventListener('change', () => vscode.postMessage({ type: 'rename', name: sel.name, newName: nm.value.trim() }));
+        nm.addEventListener('keydown', e => { if (e.key === 'Enter') nm.blur(); if (e.key === 'Escape') { nm.value = sel.name; nm.blur(); } });
+      }
+      row.append(lab, nm);
+      propsEl.appendChild(row);
+    }
+    const groups = [[several ? 'Properties' : '', sel.props.filter(p => p.type !== 'event')], ['Events', sel.props.filter(p => p.type === 'event')]];
     for (const [title, list] of groups) {
       if (!list.length) continue;
-      const s = document.createElement('div'); s.className = 'section'; s.textContent = title; propsEl.appendChild(s);
+      if (title) { const s = document.createElement('div'); s.className = 'section'; s.textContent = title; propsEl.appendChild(s); }
       for (const p of list) {
         const row = document.createElement('div'); row.className = 'row';
         const lab = document.createElement('label'); lab.textContent = p.name; lab.title = p.doc || p.name;

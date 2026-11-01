@@ -18,7 +18,7 @@ Dialogs: messages, questions, input, choosing files and folders.
 
 `uses Pastel.Dialogs;` · source: [framework/src/pastel.dialogs.pas](../../framework/src/pastel.dialogs.pas)
 
-**Contents:** [ShowMessage](#showmessage) · [Ask](#ask) · [MessageDlg](#messagedlg) · [InputBox](#inputbox) · [InputQuery](#inputquery) · [OpenFileDialog](#openfiledialog) · [SaveFileDialog](#savefiledialog) · [SelectFolderDialog](#selectfolderdialog) · [ModalResultCaption](#modalresultcaption)
+**Contents:** [ShowMessage](#showmessage) · [Ask](#ask) · [MessageDlg](#messagedlg) · [InputBox](#inputbox) · [InputQuery](#inputquery) · [LoginDialog](#logindialog) · [OpenFileDialog](#openfiledialog) · [SaveFileDialog](#savefiledialog) · [SelectFolderDialog](#selectfolderdialog) · [ModalResultCaption](#modalresultcaption)
 
 ## Routines
 
@@ -64,6 +64,17 @@ function InputQuery(const Title: string; const Prompt: string; var Value: string
 ```
 
 The same; False when cancelled (Value is not changed then).
+
+### LoginDialog
+
+```pascal
+function LoginDialog(const Title: string; var User: string; var Password: string; const Error: string = ''): Boolean
+```
+
+Asks for an e-mail (or user name) and a password; Error is shown above
+them (after a failed try). With Pastel.Auth:
+while LoginDialog('Salon', Email, Password, Client.Error) do
+if Client.Login(Email, Password) then Break;
 
 ### OpenFileDialog
 

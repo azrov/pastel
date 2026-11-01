@@ -37,6 +37,11 @@ function MessageDlg(const Msg, Title: string; const Buttons: array of Integer;
 function InputBox(const Title, Prompt, Default: string): string;
 { The same; False when cancelled (Value is not changed then). }
 function InputQuery(const Title, Prompt: string; var Value: string): Boolean;
+{ Asks for an e-mail (or user name) and a password; Error is shown above
+  them (after a failed try). With Pastel.Auth:
+    while LoginDialog('Salon', Email, Password, Client.Error) do
+      if Client.Login(Email, Password) then Break; }
+function LoginDialog(const Title: string; var User, Password: string; const Error: string = ''): Boolean;
 
 { Filter: 'Pictures|*.png;*.jpg|All files|*'. FileName: where to start
   (a file or a folder); on True the chosen file. }
@@ -217,6 +222,54 @@ begin
     Result := P.ShowModal(CheckForm) = mrOk;
     if Result then
       Value := E.Text;
+  finally
+    P.Free;
+  end;
+end;
+
+function LoginDialog(const Title: string; var User, Password: string; const Error: string): Boolean;
+var
+  P: TPopup;
+  Content: TColumn;
+  L: TLabel;
+  UserEdit, PasswordEdit: TEdit;
+begin
+  P := NewDialog(Title, 380, Content);
+  try
+    if Error <> '' then
+    begin
+      L := TLabel.Create(P);
+      L.Name := 'MessageText';
+      L.Text := Error;
+      L.WordWrap := True;
+      L.Color := Theme.Danger;
+      L.Parent := Content;
+    end;
+    L := TLabel.Create(P);
+    L.Text := _('E-mail');
+    L.Parent := Content;
+    UserEdit := TEdit.Create(P);
+    UserEdit.Name := 'UserEdit';
+    UserEdit.Text := User;
+    UserEdit.Parent := Content;
+    L := TLabel.Create(P);
+    L.Text := _('Password');
+    L.Parent := Content;
+    PasswordEdit := TEdit.Create(P);
+    PasswordEdit.Name := 'PasswordEdit';
+    PasswordEdit.Password := True;
+    PasswordEdit.Parent := Content;
+    AddButtons(P, [mrOk, mrCancel], False);
+    if User <> '' then
+      PasswordEdit.SetFocus
+    else
+      UserEdit.SetFocus;
+    Result := P.ShowModal(CheckForm) = mrOk;
+    if Result then
+    begin
+      User := Trim(UserEdit.Text);
+      Password := PasswordEdit.Text;
+    end;
   finally
     P.Free;
   end;

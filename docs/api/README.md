@@ -7,6 +7,7 @@ Made from the declarations and comments in `framework/src` (`npm run apidoc` in 
 | [Pastel.App](pastel.app.md) | The application: window, event loop, hot reload. |
 | [Pastel.Args](pastel.args.md) | Command-line arguments. |
 | [Pastel.Assets](pastel.assets.md) | The files of a project's assets/ folder, inside the program. |
+| [Pastel.Auth](pastel.auth.md) | Users, passwords and roles for a server, and login for its apps. |
 | [Pastel.Binding](pastel.binding.md) | Data binding: fills a form's controls from a record and back. |
 | [Pastel.Config](pastel.config.md) | Settings from files, environment variables and code. |
 | [Pastel.Controls](pastel.controls.md) | More controls: check boxes, radio buttons, switches, lists, |
@@ -34,6 +35,8 @@ Made from the declarations and comments in `framework/src` (`npm run apidoc` in 
 | [Pastel.Report](pastel.report.md) | Reports: invoices, lists, letters as PDF (and HTML), written |
 | [Pastel.Service](pastel.service.md) | Long-running programs (services, daemons). |
 | [Pastel.Sheets](pastel.sheets.md) | Spreadsheets: Excel files (.xlsx) and CSV, written and read. |
+| [Pastel.Sync](pastel.sync.md) | Data that works offline and is synchronized with a server: the |
+| [Pastel.SyncWeb](pastel.syncweb.md) | The server side of Pastel.Sync: one route that clients sync with. |
 | [Pastel.Term](pastel.term.md) | Terminal output and input for console programs. |
 | [Pastel.Testing](pastel.testing.md) | Unit testing. |
 | [Pastel.Text](pastel.text.md) | Text helpers that understand UTF-8. |

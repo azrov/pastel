@@ -12,7 +12,7 @@ Everything Pastel does from the terminal, with examples. `pastel help` shows the
 
 ## pastel new
 
-Creates a project, or adds a form or a control to an app.
+Creates a project, or adds a form, a control or a model (a table) to it.
 
 ```sh
 pastel new console hello        # a command-line program
@@ -23,9 +23,11 @@ pastel new lib text-tools       # units for other projects (no program of its ow
 
 pastel new form Settings        # in an app: src/forms/Settings.pform/.pas, added to main.pas
 pastel new control StarRating   # in an app or lib: src/controls/starrating.pas
+pastel new model Customer name:string! email:string age:integer
+                                # a table: its migration, src/models/customers.pas and tests
 ```
 
-The kinds are explained in [getting-started.md](getting-started.md); forms in [forms.md](forms.md), controls in [components.md](components.md).
+The kinds are explained in [getting-started.md](getting-started.md); forms in [forms.md](forms.md), controls in [components.md](components.md), models in [database.md](database.md#models-where-the-sql-lives).
 
 ## pastel build
 

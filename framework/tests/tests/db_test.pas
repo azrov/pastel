@@ -9,12 +9,13 @@ interface
 
 uses
   Classes, SysUtils, fpjson, Pastel.Testing, Pastel.Db, Pastel.Json, Pastel.Files, Pastel.Env,
-  Pastel.Log;
+  Pastel.Log, Pastel.Process;
 
 type
   TDbTests = class(TTestSuite)
   private
     procedure RunAll(const Url: string);
+    procedure BackupAndRestore(const Url: string);
   public
     procedure SetUp; override;
     procedure TearDown; override;
@@ -22,6 +23,9 @@ type
     procedure WorksOnSqlite;
     procedure WorksOnPostgres;
     procedure WorksOnMysql;
+    procedure BacksUpSqlite;
+    procedure BacksUpPostgres;
+    procedure BacksUpMysql;
     procedure SplitsScripts;
     procedure ExplainsBadAddresses;
   end;
@@ -244,6 +248,56 @@ begin
   if GetEnv('PASTEL_TEST_MYSQL_URL') = '' then
     Skip('set PASTEL_TEST_MYSQL_URL=mysql://user:password@localhost/testdb');
   RunAll(GetEnv('PASTEL_TEST_MYSQL_URL'));
+end;
+
+procedure TDbTests.BackupAndRestore(const Url: string);
+var
+  Db: TDatabase;
+  F, Name: string;
+  I: Integer;
+begin
+  Db := TDatabase.Open(Url);
+  try
+    Db.Exec('drop table if exists backup_test', []);
+    Db.Exec('create table backup_test (name varchar(50))', []);
+    Db.Exec('insert into backup_test values (?)', ['Ayşe']);
+    F := Dir + 'backup';
+    Name := Db.BackupTo(F, 2);
+    AssertTrue(FileExists(Name), Name);
+    Db.Exec('insert into backup_test values (?)', ['after the backup']);
+    AssertEquals(2, Db.QueryInt('select count(*) from backup_test', []));
+    Db.Restore(Name);
+    AssertEquals(1, Db.QueryInt('select count(*) from backup_test', []), 'back as it was');
+    AssertEquals('Ayşe', Db.QueryValue('select name from backup_test', []));
+    for I := 1 to 3 do
+    begin
+      Sleep(5);
+      Db.BackupTo(F, 2);
+    end;
+    AssertEquals(2, Length(ListFiles(F)), 'only the newest two stay');
+    Db.Exec('drop table backup_test', []);
+  finally
+    Db.Free;
+  end;
+end;
+
+procedure TDbTests.BacksUpSqlite;
+begin
+  BackupAndRestore('sqlite:' + Dir + 'shop.db');
+end;
+
+procedure TDbTests.BacksUpPostgres;
+begin
+  if (GetEnv('PASTEL_TEST_POSTGRES_URL') = '') or (Which('pg_dump') = '') then
+    Skip('needs PASTEL_TEST_POSTGRES_URL and pg_dump');
+  BackupAndRestore(GetEnv('PASTEL_TEST_POSTGRES_URL'));
+end;
+
+procedure TDbTests.BacksUpMysql;
+begin
+  if (GetEnv('PASTEL_TEST_MYSQL_URL') = '') or (Which('mysqldump') = '') then
+    Skip('needs PASTEL_TEST_MYSQL_URL and mysqldump');
+  BackupAndRestore(GetEnv('PASTEL_TEST_MYSQL_URL'));
 end;
 
 procedure TDbTests.SplitsScripts;

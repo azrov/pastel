@@ -104,6 +104,9 @@ type TDatabase = class(TDbSession)
 | `function MigrationStatus(const Dir: string = ''): TStringList` | name=applied/pending for every migration file |
 | `property Kind: TDbKind` |  |
 | `function SafeUrl: string` | the address without the password |
+| `procedure Backup(const FileName: string)` | A copy of the whole database in FileName, while it is used. SQLite: a database file (VACUUM INTO); PostgreSQL and MySQL: SQL text, made by pg_dump or mysqldump (which must be installed). |
+| `function BackupTo(const Dir: string; Keep: Integer = 10): string` | A backup into Dir named by the time (shop-2026-11-01-093015-120.db or .sql); only the Keep newest backups there stay. Returns the file name. For a daily job: Db.BackupTo('backups', 14). |
+| `procedure Restore(const FileName: string)` | Puts a backup back: the database becomes what it was then. SQLite: the file replaces the database (nothing else may use it meanwhile); PostgreSQL and MySQL: psql or mysql run the SQL. |
 
 ## Routines
 

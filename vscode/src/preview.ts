@@ -22,6 +22,27 @@ export interface DesignerServices {
  * them, drag new ones in from the toolbox. Every change is a normal text
  * edit of the .pform file, so Undo works in the editor.
  */
+/** The pictures in the project's assets/ folder, as a .pform names them ('logo.png', 'icons/save.png'). */
+export function assetImages(pformPath: string): string[] {
+  let dir = path.dirname(pformPath);
+  for (let i = 0; i < 6 && !fs.existsSync(path.join(dir, 'pastel.toml')); i++) {
+    dir = path.dirname(dir);
+  }
+  const assets = path.join(dir, 'assets');
+  const out: string[] = [];
+  const walk = (d: string, prefix: string) => {
+    let entries: fs.Dirent[];
+    try { entries = fs.readdirSync(d, { withFileTypes: true }); } catch { return; }
+    for (const e of entries) {
+      if (out.length >= 200) return;
+      if (e.isDirectory()) walk(path.join(d, e.name), prefix + e.name + '/');
+      else if (/\.(png|jpe?g|bmp)$/i.test(e.name)) out.push(prefix + e.name);
+    }
+  };
+  walk(assets, '');
+  return out.sort();
+}
+
 export class FormPreview {
   private static current: FormPreview | undefined;
   private readonly panel: vscode.WebviewPanel;
@@ -37,6 +58,7 @@ export class FormPreview {
   private readonly layoutFile: string;
   private readonly disposables: vscode.Disposable[] = [];
   // the designer's own undo: texts before each change made in the designer
+  private queue: Promise<void> = Promise.resolve();
   private undoStack: string[] = [];
   private redoStack: string[] = [];
   private lastApplied: string | undefined;
@@ -70,7 +92,10 @@ export class FormPreview {
       { enableScripts: true, retainContextWhenHidden: true });
     this.panel.webview.html = this.html();
     this.panel.onDidDispose(() => this.dispose(), null, this.disposables);
-    this.panel.webview.onDidReceiveMessage(m => this.onMessage(m), null, this.disposables);
+    // one message at a time: each edit starts from the text the one before left
+    this.panel.webview.onDidReceiveMessage(m => {
+      this.queue = this.queue.then(() => this.onMessage(m)).catch(e => console.error('pastel designer', e));
+    }, null, this.disposables);
     vscode.workspace.onDidChangeTextDocument(e => {
       if (e.document === this.document) {
         this.schedule(200);
@@ -226,9 +251,12 @@ export class FormPreview {
       schema.controls.find(c => c.name.toLowerCase() === block.className.toLowerCase());
     const pas = this.formUnitText();
     const handlers = pas ? declaredProcedures(pas) : [];
+    const images = assetImages(this.document.uri.fsPath);
     const props = (cls?.properties ?? []).map(p => {
       const line = block.props.find(x => x.name.toLowerCase() === p.name.toLowerCase());
-      return { ...p, value: line ? parseValue(line.value) : undefined };
+      // the pictures in assets/ for FileName and BackgroundImage
+      const suggest = p.type === 'string' && /^(FileName|BackgroundImage)$/i.test(p.name) && images.length ? images : p.suggest;
+      return { ...p, suggest, value: line ? parseValue(line.value) : undefined };
     });
     this.panel.webview.postMessage({
       type: 'select', name: block.name, names: [block.name], className: block.className, isRoot: block === root,
@@ -248,6 +276,11 @@ export class FormPreview {
   private async applyText(text: string, history = true): Promise<void> {
     const old = this.document.getText();
     if (text === old) {
+      return;
+    }
+    // never write a form whose objects and ends do not match (it would not compile)
+    if (parseBlocks(old) && !parseBlocks(text)) {
+      vscode.window.showErrorMessage('Pastel: the designer did not make this change; it would leave the form unbalanced.');
       return;
     }
     if (history) {

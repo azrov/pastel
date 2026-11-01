@@ -236,7 +236,15 @@ The things every business app needs, built in instead of written again in every 
 - [x] Designer: the warnings of `pastel check` drawn on the form; several selected controls (common properties, put into a row, column or card); a structure list — done in 1.0.0-rc.7
 - [x] F9 runs the right program when the open file belongs to a library — done in 1.0.0-rc.4
 
-### 1.3 — Android
+### 1.3 — Data made easier (done)
+
+- [x] `pastel new model Customer name:string! age:integer`: a model unit, its migration and tests
+- [x] `Pastel.Sync`: the offline-first synchronization of the salon example as a library (ids, `updated_at`, the newer change wins, deletions), with the server's route (`Pastel.SyncWeb`) and the client (`SyncWithServer`); the salon runs on it
+- [x] Login: users, passwords and roles on the server, tokens that renew (`Pastel.Auth`); `LoginDialog` for apps
+- [x] Backups of SQLite, PostgreSQL and MySQL from the app or the server, keeping the newest ones, and restoring them (`TDatabase.Backup`, `BackupTo`, `Restore`)
+- [x] `TDataBinding` checks values (`Rules`: required, email, number, range, min, max, pattern) and marks the wrong controls
+
+### 1.4 — Android
 
 The same Pascal code and `.pform` forms on an Android phone or tablet. The framework draws its own controls with SDL2 and FreeType, and Free Pascal 3.2.2 compiles for Android (ARM64 and ARM), so most of a desktop app carries over.
 
@@ -247,14 +255,6 @@ The same Pascal code and `.pform` forms on an Android phone or tablet. The frame
 - [ ] Phone layout: forms for small, upright screens (`pastel new form --phone`), bigger touch targets, the back button closes a form
 - [ ] The app's life: pausing and resuming, the folder for its data, settings that survive an update
 - [ ] An example: the salon's agenda on the phone, syncing with the same server as the desktop
-
-### 1.4 — Data made easier
-
-- [ ] `pastel new model Customer`: a model unit, its migration and tests from a few lines
-- [ ] `Pastel.Sync`: the offline-first synchronization of the salon example as a library (ids, `updated_at`, the newer change wins, deletions), with server routes and desktop and phone clients
-- [ ] Login for apps: users and roles on the server, a login form on the desktop and the phone, tokens that renew
-- [ ] Backups of SQLite and PostgreSQL from the app or the server, and restoring them
-- [ ] Data binding: `TDataBinding` checks values (required, ranges) and shows the problem next to the control
 
 ### 1.5 — The web, further
 

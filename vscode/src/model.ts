@@ -7,6 +7,8 @@ export interface SchemaProperty {
   values?: string[];
   /** Values to offer for a string property (icon names). */
   suggest?: string[];
+  /** The value when the .pform does not set it. */
+  default?: string;
   doc: string;
 }
 
@@ -190,6 +192,13 @@ export function handlerInserts(pascal: string, name: string,
   let endLine = -1;
   for (let i = lines.length - 1; i >= 0; i--) {
     if (/^\s*end\s*\.\s*$/i.test(lines[i])) {
+      endLine = i;
+      break;
+    }
+  }
+  // methods go before initialization/finalization, not inside them
+  for (let i = classLine + 1; i < endLine; i++) {
+    if (/^\s*(initialization|finalization)\b/i.test(lines[i])) {
       endLine = i;
       break;
     }

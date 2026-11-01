@@ -14,7 +14,8 @@
   time of the last change; synchronization keeps the newer version
   (see Changes and Apply).
   Records are never deleted, only marked (deleted = 1), so a deletion
-  reaches the other computers too. }
+  reaches the other computers too. All of this is Pastel.Sync (TSyncStore);
+  this unit adds the salon's tables, checks and invoices. }
 unit SalonStore;
 
 {$mode objfpc}{$H+}
@@ -22,20 +23,20 @@ unit SalonStore;
 interface
 
 uses
-  Classes, SysUtils, fpjson, Pastel.Db;
+  Classes, SysUtils, fpjson, Pastel.Db, Pastel.Sync;
 
 type
   TSalonKind = (skCustomer, skAppointment, skInvoice);
 
-  ESalonInvalid = class(Exception);
+  { a wrong value; a kind of ESyncInvalid, so a sync with one is refused (422) }
+  ESalonInvalid = class(ESyncInvalid);
 
   TSalonStore = class
   private
     FDb: TDatabase;
-    FOwnsDb: Boolean;
-    function Fields(Kind: TSalonKind): TStringArray;
+    FSync: TSyncStore;
     procedure Check(Kind: TSalonKind; Data: TJSONObject);
-    procedure Write(Session: TDbSession; Kind: TSalonKind; Data: TJSONObject; const Id: string; Exists: Boolean);
+    procedure CheckRecord(const Table: string; Data: TJSONObject);
   public
     constructor Create(ADb: TDatabase; OwnsDb: Boolean = False);
     destructor Destroy; override;
@@ -82,6 +83,8 @@ type
       (unless they changed again meanwhile: their updated_at is newer). }
     procedure MarkSent(Data: TJSONObject);
     property Db: TDatabase read FDb;
+    { The Pastel.Sync store under it (for SyncWithServer and AddSyncRoute). }
+    property Sync: TSyncStore read FSync;
   end;
 
 const
@@ -96,78 +99,53 @@ function NewId: string;
 implementation
 
 uses
-  DateUtils, Pastel.Json, Pastel.Crypto, SalonMoney;
-
-var
-  StampLock: TRTLCriticalSection;
-  LastMs: string = '';
-  StampCount: Integer = 0;
+  DateUtils, Pastel.Json, SalonMoney;
 
 function NowStamp: string;
-var
-  Ms: string;
 begin
-  EnterCriticalSection(StampLock);
-  try
-    { milliseconds and a counter: two changes in the same millisecond still
-      get different stamps, in the right order }
-    Ms := FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz', LocalTimeToUniversal(Now));
-    if Ms = LastMs then
-      Inc(StampCount)
-    else
-    begin
-      LastMs := Ms;
-      StampCount := 0;
-    end;
-    Result := Format('%s%.3dZ', [Ms, StampCount mod 1000]);
-  finally
-    LeaveCriticalSection(StampLock);
-  end;
+  Result := SyncStamp;
 end;
 
 function NewId: string;
 begin
-  Result := Copy(RandomToken(16), 1, 16);
+  Result := NewSyncId;
 end;
 
 constructor TSalonStore.Create(ADb: TDatabase; OwnsDb: Boolean);
 begin
   inherited Create;
   FDb := ADb;
-  FOwnsDb := OwnsDb;
+  FSync := TSyncStore.Create(ADb, OwnsDb);
+  FSync.OnCheck := @CheckRecord;
+  FSync.AddTable('customers', 'name varchar(200) not null, phone varchar(50) not null default '''', ' +
+    'email varchar(200) not null default '''', notes text');
+  FSync.AddTable('appointments', 'customer_id varchar(32) not null, starts_at varchar(16) not null, ' +
+    'minutes integer not null default 30, service varchar(200) not null default '''', ' +
+    'price_cents bigint not null default 0, status varchar(20) not null default ''booked''');
+  FSync.AddTable('invoices', 'customer_id varchar(32) not null, number varchar(20) not null, ' +
+    'issued_on varchar(10) not null, lines text, net_cents bigint not null default 0, ' +
+    'vat_rate integer not null default 20, vat_cents bigint not null default 0, ' +
+    'total_cents bigint not null default 0, paid integer not null default 0');
 end;
 
 destructor TSalonStore.Destroy;
 begin
-  if FOwnsDb then
-    FDb.Free;
+  FSync.Free;
   inherited Destroy;
 end;
 
-function TSalonStore.Fields(Kind: TSalonKind): TStringArray;
+procedure TSalonStore.CreateTables;
 begin
-  case Kind of
-    skCustomer: Result := ['name', 'phone', 'email', 'notes'];
-    skAppointment: Result := ['customer_id', 'starts_at', 'minutes', 'service', 'price_cents', 'status'];
-    skInvoice: Result := ['customer_id', 'number', 'issued_on', 'lines', 'net_cents', 'vat_rate', 'vat_cents',
-        'total_cents', 'paid'];
-  end;
+  FSync.CreateTables;
 end;
 
-procedure TSalonStore.CreateTables;
-const
-  Common = 'id varchar(32) primary key, updated_at varchar(32) not null, synced_at varchar(32) not null default '''', ' +
-    'dirty integer not null default 0, deleted integer not null default 0';
+procedure TSalonStore.CheckRecord(const Table: string; Data: TJSONObject);
+var
+  K: TSalonKind;
 begin
-  FDb.Exec('create table if not exists customers (' + Common + ', name varchar(200) not null, ' +
-    'phone varchar(50) not null default '''', email varchar(200) not null default '''', notes text)', []);
-  FDb.Exec('create table if not exists appointments (' + Common + ', customer_id varchar(32) not null, ' +
-    'starts_at varchar(16) not null, minutes integer not null default 30, service varchar(200) not null default '''', ' +
-    'price_cents bigint not null default 0, status varchar(20) not null default ''booked'')', []);
-  FDb.Exec('create table if not exists invoices (' + Common + ', customer_id varchar(32) not null, ' +
-    'number varchar(20) not null, issued_on varchar(10) not null, lines text, net_cents bigint not null default 0, ' +
-    'vat_rate integer not null default 20, vat_cents bigint not null default 0, ' +
-    'total_cents bigint not null default 0, paid integer not null default 0)', []);
+  for K := Low(TSalonKind) to High(TSalonKind) do
+    if KindTables[K] = Table then
+      Check(K, Data);
 end;
 
 procedure Invalid(const Msg: string; const Args: array of const);
@@ -217,189 +195,38 @@ begin
   end;
 end;
 
-{ every field of the kind from Data, in the order of Fields }
-function Values(const Names: TStringArray; Data: TJSONObject): TJSONArray;
-var
-  N: string;
-  V: TJSONData;
-begin
-  Result := TJSONArray.Create;
-  for N in Names do
-  begin
-    V := Data.Find(N);
-    if (V = nil) or (V.JSONType = jtNull) then
-      Result.Add(TJSONNull.Create)
-    else
-      Result.Add(V.Clone);
-  end;
-end;
-
-{ the values of a JSON array as an array of const for Pastel.Db }
-procedure Exec(Session: TDbSession; const SQL: string; Params: TJSONArray);
-var
-  V: array of TVarRec;
-  S: array of AnsiString;
-  I64: array of Int64;
-  I: Integer;
-begin
-  SetLength(V, Params.Count);
-  SetLength(S, Params.Count);
-  SetLength(I64, Params.Count);
-  for I := 0 to Params.Count - 1 do
-    case Params[I].JSONType of
-      jtNumber:
-        begin
-          I64[I] := Params[I].AsInt64;
-          V[I].VType := vtInt64;
-          V[I].VInt64 := @I64[I];
-        end;
-      jtBoolean:
-        begin
-          I64[I] := Ord(Params[I].AsBoolean);
-          V[I].VType := vtInt64;
-          V[I].VInt64 := @I64[I];
-        end;
-      jtNull:
-        begin
-          V[I].VType := vtPointer;
-          V[I].VPointer := nil;
-        end;
-    else
-      S[I] := Params[I].AsString;
-      V[I].VType := vtAnsiString;
-      V[I].VAnsiString := Pointer(S[I]);
-    end;
-  Session.Exec(SQL, V);
-end;
-
-procedure TSalonStore.Write(Session: TDbSession; Kind: TSalonKind; Data: TJSONObject; const Id: string;
-  Exists: Boolean);
-var
-  Names: TStringArray;
-  SQL, Marks: string;
-  I: Integer;
-  P: TJSONArray;
-begin
-  Names := Fields(Kind);
-  Names := Concat(Names, ['updated_at', 'synced_at', 'dirty', 'deleted']);
-  P := Values(Names, Data);
-  try
-    if Exists then
-    begin
-      SQL := 'update ' + KindTables[Kind] + ' set ';
-      for I := 0 to High(Names) do
-      begin
-        if I > 0 then SQL := SQL + ', ';
-        SQL := SQL + Names[I] + ' = ?';
-      end;
-      SQL := SQL + ' where id = ?';
-      P.Add(Id);
-    end
-    else
-    begin
-      SQL := 'insert into ' + KindTables[Kind] + ' (id';
-      Marks := '?';
-      for I := 0 to High(Names) do
-      begin
-        SQL := SQL + ', ' + Names[I];
-        Marks := Marks + ', ?';
-      end;
-      SQL := SQL + ') values (' + Marks + ')';
-      P.Insert(0, TJSONString.Create(Id));
-    end;
-    Exec(Session, SQL, P);
-  finally
-    P.Free;
-  end;
-end;
-
-{ the values a new record has when they are not given }
-procedure AddDefaults(Kind: TSalonKind; Data: TJSONObject);
-
-  procedure Default(const Name: string; Value: TJSONData);
-  begin
-    if (Data.Find(Name) = nil) or (Data.Find(Name).JSONType = jtNull) then
-      Data.Elements[Name] := Value
-    else
-      Value.Free;
-  end;
-
-begin
-  case Kind of
-    skCustomer:
-      begin
-        Default('phone', TJSONString.Create(''));
-        Default('email', TJSONString.Create(''));
-        Default('notes', TJSONString.Create(''));
-      end;
-    skAppointment:
-      begin
-        Default('minutes', TJSONIntegerNumber.Create(30));
-        Default('service', TJSONString.Create(''));
-        Default('price_cents', TJSONInt64Number.Create(0));
-        Default('status', TJSONString.Create('booked'));
-      end;
-    skInvoice:
-      begin
-        Default('lines', TJSONString.Create('[]'));
-        Default('net_cents', TJSONInt64Number.Create(0));
-        Default('vat_rate', TJSONIntegerNumber.Create(20));
-        Default('vat_cents', TJSONInt64Number.Create(0));
-        Default('total_cents', TJSONInt64Number.Create(0));
-        Default('paid', TJSONIntegerNumber.Create(0));
-      end;
-  end;
-end;
-
 function TSalonStore.Get(Kind: TSalonKind; const Id: string): TJSONObject;
 begin
-  Result := FDb.QueryOne('select * from ' + KindTables[Kind] + ' where id = ? and deleted = 0', [Id]);
+  Result := FSync.Get(KindTables[Kind], Id);
 end;
 
 function TSalonStore.Save(Kind: TSalonKind; Data: TJSONObject): string;
 var
-  Old, Merged: TJSONObject;
-  I: Integer;
+  D: TJSONObject;
 begin
-  Result := JStr(Data, 'id');
-  Old := nil;
-  if Result <> '' then
-    Old := FDb.QueryOne('select * from ' + KindTables[Kind] + ' where id = ?', [Result]);
-  { the stored record with the new values over it }
-  if Old <> nil then
-    Merged := Old
-  else
-    Merged := TJSONObject.Create;
+  D := TJSONObject(Data.Clone);
   try
-    for I := 0 to Data.Count - 1 do
-      Merged.Elements[Data.Names[I]] := Data.Items[I].Clone;
-    if Old = nil then
-      AddDefaults(Kind, Merged);
-    if Kind = skCustomer then
-    begin
-      Merged.Strings['name'] := Trim(JStr(Merged, 'name'));
-      Merged.Strings['email'] := Trim(JStr(Merged, 'email'));
+    { the salon's own tidying; checks, ids and stamps are Pastel.Sync's }
+    if (Kind = skCustomer) and (D.Find('name') <> nil) then
+      D.Strings['name'] := Trim(JStr(D, 'name'));
+    if (Kind = skCustomer) and (D.Find('email') <> nil) then
+      D.Strings['email'] := Trim(JStr(D, 'email'));
+    if (Kind = skAppointment) and (JStr(D, 'id') = '') and (JStr(D, 'status') = '') then
+      D.Strings['status'] := 'booked';
+    try
+      Result := FSync.Save(KindTables[Kind], D);
+    except
+      on E: ESyncInvalid do
+        raise ESalonInvalid.Create(E.Message);
     end;
-    if (Kind = skAppointment) and (JStr(Merged, 'status') = '') then
-      Merged.Strings['status'] := 'booked';
-    Check(Kind, Merged);
-    if Result = '' then
-      Result := NewId;
-    Merged.Strings['updated_at'] := NowStamp;
-    Merged.Integers['dirty'] := 1;
-    if Merged.Find('deleted') = nil then
-      Merged.Integers['deleted'] := 0;
-    if Merged.Find('synced_at') = nil then
-      Merged.Strings['synced_at'] := '';
-    Write(FDb, Kind, Merged, Result, Old <> nil);
   finally
-    Merged.Free;
+    D.Free;
   end;
 end;
 
 procedure TSalonStore.Delete(Kind: TSalonKind; const Id: string);
 begin
-  FDb.Exec('update ' + KindTables[Kind] + ' set deleted = 1, dirty = 1, updated_at = ? where id = ?', [NowStamp, Id]);
+  FSync.Delete(KindTables[Kind], Id);
 end;
 
 function TSalonStore.List(Kind: TSalonKind; const Filter: string): TJSONArray;
@@ -496,110 +323,28 @@ end;
 
 function TSalonStore.Count(Kind: TSalonKind): Integer;
 begin
-  Result := FDb.QueryInt('select count(*) from ' + KindTables[Kind] + ' where deleted = 0', []);
+  Result := FSync.Count(KindTables[Kind]);
 end;
 
 function TSalonStore.Changes(const Since: string; Dirty: Boolean): TJSONObject;
-var
-  K: TSalonKind;
-  Rows: TJSONArray;
-  I: Integer;
 begin
-  Result := TJSONObject.Create;
-  for K := Low(TSalonKind) to High(TSalonKind) do
-  begin
-    if Dirty then
-      Rows := FDb.Query('select * from ' + KindTables[K] + ' where dirty = 1 order by updated_at', [])
-    else
-      Rows := FDb.Query('select * from ' + KindTables[K] + ' where synced_at > ? order by synced_at', [Since]);
-    { what only this side needs to know stays here }
-    for I := 0 to Rows.Count - 1 do
-    begin
-      Rows.Objects[I].Delete('dirty');
-      Rows.Objects[I].Delete('synced_at');
-      Rows.Objects[I].Delete('customer_name');
-    end;
-    Result.Add(KindTables[K], Rows);
-  end;
+  Result := FSync.Changes(Since, Dirty);
 end;
 
 function TSalonStore.Apply(Data: TJSONObject; Server: Boolean): Integer;
-var
-  K: TSalonKind;
-  Rows: TJSONArray;
-  R, Old: TJSONObject;
-  I: Integer;
-  Tx: TDbTransaction;
-  Stamp: string;
 begin
-  Result := 0;
-  Stamp := NowStamp;
-  Tx := FDb.BeginTransaction;
+  FSync.IsServer := Server;
   try
-    for K := Low(TSalonKind) to High(TSalonKind) do
-    begin
-      if not (Data.Find(KindTables[K]) is TJSONArray) then
-        Continue;
-      Rows := TJSONArray(Data.Find(KindTables[K]));
-      for I := 0 to Rows.Count - 1 do
-      begin
-        if not (Rows[I] is TJSONObject) then
-          Continue;
-        R := TJSONObject(Rows[I].Clone);
-        try
-          if (JStr(R, 'id') = '') or (JStr(R, 'updated_at') = '') then
-            raise ESalonInvalid.CreateFmt('a record of %s without id or updated_at', [KindTables[K]]);
-          AddDefaults(K, R);   { an older program may not send every field }
-          if JInt(R, 'deleted') = 0 then
-            Check(K, R);       { the other side may be an old or a broken program }
-          Old := Tx.QueryOne('select updated_at, dirty from ' + KindTables[K] + ' where id = ?', [JStr(R, 'id')]);
-          try
-            { the newer version wins; the same version again changes nothing }
-            if (Old <> nil) and (JStr(Old, 'updated_at') >= JStr(R, 'updated_at')) then
-              Continue;
-            if Server then
-              R.Strings['synced_at'] := Stamp
-            else
-              R.Strings['synced_at'] := '';
-            R.Integers['dirty'] := 0;
-            if R.Find('deleted') = nil then
-              R.Integers['deleted'] := 0;
-            Write(Tx, K, R, JStr(R, 'id'), Old <> nil);
-            Inc(Result);
-          finally
-            Old.Free;
-          end;
-        finally
-          R.Free;
-        end;
-      end;
-    end;
-    Tx.Commit;
-  finally
-    Tx.Free;
+    Result := FSync.Apply(Data);
+  except
+    on E: ESyncInvalid do
+      raise ESalonInvalid.Create(E.Message);
   end;
 end;
 
 procedure TSalonStore.MarkSent(Data: TJSONObject);
-var
-  K: TSalonKind;
-  Rows: TJSONArray;
-  I: Integer;
 begin
-  for K := Low(TSalonKind) to High(TSalonKind) do
-    if Data.Find(KindTables[K]) is TJSONArray then
-    begin
-      Rows := TJSONArray(Data.Find(KindTables[K]));
-      for I := 0 to Rows.Count - 1 do
-        FDb.Exec('update ' + KindTables[K] + ' set dirty = 0 where id = ? and updated_at = ?',
-          [JStr(Rows[I], 'id'), JStr(Rows[I], 'updated_at')]);
-    end;
+  FSync.MarkSent(Data);
 end;
-
-initialization
-  InitCriticalSection(StampLock);
-
-finalization
-  DoneCriticalSection(StampLock);
 
 end.

@@ -147,7 +147,7 @@ type
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
   end;
 
-  TImageFit = (ifContain, ifCover, ifStretch, ifCenter);
+  TImageFit = Pastel.UI.TImageFit;
 
   { A picture from a PNG, JPEG or BMP file. }
   TImage = class(TControl)

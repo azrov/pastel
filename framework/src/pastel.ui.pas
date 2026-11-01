@@ -17,6 +17,8 @@ uses
 type
   TAlignItems = (aiStretch, aiStart, aiCenter, aiEnd);
   TJustify = (jsStart, jsCenter, jsEnd, jsSpaceBetween);
+  { How a picture fills its place: Contain: all of it fits; Cover: fills, cut at the edges; Stretch; Center: real size. }
+  TImageFit = (ifContain, ifCover, ifStretch, ifCenter);
   TTextAlign = (taLeft, taCenter, taRight);
   { bsFlat: no background until the mouse is on it (tool bars). }
   TButtonStyle = (bsPrimary, bsSecondary, bsDanger, bsFlat);
@@ -138,7 +140,12 @@ type
     FJustify: TJustify;
     FColor, FBorderColor: TColor32;
     FRadius, FBorderWidth: Integer;
+    FBackgroundImage: string;
+    FBackgroundFit: TImageFit;
+    FBackground: TBitmap32;
     procedure SetGap(AValue: Integer);
+    procedure SetBackgroundImage(const AValue: string);
+    procedure SetBackgroundFit(AValue: TImageFit);
     procedure SetPadding(AValue: Integer);
     procedure SetAlign(AValue: TAlignItems);
     procedure SetJustify(AValue: TJustify);
@@ -153,7 +160,11 @@ type
     { The colors to paint with: Color/BorderColor, or the theme's for 0 in cards and forms. }
     function PaintColor: TColor32; virtual;
     function PaintBorderColor: TColor32; virtual;
+    { Draws BackgroundImage into R. }
+    procedure PaintBackground(C: TCanvas32; const R: TRectI);
   public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
     { True for TRow: children are placed left to right. }
     property Horizontal: Boolean read FRow;
   published
@@ -165,6 +176,9 @@ type
     property BorderColor: TColor32 read FBorderColor write SetBorderColor default 0;
     property BorderWidth: Integer read FBorderWidth write SetBorderWidth default 0;
     property Radius: Integer read FRadius write SetRadius default 0;
+    { A picture behind the children: a file in assets/, next to the program, or a full path. }
+    property BackgroundImage: string read FBackgroundImage write SetBackgroundImage;
+    property BackgroundFit: TImageFit read FBackgroundFit write SetBackgroundFit default ifCover;
   end;
 
   TColumn = class(TBox);
@@ -246,8 +260,11 @@ type
     FDefault, FCancel: Boolean;
     FAction: TBasicAction;
     FIcon: string;
+    FColor, FTextColor: TColor32;
     procedure SetText(const AValue: string);
     procedure SetIcon(const AValue: string);
+    procedure SetColor(AValue: TColor32);
+    procedure SetTextColor(AValue: TColor32);
     function IconSize: Integer;
     function GetIcon: string;
     procedure SetStyle(AValue: TButtonStyle);
@@ -268,6 +285,10 @@ type
   published
     property Text: string read FText write SetText;
     property Style: TButtonStyle read FStyle write SetStyle default bsPrimary;
+    { Any background color instead of the style's (hover and press shade it); 0: the style's. }
+    property Color: TColor32 read FColor write SetColor default 0;
+    { Any text and icon color; 0: the style's. }
+    property TextColor: TColor32 read FTextColor write SetTextColor default 0;
     { A built-in icon ('save', 'add', 'delete'...; see Pastel.Icons) before the text, or alone. }
     property Icon: string read FIcon write SetIcon;
     { A click runs the action (and Text, Enabled come from it when not set). }
@@ -294,7 +315,7 @@ type
     keyboard, clipboard, undo/redo, scrolling; TMemo adds lines and wrapping. }
   TCustomEdit = class(TControl)
   private
-    FText, FPlaceholder: string;
+    FText, FPlaceholder, FError, FHintBefore: string;
     FCaret, FAnchor: Integer;     { byte positions (1-based); the selection is between them }
     FScrollX, FScrollY: Integer;
     FDesiredX: Integer;
@@ -338,6 +359,7 @@ type
     function WordRight(P: Integer): Integer;
     function VerticalPos(P, Lines: Integer): Integer;
     procedure DoChange;
+    procedure SetError(const AValue: string);
   protected
     FMultiLine, FWordWrap, FReadOnly, FPassword: Boolean;
     FMaxLength: Integer;
@@ -373,6 +395,9 @@ type
     { At most this many bytes; 0: no limit. }
     property MaxLength: Integer read FMaxLength write FMaxLength default 0;
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
+    { A problem with the value ('Fill this in'): a red border, and the text
+      as a tooltip; typing clears it. TDataBinding.Validate sets it. }
+    property Error: string read FError write SetError;
   end;
 
   { One line of text. }
@@ -696,7 +721,7 @@ function NonVisualClassAt(Index: Integer): TComponentClass;
 implementation
 
 uses
-  Math, Pastel.Icons;
+  Math, Pastel.Icons, Pastel.Assets;
 
 var
   ControlClasses: TStringList = nil;
@@ -1576,6 +1601,92 @@ begin
   Result := FBorderColor;
 end;
 
+constructor TBox.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FBackgroundFit := ifCover;
+end;
+
+destructor TBox.Destroy;
+begin
+  FBackground.Free;
+  inherited Destroy;
+end;
+
+procedure TBox.SetBackgroundImage(const AValue: string);
+var
+  S: TStream;
+  Dir, F: string;
+begin
+  FBackgroundImage := AValue;
+  FreeAndNil(FBackground);
+  if AValue <> '' then
+  begin
+    FBackground := TBitmap32.Create;
+    try
+      Dir := ExtractFilePath(ParamStr(0));
+      F := '';
+      for F in [AValue, Dir + AValue, Dir + 'assets' + PathDelim + AValue, 'assets' + PathDelim + AValue] do
+        if FileExists(F) then
+          Break;
+      if FileExists(F) then
+        FBackground.LoadFromFile(F)
+      else if AssetExists(AValue) then
+      begin
+        S := OpenAsset(AValue);
+        try
+          FBackground.LoadFromStream(S);
+        finally
+          S.Free;
+        end;
+      end
+      else
+        FreeAndNil(FBackground);
+    except
+      FreeAndNil(FBackground);      { a picture that cannot be read is not drawn }
+    end;
+  end;
+  Invalidate;
+end;
+
+procedure TBox.SetBackgroundFit(AValue: TImageFit);
+begin
+  FBackgroundFit := AValue;
+  Invalidate;
+end;
+
+procedure TBox.PaintBackground(C: TCanvas32; const R: TRectI);
+var
+  Scale: Double;
+  W, H: Integer;
+begin
+  if (FBackground <> nil) and not FBackground.Empty and (R.W > 0) and (R.H > 0) then
+  begin
+    case FBackgroundFit of
+      ifStretch:
+        begin
+          W := R.W;
+          H := R.H;
+        end;
+      ifCenter:
+        begin
+          W := FBackground.Width;
+          H := FBackground.Height;
+        end;
+    else
+      if FBackgroundFit = ifCover then
+        Scale := Math.Max(R.W / FBackground.Width, R.H / FBackground.Height)
+      else
+        Scale := Math.Min(R.W / FBackground.Width, R.H / FBackground.Height);
+      W := Math.Max(1, Round(FBackground.Width * Scale));
+      H := Math.Max(1, Round(FBackground.Height * Scale));
+    end;
+    C.PushClip(R);
+    C.DrawBitmap(FBackground, R.X + (R.W - W) div 2, R.Y + (R.H - H) div 2, W, H);
+    C.PopClip;
+  end;
+end;
+
 procedure TBox.Paint(C: TCanvas32);
 var
   Col, Bor: TColor32;
@@ -1584,6 +1695,7 @@ begin
   Bor := PaintBorderColor;
   if (Cardinal(Col) shr 24) > 0 then
     C.FillRoundRect(Bounds.X, Bounds.Y, Bounds.W, Bounds.H, FRadius, Col);
+  PaintBackground(C, Bounds);
   if (FBorderWidth > 0) and ((Cardinal(Bor) shr 24) > 0) then
     C.StrokeRoundRect(Bounds.X, Bounds.Y, Bounds.W, Bounds.H, FRadius, FBorderWidth, Bor);
   { a little extra room so children's focus rings are not cut off }
@@ -1995,6 +2107,14 @@ begin
     else Bg := Theme.Accent;
     Fg := Theme.OnAccent;
   end;
+  if (Cardinal(FColor) shr 24) > 0 then
+  begin
+    if IsPressed then Bg := Mix(FColor, $FF000000, 0.25)
+    else if IsHovered then Bg := Mix(FColor, $FF000000, 0.12)
+    else Bg := FColor;
+  end;
+  if (Cardinal(FTextColor) shr 24) > 0 then
+    Fg := FTextColor;
   if not IsEnabled then
   begin
     if FStyle <> bsFlat then
@@ -2022,6 +2142,18 @@ begin
     DrawIcon(C, GetIcon, X, Bounds.Y + (Bounds.H - IS_) div 2, IS_, Fg);
   C.DrawText(F, X + IW, Bounds.Y + (Bounds.H - F.LineHeight) div 2, S, Fg);
   C.PopClip;
+end;
+
+procedure TButton.SetColor(AValue: TColor32);
+begin
+  FColor := AValue;
+  Invalidate;
+end;
+
+procedure TButton.SetTextColor(AValue: TColor32);
+begin
+  FTextColor := AValue;
+  Invalidate;
 end;
 
 function TButton.Focusable: Boolean;
@@ -2586,6 +2718,7 @@ begin
   NeedsRepaint := False;
   NeedsPartialRepaint := False;
   C.Clear(PaintColor);
+  PaintBackground(C, RectI(0, 0, FWidthPx, FHeightPx));
   PaintChildren(C);
   for I := 0 to FPopups.Count - 1 do
   begin

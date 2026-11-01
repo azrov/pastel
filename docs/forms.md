@@ -94,7 +94,9 @@ With the Pastel extension, open a `.pform` file and press the designer button in
 - drag controls to move them: the orange line shows where the control will go (between other controls, or into a row, column or card)
 - drag new controls in from the toolbox, or click one to add it after the selected control
 - `Delete` removes the selected control; `Ctrl+C`, `Ctrl+X`, `Ctrl+V` and `Ctrl+D` (duplicate) copy controls, with new names when a name is taken
-- `F2` or the name at the top of the properties panel renames a control, and the form's `.pas` code is renamed with it
+- `F2` or the **Name** row at the top of the properties panel renames a control, and the form's `.pas` code is renamed with it
+- a property the `.pform` does not set shows its default (`Enabled` and `Visible` are ticked, `Style` says *(default: Primary)*); choosing the default again removes the line from the `.pform`
+- `BackgroundImage` and the `FileName` of a picture offer the pictures in `assets/`
 - `Ctrl+Z` / `Ctrl+Y` undo and redo designer changes (every change is also an ordinary edit of the `.pform` text)
 - the size box shows the form at phone, tablet and desktop sizes; *Dark* shows it in the dark theme
 - `Ctrl+click` selects several controls: change a property of all of them at once (`Style = Secondary` for three buttons), delete, copy or cut them together

@@ -10,6 +10,16 @@
     PersonData.Save(Row);            // name, email, active, age_years
     if PersonData.Modified then ...
 
+  Rules check the values before they are saved:
+
+    object PersonData: TDataBinding
+      Fields = ('NameEdit', 'EmailEdit', 'AgeEdit')
+      Rules = ('NameEdit=required', 'EmailEdit=email', 'AgeEdit=number, range 0..120')
+      ErrorLabel = ProblemLabel
+    end
+
+    if not PersonData.Validate then Exit;      // the first wrong control is focused
+
   'NameEdit' alone binds the field 'name' (the name without the control's
   kind, in snake_case: FullNameEdit -> full_name). An edit or memo shows the
   value as text, a check box or switch a boolean, a slider or progress bar
@@ -29,11 +39,23 @@ uses
 type
   EBindingError = class(Exception);
 
+  { A check of one's own: set Message to what is wrong ('' when it is fine). }
+  TValidateEvent = procedure(Sender: TObject; Control: TControl; const Value: string;
+    var Message: string) of object;
+
   TDataBinding = class(TComponent)
   private
     FFields: TStringList;
+    FRules: TStringList;
+    FProblems: TStringList;
+    FErrorLabel: TControl;
+    FOnValidate: TValidateEvent;
     FSnapshot: string;
     FOnLoad: TNotifyEvent;
+    function GetRules: TStrings;
+    procedure SetRules(AValue: TStrings);
+    procedure SetErrorLabel(AValue: TControl);
+    function CheckRules(Control: TControl; const Rules, Value: string): string;
     function GetFields: TStrings;
     procedure SetFields(AValue: TStrings);
     function GetModified: Boolean;
@@ -68,7 +90,21 @@ type
     procedure MarkSaved;
     { The user changed a value since the last Load or MarkSaved. }
     property Modified: Boolean read GetModified;
+    { Checks every control that has Rules (and OnValidate): the wrong ones
+      get a red border and the problem as their tooltip, the first one the
+      focus, and ErrorLabel its message. False when something is wrong. }
+    function Validate: Boolean;
+    { After Validate: ControlName=message for every problem. }
+    property Problems: TStringList read FProblems;
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   published
+    { 'ControlName=rule, rule', one per control: required, email, number,
+      integer, range 1..10, min 3 (characters), max 50, pattern ^[A-Z]{2}\d+$
+      (last, as it may have commas). }
+    property Rules: TStrings read GetRules write SetRules;
+    { A label that shows the first problem (and is emptied when all is fine). }
+    property ErrorLabel: TControl read FErrorLabel write SetErrorLabel;
+    property OnValidate: TValidateEvent read FOnValidate write FOnValidate;
     { 'ControlName' or 'ControlName=field', one per line. }
     property Fields: TStrings read GetFields write SetFields;
     property OnLoad: TNotifyEvent read FOnLoad write FOnLoad;
@@ -80,7 +116,7 @@ function FieldFromControlName(const Name: string): string;
 implementation
 
 uses
-  TypInfo, Variants, Pastel.Controls, Pastel.Grids;
+  TypInfo, Variants, RegExpr, Pastel.Controls, Pastel.Grids, Pastel.Lang;
 
 const
   Kinds: array[0..21] of string = ('CheckBox', 'ComboBox', 'ListBox', 'ListView', 'TreeView', 'Edit', 'Memo',
@@ -111,11 +147,15 @@ end;
 constructor TDataBinding.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  FRules := TStringList.Create;
+  FProblems := TStringList.Create;
   FFields := TStringList.Create;
 end;
 
 destructor TDataBinding.Destroy;
 begin
+  FRules.Free;
+  FProblems.Free;
   FFields.Free;
   inherited Destroy;
 end;
@@ -429,6 +469,152 @@ begin
   MarkSaved;
 end;
 
+{ ---- checking ---- }
+
+function TDataBinding.GetRules: TStrings;
+begin
+  Result := FRules;
+end;
+
+procedure TDataBinding.SetRules(AValue: TStrings);
+begin
+  FRules.Assign(AValue);
+end;
+
+procedure TDataBinding.SetErrorLabel(AValue: TControl);
+begin
+  if FErrorLabel <> nil then
+    FErrorLabel.RemoveFreeNotification(Self);
+  FErrorLabel := AValue;
+  if AValue <> nil then
+    AValue.FreeNotification(Self);
+end;
+
+procedure TDataBinding.Notification(AComponent: TComponent; Operation: TOperation);
+begin
+  inherited Notification(AComponent, Operation);
+  if (Operation = opRemove) and (AComponent = FErrorLabel) then
+    FErrorLabel := nil;
+end;
+
+function TDataBinding.CheckRules(Control: TControl; const Rules, Value: string): string;
+var
+  Rule, RuleName, Arg, V: string;
+  Parts: TStringArray;
+  I, P: Integer;
+  N, Lo, Hi: Double;
+  Rest: string;
+begin
+  Result := '';
+  V := Trim(Value);
+  { a pattern takes the rest of the line (it may have commas) }
+  Rest := Rules;
+  P := Pos('pattern ', LowerCase(Rest));
+  Arg := '';
+  if P > 0 then
+  begin
+    Arg := Trim(Copy(Rest, P + 8, MaxInt));
+    Rest := Copy(Rest, 1, P - 1);
+  end;
+  Parts := Rest.Split([',']);
+  for I := 0 to High(Parts) do
+  begin
+    Rule := Trim(Parts[I]);
+    if Rule = '' then
+      Continue;
+    RuleName := LowerCase(Rule);
+    P := Pos(' ', RuleName);
+    if P > 0 then
+    begin
+      Rule := Trim(Copy(Rule, P + 1, MaxInt));
+      RuleName := Copy(RuleName, 1, P - 1);
+    end
+    else
+      Rule := '';
+    if RuleName = 'required' then
+    begin
+      if V = '' then
+        Exit(_('Fill this in'));
+      Continue;
+    end;
+    if V = '' then
+      Continue;               { the other rules are for values that are there }
+    case RuleName of
+      'email':
+        if (Pos('@', V) < 2) or (Pos('.', Copy(V, Pos('@', V), MaxInt)) = 0) or (Pos(' ', V) > 0) then
+          Exit(_('This is not an e-mail address'));
+      'number':
+        if not TryParseNumber(V, N) then
+          Exit(_('This is not a number'));
+      'integer':
+        if not TryStrToInt(V, P) then
+          Exit(_('This is not a whole number'));
+      'range':
+        begin
+          Lo := 0;
+          Hi := 0;
+          P := Pos('..', Rule);
+          if (P = 0) or not TryParseNumber(Copy(Rule, 1, P - 1), Lo) or
+             not TryParseNumber(Copy(Rule, P + 2, MaxInt), Hi) then
+            raise EBindingError.CreateFmt('%s: "range %s" is not a range like "range 1..10"', [Control.Name, Rule]);
+          if not TryParseNumber(V, N) then
+            Exit(_('This is not a number'));
+          if (N < Lo) or (N > Hi) then
+            Exit(Format(_('Give a number from %s to %s'), [Trim(Copy(Rule, 1, P - 1)), Trim(Copy(Rule, P + 2, MaxInt))]));
+        end;
+      'min':
+        if Length(UTF8Decode(V)) < StrToIntDef(Rule, 0) then
+          Exit(Format(_('At least %d characters'), [StrToIntDef(Rule, 0)]));
+      'max':
+        if Length(UTF8Decode(V)) > StrToIntDef(Rule, MaxInt) then
+          Exit(Format(_('At most %d characters'), [StrToIntDef(Rule, 0)]));
+    else
+      raise EBindingError.CreateFmt('%s: unknown rule "%s" (required, email, number, integer, range, min, max, pattern)',
+        [Control.Name, RuleName]);
+    end;
+  end;
+  if (Arg <> '') and (V <> '') and not ExecRegExpr(Arg, V) then
+    Exit(_('This is not in the right form'));
+end;
+
+function TDataBinding.Validate: Boolean;
+var
+  I: Integer;
+  C: TControl;
+  Msg, Value: string;
+  First: TControl;
+begin
+  FProblems.Clear;
+  First := nil;
+  for I := 0 to FFields.Count - 1 do
+  begin
+    if Trim(FFields[I]) = '' then
+      Continue;
+    C := ControlOf(I);
+    Value := GetValue(C);
+    Msg := CheckRules(C, FRules.Values[C.Name], Value);
+    if (Msg = '') and Assigned(FOnValidate) then
+      FOnValidate(Self, C, Value, Msg);
+    if C is TCustomEdit then
+      TCustomEdit(C).Error := Msg;
+    if Msg <> '' then
+    begin
+      FProblems.Add(C.Name + '=' + Msg);
+      if First = nil then
+        First := C;
+    end;
+  end;
+  Result := First = nil;
+  if FErrorLabel is TLabel then
+    if First <> nil then
+      TLabel(FErrorLabel).Text := FProblems.ValueFromIndex[0]
+    else
+      TLabel(FErrorLabel).Text := '';
+  if First <> nil then
+    First.SetFocus;
+end;
+
 initialization
   RegisterNonVisual(TDataBinding);
+
 end.

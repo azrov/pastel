@@ -9,7 +9,7 @@ Controls, layout and input handling.
 
 `uses Pastel.UI;` · source: [framework/src/pastel.ui.pas](../../framework/src/pastel.ui.pas)
 
-**Contents:** [TAlignItems](#talignitems) · [TJustify](#tjustify) · [TTextAlign](#ttextalign) · [TButtonStyle](#tbuttonstyle) · [TCursorKind](#tcursorkind) · [TWindowState](#twindowstate) · [TThemeMode](#tthememode) · [TControl](#tcontrol) · [TAction](#taction) · [TBox](#tbox) · [TColumn](#tcolumn) · [TRow](#trow) · [TFlow](#tflow) · [TCard](#tcard) · [TSpacer](#tspacer) · [TLabel](#tlabel) · [TButton](#tbutton) · [TEditState](#teditstate) · [TVisualLine](#tvisualline) · [TCustomEdit](#tcustomedit) · [TEdit](#tedit) · [TMemo](#tmemo) · [TPopup](#tpopup) · [TTimer](#ttimer) · [TForm](#tform) · [TTheme](#ttheme) · [UseDarkTheme](#usedarktheme) · [SetThemeValue](#setthemevalue) · [InvalidateArea](#invalidatearea) · [RequestAnimation](#requestanimation) · [AnimationTime](#animationtime) · [RequestAnimation](#requestanimation) · [ProcessTimers](#processtimers) · [WrapText](#wraptext) · [RegisterControl](#registercontrol) · [FindControlClass](#findcontrolclass) · [ControlClassCount](#controlclasscount) · [ControlClassAt](#controlclassat) · [RegisterNonVisual](#registernonvisual) · [FindNonVisualClass](#findnonvisualclass) · [NonVisualClassCount](#nonvisualclasscount) · [NonVisualClassAt](#nonvisualclassat)
+**Contents:** [TAlignItems](#talignitems) · [TJustify](#tjustify) · [TImageFit](#timagefit) · [TTextAlign](#ttextalign) · [TButtonStyle](#tbuttonstyle) · [TCursorKind](#tcursorkind) · [TWindowState](#twindowstate) · [TThemeMode](#tthememode) · [TControl](#tcontrol) · [TAction](#taction) · [TBox](#tbox) · [TColumn](#tcolumn) · [TRow](#trow) · [TFlow](#tflow) · [TCard](#tcard) · [TSpacer](#tspacer) · [TLabel](#tlabel) · [TButton](#tbutton) · [TEditState](#teditstate) · [TVisualLine](#tvisualline) · [TCustomEdit](#tcustomedit) · [TEdit](#tedit) · [TMemo](#tmemo) · [TPopup](#tpopup) · [TTimer](#ttimer) · [TForm](#tform) · [TTheme](#ttheme) · [UseDarkTheme](#usedarktheme) · [SetThemeValue](#setthemevalue) · [InvalidateArea](#invalidatearea) · [RequestAnimation](#requestanimation) · [AnimationTime](#animationtime) · [RequestAnimation](#requestanimation) · [ProcessTimers](#processtimers) · [WrapText](#wraptext) · [RegisterControl](#registercontrol) · [FindControlClass](#findcontrolclass) · [ControlClassCount](#controlclasscount) · [ControlClassAt](#controlclassat) · [RegisterNonVisual](#registernonvisual) · [FindNonVisualClass](#findnonvisualclass) · [NonVisualClassCount](#nonvisualclasscount) · [NonVisualClassAt](#nonvisualclassat)
 
 ## Types
 
@@ -33,6 +33,18 @@ type TJustify = (jsStart, jsCenter, jsEnd, jsSpaceBetween)
 - `jsCenter`
 - `jsEnd`
 - `jsSpaceBetween`
+### TImageFit
+
+```pascal
+type TImageFit = (ifContain, ifCover, ifStretch, ifCenter)
+```
+
+How a picture fills its place: Contain: all of it fits; Cover: fills, cut at the edges; Stretch; Center: real size.
+
+- `ifContain` How a picture fills its place: Contain: all of it fits; Cover: fills, cut at the edges; Stretch; Center: real size.
+- `ifCover` How a picture fills its place: Contain: all of it fits; Cover: fills, cut at the edges; Stretch; Center: real size.
+- `ifStretch` How a picture fills its place: Contain: all of it fits; Cover: fills, cut at the edges; Stretch; Center: real size.
+- `ifCenter` How a picture fills its place: Contain: all of it fits; Cover: fills, cut at the edges; Stretch; Center: real size.
 ### TTextAlign
 
 ```pascal
@@ -146,6 +158,8 @@ A container that stacks its children vertically or horizontally.
 
 | | |
 |---|---|
+| `constructor Create(AOwner: TComponent)` |  |
+| `destructor Destroy` |  |
 | `property Horizontal: Boolean` | True for TRow: children are placed left to right. |
 | `property Gap: Integer` |  |
 | `property Padding: Integer` |  |
@@ -155,6 +169,8 @@ A container that stacks its children vertically or horizontally.
 | `property BorderColor: TColor32` |  |
 | `property BorderWidth: Integer` |  |
 | `property Radius: Integer` |  |
+| `property BackgroundImage: string` | A picture behind the children: a file in assets/, next to the program, or a full path. |
+| `property BackgroundFit: TImageFit` |  |
 
 ### TColumn
 
@@ -241,6 +257,8 @@ type TButton = class(TControl)
 | `procedure Click` |  |
 | `property Text: string` |  |
 | `property Style: TButtonStyle` |  |
+| `property Color: TColor32` | Any background color instead of the style's (hover and press shade it); 0: the style's. |
+| `property TextColor: TColor32` | Any text and icon color; 0: the style's. |
 | `property Icon: string` | A built-in icon ('save', 'add', 'delete'...; see Pastel.Icons) before the text, or alone. |
 | `property Action: TBasicAction` | A click runs the action (and Text, Enabled come from it when not set). |
 | `property ModalResult: Integer` | In a dialog: a click closes it with this result (mrOk, mrCancel...). |
@@ -301,6 +319,7 @@ keyboard, clipboard, undo/redo, scrolling; TMemo adds lines and wrapping.
 | `property ReadOnly: Boolean` |  |
 | `property MaxLength: Integer` | At most this many bytes; 0: no limit. |
 | `property OnChange: TNotifyEvent` |  |
+| `property Error: string` | A problem with the value ('Fill this in'): a red border, and the text as a tooltip; typing clears it. TDataBinding.Validate sets it. |
 
 ### TEdit
 

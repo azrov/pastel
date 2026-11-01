@@ -366,6 +366,16 @@ out="$("$PASTEL" add hi --git "$PK/extras" --path greet --branch master 2>&1)"
 expect "a package from a git branch"       'grep -q "^hi = { git = \".*extras\", path = \"greet\", branch = \"master\" }$" pastel.toml'
 unset PASTEL_CACHE PASTEL_REGISTRY
 
+# --- pastel new model: a table, its migration, a unit and tests ---
+cd "$WORK" && rm -rf shop-model && "$PASTEL" new api shop-model >/dev/null && cd shop-model
+out="$("$PASTEL" new model Customer name:string! email:string age:integer active:boolean balance:money 2>&1)"
+expect "new model writes three files"       '[ -f database/migrations/002_create_customers.sql ] && [ -f src/models/customers.pas ] && [ -f tests/customers_test.pas ]'
+expect "the migration has the columns"      'grep -q "balance decimal(14,2) not null default 0" database/migrations/002_create_customers.sql'
+out="$("$PASTEL" test 2>&1)"
+expect "the model's tests pass"             'echo "$out" | grep -q "^Customers" && echo "$out" | grep -q "Tests: 7 passed"'
+set +e; out="$("$PASTEL" new model Thing size:huge 2>&1)"; code=$?; set -e
+expect "an unknown field type is explained" '[ "$code" = 1 ] && echo "$out" | grep -q "unknown type \"huge\""'
+
 # --- the debugger shows values readably (vscode/gdb/pastel.py) ---
 if command -v gdb >/dev/null 2>&1; then
   cd "$WORK" && rm -rf dbg && "$PASTEL" new console dbg >/dev/null && cd dbg

@@ -15,7 +15,6 @@ type
   private
     FStore: TSalonStore;
     FShop: string;
-    procedure Sync(Req: TWebRequest; Res: TWebResponse);
     procedure Customers(Req: TWebRequest; Res: TWebResponse);
     procedure Appointments(Req: TWebRequest; Res: TWebResponse);
     procedure Invoices(Req: TWebRequest; Res: TWebResponse);
@@ -30,7 +29,7 @@ type
 implementation
 
 uses
-  Pastel.Json, Pastel.Log, Pastel.Report, Pastel.Sheets, SalonPrint;
+  Pastel.Json, Pastel.Log, Pastel.Report, Pastel.Sheets, Pastel.SyncWeb, SalonPrint;
 
 constructor TSalonController.Create(AStore: TSalonStore; const Shop: string);
 begin
@@ -41,43 +40,14 @@ end;
 
 procedure TSalonController.Routes(Web: TWebServer);
 begin
-  Web.Post('/api/sync', @Sync);
+  { POST /api/sync: the desktops' synchronization, all of it Pastel.Sync's }
+  FStore.Sync.IsServer := True;
+  AddSyncRoute(Web, FStore.Sync);
   Web.Get('/api/customers', @Customers);
   Web.Get('/api/appointments', @Appointments);
   Web.Get('/api/invoices', @Invoices);
   Web.Get('/api/invoices.xlsx', @InvoicesXlsx);
   Web.Get('/api/invoices/:id/pdf', @InvoicePdf);
-end;
-
-(* POST /api/sync  {"since": "<the server's time of the last sync>", "changes": {...}}
-   -> {"now": "...", "applied": 3, "changes": {what changed here since "since"}} *)
-procedure TSalonController.Sync(Req: TWebRequest; Res: TWebResponse);
-var
-  Body, Answer, Theirs: TJSONObject;
-  Now_, Since: string;
-  Applied: Integer;
-begin
-  Body := Req.JsonObject;
-  if not (Body.Find('changes') is TJSONObject) then
-    raise EWebError.Create(422, 'changes is required (an object with customers, appointments, invoices)');
-  Since := JStr(Body, 'since');
-  { the time before taking anything: what other computers send meanwhile
-    comes with the next sync }
-  Now_ := NowStamp;
-  try
-    Applied := FStore.Apply(TJSONObject(Body.Find('changes')), True);
-  except
-    on E: ESalonInvalid do
-      raise EWebError.Create(422, E.Message);
-  end;
-  Theirs := FStore.Changes(Since, False);
-  Answer := TJSONObject.Create;
-  Answer.Strings['now'] := Now_;
-  Answer.Integers['applied'] := Applied;
-  Answer.Add('changes', Theirs);
-  Log.Info('sync from %s: %d record(s) taken, %d sent back', [Req.ClientIP, Applied,
-    Theirs.Arrays['customers'].Count + Theirs.Arrays['appointments'].Count + Theirs.Arrays['invoices'].Count]);
-  Res.Json(Answer);
 end;
 
 { the rows without what only the sync needs }

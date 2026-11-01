@@ -6,7 +6,7 @@ More controls: check boxes, radio buttons, switches, lists,
 
 `uses Pastel.Controls;` · source: [framework/src/pastel.controls.pas](../../framework/src/pastel.controls.pas)
 
-**Contents:** [TCheckBox](#tcheckbox) · [TRadioButton](#tradiobutton) · [TSwitch](#tswitch) · [TListBox](#tlistbox) · [TComboBox](#tcombobox) · [TImageFit](#timagefit) · [TImage](#timage) · [TScrollBox](#tscrollbox) · [TTabSheet](#ttabsheet) · [TTabControl](#ttabcontrol) · [TProgressBar](#tprogressbar) · [TSlider](#tslider) · [TSpinner](#tspinner) · [TSplitter](#tsplitter) · [TToolBar](#ttoolbar) · [TStatusBar](#tstatusbar) · [FindAppFile](#findappfile)
+**Contents:** [TCheckBox](#tcheckbox) · [TRadioButton](#tradiobutton) · [TSwitch](#tswitch) · [TListBox](#tlistbox) · [TComboBox](#tcombobox) · [TImage](#timage) · [TScrollBox](#tscrollbox) · [TTabSheet](#ttabsheet) · [TTabControl](#ttabcontrol) · [TProgressBar](#tprogressbar) · [TSlider](#tslider) · [TSpinner](#tspinner) · [TSplitter](#tsplitter) · [TToolBar](#ttoolbar) · [TStatusBar](#tstatusbar) · [FindAppFile](#findappfile)
 
 ## Types
 
@@ -86,16 +86,6 @@ A drop-down list.
 | `property Placeholder: string` | Shown when nothing is chosen. |
 | `property OnChange: TNotifyEvent` |  |
 
-### TImageFit
-
-```pascal
-type TImageFit = (ifContain, ifCover, ifStretch, ifCenter)
-```
-
-- `ifContain`
-- `ifCover`
-- `ifStretch`
-- `ifCenter`
 ### TImage
 
 ```pascal
@@ -249,6 +239,12 @@ them pushes the next ones to the right).
 |---|---|
 | `constructor Create(AOwner: TComponent)` |  |
 | `property Text: string` |  |
+
+## Other types
+
+| | |
+|---|---|
+| `type TImageFit = Pastel.UI.TImageFit` |  |
 
 ## Routines
 

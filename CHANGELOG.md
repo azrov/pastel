@@ -2,6 +2,22 @@
 
 The `pastel` tool and the framework. The VS Code extension has its own list: [vscode/CHANGELOG.md](vscode/CHANGELOG.md). What is planned is in [ROADMAP.md](ROADMAP.md).
 
+## 1.3.0
+
+Data made easier.
+
+- `Pastel.Sync`: data that works offline — a SQLite file on every computer, synced with the server (ids made where records are made, the newer change wins, deletions travel); `Pastel.SyncWeb`: the server's route. The salon example runs on it
+- `Pastel.Auth`: users, passwords (PBKDF2) and roles; login, refresh and logout routes; `RequireRole`; `TAuthClient` for apps; `LoginDialog`
+- `pastel new model Customer name:string! email:string age:integer`: a migration, a model unit and its tests
+- Backups: `TDatabase.Backup`, `BackupTo(Dir, Keep)`, `Restore` for SQLite, PostgreSQL and MySQL
+- `TDataBinding.Rules` and `Validate`: required, email, number, integer, range, min, max, pattern; `OnValidate`; wrong edits get a red border (`TEdit.Error`)
+- Built-in translations of the new messages in 11 languages
+- `BackgroundImage` and `BackgroundFit` for forms, cards, rows and columns
+- Buttons in any color: `TButton.Color` and `TextColor`
+- New forms have `Pastel.Dialogs` in their `uses`, so `ShowMessage`, `MessageDlg` and `InputBox` work at once; when an everyday routine (`ShowMessage`, `IntToStr`, `TStringList`, `Min`...) is missing, `pastel build` says which unit has it
+- The designer schema tells each property's default
+- Documentation: [docs/sync.md](docs/sync.md), [docs/auth.md](docs/auth.md); models and backups in [docs/database.md](docs/database.md)
+
 ## 1.2.0
 
 Everyday desktop comfort.

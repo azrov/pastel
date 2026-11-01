@@ -728,18 +728,21 @@ async function addHandler(pformUri: vscode.Uri, name: string, params?: string): 
     vscode.window.showErrorMessage(`Pastel: ${path.basename(pasUri.fsPath)} was not found next to the .pform file.`);
     return;
   }
-  const inserts = handlerInserts(pasDoc.getText(), name, params);
+  // it is there already (a second double-click): only show it
+  const inserts = findProcedure(pasDoc.getText(), name) ? [] : handlerInserts(pasDoc.getText(), name, params);
   if (!inserts) {
     vscode.window.showErrorMessage('Pastel: could not find the form class (T...Form = class(T...FormBase)) in ' +
       path.basename(pasUri.fsPath));
     return;
   }
-  const edit = new vscode.WorkspaceEdit();
-  for (const ins of inserts) {
-    edit.insert(pasUri, new vscode.Position(ins.line, 0), ins.text);
+  if (inserts.length) {
+    const edit = new vscode.WorkspaceEdit();
+    for (const ins of inserts) {
+      edit.insert(pasUri, new vscode.Position(ins.line, 0), ins.text);
+    }
+    await vscode.workspace.applyEdit(edit);
+    await pasDoc.save();
   }
-  await vscode.workspace.applyEdit(edit);
-  await pasDoc.save();
   const editor = await vscode.window.showTextDocument(pasDoc, vscode.ViewColumn.Active);
   const pos = findProcedure(pasDoc.getText(), name);
   if (pos) {

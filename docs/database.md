@@ -146,6 +146,76 @@ end;
 
 The model's tests use a fresh SQLite file per test (`tests/tasks_test.pas`).
 
+**`pastel new model`** writes a model for a new table — its migration, the unit and its tests — from a list of fields:
+
+```sh
+pastel new model Customer name:string! email:string age:integer active:boolean balance:money born:date
+```
+
+```
+     Created database/migrations/002_create_customers.sql
+     Created src/models/customers.pas
+     Created tests/customers_test.pas
+```
+
+| Type | SQL | Pascal |
+|---|---|---|
+| `string` | `varchar(200)` | `string` |
+| `text` | `text` | `string` |
+| `integer`, `bigint` | `integer`, `bigint` | `Integer`, `Int64` |
+| `number` | `double precision` | `Double` |
+| `money` | `decimal(14,2)` | `Currency` |
+| `boolean` | `integer` (0/1) | `Boolean` |
+| `date`, `datetime` | text (`2026-11-03`, `2026-11-03 09:30:00`) | `string` |
+
+`!` after the type makes the field required (`TCustomer.Check` refuses it empty). The unit has `TCustomer` (one row, published properties, so `TDataBinding.LoadObject` fills a form from it) and `TCustomers` (the table):
+
+```pascal
+uses
+  Customers;
+
+Table := TCustomers.Create(Db);
+C := TCustomer.Create;
+C.Name := 'Ayşe Yılmaz';
+Table.Save(C);                                       // checked; C.Id is set
+C := Table.Find(C.Id);                               // nil when there is none
+Rows := Table.All('age > ?', [30], 'name');          // JSON rows: CustomerList.LoadJson(Rows)
+Table.Delete(C.Id);
+```
+
+`pastel migrate` makes the table; the tests run with `pastel test`. The generated code is yours to change.
+
+## Backups
+
+```pascal
+Db.Backup('backups/shop.db');                  // a copy of the whole database, while it is used
+Name := Db.BackupTo('backups', 14);            // backups/shop-2026-11-01-093015-120.db; the 14 newest stay
+Db.Restore(Name);                              // back to how it was then
+```
+
+| | Backup | Restore |
+|---|---|---|
+| SQLite | a database file (`VACUUM INTO`), safe while the app works | the file replaces the database; nothing else may use it meanwhile |
+| PostgreSQL | SQL from `pg_dump` (`sudo apt install postgresql-client`) | `psql` runs it |
+| MySQL, MariaDB | SQL from `mysqldump` (`sudo apt install mariadb-client`) | `mysql` runs it |
+
+A backup every night in a service ([services.md](services.md)):
+
+```pascal
+DailyAt('03:30', @DailyBackup, 'backup');       // in the service's Started
+
+procedure TShopService.DailyBackup;
+begin
+  Log.Info('backup: %s', [Db.BackupTo(JoinPath([AppDir, 'backups']), 14)]);
+end;
+```
+
+Keep a copy somewhere else too (another disk, another computer): a backup on the same disk is gone with the disk.
+
+## Data that works offline
+
+A desktop or phone app that keeps working without the network and exchanges its changes with a server: [sync.md](sync.md).
+
 ## Testing with PostgreSQL and MySQL
 
 The framework's own tests run the same checks on all three databases when

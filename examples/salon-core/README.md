@@ -13,7 +13,7 @@ Both use the same units, so a customer is checked and stored the same way on the
 
 | Unit | |
 |---|---|
-| `SalonStore` | The tables, saving with checks, lists, a day's appointments, invoices with VAT, and the sync: `Changes`, `Apply`, `MarkSent` |
+| `SalonStore` | The tables, saving with checks, lists, a day's appointments, invoices with VAT, and the sync: `Changes`, `Apply`, `MarkSent` — on [Pastel.Sync](../../docs/sync.md) |
 | `SalonSync` | The desktop side of the sync over HTTP |
 | `SalonMoney` | Money in cents: `CentsToText`, `TryTextToCents`, `VatOf` |
 | `SalonPrint` | An invoice as PDF or HTML (`InvoiceReport`, [Pastel.Report](../../docs/documents.md)), the invoices as an Excel file (`InvoicesSheet`) |

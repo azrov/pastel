@@ -199,8 +199,25 @@ end;
 
 procedure TCustomEdit.DoChange;
 begin
+  if FError <> '' then
+    Error := '';         { the user changes it: the problem may be gone }
   if Assigned(FOnChange) then
     FOnChange(Self);
+end;
+
+procedure TCustomEdit.SetError(const AValue: string);
+begin
+  if FError = AValue then
+    Exit;
+  { the tooltip shows the problem, and the control's own hint again after }
+  if FError = '' then
+    FHintBefore := Hint;
+  FError := AValue;
+  if AValue = '' then
+    Hint := FHintBefore
+  else
+    Hint := AValue;
+  Invalidate;
 end;
 
 function TCustomEdit.DisplayText(const S: string): string;
@@ -593,6 +610,8 @@ begin
     Border := Theme.BorderHover
   else
     Border := Theme.Border;
+  if FError <> '' then
+    Border := Theme.Danger;
   if Enabled and not FReadOnly then
     C.FillRoundRect(Bounds.X, Bounds.Y, Bounds.W, Bounds.H, Theme.Radius, Theme.Surface)
   else
