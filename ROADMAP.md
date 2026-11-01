@@ -267,7 +267,8 @@ The same Pascal code and `.pform` forms on an Android phone or tablet. The frame
 - [ ] Windows: signing the `.exe` and the installer; updates of desktop apps from a server
 - [ ] Android: updates outside Google Play (from your own server)
 - [ ] SDL3 (when the Linux distributions ship it)
-- [ ] A package registry: `pastel add text-tools` for libraries others published
+- [x] Packages: `pastel add`, `remove`, `update`, `search`, `deps`; versions from git tags, `pastel.lock`, a registry ([pastel-packages](https://github.com/azrov/pastel-packages)) — done in 1.0.0-rc.6
+- [ ] [pastel-extras](https://github.com/azrov/pastel-extras): serial ports (done), barcodes and labels, charts, GPIO, cameras
 
 ### 1.7 — Tooling
 

@@ -1,6 +1,6 @@
 #!/bin/sh
 # Installs the latest Pastel release on Linux:
-#   curl -fsSL https://github.com/<owner>/pastel/releases/latest/download/install.sh | sh
+#   curl -fsSL https://github.com/azrov/pastel/releases/latest/download/install.sh | sh
 # into ~/.pastel/<version>/, with ~/.local/bin/pastel pointing at it.
 # Needs Free Pascal: sudo apt install fpc (and fpc-source for Windows builds).
 set -e

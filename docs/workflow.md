@@ -6,7 +6,7 @@
 | `pastel test --watch` | Run the tests again every time you save |
 | `pastel fmt` | Format the code in one standard style |
 | `pastel new lib` | A library: units that other projects use |
-| `[dependencies]` | Use another Pastel project from this one |
+| `[dependencies]` | Use another Pastel project or a package from this one ([packages.md](packages.md)) |
 
 ## Watch: `pastel run --watch`
 
@@ -112,4 +112,4 @@ uses TextTools;
 - Changes in a dependency are compiled with your project, and `--watch` sees them.
 - Any Pastel project can be a dependency, not only libraries; usually it is a library.
 
-Dependencies from the internet (a package registry) are planned for a later version.
+Packages from the internet — from the registry or a git repository, with versions and `pastel.lock` — are explained in [packages.md](packages.md).

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.3
+
+- Completion and go to definition know the units of packages (`pastel add`), read from the cache
+- Links to the repository on GitHub
+
 ## 1.0.2
 
 - The designer offers the icon names in a button's `Icon` field

@@ -3,6 +3,7 @@
 Everything Pastel does from the terminal, with examples. `pastel help` shows the short list; every command works in any folder of a project (it finds `pastel.toml`). Exit codes: `0` worked, `1` failed (compile errors, failing tests...), `2` wrong usage.
 
 **Projects:** [new](#pastel-new) · [upgrade](#pastel-upgrade) · [clean](#pastel-clean)
+**Packages:** [add](#pastel-add) · [remove](#pastel-remove) · [update](#pastel-update) · [search](#pastel-search) · [deps](#pastel-deps)
 **Building and running:** [build](#pastel-build) · [run](#pastel-run) · [test](#pastel-test) · [fmt](#pastel-fmt) · [check](#pastel-check)
 **Shipping:** [package](#pastel-package) · [targets](#pastel-targets) · [doctor](#pastel-doctor)
 **Apps:** [lang](#pastel-lang) · [preview](#pastel-preview) · [schema](#pastel-schema)
@@ -140,6 +141,53 @@ pastel migrate                          # run what did not run yet
 pastel migrate status                   # applied / pending
 pastel migrate new add_customers        # a new file: database/migrations/002_add_customers.sql
 pastel migrate --database postgres://user:pw@localhost/shop
+```
+
+## pastel add
+
+Adds a package to `[dependencies]` and `pastel.lock`, and fetches it ([packages.md](packages.md)).
+
+```sh
+pastel add serial                                    # from the registry, the newest version
+pastel add serial@^1.0                               # a range of versions
+pastel add chart --git https://github.com/someone/pastel-chart
+pastel add gpio --git https://github.com/azrov/pastel-extras --path gpio --branch main
+pastel add salon-core --path ../salon-core           # a folder on this computer
+```
+
+## pastel remove
+
+Removes packages from `pastel.toml`, and from `pastel.lock` what nothing needs any more.
+
+```sh
+pastel remove serial
+```
+
+## pastel update
+
+Moves packages to the newest version `pastel.toml` allows and writes `pastel.lock`.
+
+```sh
+pastel update               # all
+pastel update serial        # one
+```
+
+## pastel search
+
+Looks for packages in the registry, by name and description.
+
+```sh
+pastel search               # every package
+pastel search barcode
+```
+
+## pastel deps
+
+The dependencies, theirs, and the versions used.
+
+```sh
+pastel deps
+pastel deps --json          # for editors: name, version, folder
 ```
 
 ## pastel upgrade

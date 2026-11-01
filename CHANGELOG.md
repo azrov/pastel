@@ -2,6 +2,18 @@
 
 The `pastel` tool and the framework. The VS Code extension has its own list: [vscode/CHANGELOG.md](vscode/CHANGELOG.md). What is planned is in [ROADMAP.md](ROADMAP.md).
 
+## 1.0.0-rc.6
+
+Packages, like Composer for PHP.
+
+- `pastel add serial`, `pastel add x --git URL [--path folder] [--branch b]`, `pastel remove`, `pastel update`, `pastel search`, `pastel deps [--json]`
+- `[dependencies]`: `serial = "^1.2"` (the registry), `{ git = "...", version = "^0.3" }`, `branch`, `rev`; versions are git tags, ranges like Composer and Cargo (`^`, `~`, `>=`)
+- `pastel.lock`: the exact commit of every package, also of the packages they use; versions that cannot both be met are explained
+- One cache for all projects (`~/.cache/pastel`, `PASTEL_CACHE`); building needs no network when the packages are there
+- The registry: [github.com/azrov/pastel-packages](https://github.com/azrov/pastel-packages); `PASTEL_REGISTRY` for another one
+- Building: units are compiled again when their sources move (another version of a package); FPC units for a cross target are taken from the package made for that system (`Serial` for Windows from rtl-extra)
+- Documentation: [docs/packages.md](docs/packages.md)
+
 ## 1.0.0-rc.5
 
 - `TSplitter`: a bar the user drags to share the room between two controls; `TToolBar` and `TStatusBar`

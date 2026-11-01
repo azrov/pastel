@@ -324,7 +324,10 @@ begin
     '{{name}} = { path = "../{{name}}" }',
     '```',
     '',
-    'and `uses {{unit}};` in the code.'
+    'and `uses {{unit}};` in the code.',
+    '',
+    'To share it as a package: put it in a git repository, tag a version (`git tag v0.1.0`),',
+    'and others add it with `pastel add {{name}} --git <its URL>`. See docs/packages.md of Pastel.'
   ], Name, Ident);
   WriteText(Dir + 'README.md', StringReplace(Content, '{{unit}}', UnitName, [rfReplaceAll]));
 end;

@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import { registerFormatter } from './format';
 import { registerDebugging } from './debug';
 import { registerTesting } from './testing';
-import { currentProjectRoot, findProjectRoot, pastelPath, readProjectInfo, runnableProjectRoot, runPastel } from './cli';
+import { currentProjectRoot, findProjectRoot, pastelPath, readProjectInfo, runnableProjectRoot, runPastel, workspaceProjects } from './cli';
 import {
   allObjects, classFor, completionContext, declaredProcedures, enclosingObjects,
   findProcedure, handlerInserts, missingHandlerName, missingHandlerParams, parseIssues, Schema, SchemaClass,
@@ -34,6 +34,27 @@ const PLATFORMS: { label: string; description: string }[] = [
 
 let extensionContext: vscode.ExtensionContext | undefined;
 
+/** The units of packages and of libraries outside the workspace, for completion and go to definition. */
+async function indexPackages(): Promise<void> {
+  const inWorkspace = (dir: string) => (vscode.workspace.workspaceFolders ?? [])
+    .some(f => (dir + path.sep).startsWith(f.uri.fsPath + path.sep));
+  for (const p of await workspaceProjects()) {
+    const r = await runPastel(['deps', '--json'], p.root);
+    if (r.code !== 0) {
+      continue;
+    }
+    try {
+      for (const d of JSON.parse(r.stdout) as { root: string }[]) {
+        if (d.root && !inWorkspace(d.root)) {
+          pascalIndex.addLibrary(d.root);
+        }
+      }
+    } catch {
+      // not JSON: an older pastel
+    }
+  }
+}
+
 export function activate(context: vscode.ExtensionContext): void {
   extensionContext = context;
   diagnostics = vscode.languages.createDiagnosticCollection('pastel');
@@ -44,7 +65,11 @@ export function activate(context: vscode.ExtensionContext): void {
   registerRequests(context);
   registerNavigation(context, pascalIndex);
   const schemaReady = loadSchema();
-  schemaReady.then(sch => pascalIndex.build(sch?.frameworkDir));
+  schemaReady.then(sch => pascalIndex.build(sch?.frameworkDir)).then(() => indexPackages());
+  const lockWatcher = vscode.workspace.createFileSystemWatcher('**/{pastel.toml,pastel.lock}');
+  lockWatcher.onDidChange(() => indexPackages());
+  lockWatcher.onDidCreate(() => indexPackages());
+  context.subscriptions.push(lockWatcher);
   registerIntellisense(context, pascalIndex, schemaReady);
   setDefinitionHook(analyzerDefinition);
   updateFormContext(vscode.window.activeTextEditor);

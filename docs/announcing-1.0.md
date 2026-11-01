@@ -46,7 +46,7 @@ A console program starts in a millisecond; a desktop app is under a megabyte and
 
 ## Get it
 
-- Linux: `curl -fsSL https://github.com/OWNER/pastel/releases/latest/download/install.sh | sh`
+- Linux: `curl -fsSL https://github.com/azrov/pastel/releases/latest/download/install.sh | sh`
 - Windows: the `.zip` from the release page
 - VS Code: search for **Pastel** in the extensions
 - Docs and guides: the project website; start with *Getting started*

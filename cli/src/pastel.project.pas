@@ -10,7 +10,7 @@ uses
   SysUtils;
 
 const
-  PastelVersion = '1.0.0-rc.5';
+  PastelVersion = '1.0.0-rc.6';
   ProjectFileName = 'pastel.toml';
 
 { '0.7' for Pastel 0.7.x: what [project] pastel records. }
@@ -23,8 +23,14 @@ type
 
   TDependency = record
     Name: string;
-    Path: string;      { as written in pastel.toml }
-    Root: string;      { absolute, with trailing path delimiter }
+    Path: string;      { as written in pastel.toml; in a git repository: the folder of the package }
+    Root: string;      { absolute, with trailing path delimiter; '' while a package is not resolved }
+    Remote: Boolean;   { a package: from the registry or a git repository, not a folder }
+    Git: string;       { git = "https://..."; '' for the registry }
+    Version: string;   { "^1.2", "~1.2.3", "1.2.3", ">=1.0, <2.0", "*" }
+    Branch: string;    { branch = "main" instead of a version }
+    Rev: string;       { rev = "a1b2c3d" instead of a version }
+    Resolved: string;  { the version used: "1.2.3", "main", a commit }
   end;
 
   TPastelProject = class
@@ -61,6 +67,16 @@ type
   end;
 
 function IsValidProjectName(const S: string): Boolean;
+{ "^1.2", "1.0.0", "*", ">=1.0": a version, not a path. }
+function IsVersionSpec(const S: string): Boolean;
+
+var
+  { Finds a package (a dependency with Remote) and sets its Root; set by
+    Pastel.Packages. ProjectRoot is the folder of the project that needs it. }
+  ResolvePackage: procedure(const ProjectRoot: string; var D: TDependency) = nil;
+  { False: packages are not looked for (their Root stays ''), e.g. when
+    projects are only looked at. }
+  ResolvePackages: Boolean = True;
 
 const
   ProfileNames: array[0..2] of string = ('debug', 'release', 'test');
@@ -72,6 +88,11 @@ implementation
 
 uses
   RegExpr, Pastel.Toml;
+
+function IsVersionSpec(const S: string): Boolean;
+begin
+  Result := (S <> '') and (S[1] in ['0'..'9', '^', '~', '*', '>', '<', '=']);
+end;
 
 function TitleFromName(const Name: string): string;
 var
@@ -189,7 +210,7 @@ begin
         if not ExecRegExpr('^(project\.(name|version|pastel|title|description|type)|' +
           'build\.(main|mode|defines|unit_paths)|targets\.platforms|' +
           'profile\.(debug|release|test)\.(defines|options)|' +
-          'dependencies\.[^.]+(\.path)?|' +
+          'dependencies\.[^.]+(\.(path|git|version|branch|rev))?|' +
           'package\.(include|maintainer|deb\.depends|docker\.base|[a-z0-9-]+\.include)|' +
           'format\.(indent|keywords))$', Doc.Values[I]) then
         begin
@@ -209,16 +230,47 @@ begin
         end;
       for Dep in Doc.Keys('dependencies') do
       begin
+        D := Default(TDependency);
         D.Name := Dep;
-        if Doc.Has('dependencies.' + Dep + '.path') then
+        if Doc.Has('dependencies.' + Dep + '.git') then
+        begin
+          { a package in a git repository: git = "...", path = "folder in it" }
+          D.Remote := True;
+          D.Git := Doc.GetString('dependencies.' + Dep + '.git');
+          D.Path := Doc.GetString('dependencies.' + Dep + '.path', '');
+        end
+        else if Doc.Has('dependencies.' + Dep + '.path') then
           D.Path := Doc.GetString('dependencies.' + Dep + '.path')
+        else if Doc.Has('dependencies.' + Dep + '.version') then
+          D.Remote := True     { from the registry }
         else if Doc.Find('dependencies.' + Dep) <> nil then
-          D.Path := Doc.GetString('dependencies.' + Dep)
+        begin
+          D.Path := Doc.GetString('dependencies.' + Dep);
+          if IsVersionSpec(D.Path) then
+          begin
+            D.Remote := True;  { serial = "^1.2": from the registry }
+            D.Version := D.Path;
+            D.Path := '';
+          end;
+        end
         else
-          raise EProjectError.CreateFmt('%s: dependency "%s" needs a path, e.g. %s = { path = "../%s" }',
-            [ProjectFileName, Dep, Dep, Dep]);
+          raise EProjectError.CreateFmt('%s: dependency "%s" needs a version or a path, e.g. %s = "^1.0" or %s = { path = "../%s" }',
+            [ProjectFileName, Dep, Dep, Dep, Dep]);
+        if D.Remote then
+        begin
+          D.Version := Doc.GetString('dependencies.' + Dep + '.version', D.Version);
+          D.Branch := Doc.GetString('dependencies.' + Dep + '.branch', '');
+          D.Rev := Doc.GetString('dependencies.' + Dep + '.rev', '');
+          if (D.Version = '') and (D.Branch = '') and (D.Rev = '') then
+            D.Version := '*';
+          if (D.Git = '') and ((D.Branch <> '') or (D.Rev <> '')) then
+            raise EProjectError.CreateFmt('%s: dependency "%s": branch and rev need a git repository (git = "https://...")',
+              [ProjectFileName, Dep]);
+          if ResolvePackages and Assigned(ResolvePackage) then
+            ResolvePackage(P.Root, D);
+        end
         { relative to the project, or a full path }
-        if (D.Path <> '') and ((D.Path[1] in ['/', '\']) or ((Length(D.Path) > 1) and (D.Path[2] = ':'))) then
+        else if (D.Path <> '') and ((D.Path[1] in ['/', '\']) or ((Length(D.Path) > 1) and (D.Path[2] = ':'))) then
           D.Root := IncludeTrailingPathDelimiter(ExpandFileName(SetDirSeparators(D.Path)))
         else
           D.Root := IncludeTrailingPathDelimiter(ExpandFileName(P.Root + SetDirSeparators(D.Path)));
@@ -244,7 +296,10 @@ begin
     if (P.FormatKeywords <> 'lower') and (P.FormatKeywords <> 'keep') then
       raise EProjectError.CreateFmt('%s: [format] keywords must be "lower" or "keep"', [ProjectFileName]);
     for D in P.Dependencies do
-      if not FileExists(D.Root + ProjectFileName) then
+      if D.Remote and (D.Root <> '') and not FileExists(D.Root + ProjectFileName) then
+        raise EProjectError.CreateFmt('%s: package "%s": no %s in %s%s',
+          [ProjectFileName, D.Name, ProjectFileName, D.Git, BoolToStr(D.Path <> '', ' (' + D.Path + ')', '')])
+      else if not D.Remote and not FileExists(D.Root + ProjectFileName) then
         raise EProjectError.CreateFmt('%s: dependency "%s": no %s in "%s"',
           [ProjectFileName, D.Name, ProjectFileName, D.Path]);
     if (P.Mode <> 'objfpc') and (P.Mode <> 'delphi') then

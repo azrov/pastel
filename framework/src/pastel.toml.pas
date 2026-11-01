@@ -501,7 +501,10 @@ var
   Seen: TStringList;
 begin
   Result := nil;
-  Prefix := Table + '.';
+  if Table = '' then
+    Prefix := ''      { the top-level keys and tables }
+  else
+    Prefix := Table + '.';
   Seen := TStringList.Create;
   try
     Seen.Sorted := True;

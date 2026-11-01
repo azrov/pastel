@@ -8,7 +8,7 @@ uses
   Classes, SysUtils,
   Pastel.Console, Pastel.Toml, Pastel.Project, Pastel.Targets,
   Pastel.Builder, Pastel.Templates, Pastel.Doctor, Pastel.Inspect, Pastel.TestCmd,
-  Pastel.Watch, Pastel.FmtCmd, Pastel.Package, Pastel.MigrateCmd, Pastel.LangCmd, Pastel.Runtime, Pastel.CustomCtl, Pastel.Upgrade, Pastel.UI, RegExpr;
+  Pastel.Watch, Pastel.FmtCmd, Pastel.Package, Pastel.MigrateCmd, Pastel.LangCmd, Pastel.Runtime, Pastel.CustomCtl, Pastel.Upgrade, Pastel.Packages, Pastel.UI, RegExpr;
 
 const
   ExitOk = 0;
@@ -23,7 +23,7 @@ type
     Target: string;
     Release, Verbose, All, Help, Watch, Check, NoBuild, Dark, Install: Boolean;
     Json, Stdin, NoRun: Boolean;
-    Output, Layout, Database: string;
+    Output, Layout, Database, Git, SubPath, Branch: string;
     Width, Height: Integer;
   end;
 
@@ -50,6 +50,11 @@ begin
   WriteLn('  package [kind]         An archive; deb, docker, appimage, installer (--target, --all, --no-build)');
   WriteLn('  migrate [status|new]   Database migrations in database/migrations (--database URL)');
   WriteLn('  lang [add <code>]      Texts to translate in assets/lang/*.json');
+  WriteLn('  add <name>[@version]   Add a package (--git URL, --path folder, --branch name)');
+  WriteLn('  remove <name>          Remove a package');
+  WriteLn('  update [names]         The newest versions pastel.toml allows (pastel.lock)');
+  WriteLn('  search [words]         Look for packages in the registry');
+  WriteLn('  deps                   The dependencies, and theirs (--json)');
   WriteLn('  upgrade [--check]      Bring a project from an older Pastel up to date');
   WriteLn('  clean                  Remove the build folder');
   WriteLn('  targets                List the platforms Pastel can build for');
@@ -129,7 +134,7 @@ begin
     else if A = '--stdin' then
       CL.Stdin := True
     else if (A = '-o') or (A = '--output') or (A = '--width') or (A = '--height') or (A = '--layout') or
-            (A = '--database') then
+            (A = '--database') or (A = '--git') or (A = '--path') or (A = '--branch') then
     begin
       Inc(I);
       if I > ParamCount then
@@ -143,6 +148,12 @@ begin
         CL.Layout := ParamStr(I)
       else if A = '--database' then
         CL.Database := ParamStr(I)
+      else if A = '--git' then
+        CL.Git := ParamStr(I)
+      else if A = '--path' then
+        CL.SubPath := ParamStr(I)
+      else if A = '--branch' then
+        CL.Branch := ParamStr(I)
       else if A = '--width' then
         CL.Width := StrToIntDef(ParamStr(I), 0)
       else
@@ -307,8 +318,13 @@ begin
       Dir := IncludeTrailingPathDelimiter(Parent + PathDelim + SR.Name);
       if (SR.Name = '.') or (SR.Name = '..') or not FileExists(Dir + ProjectFileName) then
         Continue;
+      ResolvePackages := False;     { only looked at: no fetching }
       try
-        P := TPastelProject.Load(Dir);
+        try
+          P := TPastelProject.Load(Dir);
+        finally
+          ResolvePackages := True;
+        end;
       except
         Continue;
       end;
@@ -763,6 +779,11 @@ begin
       'migrate': ExitCode := RunMigrate(CL.Positional, CL.Database);
       'lang':    ExitCode := RunLang(CL.Positional);
       'upgrade': ExitCode := RunUpgrade(CL.Check);
+      'add':     ExitCode := RunAdd(CL.Positional, CL.Git, CL.SubPath, CL.Branch);
+      'remove':  ExitCode := RunRemove(CL.Positional);
+      'update':  ExitCode := RunUpdate(CL.Positional);
+      'search':  ExitCode := RunSearch(CL.Positional);
+      'deps':    ExitCode := RunDeps(CL.Json);
       'fmt':     ExitCode := RunFormat(CL.Positional, CL.Check, CL.Stdin);
       'package': ExitCode := CmdPackage(CL);
       'preview': ExitCode := CmdPreview(CL);

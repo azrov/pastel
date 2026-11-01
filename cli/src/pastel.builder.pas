@@ -247,6 +247,46 @@ begin
     Dirs.Add(ExpandFileName(Root + SetDirSeparators(D)));
 end;
 
+{ The compiled units in UnitDir were made from the folders in Sources;
+  when the folders change, they are deleted (and so compiled again). }
+procedure ForgetUnitsOfOtherSources(const UnitDir, Sources: string);
+var
+  Stamp, Old: string;
+  SR: TSearchRec;
+  L: TStringList;
+begin
+  Stamp := IncludeTrailingPathDelimiter(UnitDir) + 'sources.txt';
+  Old := '';
+  if FileExists(Stamp) then
+  begin
+    L := TStringList.Create;
+    try
+      L.LoadFromFile(Stamp);
+      Old := L.Text;
+    finally
+      L.Free;
+    end;
+  end;
+  if Old = Sources then
+    Exit;
+  if FindFirst(IncludeTrailingPathDelimiter(UnitDir) + '*', faAnyFile, SR) = 0 then
+  try
+    repeat
+      if (SR.Attr and faDirectory) = 0 then
+        DeleteFile(IncludeTrailingPathDelimiter(UnitDir) + SR.Name);
+    until FindNext(SR) <> 0;
+  finally
+    FindClose(SR);
+  end;
+  L := TStringList.Create;
+  try
+    L.Text := Sources;
+    L.SaveToFile(Stamp);
+  finally
+    L.Free;
+  end;
+end;
+
 procedure AddDependencies(Project: TPastelProject; Dirs, Seen: TStrings);
 var
   D: TDependency;
@@ -593,8 +633,10 @@ procedure BuildUnitIndex;
         else
         begin
           Ext := LowerCase(ExtractFileExt(SR.Name));
-          if ((Ext = '.pp') or (Ext = '.pas')) and (UnitIndex.IndexOfName(LowerCase(ChangeFileExt(SR.Name, ''))) < 0) then
-            UnitIndex.Add(LowerCase(ChangeFileExt(SR.Name, '')) + '=' + Pkg);
+          { a unit can be in several packages (serial: rtl-extra/src/win, rtl-extra/src/unix,
+            morphunits/src): all are kept, PackageForUnit chooses }
+          if (Ext = '.pp') or (Ext = '.pas') then
+            UnitIndex.Add(LowerCase(ChangeFileExt(SR.Name, '')) + '=' + Pkg + '|' + Dir);
         end;
       until FindNext(SR) <> 0;
     finally
@@ -624,6 +666,47 @@ begin
     FindClose(SR);
   end;
   UnitIndex.Sorted := True;
+end;
+
+function PackageDirs(const Pkg, OS: string): TStringArray; forward;
+
+{ 'win', 'src/unix/x': a folder for some systems only }
+function InPlatformDir(const Rel: string): Boolean;
+var
+  Part, P: string;
+begin
+  for Part in Rel.Split([PathDelim]) do
+    for P in PlatformDirs do
+      if LowerCase(Part) = P then
+        Exit(True);
+  Result := False;
+end;
+
+{ the package with the unit for this OS: a folder made for the OS first
+  (rtl-extra/src/win), then one for every OS (fcl-json/src) }
+function PackageForUnit(const UnitName, OS: string): string;
+var
+  Pass, I, P: Integer;
+  Pkg, Dir, D: string;
+begin
+  Result := '';
+  for Pass := 1 to 2 do
+    for I := 0 to UnitIndex.Count - 1 do
+      if UnitIndex.Names[I] = LowerCase(UnitName) then
+      begin
+        P := Pos('|', UnitIndex.ValueFromIndex[I]);
+        Pkg := Copy(UnitIndex.ValueFromIndex[I], 1, P - 1);
+        Dir := Copy(UnitIndex.ValueFromIndex[I], P + 1, MaxInt);
+        if (Pass = 1) <> InPlatformDir(Copy(Dir, Length(Pkg) + 6, MaxInt)) then
+          Continue;
+        { packages for other systems only (morphunits, arosunits, ...) }
+        if (Pass = 2) and ((Pos('units', ExtractFileName(Pkg)) > 0) and
+           (Pos('win', ExtractFileName(Pkg)) = 0)) then
+          Continue;
+        for D in PackageDirs(Pkg, OS) do
+          if D = Dir then
+            Exit(Pkg);
+      end;
 end;
 
 { the unit in "Fatal: Can't find unit X used by Y", '' when there is none }
@@ -1016,6 +1099,9 @@ begin
     Dirs.Add(GenDir);
     if Framework <> '' then
       Dirs.Add(Framework);
+    { other source folders (another version of a package): the compiled
+      units are of the old ones, and may look newer than the new sources }
+    ForgetUnitsOfOtherSources(Project.Root + UnitDir, Dirs.Text);
     if Opts.OverlayFile <> '' then
     begin
       { the unsaved text in a folder searched first; the program is copied
@@ -1130,7 +1216,7 @@ begin
         if Missing = '' then
           Break;
         BuildUnitIndex;
-        Pkg := UnitIndex.Values[LowerCase(Missing)];
+        Pkg := PackageForUnit(Missing, Opts.Target.OS);
         if (Pkg = '') or (Pkgs.IndexOf(Pkg) >= 0) then
           Break;
         Pkgs.Add(Pkg);

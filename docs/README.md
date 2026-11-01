@@ -45,6 +45,7 @@ Everything about Pastel, by topic. Every page has examples you can copy; the [ex
 | | |
 |---|---|
 | [Everyday work](workflow.md) | Watching, formatting, libraries and dependencies |
+| [Packages](packages.md) | `pastel add`: libraries from the registry or git, versions, `pastel.lock`; publishing your own |
 | [Testing](testing.md) | Test suites, asserts, `pastel test`, the test explorer |
 | [VS Code](../vscode/README.md) | The extension: designer, code intelligence, tasks |
 

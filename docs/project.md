@@ -32,6 +32,8 @@ platforms = ["linux", "windows", "rpi"]   # pastel build --all, pastel package -
 
 [dependencies]
 text-tools = { path = "../text-tools" }   # another Pastel project (a relative or a full path), see workflow.md
+serial = "^1.2"                           # a package from the registry, see packages.md
+chart = { git = "https://github.com/someone/pastel-chart", version = "^0.3" }   # or from a git repository
 
 [package]
 include = ["config.example.toml", "assets"]   # put into every package

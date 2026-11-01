@@ -323,6 +323,45 @@ sed -i 's#path = "../text-tools"#path = "../missing"#' use-tools/pastel.toml
 set +e; out="$(cd use-tools && "$PASTEL" build 2>&1)"; set -e
 expect "a missing dependency is explained" 'echo "$out" | grep -q "dependency \"text-tools\": no pastel.toml in \"../missing\""'
 
+# --- packages: a registry, git repositories, versions, pastel.lock ---
+PK="$WORK/pk" && rm -rf "$PK" && mkdir -p "$PK" && cd "$PK"
+export PASTEL_CACHE="$PK/cache" PASTEL_REGISTRY="$PK/registry"
+mkdir extras && cd extras && git init -q && git config user.email t@example.com && git config user.name t
+"$PASTEL" new lib serial >/dev/null && "$PASTEL" new lib greet >/dev/null && rm -rf serial/tests greet/tests
+printf 'unit Serial;\n{$mode objfpc}{$H+}\ninterface\nconst\n  SerialVersion = %s;\nimplementation\nend.\n' "'0.1.0'" > serial/src/serial.pas
+printf 'unit Greet;\n{$mode objfpc}{$H+}\ninterface\nfunction Hello: string;\nimplementation\nuses\n  Serial;\nfunction Hello: string;\nbegin\n  Result := %s + SerialVersion;\nend;\nend.\n' "'hello '" > greet/src/greet.pas
+printf '\n[dependencies]\nserial = "^0.1"\n' >> greet/pastel.toml
+git add -A && git commit -qm one && git tag v0.1.0
+sed -i "s/'0.1.0'/'0.1.5'/" serial/src/serial.pas && git commit -qam two && git tag v0.1.5
+sed -i "s/'0.1.5'/'0.2.0'/" serial/src/serial.pas && sed -i 's/serial = "^0.1"/serial = "^0.2"/' greet/pastel.toml && git commit -qam three && git tag v0.2.0
+mkdir -p "$PK/registry" && printf '[serial]\ngit = "%s"\npath = "serial"\ndescription = "Serial ports"\n\n[greet]\ngit = "%s"\npath = "greet"\ndescription = "Says hello"\n' "$PK/extras" "$PK/extras" > "$PK/registry/packages.toml"
+cd "$PK" && "$PASTEL" new console use-pk >/dev/null && cd use-pk
+printf 'program usepk;\n{$mode objfpc}{$H+}\nuses\n  Greet;\nbegin\n  WriteLn(Hello);\nend.\n' > src/main.pas
+out="$("$PASTEL" search serial 2>&1)"
+expect "search finds a package"            'echo "$out" | grep -q "^serial .*Serial ports"'
+out="$("$PASTEL" add greet@^0.1 2>&1)"
+expect "add writes pastel.toml"            'grep -q "^greet = \"^0.1\"$" pastel.toml'
+expect "and pastel.lock, with theirs"       'grep -q "^\[package.serial\]" pastel.lock && grep -q "^version = \"0.1.5\"" pastel.lock'
+out="$("$PASTEL" run 2>&1)"
+expect "a package is built"                'echo "$out" | grep -q "^hello 0.1.5$"'
+out="$("$PASTEL" deps 2>&1)"
+expect "deps shows the tree"               'echo "$out" | grep -q "^  serial 0.1.5"'
+set +e; out="$("$PASTEL" add serial@^0.2 2>&1)"; code=$?; set -e
+expect "versions that cannot both be used"  '[ "$code" = 1 ] && echo "$out" | grep -q "a library needs ^0.1" && ! grep -q "^serial" pastel.toml && grep -q "0.1.5" pastel.lock'
+sed -i 's/^greet = .*/greet = "^0.2"/' pastel.toml
+out="$("$PASTEL" run 2>&1)"
+expect "a new version is fetched and built" 'echo "$out" | grep -q "^hello 0.2.0$" && grep -q "^version = \"0.2.0\"" pastel.lock'
+rm -rf "$PK/cache/src"
+out="$(PASTEL_REGISTRY=/nowhere "$PASTEL" run 2>&1)"
+expect "pastel.lock builds without the registry" 'echo "$out" | grep -q "^hello 0.2.0$"'
+set +e; out="$("$PASTEL" add serial@^9 2>&1)"; code=$?; set -e
+expect "no version matches is explained"   '[ "$code" = 1 ] && echo "$out" | grep -q "no version matches \"^9\" (there are: 0.1.0, 0.1.5, 0.2.0)"'
+out="$("$PASTEL" remove greet 2>&1)"
+expect "remove drops it and its packages"  '! grep -q "^greet" pastel.toml && [ ! -f pastel.lock ]'
+out="$("$PASTEL" add hi --git "$PK/extras" --path greet --branch master 2>&1)"
+expect "a package from a git branch"       'grep -q "^hi = { git = \".*extras\", path = \"greet\", branch = \"master\" }$" pastel.toml'
+unset PASTEL_CACHE PASTEL_REGISTRY
+
 # --- pastel fmt ---
 cd "$WORK/demo-app"
 cat > src/messy.pas <<'PAS'

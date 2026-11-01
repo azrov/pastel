@@ -2,8 +2,17 @@
   "name": "pastel-vscode",
   "displayName": "Pastel",
   "description": "Build cross-platform apps in Object Pascal with Pastel: run, build, live form preview, .pform completion and checks.",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "publisher": "pastel",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/azrov/pastel",
+    "directory": "vscode"
+  },
+  "homepage": "https://github.com/azrov/pastel#readme",
+  "bugs": {
+    "url": "https://github.com/azrov/pastel/issues"
+  },
   "license": "MIT",
   "icon": "media/icon.png",
   "engines": {

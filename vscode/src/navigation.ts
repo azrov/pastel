@@ -50,6 +50,35 @@ export class PascalIndex {
     }
   }
 
+  /** The units of a library outside the workspace (a package in the cache): read-only, like the framework. */
+  addLibrary(dir: string): void {
+    const walk = (d: string, depth: number): void => {
+      let names: string[];
+      try {
+        names = fs.readdirSync(d);
+      } catch {
+        return;
+      }
+      for (const name of names) {
+        const full = path.join(d, name);
+        if (/\.(pas|pp|inc)$/i.test(name)) {
+          if (!/\.inc$/i.test(name)) {
+            this.update(full, undefined, true);
+          }
+        } else if (depth < 6 && name !== 'build' && name !== 'tests' && !name.startsWith('.')) {
+          try {
+            if (fs.statSync(full).isDirectory()) {
+              walk(full, depth + 1);
+            }
+          } catch {
+            // gone meanwhile
+          }
+        }
+      }
+    };
+    walk(path.join(dir, 'src'), 0);
+  }
+
   update(file: string, text?: string, framework = false): void {
     try {
       const content = text ?? fs.readFileSync(file, 'utf8');
