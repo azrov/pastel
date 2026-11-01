@@ -48,8 +48,10 @@ tail -1 "$WORK/framework.log"
 
 
 echo "== examples"
-for ex in dupfinder weather notes-api contacts notepad components; do
+for ex in dupfinder weather notes-api contacts notepad components salon-core salon-api; do
   rm -rf "$WORK/ex-$ex" && cp -r "examples/$ex" "$WORK/ex-$ex" && rm -rf "$WORK/ex-$ex/build"
+  # libraries next to it (path = "../x") are the ones in examples/
+  sed -i "s|path = \"\.\./\([a-z-]*\)\"|path = \"$ROOT/examples/\1\"|" "$WORK/ex-$ex/pastel.toml"
   out="$(cd "$WORK/ex-$ex" && "$PASTEL" test 2>&1)" || { echo "$out"; exit 1; }
   echo "$ex: $(echo "$out" | grep "Tests:" | tail -1)"
 done
@@ -105,6 +107,28 @@ for t in ui ui-memory; do
 done
 expect "a library's controls are in the toolbox" '(cd "$WORK/ex-components-demo" && "$PASTEL" schema 2>/dev/null) | grep -q "\"name\":\"TDatePicker\",\"container\":false,\"form\":false,\"nonvisual\":false,\"project\":true"'
 expect "and its non-visual components"     '(cd "$WORK/ex-components-demo" && "$PASTEL" schema 2>/dev/null) | grep -q "\"name\":\"TFormMemory\",\"container\":false,\"form\":false,\"nonvisual\":true,\"project\":true"'
+# the salon system: a desktop app and its server, sharing salon-core
+for p in salon-desk salon-api; do
+  rm -rf "$WORK/ex-$p" && cp -r "examples/$p" "$WORK/ex-$p" && rm -rf "$WORK/ex-$p/build" "$WORK/ex-$p/data"
+  sed -i "s|path = \"../salon-core\"|path = \"$ROOT/examples/salon-core\"|; s|path = \"../components\"|path = \"$ROOT/examples/components\"|" "$WORK/ex-$p/pastel.toml"
+  (cd "$WORK/ex-$p" && "$PASTEL" build >/dev/null 2>&1)
+done
+rm -rf "$WORK/salon" && mkdir -p "$WORK/salon"
+set +e; out="$(cd "$WORK/ex-salon-desk" && SALON_DB="$WORK/salon/ui.db" XDG_CONFIG_HOME="$WORK/salon/cfg0" PASTEL_LANG=en PASTEL_CHECK_REPAINT=1 PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT=tests/ui.txt ./build/*/debug/salon-desk 2>&1)"; code=$?; set -e
+expect "salon: customers, appointments, invoices" '[ "$code" = 0 ] && ! echo "$out" | grep -q FAIL'
+[ "$code" = 0 ] || echo "$out" | grep -v "^ok" | head
+sport=$((20000 + ($$ + 77) % 20000))
+(cd "$WORK/ex-salon-api" && SALON_API_SERVER_PORT=$sport SALON_API_DATABASE_URL="sqlite:$WORK/salon/server.db" ./build/*/debug/salon-api > "$WORK/salon/api.log" 2>&1) &
+for i in $(seq 100); do grep -q "is running" "$WORK/salon/api.log" 2>/dev/null && break; sleep 0.1; done
+for n in 1 2; do
+  f=sync.txt; [ $n = 2 ] && f=sync-2.txt
+  sed "s|SERVER|http://127.0.0.1:$sport|" "$WORK/ex-salon-desk/tests/$f" > "$WORK/salon/$f"
+  set +e; out="$(cd "$WORK/ex-salon-desk" && SALON_DB="$WORK/salon/desk$n.db" XDG_CONFIG_HOME="$WORK/salon/cfg$n" PASTEL_LANG=en PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT="$WORK/salon/$f" ./build/*/debug/salon-desk 2>&1)"; code=$?; set -e
+  expect "salon: computer $n syncs with the server" '[ "$code" = 0 ] && ! echo "$out" | grep -q FAIL'
+  [ "$code" = 0 ] || echo "$out" | grep -v "^ok" | head
+done
+expect "salon: the server has the customer"  'curl -s "localhost:$sport/api/customers?q=zeynep" | grep -q "\"name\":\"Zeynep Kaya\""'
+pkill -TERM -x salon-api || true
 echo "== end-to-end tests"
 # --- desktop packages ---
 (cd "$WORK/ex-notepad" && "$PASTEL" package deb >/dev/null)

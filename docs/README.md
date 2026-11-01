@@ -17,6 +17,7 @@ Everything about Pastel, by topic. Every page has examples you can copy; the [ex
 | [A command-line tool](guide-cli.md) | Arguments, files, output, tests, a release |
 | [A REST API with a database](guide-api.md) | Routes, JSON, validation, migrations, deployment |
 | [A desktop app](guide-desktop.md) | Forms, menus, dialogs, tables, data, languages, an installer |
+| [A business system: desktop + server](guide-business.md) | One library shared by a desktop app and its server; working offline and syncing |
 
 ## Desktop apps
 
@@ -66,6 +67,9 @@ Everything about Pastel, by topic. Every page has examples you can copy; the [ex
 | [notepad](../examples/notepad/README.md) | A desktop text editor: menus, file dialogs, translated into Turkish |
 | [components](../examples/components/README.md) | A library of components: a star rating, an amount field, a date picker |
 | [components-demo](../examples/components-demo/README.md) | An order form that uses that library |
+| [salon-core](../examples/salon-core/README.md) | The shared part of a business system: customers, appointments, invoices, sync |
+| [salon-desk](../examples/salon-desk/README.md) | Its desktop app: works offline on SQLite, syncs with the server; English and Turkish |
+| [salon-api](../examples/salon-api/README.md) | Its server: keeps the data of every computer, answers the sync |
 
 ## For contributors
 

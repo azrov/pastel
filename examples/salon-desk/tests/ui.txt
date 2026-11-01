@@ -1,0 +1,61 @@
+# The salon app, driven like a user would (tests/run.sh runs it with an empty database):
+#   SALON_DB=/tmp/s.db PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT=tests/ui.txt ./build/linux/debug/salon-desk
+# --- two customers ---
+click CustomersPage
+type NameEdit Ayşe Yılmaz
+type PhoneEdit 0532 111 22 33
+type EmailEdit ayse@example.com
+click SaveCustomerButton
+expect CountsLabel 1 customers, 0 invoices
+click NewCustomerButton
+type NameEdit Mehmet Öz
+type EmailEdit not-an-address
+click SaveCustomerButton
+expect MessageText "not-an-address" is not an e-mail address
+click OkButton
+set EmailEdit.Text mehmet@example.com
+click SaveCustomerButton
+expect CountsLabel 2 customers, 0 invoices
+type SearchEdit ayşe
+expect CustomerList.Row -1
+set SearchEdit.Text 
+# --- appointments on a fixed day ---
+click AgendaPage
+set DayPicker.DateText 2026-11-03
+expect DayTotalLabel 0 appointments, 0.00
+click CustomerCombo
+key down
+key enter
+set TimeCombo.Text 14:30
+type ServiceEdit Haircut
+type PriceEdit 450
+click SaveAppointmentButton
+expect DayTotalLabel 1 appointments, 450.00
+click NewAppointmentButton
+set CustomerCombo.Text Ayşe Yılmaz
+set TimeCombo.Text 09:00
+set MinutesCombo.Text 90 min
+type ServiceEdit Color
+type PriceEdit 900,5
+click SaveAppointmentButton
+expect DayTotalLabel 2 appointments, 1,350.50
+expect DayList.Row 0
+click DoneButton
+expect AppointmentTitle Appointment: done
+# the next day is empty, the day before comes back
+click NextDayButton
+expect DayTotalLabel 0 appointments, 0.00
+click PrevDayButton
+expect DayTotalLabel 2 appointments, 1,350.50
+# --- an invoice for the done appointment ---
+click InvoicesPage
+set InvoiceCustomerCombo.Text Ayşe Yılmaz
+expect OpenLabel 1 done appointment(s) not invoiced
+click CreateInvoiceButton
+expect CountsLabel 2 customers, 1 invoices
+expect OpenLabel 0 done appointment(s) not invoiced
+expect InvoiceList.Row 0
+expect InvoiceLinesLabel 2026-11-03 Color: 900.50|Net 900.50 + VAT 20% 180.10 = 1,080.60
+click PaidButton
+expect PaidButton.Enabled False
+quit

@@ -1,0 +1,15 @@
+# Example: the shared part of a small business system (a hair salon, a
+# clinic, a repair shop): customers, appointments and invoices, stored in a
+# database, and the synchronization between the desktop app and the server.
+# Used by examples/salon-desk (desktop) and examples/salon-api (server):
+# the same code checks, stores and merges the data on both sides.
+
+[project]
+name = "salon-core"
+version = "1.0.0"
+pastel = "1.0"
+type = "lib"
+
+[build]
+mode = "objfpc"
+

@@ -1,0 +1,18 @@
+# salon-api settings for a server: /etc/salon-api/config.toml
+# "sudo systemctl reload salon-api" reads them again; a new database needs a restart.
+
+[server]
+port = 8080
+address = "127.0.0.1"        # behind nginx/Caddy on the same machine
+trust_proxy = true
+# cors = ["https://app.example.com"]
+
+[database]
+url = "sqlite:/var/lib/salon-api/app.db"
+# url = "postgres://salon_api:PASSWORD@localhost/salon_api"
+
+[api]
+keys = ["CHANGE-ME-openssl-rand-base64-32"]
+
+[log]
+level = "info"

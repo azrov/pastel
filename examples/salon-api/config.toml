@@ -1,0 +1,17 @@
+# Settings while developing ("pastel run" reads ./config.toml). Every
+# setting can also come from an environment variable: database.url ->
+# SALON_API_DATABASE_URL, server.port -> SALON_API_SERVER_PORT.
+
+[server]
+port = 8080
+address = "127.0.0.1"        # only this computer while developing
+
+[database]
+url = "sqlite:data/salon.db" # or postgres://user:password@localhost/salon
+                             # or mysql://user:password@localhost/salon
+
+[api]
+# keys = ["make-one-with: openssl rand -base64 32"]   # then the API needs X-API-Key
+
+[log]
+level = "info"

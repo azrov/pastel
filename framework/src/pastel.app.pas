@@ -966,11 +966,13 @@ var
   function TextOf(Ctrl: TControl): string;
   begin
     if Ctrl is TCustomEdit then
-      Result := StringReplace(TCustomEdit(Ctrl).Text, #10, '|', [rfReplaceAll])
+      Result := TCustomEdit(Ctrl).Text
     else if IsPublishedProp(Ctrl, 'Text') then
       Result := GetStrProp(Ctrl, 'Text')
     else
       Result := '';
+    { several lines (a memo, a label): one line with | between them }
+    Result := StringReplace(StringReplace(Result, #13#10, #10, [rfReplaceAll]), #10, '|', [rfReplaceAll]);
   end;
 
   procedure Key(const Spec: string);

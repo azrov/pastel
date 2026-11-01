@@ -1,0 +1,14 @@
+# Two shop computers and the server (tests/run.sh starts examples/salon-api and puts its address for SERVER):
+# the first computer adds a customer and syncs; sync-2.txt is the second computer.
+click CustomersPage
+type NameEdit Zeynep Kaya
+click SaveCustomerButton
+click FileMenu
+click SettingsItem
+set ServerEdit.Text SERVER
+click OkButton
+key ctrl+r
+expect StatusLabel Synced: 1 sent, 0 received.
+key ctrl+r
+expect StatusLabel Synced: 0 sent, 0 received.
+quit

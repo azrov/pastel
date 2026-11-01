@@ -2,6 +2,14 @@
 
 The `pastel` tool and the framework. The VS Code extension has its own list: [vscode/CHANGELOG.md](vscode/CHANGELOG.md). What is planned is in [ROADMAP.md](ROADMAP.md).
 
+## 1.0.0-rc.3
+
+A business system as an example.
+
+- `examples/salon-core`, `salon-desk`, `salon-api`: customers, appointments and invoices; a desktop app that works offline on SQLite and syncs with its server; both share one library; English and Turkish
+- Guide: a business system — desktop app and server (`docs/guide-business.md`)
+- UI scripts: text of several lines (labels, memos) is compared with `|` between the lines
+
 ## 1.0.0-rc.2
 
 Components and documentation.

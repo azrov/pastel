@@ -1,0 +1,47 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "pastel: build",
+      "type": "shell",
+      "command": "pastel",
+      "args": ["build"],
+      "options": { "env": { "NO_COLOR": "1" } },
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": {
+        "owner": "pastel",
+        "fileLocation": ["autoDetect", "${workspaceFolder}"],
+        "pattern": {
+          "regexp": "^(.+?)\\((\\d+)(?:,(\\d+))?\\)\\s+(Error|Fatal|Warning):\\s+(.*)$",
+          "file": 1, "line": 2, "column": 3, "severity": 4, "message": 5
+        }
+      }
+    },
+    {
+      "label": "pastel: test",
+      "type": "shell",
+      "command": "pastel",
+      "args": ["test"],
+      "options": { "env": { "NO_COLOR": "1" } },
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "pastel: run",
+      "type": "shell",
+      "command": "pastel",
+      "args": ["run"],
+      "options": { "env": { "NO_COLOR": "1" } },
+      "problemMatcher": []
+    },
+    {
+      "label": "pastel: watch",
+      "detail": "build and run again on every save",
+      "type": "shell",
+      "command": "pastel",
+      "args": ["run", "--watch"],
+      "isBackground": true,
+      "problemMatcher": []
+    }
+  ]
+}

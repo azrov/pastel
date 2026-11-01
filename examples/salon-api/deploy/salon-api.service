@@ -1,0 +1,30 @@
+# systemd unit for salon-api. Install: see deploy/README.md
+[Unit]
+Description=salon-api
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# Pastel services tell systemd when they are ready
+Type=notify
+ExecStart=/opt/salon-api/salon-api
+ExecReload=/bin/kill -HUP $MAINPID
+# its own user, created by systemd; files go to /var/lib/salon-api
+DynamicUser=yes
+StateDirectory=salon-api
+WorkingDirectory=/var/lib/salon-api
+Restart=on-failure
+RestartSec=2
+# Settings can also be given here instead of /etc/salon-api/config.toml:
+#Environment=SALON_API_DATABASE_URL=postgres://...
+# A database on this machine: start after it
+#After=postgresql.service
+# Restart it when it hangs (a job that takes longer than this counts as hanging):
+#WatchdogSec=60
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

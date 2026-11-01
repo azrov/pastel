@@ -1,0 +1,10 @@
+# The second computer (its own database): it gets the customer from the server.
+click FileMenu
+click SettingsItem
+set ServerEdit.Text SERVER
+click OkButton
+expect CountsLabel 0 customers, 0 invoices
+key ctrl+r
+expect StatusLabel Synced: 0 sent, 1 received.
+expect CountsLabel 1 customers, 0 invoices
+quit

@@ -1,0 +1,28 @@
+# Example: the server of the salon system (examples/salon-core). It keeps
+# the data of every shop computer and answers POST /api/sync; a small
+# read-only API shows customers, a day's appointments and invoices.
+# Try it: pastel run, then the desktop app (examples/salon-desk) with the
+# server address http://127.0.0.1:8080.
+
+[project]
+name = "salon-api"
+version = "1.0.0"
+pastel = "1.0"
+description = "The server of the salon system"
+type = "service"
+
+[build]
+main = "src/main.pas"
+mode = "objfpc"
+
+[targets]
+platforms = ["linux", "linux-arm64"]
+
+[package]
+include = ["config.example.toml", "deploy"]
+
+[package.deb]
+depends = ["libsqlite3-0"]
+
+[dependencies]
+salon-core = { path = "../salon-core" }

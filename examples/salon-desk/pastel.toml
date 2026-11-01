@@ -1,0 +1,22 @@
+# Example: the desktop app of the salon system (examples/salon-core): customers,
+# a day of appointments, invoices; works without a network and syncs with
+# examples/salon-api. Try it: pastel run
+
+[project]
+name = "salon-desk"
+version = "1.0.0"
+pastel = "1.0"
+title = "Salon"
+description = "Customers, appointments and invoices for a small business"
+type = "app"
+
+[build]
+main = "src/main.pas"
+mode = "objfpc"
+
+[targets]
+platforms = ["linux", "windows"]
+
+[dependencies]
+salon-core = { path = "../salon-core" }     # the data, its checks and the sync
+components = { path = "../components" }     # TDatePicker, TCurrencyEdit, TFormMemory

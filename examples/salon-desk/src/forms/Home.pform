@@ -1,0 +1,323 @@
+object HomeForm: THomeForm
+  Title = 'Salon'
+  Width = 1080
+  Height = 680
+  Padding = 0
+  Gap = 0
+  OnCreate = FormCreate
+  object MainMenu: TMenuBar
+    object FileMenu: TMenuItem
+      Caption = 'File'
+      object SyncItem: TMenuItem
+        Action = SyncAction
+      end
+      object SettingsItem: TMenuItem
+        Caption = 'Settings...'
+        OnClick = SettingsClick
+      end
+      object Sep1: TMenuItem
+        Caption = '-'
+      end
+      object QuitItem: TMenuItem
+        Caption = 'Quit'
+        ShortCut = 'Ctrl+Q'
+        OnClick = QuitClick
+      end
+    end
+    object HelpMenu: TMenuItem
+      Caption = 'Help'
+      object AboutItem: TMenuItem
+        Caption = 'About'
+        OnClick = AboutClick
+      end
+    end
+  end
+  object SyncAction: TAction
+    Caption = 'Sync with the server'
+    ShortCut = 'Ctrl+R'
+    OnExecute = SyncExecute
+  end
+  object CustomerData: TDataBinding
+    Fields = ('NameEdit', 'PhoneEdit', 'EmailEdit', 'NotesMemo')
+  end
+  object Pages: TTabControl
+    Grow = 1
+    OnChange = PagesChange
+    object AgendaPage: TTabSheet
+      Caption = 'Appointments'
+      Padding = 16
+      Gap = 12
+      object DayBar: TRow
+        Gap = 8
+        object PrevDayButton: TButton
+          Text = '‹'
+          Style = Secondary
+          OnClick = PrevDayClick
+        end
+        object DayPicker: TDatePicker
+          Width = 170
+          OnChange = DayChange
+        end
+        object NextDayButton: TButton
+          Text = '›'
+          Style = Secondary
+          OnClick = NextDayClick
+        end
+        object TodayButton: TButton
+          Text = 'Today'
+          Style = Secondary
+          OnClick = TodayClick
+        end
+        object DaySpace: TSpacer
+        end
+        object DayTotalLabel: TLabel
+          Text = ''
+          Bold = True
+        end
+      end
+      object AgendaBody: TRow
+        Grow = 1
+        Align = Stretch
+        Gap = 16
+        object DayList: TListView
+          Grow = 1
+          Sortable = False
+          OnChange = DayListChange
+          object TimeColumn: TGridColumn
+            Title = 'Time'
+            Width = 70
+          end
+          object WhoColumn: TGridColumn
+            Title = 'Customer'
+          end
+          object ServiceColumn: TGridColumn
+            Title = 'Service'
+          end
+          object PriceColumn: TGridColumn
+            Title = 'Price'
+            Width = 100
+            Alignment = Right
+          end
+          object StatusColumn: TGridColumn
+            Title = 'Status'
+            Width = 110
+          end
+        end
+        object AppointmentCard: TCard
+          Width = 360
+          Gap = 6
+          object AppointmentTitle: TLabel
+            Text = 'New appointment'
+            FontSize = 17
+            Bold = True
+          end
+          object CustomerLabel: TLabel
+            Text = 'Customer'
+          end
+          object CustomerCombo: TComboBox
+            Placeholder = 'Choose a customer'
+          end
+          object TimeRow: TRow
+            Gap = 8
+            object TimeCombo: TComboBox
+              Grow = 1
+              Placeholder = 'Time'
+            end
+            object MinutesCombo: TComboBox
+              Width = 110
+              Items = ('15 min', '30 min', '45 min', '60 min', '90 min', '120 min')
+              Text = '30 min'
+            end
+          end
+          object ServiceLabel: TLabel
+            Text = 'Service'
+          end
+          object ServiceEdit: TEdit
+            Placeholder = 'Haircut'
+          end
+          object PriceLabel: TLabel
+            Text = 'Price'
+          end
+          object PriceEdit: TCurrencyEdit
+            Placeholder = '0,00'
+          end
+          object CardSpace: TSpacer
+          end
+          object AppointmentButtons: TRow
+            Gap = 6
+            object NewAppointmentButton: TButton
+              Text = 'New'
+              Style = Secondary
+              Grow = 1
+              OnClick = NewAppointmentClick
+            end
+            object CancelAppointmentButton: TButton
+              Text = 'Cancel'
+              Style = Danger
+              Grow = 1
+              OnClick = CancelAppointmentClick
+            end
+            object DoneButton: TButton
+              Text = 'Done'
+              Style = Secondary
+              Grow = 1
+              OnClick = DoneClick
+            end
+          end
+          object SaveAppointmentButton: TButton
+            Text = 'Save'
+            OnClick = SaveAppointmentClick
+          end
+        end
+      end
+    end
+    object CustomersPage: TTabSheet
+      Caption = 'Customers'
+      Padding = 16
+      object CustomersBody: TRow
+        Grow = 1
+        Align = Stretch
+        Gap = 16
+        object CustomerSide: TColumn
+          Grow = 1
+          Gap = 8
+          object SearchEdit: TEdit
+            Placeholder = 'Search: name, phone or e-mail'
+            OnChange = SearchChange
+          end
+          object CustomerList: TListView
+            Grow = 1
+            Sortable = False
+            OnChange = CustomerListChange
+            object NameColumn: TGridColumn
+              Title = 'Name'
+              Field = 'name'
+            end
+            object PhoneColumn: TGridColumn
+              Title = 'Phone'
+              Field = 'phone'
+              Width = 150
+            end
+          end
+        end
+        object CustomerCard: TCard
+          Width = 340
+          Gap = 6
+          object NameLabel: TLabel
+            Text = 'Name'
+          end
+          object NameEdit: TEdit
+          end
+          object PhoneLabel: TLabel
+            Text = 'Phone'
+          end
+          object PhoneEdit: TEdit
+          end
+          object EmailLabel: TLabel
+            Text = 'E-mail'
+          end
+          object EmailEdit: TEdit
+          end
+          object NotesLabel: TLabel
+            Text = 'Notes'
+          end
+          object NotesMemo: TMemo
+            Grow = 1
+          end
+          object CustomerButtons: TRow
+            Gap = 6
+            Justify = End
+            object DeleteCustomerButton: TButton
+              Text = 'Delete'
+              Style = Danger
+              OnClick = DeleteCustomerClick
+            end
+            object NewCustomerButton: TButton
+              Text = 'New'
+              Style = Secondary
+              OnClick = NewCustomerClick
+            end
+            object SaveCustomerButton: TButton
+              Text = 'Save'
+              OnClick = SaveCustomerClick
+            end
+          end
+        end
+      end
+    end
+    object InvoicesPage: TTabSheet
+      Caption = 'Invoices'
+      Padding = 16
+      Gap = 12
+      object InvoiceBar: TRow
+        Gap = 8
+        object InvoiceCustomerCombo: TComboBox
+          Width = 260
+          Placeholder = 'Customer to invoice'
+          OnChange = InvoiceCustomerChange
+        end
+        object OpenLabel: TLabel
+          Text = ''
+        end
+        object InvoiceSpace: TSpacer
+        end
+        object CreateInvoiceButton: TButton
+          Text = 'Invoice the done appointments'
+          OnClick = CreateInvoiceClick
+        end
+      end
+      object InvoiceList: TListView
+        Grow = 1
+        Sortable = False
+        OnChange = InvoiceListChange
+        object NumberColumn: TGridColumn
+          Title = 'Number'
+          Width = 110
+        end
+        object IssuedColumn: TGridColumn
+          Title = 'Date'
+          Width = 110
+        end
+        object InvoiceWhoColumn: TGridColumn
+          Title = 'Customer'
+        end
+        object TotalColumn: TGridColumn
+          Title = 'Total'
+          Width = 120
+          Alignment = Right
+        end
+        object PaidColumn: TGridColumn
+          Title = 'Paid'
+          Width = 90
+        end
+      end
+      object InvoiceDetail: TRow
+        Gap = 8
+        object InvoiceLinesLabel: TLabel
+          Grow = 1
+          WordWrap = True
+          Text = ''
+        end
+        object PaidButton: TButton
+          Text = 'Mark as paid'
+          Style = Secondary
+          OnClick = PaidClick
+        end
+      end
+    end
+  end
+  object StatusBar: TRow
+    Padding = 8
+    Gap = 16
+    object StatusLabel: TLabel
+      Text = ''
+      FontSize = 12
+    end
+    object StatusSpace: TSpacer
+    end
+    object CountsLabel: TLabel
+      Text = ''
+      FontSize = 12
+    end
+  end
+end

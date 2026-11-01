@@ -1,0 +1,45 @@
+object SettingsForm: TSettingsForm
+  Title = 'Settings'
+  Width = 460
+  Height = 330
+  OnCreate = FormCreate
+  object Memory: TFormMemory
+    Fields = ('ServerEdit', 'KeyEdit', 'VatEdit')
+    FileName = 'settings.json'
+  end
+  object ServerLabel: TLabel
+    Text = 'Server (for Sync)'
+  end
+  object ServerEdit: TEdit
+    Placeholder = 'http://127.0.0.1:8080'
+  end
+  object KeyLabel: TLabel
+    Text = 'API key (when the server asks for one)'
+  end
+  object KeyEdit: TEdit
+    Password = True
+  end
+  object VatLabel: TLabel
+    Text = 'VAT on invoices (%)'
+  end
+  object VatEdit: TEdit
+    Text = '20'
+  end
+  object Space: TSpacer
+  end
+  object Buttons: TRow
+    Gap = 8
+    Justify = End
+    object CancelButton: TButton
+      Text = 'Cancel'
+      Style = Secondary
+      ModalResult = mrCancel
+      Cancel = True
+    end
+    object OkButton: TButton
+      Text = 'OK'
+      ModalResult = mrOk
+      Default = True
+    end
+  end
+end

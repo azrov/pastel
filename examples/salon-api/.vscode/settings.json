@@ -1,0 +1,8 @@
+{
+  "search.exclude": { "build/**": true },
+  "files.watcherExclude": { "**/build/**": true },
+  "[pascal]": {
+    "editor.defaultFormatter": "pastel.pastel-vscode",
+    "editor.formatOnSave": true
+  }
+}
