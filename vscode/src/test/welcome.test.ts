@@ -40,7 +40,7 @@ test('the first page lists the recent projects', () => {
   assert.deepStrictEqual(last('openRecent'), { type: 'openRecent', path: '/home/a/salon-desk' });
 });
 
-test('New Project shows the templates by category; Android is coming', () => {
+test('New Project shows the templates by category', () => {
   $('newProject').click();
   assert.ok(!$('wizard1').hidden && $('projects').hidden);
   const cats = [...doc.querySelectorAll('#cats button')].map((b: any) => b.textContent);
@@ -51,15 +51,28 @@ test('New Project shows the templates by category; Android is coming', () => {
   assert.deepStrictEqual([...doc.querySelectorAll('.card')].map((c: any) => c.dataset.kind), ['api', 'service']);
   doc.querySelectorAll('#cats button')[4].click();
   const android = doc.querySelector('.card');
-  assert.ok(android.classList.contains('soon') && android.textContent.includes('Coming in Pastel 1.5'));
-  android.click();
-  assert.ok($('next').disabled, 'it cannot be chosen yet');
+  assert.strictEqual(android.dataset.kind, 'android');
+  assert.ok(android.textContent.includes('Android'));
+});
+
+test('an Android app is an app built for Android', () => {
+  doc.querySelector('.card').click();
+  $('next').click();
+  assert.strictEqual($('name').value, 'my-phone-app');
+  const boxes = [...doc.querySelectorAll('#platforms input')];
+  assert.deepStrictEqual(boxes.map((b: any) => b.value + ':' + b.checked), ['Windows:false', 'Linux:false', 'Android:true']);
+  $('finish').click();
+  assert.deepStrictEqual(last('create'), { type: 'create', kind: 'app', name: 'my-phone-app', location: '/home/a/PastelProjects', platforms: ['Android'] });
+  w.dispatchEvent(new w.MessageEvent('message', { data: { type: 'failed', message: 'x' } }));
+  $('back').click();
 });
 
 test('a desktop app: name, folder, platforms, Create', () => {
   doc.querySelectorAll('#cats button')[0].click();
   doc.querySelector('.card').click();
   assert.ok(!$('next').disabled);
+  $('name').dataset.typed = '';
+  delete $('name').dataset.typed;
   $('next').click();
   assert.ok(!$('wizard2').hidden);
   assert.strictEqual($('chosenTitle').textContent, 'Desktop App');
@@ -75,7 +88,9 @@ test('a desktop app: name, folder, platforms, Create', () => {
   assert.strictEqual(last('browse').type, 'browse');
   w.dispatchEvent(new w.MessageEvent('message', { data: { type: 'location', location: 'C:\\Users\\a\\Projects' } }));
   assert.strictEqual($('where').textContent, 'The project goes into C:\\Users\\a\\Projects\\shop', 'Windows paths');
-  doc.querySelectorAll('#platforms input')[1].checked = false;
+  const pl = [...doc.querySelectorAll('#platforms input')];
+  assert.deepStrictEqual(pl.map((b: any) => b.value + ':' + b.checked), ['Windows:true', 'Linux:true', 'Android:false'], 'a desktop app can add Android');
+  pl[1].checked = false;
   $('finish').click();
   assert.deepStrictEqual(last('create'), { type: 'create', kind: 'app', name: 'shop', location: 'C:\\Users\\a\\Projects', platforms: ['Windows'] });
   w.dispatchEvent(new w.MessageEvent('message', { data: { type: 'failed', message: 'shop exists already.' } }));

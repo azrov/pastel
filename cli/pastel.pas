@@ -8,7 +8,7 @@ uses
   Classes, SysUtils,
   Pastel.Console, Pastel.Toml, Pastel.Project, Pastel.Targets,
   Pastel.Builder, Pastel.Templates, Pastel.Doctor, Pastel.Inspect, Pastel.TestCmd,
-  Pastel.Watch, Pastel.FmtCmd, Pastel.Package, Pastel.MigrateCmd, Pastel.LangCmd, Pastel.Runtime, Pastel.CustomCtl, Pastel.Upgrade, Pastel.Packages, Pastel.ModelGen, Pastel.UI, RegExpr;
+  Pastel.Watch, Pastel.FmtCmd, Pastel.Package, Pastel.MigrateCmd, Pastel.LangCmd, Pastel.Runtime, Pastel.CustomCtl, Pastel.Upgrade, Pastel.Packages, Pastel.ModelGen, Pastel.UI, RegExpr, Process;
 
 const
   ExitOk = 0;
@@ -394,12 +394,99 @@ begin
   end;
 end;
 
+{ pastel run --target android: the app on the phone connected with USB (adb), and its log }
+function RunOnAndroid(const CL: TCommandLine; const T: TTarget): Integer;
+var
+  Project: TPastelProject;
+  Apk, Adb, Output, Id: string;
+  Args: TStringList;
+
+  function Adb_(const A: array of string; Show: Boolean): Boolean;
+  var
+    S: string;
+  begin
+    Args.Clear;
+    for S in A do
+      Args.Add(S);
+    Result := RunCapture(Adb, Args, Project.Root, Output) = 0;
+    if Show or not Result then
+      if Trim(Output) <> '' then
+        WriteLn(Trim(Output));
+  end;
+
+begin
+  Result := ExitError;
+  Adb := ExeSearch({$IFDEF WINDOWS}'adb.exe'{$ELSE}'adb'{$ENDIF}, GetEnvironmentVariable('PATH'));
+  if Adb = '' then
+  begin
+    Fail('running on a phone needs adb (Android''s device bridge)');
+    {$IFDEF LINUX}
+    Hint('sudo apt install adb; then turn on USB debugging on the phone (Settings > Developer options)');
+    {$ELSE}
+    Hint('it comes with Android Studio''s platform-tools; then turn on USB debugging on the phone');
+    {$ENDIF}
+    Exit;
+  end;
+  Project := OpenProject;
+  if Project = nil then
+    Exit;
+  Args := TStringList.Create;
+  try
+    Apk := PackageApk(Project, T, CL.Verbose, not CL.Release);
+    if Apk = '' then
+      Exit;
+    Adb_(['devices'], False);
+    if Pos(#9'device', Output) = 0 then
+    begin
+      Fail('no phone is connected');
+      Hint('connect it with USB, allow USB debugging on it, then check with: adb devices');
+      Exit;
+    end;
+    Id := AndroidAppId(Project);
+    Status('Installing', ExtractFileName(Apk) + ' on the phone');
+    if not Adb_(['install', '-r', Apk], False) then
+    begin
+      Fail('the phone did not install it');
+      Exit;
+    end;
+    Adb_(['logcat', '-c'], False);
+    Status('Starting', Id);
+    if not Adb_(['shell', 'am', 'start', '-n', Id + '/android.app.NativeActivity'], False) then
+      Exit;
+    Status('Log', 'what the app writes (WriteLn, errors); Ctrl+C stops showing it, the app keeps running');
+    Args.Clear;
+    Args.Add('logcat');
+    Args.Add('-v');
+    Args.Add('brief');
+    Args.Add('pastel:V');
+    Args.Add('AndroidRuntime:E');
+    Args.Add('DEBUG:V');
+    Args.Add('*:S');
+    with TProcess.Create(nil) do
+    try
+      Executable := Adb;
+      Parameters.Assign(Args);
+      CurrentDirectory := Project.Root;
+      Options := [poWaitOnExit];
+      Execute;
+      Result := ExitCode;
+    finally
+      Free;
+    end;
+  finally
+    Args.Free;
+    Project.Free;
+  end;
+end;
+
 function CmdRun(const CL: TCommandLine): Integer;
 var
   Project: TPastelProject;
   T: TTarget;
   Users: string;
 begin
+  if (CL.Target <> '') and FindTarget(CL.Target, T) and (T.OS = 'android') then
+    Exit(RunOnAndroid(CL, T));
   if (CL.Target <> '') and FindTarget(CL.Target, T) and not IsHost(T) then
   begin
     Fail(Format('cannot run a %s program on this computer', [T.Name]));
@@ -461,6 +548,8 @@ var
       Result := PackageInstaller(Project, Target, CL.Verbose) <> ''
     else if Kind = 'appimage' then
       Result := PackageAppImage(Project, Target, CL.Verbose) <> ''
+    else if Kind = 'apk' then
+      Result := PackageApk(Project, Target, CL.Verbose) <> ''
     else
       Result := PackageProject(Project, Target, CL.Verbose) <> '';
   end;
@@ -469,10 +558,11 @@ begin
   Kind := '';
   if Length(CL.Positional) > 0 then
     Kind := LowerCase(CL.Positional[0]);
-  if (Kind <> '') and (Kind <> 'deb') and (Kind <> 'docker') and (Kind <> 'installer') and (Kind <> 'appimage') then
+  if (Kind <> '') and (Kind <> 'deb') and (Kind <> 'docker') and (Kind <> 'installer') and (Kind <> 'appimage') and
+    (Kind <> 'apk') then
   begin
     Fail(Format('unknown package kind "%s"', [Kind]));
-    Hint('use: pastel package, pastel package deb, docker, appimage, installer --target windows');
+    Hint('use: pastel package, pastel package deb, docker, appimage, apk, installer --target windows');
     Exit(ExitUsage);
   end;
   Project := OpenProject;
@@ -493,7 +583,9 @@ begin
         { a .deb, an image or an AppImage only for the Linux platforms, an installer for Windows }
         if (Kind = 'installer') and (Copy(Name, 1, 7) <> 'windows') then
           Continue;
-        if (Kind <> '') and (Kind <> 'installer') and (Copy(Name, 1, 5) <> 'linux') then
+        if (Kind = 'apk') and (Copy(Name, 1, 7) <> 'android') then
+          Continue;
+        if (Kind <> '') and (Kind <> 'installer') and (Kind <> 'apk') and (Copy(Name, 1, 5) <> 'linux') then
           Continue;
         if not ResolveTarget(Name, T) or not PackageOne(T) then
           Inc(Failed);
@@ -508,7 +600,9 @@ begin
     end;
     if not ResolveTarget(CL.Target, T) then
       Exit(ExitUsage);
-    if (Kind <> '') and (CL.Target = '') and (T.OS <> 'linux') then
+    if (Kind = 'apk') and (CL.Target = '') then
+      ResolveTarget('android-arm64', T)       { an .apk is for Android, made anywhere }
+    else if (Kind <> '') and (CL.Target = '') and (T.OS <> 'linux') then
       ResolveTarget('linux', T);       { a .deb or an image is for Linux, also when made elsewhere }
     if PackageOne(T) then
       Result := ExitOk
@@ -712,8 +806,9 @@ end;
 function CmdDoctor(const CL: TCommandLine): Integer;
 var
   T: TTarget;
-  Name, Err, Fpc: string;
+  Name, Err, Fpc, Prefix: string;
   I, Index: Integer;
+  HaveBinutils: Boolean;
 begin
   if not CL.Install then
   begin
@@ -738,6 +833,25 @@ begin
     for I := Low(KnownTargets) to High(KnownTargets) do
       if KnownTargets[I].Name = T.Name then
         Index := I;
+    { Android: the start of a library and the system libraries' names, made with the binutils }
+    if (T.OS = 'android') and not AndroidLibsReady then
+    begin
+      Prefix := FindBinutilsPrefix(T, HaveBinutils);
+      if not HaveBinutils then
+      begin
+        Fail('the ARM 64-bit binutils are needed for Android: ' + BinutilsHint(T));
+        Result := ExitError;
+        Continue;
+      end;
+      Err := MakeAndroidLibs(Prefix);
+      if Err <> '' then
+      begin
+        Fail(Err);
+        Result := ExitError;
+        Continue;
+      end;
+      Status('Made', 'the Android system library stand-ins in ' + AndroidLibDir);
+    end;
     if (Fpc <> '') and (Index >= 0) and not CanBuildTarget(Fpc, Index) then
     begin
       Err := BuildRtl(Fpc, T);

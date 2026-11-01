@@ -134,7 +134,7 @@ export class FormPreview {
         type: 'schema',
         controls: schema.controls.map(c => ({
           name: c.name, container: c.container, project: !!c.project, nonvisual: !!c.nonvisual,
-          platforms: c.platforms ?? ['Windows', 'Linux'], android: c.android ?? 'planned',
+          platforms: c.platforms ?? ['Windows', 'Linux'], android: c.android ?? 'preview',
         })),
         icons: schema.icons ?? [],
       });

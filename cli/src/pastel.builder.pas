@@ -737,6 +737,45 @@ begin
       end;
 end;
 
+{ Android: the app's main program as a library (libmain.so) that Android's
+  NativeActivity loads; Pastel.Android exports ANativeActivity_onCreate and
+  starts the app's event loop when the activity is there. }
+function WriteAndroidMain(Project: TPastelProject; const GenDir: string): string;
+var
+  L: TStringList;
+  I, MainBegin: Integer;
+  T: string;
+  Named: Boolean;
+begin
+  L := TStringList.Create;
+  try
+    L.LoadFromFile(Project.Root + Project.MainFile);
+    Named := False;
+    MainBegin := -1;
+    for I := 0 to L.Count - 1 do
+    begin
+      T := LowerCase(Trim(L[I]));
+      if not Named and (Copy(T, 1, 8) = 'program ') then
+      begin
+        L[I] := 'library main;';
+        Named := True;
+      end;
+      if T = 'begin' then
+        MainBegin := I;
+    end;
+    if not Named or (MainBegin < 0) then
+      raise EProjectError.Create(Project.MainFile + ': the program (program ...; begin ... end.) was not found');
+    L.Insert(MainBegin, 'exports ANativeActivity_onCreate;');
+    L.Insert(MainBegin + 1, '');
+    { messages point at the real main file }
+    L.Insert(0, '{ made by pastel build from ' + Project.MainFile + ' for Android }');
+    Result := GenDir + PathDelim + 'androidmain.pas';
+    L.SaveToFile(Project.Root + Result);
+  finally
+    L.Free;
+  end;
+end;
+
 { the unit in "Fatal: Can't find unit X used by Y", '' when there is none }
 function MissingUnit(const CompilerOut: string): string;
 var
@@ -929,6 +968,7 @@ var
   NotFound, KnownUnit: string;
   BinPrefix, GenDir, Framework, LibMain, OverlayDir, OverlayMain, MainSrc: string;
   LibCheck, HasAssets: Boolean;
+  AndroidMain: string;
   LibUnits: Integer;
   Gen: TCodegenResult;
   Issues: TIssues;
@@ -1047,7 +1087,9 @@ begin
   GenDir := OutDir + PathDelim + 'gen';
   WriteAppInfo(Project, Project.Root + GenDir, Profile, Opts.Target.Name);
   try
-    HasAssets := WriteAppAssets(Project, Project.Root + GenDir, Opts.Release, Opts.Target.OS.StartsWith('win'));
+    { a phone has no project folder: its pictures go into the program }
+    HasAssets := WriteAppAssets(Project, Project.Root + GenDir, Opts.Release or (Opts.Target.OS = 'android'),
+      Opts.Target.OS.StartsWith('win'));
   except
     on E: EProjectError do
     begin
@@ -1057,6 +1099,31 @@ begin
   end;
   LibCheck := (Project.Kind = 'lib') and (Opts.MainFile = '') and (Project.MainFile = '');
   LibUnits := 0;
+  AndroidMain := '';
+  if Opts.Target.OS = 'android' then
+  begin
+    if Project.Kind <> 'app' then
+    begin
+      Fail(Format('Android builds are made of app projects (this is a %s project)', [Project.Kind]));
+      Exit;
+    end;
+    if not AndroidLibsReady then
+    begin
+      Fail('this computer cannot build for Android yet');
+      Hint('pastel doctor --install android sets it up (it needs the ARM 64-bit binutils: sudo apt install binutils-aarch64-linux-gnu)');
+      Exit;
+    end;
+    try
+      AndroidMain := WriteAndroidMain(Project, GenDir);
+    except
+      on E: EProjectError do
+      begin
+        Fail(E.Message);
+        Exit;
+      end;
+    end;
+    ExePath := OutDir + PathDelim + 'libmain.so';
+  end;
   if LibCheck then
   begin
     try
@@ -1093,6 +1160,12 @@ begin
     BinPrefix := FindBinutilsPrefix(Opts.Target, HaveBinutils);
     if BinPrefix <> '' then
       Args.Add('-XP' + BinPrefix);
+    if AndroidMain <> '' then
+    begin
+      { the start of a library and the names of the system libraries }
+      Args.Add('-Fl' + AndroidLibDir);
+      Args.Add('-Fo' + AndroidLibDir);
+    end;
 
     if Project.Mode = 'delphi' then
       Args.Add('-Mdelphi')
@@ -1164,10 +1237,12 @@ begin
     { threads, UTF-8 strings and console on every platform }
     if Framework <> '' then
     begin
+      Opt := 'Pastel.Startup,Pastel.ErrorExit';
+      if AndroidMain <> '' then
+        Opt := Opt + ',Pastel.Android';
       if HasAssets then
-        Args.Add('-FaPastel.Startup,Pastel.ErrorExit,AppAssets')
-      else
-        Args.Add('-FaPastel.Startup,Pastel.ErrorExit');
+        Opt := Opt + ',AppAssets';
+      Args.Add('-Fa' + Opt);
     end;
     Args.Add('-dPASTEL');
     if Opts.Release then
@@ -1211,7 +1286,9 @@ begin
     Args.Add('-vm6058');   { "marked as inline is not inlined": only a missed speed-up, says nothing about the code }
     if Opts.CheckOnly then
       Args.Add('-Cn');
-    if OverlayMain <> '' then
+    if AndroidMain <> '' then
+      Args.Add(AndroidMain)
+    else if OverlayMain <> '' then
       Args.Add(OverlayMain)
     else if Opts.MainFile <> '' then
       Args.Add(Opts.MainFile)

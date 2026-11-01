@@ -15,7 +15,8 @@ unit Pastel.App;
 interface
 
 uses
-  Classes, SysUtils, Pastel.Graphics, Pastel.UI, Pastel.PForm, Pastel.Forms, Pastel.Env;
+  Classes, SysUtils, Pastel.Graphics, Pastel.UI, Pastel.PForm, Pastel.Forms, Pastel.Env
+  {$IFDEF ANDROID}, Pastel.Android{$ENDIF};
 
 type
   TApplication = class
@@ -72,6 +73,26 @@ type
     procedure TryClose;
     procedure DoLayout;
     procedure RunScript(const FileName: string);
+  {$IFDEF ANDROID}
+  private
+    FLanguageFromSystem, FKeyboardShown: Boolean;
+    FTouchDown, FTouchScrolling, FLongPressDone: Boolean;
+    FTouchStartX, FTouchStartY, FTouchX, FTouchY, FScrollFromY, FLastTapX, FLastTapY: Integer;
+    FTouchTime, FLastTapTime: QWord;
+    procedure AndroidSizeFromWindow;
+    procedure AndroidCreateWindow;
+    procedure AndroidPresent;
+    procedure AndroidCommand(Cmd: TAndroidCommand);
+    procedure AndroidTouch(Ev: Pointer);
+    procedure AndroidLongPress;
+    function AndroidKey(Ev: Pointer): Boolean;
+    procedure AndroidInputEvents;
+    procedure AndroidProcessEvents(Timeout: Integer);
+    procedure AndroidKeyboard;
+  public
+    { Internal: the event loop on Android's app thread. }
+    procedure AndroidRun;
+  {$ENDIF}
   public
     { One pass of the event loop: events, timers, threads, layout, paint.
       Long work in an event handler can call it to keep the window alive. }
@@ -95,7 +116,7 @@ var
 implementation
 
 uses
-  Math, TypInfo, Process, {$IFDEF WINDOWS}Registry,{$ENDIF} Pastel.SDL2, Pastel.Assets,
+  Math, TypInfo, {$IFNDEF ANDROID}Process, Pastel.SDL2,{$ENDIF} {$IFDEF WINDOWS}Registry,{$ENDIF} Pastel.Assets,
   { linked into every app, so .pform files can use their controls }
   Pastel.Controls, Pastel.Menus, Pastel.Dialogs, Pastel.Grids, Pastel.Binding, Pastel.Inputs, Pastel.Toml, Pastel.Lang;
 
@@ -103,6 +124,7 @@ const
   DefaultWidth = 480;
   DefaultHeight = 360;
 
+{$IFNDEF ANDROID}
 function SdlClipboardGet: string;
 var
   P: PChar;
@@ -118,6 +140,7 @@ procedure SdlClipboardSet(const S: string);
 begin
   SDL_SetClipboardText(PChar(S));
 end;
+{$ENDIF}
 
 constructor TApplication.Create;
 begin
@@ -129,6 +152,7 @@ end;
 destructor TApplication.Destroy;
 begin
   FMainForm.Free;
+  {$IFNDEF ANDROID}
   if FTexture <> nil then SDL_DestroyTexture(FTexture);
   if FRenderer <> nil then SDL_DestroyRenderer(FRenderer);
   if FWindow <> nil then
@@ -136,6 +160,7 @@ begin
     SDL_DestroyWindow(FWindow);
     SDL_Quit;
   end;
+  {$ENDIF}
   FCanvas.Free;
   DoneFonts;
   inherited Destroy;
@@ -152,6 +177,9 @@ begin
   { release builds have no console, so the message would be invisible }
   if not IsConsole then
     MessageBoxA(nil, PChar(Msg), 'Pastel', $10);
+  {$ENDIF}
+  {$IFDEF ANDROID}
+  AndroidLog('error: ' + Msg);
   {$ENDIF}
   if IsConsole then
     WriteLn(StdErr, 'error: ', Msg);
@@ -244,13 +272,17 @@ end;
 
 { Is the computer set to dark colors? }
 function SystemPrefersDark: Boolean;
+{$IFNDEF ANDROID}
 var
   Out_: string;
+{$ENDIF}
 begin
   Result := False;
   if GetEnv('PASTEL_THEME') <> '' then
     Exit(SameText(GetEnv('PASTEL_THEME'), 'dark'));
-  {$IF defined(WINDOWS)}
+  {$IF defined(ANDROID)}
+  Result := AndroidNightMode;
+  {$ELSEIF defined(WINDOWS)}
   with TRegistry.Create(KEY_READ) do
   try
     RootKey := HKEY_CURRENT_USER;
@@ -285,7 +317,12 @@ begin
   UseAssetFonts;
   UseThemeFile;
   if not LanguageChosen then
+  begin
     UseLanguage(SystemLanguage);
+    {$IFDEF ANDROID}
+    FLanguageFromSystem := True;     { the phone's language is known once the activity is there }
+    {$ENDIF}
+  end;
   FHeadless := GetEnv('PASTEL_HEADLESS') = '1';
   FCheckRepaint := GetEnv('PASTEL_CHECK_REPAINT') = '1';
   if GetEnv('PASTEL_FULL_REPAINT') = '1' then
@@ -339,6 +376,9 @@ begin
       tmSystem: UseDarkTheme(SystemPrefersDark);
     end;
     FSourcePath := Src.FilePath;
+    {$IFDEF ANDROID}
+    FSourcePath := '';      { the .pform files are on the computer, not on the phone }
+    {$ENDIF}
     FSeenText := Text;
     FLastGood := Text;
   end;
@@ -366,6 +406,11 @@ begin
 end;
 
 procedure TApplication.SetWindowIcon;
+{$IFDEF ANDROID}
+begin
+  { the app's icon is in the APK }
+end;
+{$ELSE}
 var
   B: TBitmap32;
   S: TStream;
@@ -394,8 +439,17 @@ begin
   end;
   B.Free;
 end;
+{$ENDIF}
 
 procedure TApplication.CreateWindow;
+{$IFDEF ANDROID}
+begin
+  FWidth := DefaultWidth;
+  FHeight := DefaultHeight;
+  if not FHeadless then
+    AndroidCreateWindow;
+end;
+{$ELSE}
 var
   Err: string;
   W, H, WW, WH, PW, PH: Integer;
@@ -415,7 +469,6 @@ begin
       FScale := ForcedScale;
     Exit;
   end;
-
   Err := LoadSDL2;
   if Err <> '' then
     Fatal(Err);
@@ -487,6 +540,7 @@ begin
   ClipboardSetText := @SdlClipboardSet;
   SDL_StartTextInput;
 end;
+{$ENDIF}
 
 procedure TApplication.DoLayout;
 begin
@@ -517,6 +571,11 @@ end;
 
 { Applies window settings changed from code (Maximize, Resizable := ...). }
 procedure TApplication.SyncWindow;
+{$IFDEF ANDROID}
+begin
+  NeedsWindowSync := False;     { a phone's app fills the screen }
+end;
+{$ELSE}
 var
   Want: TWindowState;
 begin
@@ -553,6 +612,7 @@ begin
     FAppliedState := Want;
   end;
 end;
+{$ENDIF}
 
 procedure TApplication.Paint;
 begin
@@ -640,6 +700,12 @@ begin
 end;
 
 procedure TApplication.Present;
+{$IFDEF ANDROID}
+begin
+  if not FHeadless then
+    AndroidPresent;
+end;
+{$ELSE}
 var
   R: TRectI;    { the same layout as SDL_Rect }
 begin
@@ -664,8 +730,15 @@ begin
   SDL_RenderCopy(FRenderer, FTexture, nil, nil);
   SDL_RenderPresent(FRenderer);
 end;
+{$ENDIF}
 
 procedure TApplication.UpdateCursor;
+{$IFDEF ANDROID}
+begin
+  if not FHeadless then
+    AndroidKeyboard;      { no mouse pointer; the on-screen keyboard for edits }
+end;
+{$ELSE}
 var
   K: TCursorKind;
 begin
@@ -684,8 +757,14 @@ begin
     SDL_SetWindowTitle(FWindow, PChar(FWindowTitle));
   end;
 end;
+{$ENDIF}
 
 procedure TApplication.ProcessEvents(Timeout: Integer);
+{$IFDEF ANDROID}
+begin
+  AndroidProcessEvents(Timeout);
+end;
+{$ELSE}
 var
   Ev: TSDL_Event;
   Got: Boolean;
@@ -755,6 +834,7 @@ begin
     Got := SDL_PollEvent(@Ev) <> 0;
   end;
 end;
+{$ENDIF}
 
 procedure TApplication.Reload(const NewSource: string);
 var
@@ -1316,6 +1396,11 @@ begin
 end;
 
 procedure TApplication.WakeUp(Sender: TObject);
+{$IFDEF ANDROID}
+begin
+  AndroidWake;
+end;
+{$ELSE}
 var
   Ev: TSDL_Event;
 begin
@@ -1326,6 +1411,11 @@ begin
     SDL_PushEvent(@Ev);
   end;
 end;
+{$ENDIF}
+
+{$IFDEF ANDROID}
+{$I pastel.app.android.inc}
+{$ENDIF}
 
 procedure TApplication.Run;
 var
@@ -1333,6 +1423,14 @@ var
 begin
   if FMainForm = nil then
     Fatal('Application.Run needs a form: call Application.CreateForm first');
+  {$IFDEF ANDROID}
+  { Android starts the app when its activity is there (Pastel.Android) }
+  if not FHeadless then
+  begin
+    AndroidAppMain := @AndroidRunApp;
+    Exit;
+  end;
+  {$ENDIF}
   CreateWindow;
   ModalStep := @AppModalStep;
   WakeMainThread := @WakeUp;
@@ -1359,7 +1457,7 @@ var
 {$ENDIF}
 begin
   Result := nil;
-  {$IFDEF WINDOWS}
+  {$IF defined(WINDOWS) and not defined(ANDROID)}
   if (Application = nil) or (Application.FWindow = nil) or not Assigned(SDL_GetWindowWMInfo) then
     Exit;
   FillChar(Info, SizeOf(Info), 0);

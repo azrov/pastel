@@ -12,7 +12,7 @@ unit Pastel.Graphics;
 interface
 
 uses
-  Classes, SysUtils, Pastel.FreeType, Pastel.Env;
+  Classes, SysUtils, Pastel.FreeType, Pastel.TrueType, Pastel.Env;
 
 type
   { $AARRGGBB. A distinct type so .pform files can use '#RRGGBB' for it. }
@@ -44,6 +44,9 @@ type
   TPastelFont = class
   private
     FFace: PFT_Face;
+    FTT: TTrueTypeFont;          { the font without FreeType (not owned) }
+    FTTScale: Double;
+    FEmbolden: Boolean;
     FSize: Integer;
     FBold: Boolean;
     FAscent, FDescent, FLineHeight: Integer;
@@ -51,7 +54,7 @@ type
     FPages: array[0..$10FF] of PGlyphPage;
     function Kerning(Left, Right: FT_UInt): Integer;
   public
-    constructor Create(const FileName: string; ASize: Integer);
+    constructor Create(const FileName: string; ASize: Integer; AEmbolden: Boolean = False);
     destructor Destroy; override;
     function Glyph(CodePoint: Cardinal): PGlyph;
     function TextWidth(const S: string): Integer;
@@ -151,6 +154,9 @@ procedure SetFontFiles(const Regular, Bold: string);
 function InitFonts: string;
 { Internal: frees the fonts at the end. }
 procedure DoneFonts;
+{ True when text is drawn by Pastel.TrueType instead of FreeType (always on
+  Android; on a desktop without the FreeType library, or with PASTEL_FONT_ENGINE=pascal). }
+function PascalFonts: Boolean;
 
 implementation
 
@@ -161,6 +167,35 @@ var
   FTLib: PFT_Library = nil;
   RegularFontFile, BoldFontFile: string;
   FontCache: TStringList = nil;
+  UsePascalFonts: Boolean = False;
+  FontFiles: TStringList = nil;     { file name -> TTrueTypeFont, read once }
+
+function PascalFonts: Boolean;
+begin
+  Result := UsePascalFonts;
+end;
+
+function LoadedFontFile(const FileName: string): TTrueTypeFont;
+var
+  I: Integer;
+begin
+  if FontFiles = nil then
+  begin
+    FontFiles := TStringList.Create;
+    FontFiles.Sorted := True;
+    FontFiles.OwnsObjects := True;
+  end;
+  I := FontFiles.IndexOf(FileName);
+  if I >= 0 then
+    Exit(TTrueTypeFont(FontFiles.Objects[I]));
+  try
+    Result := TTrueTypeFont.Create(FileName);
+  except
+    on E: Exception do
+      raise EPastelGraphics.Create('cannot open font ' + FileName + ': ' + E.Message);
+  end;
+  FontFiles.AddObject(FileName, Result);
+end;
 
 { ---- colors ---- }
 
@@ -306,10 +341,22 @@ end;
 
 { ---- fonts ---- }
 
-constructor TPastelFont.Create(const FileName: string; ASize: Integer);
+constructor TPastelFont.Create(const FileName: string; ASize: Integer; AEmbolden: Boolean);
 begin
   inherited Create;
   FSize := ASize;
+  if UsePascalFonts then
+  begin
+    FTT := LoadedFontFile(FileName);
+    FTTScale := ASize / FTT.UnitsPerEm;
+    FEmbolden := AEmbolden;
+    { rounded like FreeType does }
+    FAscent := Ceil(FTT.Ascender * FTTScale);
+    FDescent := Ceil(-FTT.Descender * FTTScale);
+    FLineHeight := Max(Round((FTT.Ascender - FTT.Descender + FTT.LineGap) * FTTScale), FAscent + FDescent);
+    FHasKerning := FTT.HasKerning;
+    Exit;
+  end;
   if FT_New_Face(FTLib, PChar(FileName), 0, FFace) <> 0 then
     raise EPastelGraphics.Create('cannot open font ' + FileName);
   FT_Set_Pixel_Sizes(FFace, 0, ASize);
@@ -338,6 +385,7 @@ end;
 
 function TPastelFont.Glyph(CodePoint: Cardinal): PGlyph;
 var
+  TT: TTrueTypeBitmap;
   Slot: PFT_GlyphSlot;
   Row: Integer;
   Src: PByte;
@@ -353,6 +401,19 @@ begin
   if Result <> nil then
     Exit;
   New(Result);
+  if FTT <> nil then
+  begin
+    Result^.Index := FTT.GlyphIndex(CodePoint);
+    FTT.Render(Result^.Index, FTTScale, FEmbolden, TT);
+    Result^.Width := TT.Width;
+    Result^.Height := TT.Height;
+    Result^.Left := TT.Left;
+    Result^.Top := TT.Top;
+    Result^.Advance := TT.Advance;
+    Result^.Bits := TT.Bits;
+    FPages[CodePoint shr 8]^[CodePoint and $FF] := Result;
+    Exit;
+  end;
   Result^.Index := FT_Get_Char_Index(FFace, CodePoint);
   Result^.Width := 0;
   Result^.Height := 0;
@@ -383,6 +444,8 @@ var
   V: FT_Vector;
 begin
   Result := 0;
+  if (FTT <> nil) and FHasKerning and (Left <> 0) and (Right <> 0) then
+    Exit(Round(FTT.Kerning(Left, Right) * FTTScale));
   if FHasKerning and (Left <> 0) and (Right <> 0) and
      (FT_Get_Kerning(FFace, Left, Right, FT_KERNING_DEFAULT, V) = 0) then
     Result := V.x div 64;
@@ -468,7 +531,7 @@ begin
       '/usr/share/fonts/TTF/DejaVuSans.ttf',
       '/usr/share/fonts/dejavu/DejaVuSans.ttf',
       '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf',
-      '/system/fonts/Roboto-Regular.ttf']);
+      '/system/fonts/Roboto-Regular.ttf', '/system/fonts/DroidSans.ttf']);
   if BoldFontFile = '' then
     BoldFontFile := FirstExisting([
       '/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf',
@@ -478,7 +541,7 @@ begin
       '/usr/share/fonts/TTF/DejaVuSans-Bold.ttf',
       '/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf',
       '/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf',
-      '/system/fonts/Roboto-Bold.ttf']);
+      '/system/fonts/Roboto-Bold.ttf', '/system/fonts/DroidSans-Bold.ttf']);
   {$ENDIF}
   if BoldFontFile = '' then
     BoldFontFile := RegularFontFile;
@@ -486,13 +549,17 @@ end;
 
 function InitFonts: string;
 begin
-  if FTLib <> nil then
+  if (FTLib <> nil) or (FontCache <> nil) then
     Exit('');
-  Result := LoadFreeType;
-  if Result <> '' then
-    Exit;
-  if FT_Init_FreeType(FTLib) <> 0 then
+  { FreeType when it is there; else Pastel's own TrueType reader (always on Android) }
+  {$IFDEF ANDROID}
+  UsePascalFonts := True;
+  {$ELSE}
+  UsePascalFonts := SameText(GetEnv('PASTEL_FONT_ENGINE'), 'pascal') or (LoadFreeType <> '');
+  if not UsePascalFonts and (FT_Init_FreeType(FTLib) <> 0) then
     Exit('FreeType could not be initialized');
+  {$ENDIF}
+  Result := '';
   FindSystemFonts;
   if RegularFontFile = '' then
     Exit('no usable font was found (set PASTEL_FONT to a .ttf file)');
@@ -515,6 +582,7 @@ end;
 procedure DoneFonts;
 begin
   FreeAndNil(FontCache);
+  FreeAndNil(FontFiles);
 end;
 
 function GetFont(Size: Integer; Bold: Boolean): TPastelFont;
@@ -529,7 +597,8 @@ begin
   if I >= 0 then
     Exit(TPastelFont(FontCache.Objects[I]));
   if Bold then
-    Result := TPastelFont.Create(BoldFontFile, Size)
+    { without a bold font file the regular one is drawn thicker }
+    Result := TPastelFont.Create(BoldFontFile, Size, UsePascalFonts and (BoldFontFile = RegularFontFile))
   else
     Result := TPastelFont.Create(RegularFontFile, Size);
   Result.FBold := Bold;

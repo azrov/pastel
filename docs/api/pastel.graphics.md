@@ -8,7 +8,7 @@ Software 2D drawing: colors, an anti-aliased canvas and fonts.
 
 `uses Pastel.Graphics;` · source: [framework/src/pastel.graphics.pas](../../framework/src/pastel.graphics.pas)
 
-**Contents:** [TRectI](#trecti) · [TPastelFont](#tpastelfont) · [TBitmap32](#tbitmap32) · [TCanvas32](#tcanvas32) · [EPastelGraphics](#epastelgraphics) · [RGB](#rgb) · [RGBA](#rgba) · [WithAlpha](#withalpha) · [Mix](#mix) · [TryParseColor](#tryparsecolor) · [RectI](#recti) · [NextCodePoint](#nextcodepoint) · [PrevCharStart](#prevcharstart) · [GetFont](#getfont) · [SetFontFiles](#setfontfiles)
+**Contents:** [TRectI](#trecti) · [TPastelFont](#tpastelfont) · [TBitmap32](#tbitmap32) · [TCanvas32](#tcanvas32) · [EPastelGraphics](#epastelgraphics) · [RGB](#rgb) · [RGBA](#rgba) · [WithAlpha](#withalpha) · [Mix](#mix) · [TryParseColor](#tryparsecolor) · [RectI](#recti) · [NextCodePoint](#nextcodepoint) · [PrevCharStart](#prevcharstart) · [GetFont](#getfont) · [SetFontFiles](#setfontfiles) · [PascalFonts](#pascalfonts)
 
 ## Types
 
@@ -37,7 +37,7 @@ type TPastelFont = class
 
 | | |
 |---|---|
-| `constructor Create(const FileName: string; ASize: Integer)` |  |
+| `constructor Create(const FileName: string; ASize: Integer; AEmbolden: Boolean = False)` |  |
 | `destructor Destroy` |  |
 | `function Glyph(CodePoint: Cardinal): PGlyph` |  |
 | `function TextWidth(const S: string): Integer` |  |
@@ -176,4 +176,13 @@ procedure SetFontFiles(const Regular: string; const Bold: string)
 ```
 
 Use these .ttf files instead of the system font (after InitFonts).
+
+### PascalFonts
+
+```pascal
+function PascalFonts: Boolean
+```
+
+True when text is drawn by Pastel.TrueType instead of FreeType (always on
+Android; on a desktop without the FreeType library, or with PASTEL_FONT_ENGINE=pascal).
 

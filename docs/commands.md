@@ -60,6 +60,12 @@ pastel run --release
 
 While a desktop app runs, saving a `.pform` file updates the window at once (hot reload).
 
+```sh
+pastel run --target android            # on the phone connected with USB: installs, starts, shows its log
+```
+
+See [android.md](android.md).
+
 ## pastel test
 
 Runs the tests in `tests/` (units with `TTestSuite` classes, see [testing.md](testing.md)).
@@ -105,6 +111,7 @@ pastel package deb                      # a Debian/Ubuntu package (service: with
 pastel package docker                   # a container image (services)
 pastel package appimage                 # one file that runs on most Linux systems (apps)
 pastel package installer --target windows   # a Windows installer (needs makensis)
+pastel package apk                      # an Android app, signed: dist/<name>-<version>.apk (android.md)
 pastel package --no-build               # pack what was built already
 ```
 
@@ -126,6 +133,8 @@ Checks the setup: the compiler, the libraries apps and HTTPS need, and which pla
 pastel doctor
 pastel doctor --install windows    # set up building for Windows on Linux: Free Pascal's units
                                    # for Windows (from fpc-source) and SDL2.dll / freetype.dll
+pastel doctor --install android    # set up building for Android: Free Pascal's units for
+                                   # ARM 64-bit Android, without the NDK (android.md)
 ```
 
 ## pastel lang

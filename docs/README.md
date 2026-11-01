@@ -26,6 +26,7 @@ Everything about Pastel, by topic. Every page has examples you can copy; the [ex
 | [Forms and controls](forms.md) | `.pform` files, layout, the designer, hot reload, UI test scripts |
 | [Controls reference](controls.md) | Every control and component, each with a `.pform` and a code example |
 | [Writing components](components.md) | Your own controls and non-visual components; sharing them in a library |
+| [Android](android.md) | The same app on phones and tablets: setting up, `pastel package apk`, running on a connected phone (preview) |
 
 ## Programs and services
 

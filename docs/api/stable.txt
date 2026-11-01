@@ -402,7 +402,7 @@ Pastel.Graphics: TCanvas32.property PixelHeight: Integer
 Pastel.Graphics: TCanvas32.property PixelWidth: Integer
 Pastel.Graphics: TCanvas32.property Scale: Single
 Pastel.Graphics: TCanvas32.property Width: Integer
-Pastel.Graphics: TPastelFont.constructor Create(const FileName: string; ASize: Integer)
+Pastel.Graphics: TPastelFont.constructor Create(const FileName: string; ASize: Integer; AEmbolden: Boolean = False)
 Pastel.Graphics: TPastelFont.destructor Destroy
 Pastel.Graphics: TPastelFont.function Glyph(CodePoint: Cardinal): PGlyph
 Pastel.Graphics: TPastelFont.function HitTest(const S: string; X: Integer): Integer
@@ -423,6 +423,7 @@ Pastel.Graphics: TRectI.function Union(const R: TRectI): TRectI
 Pastel.Graphics: function GetFont(Size: Integer; Bold: Boolean = False): TPastelFont
 Pastel.Graphics: function Mix(A: TColor32; B: TColor32; T: Single): TColor32
 Pastel.Graphics: function NextCodePoint(const S: string; var I: Integer): Cardinal
+Pastel.Graphics: function PascalFonts: Boolean
 Pastel.Graphics: function PrevCharStart(const S: string; I: Integer): Integer
 Pastel.Graphics: function RGB(R: Byte; G: Byte; B: Byte): TColor32
 Pastel.Graphics: function RGBA(R: Byte; G: Byte; B: Byte; A: Byte): TColor32
@@ -1061,6 +1062,28 @@ Pastel.Toml: type ETomlError = class(Exception)
 Pastel.Toml: type TTomlDocument = class
 Pastel.Toml: type TTomlKind = (tkString, tkInteger, tkFloat, tkBoolean, tkArray)
 Pastel.Toml: type TTomlValue = class
+Pastel.TrueType: TTrueTypeBitmap.Advance: Integer
+Pastel.TrueType: TTrueTypeBitmap.Bits: array of Byte
+Pastel.TrueType: TTrueTypeBitmap.Height: Integer
+Pastel.TrueType: TTrueTypeBitmap.Left: Integer
+Pastel.TrueType: TTrueTypeBitmap.Top: Integer
+Pastel.TrueType: TTrueTypeBitmap.Width: Integer
+Pastel.TrueType: TTrueTypeFont.constructor Create(const FileName: string)
+Pastel.TrueType: TTrueTypeFont.constructor CreateFromStream(Stream: TStream)
+Pastel.TrueType: TTrueTypeFont.function AdvanceWidth(Glyph: Integer): Integer
+Pastel.TrueType: TTrueTypeFont.function GlyphIndex(CodePoint: Cardinal): Integer
+Pastel.TrueType: TTrueTypeFont.function HasKerning: Boolean
+Pastel.TrueType: TTrueTypeFont.function Kerning(Left: Integer; Right: Integer): Integer
+Pastel.TrueType: TTrueTypeFont.procedure Load
+Pastel.TrueType: TTrueTypeFont.procedure Render(Glyph: Integer; Scale: Double; Embolden: Boolean; out Bitmap: TTrueTypeBitmap)
+Pastel.TrueType: TTrueTypeFont.property Ascender: Integer
+Pastel.TrueType: TTrueTypeFont.property Descender: Integer
+Pastel.TrueType: TTrueTypeFont.property LineGap: Integer
+Pastel.TrueType: TTrueTypeFont.property NumGlyphs: Integer
+Pastel.TrueType: TTrueTypeFont.property UnitsPerEm: Integer
+Pastel.TrueType: type ETrueType = class(Exception)
+Pastel.TrueType: type TTrueTypeBitmap = record
+Pastel.TrueType: type TTrueTypeFont = class
 Pastel.UI: TAction.constructor Create(AOwner: TComponent)
 Pastel.UI: TAction.function Execute: Boolean
 Pastel.UI: TAction.property Caption: string

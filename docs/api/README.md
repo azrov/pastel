@@ -5,6 +5,7 @@ Made from the declarations and comments in `framework/src` (`npm run apidoc` in 
 | Unit | |
 |---|---|
 | [Pastel.Additional](pastel.additional.md) | More standard controls, like the "Additional" page of Delphi's palette: |
+| [Pastel.Android](pastel.android.md) | The bridge to Android: an app is a NativeActivity, so it needs no |
 | [Pastel.App](pastel.app.md) | The application: window, event loop, hot reload. |
 | [Pastel.Args](pastel.args.md) | Command-line arguments. |
 | [Pastel.Assets](pastel.assets.md) | The files of a project's assets/ folder, inside the program. |
@@ -42,6 +43,7 @@ Made from the declarations and comments in `framework/src` (`npm run apidoc` in 
 | [Pastel.Testing](pastel.testing.md) | Unit testing. |
 | [Pastel.Text](pastel.text.md) | Text helpers that understand UTF-8. |
 | [Pastel.Toml](pastel.toml.md) | A small TOML reader for pastel.toml files. |
+| [Pastel.TrueType](pastel.truetype.md) | TrueType fonts in plain Pascal: reads a .ttf (or the first font of a |
 | [Pastel.UI](pastel.ui.md) | Controls, layout and input handling. |
 | [Pastel.Web](pastel.web.md) | HTTP server for web APIs and sites. |
 | [Pastel.Workers](pastel.workers.md) | Background work: a thread-safe queue and a pool of worker threads. |

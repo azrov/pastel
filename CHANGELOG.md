@@ -2,6 +2,19 @@
 
 The `pastel` tool and the framework. The VS Code extension has its own list: [vscode/CHANGELOG.md](vscode/CHANGELOG.md). What is planned is in [ROADMAP.md](ROADMAP.md).
 
+## 1.5.0-beta.1
+
+Android, as a preview.
+
+- Apps build for Android: `pastel build --target android` makes `libmain.so`, a NativeActivity with no Java code; `pastel doctor --install android` sets it up with Free Pascal's ARM 64-bit compiler and the ARM binutils, without the NDK
+- `pastel package apk`: an installable, signed `.apk` (a debug key, or `[package.android] keystore`), with the app's name, icon, id and version
+- `pastel run --target android`: installs on the connected phone, starts it and shows its log
+- On the phone: fingers (tap, double tap, long press for popup menus, scrolling), the back button, the on-screen keyboard, the screen's density, dark mode and language from the phone, the app's own folder
+- `Pastel.TrueType`: TrueType fonts in plain Pascal, used on Android and where FreeType is missing (`PASTEL_FONT_ENGINE=pascal` to try it)
+- `[package.android]` settings: `id`, `orientation`, `keystore`, `alias`
+- The New Project wizard makes Android apps; the palette says which controls work on phones
+- [docs/android.md](docs/android.md)
+
 ## 1.4.3
 
 Delphi's standard components, completed.

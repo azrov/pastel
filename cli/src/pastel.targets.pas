@@ -21,7 +21,7 @@ type
   end;
 
 const
-  KnownTargets: array[0..6] of TTarget = (
+  KnownTargets: array[0..7] of TTarget = (
     (Name: 'linux';       CPU: 'x86_64';  OS: 'linux';  Options: '';
      ExeExt: '';     Description: 'Linux, 64-bit PC';
      Binutils: 'x86_64-linux-gnu- x86_64-linux-'; BinutilsPackage: 'binutils-x86-64-linux-gnu'),
@@ -42,17 +42,22 @@ const
      Binutils: 'x86_64-apple-darwin-'; BinutilsPackage: ''),
     (Name: 'macos-arm64'; CPU: 'aarch64'; OS: 'darwin'; Options: '';
      ExeExt: '';     Description: 'macOS, Apple Silicon';
-     Binutils: 'aarch64-apple-darwin-'; BinutilsPackage: '')
+     Binutils: 'aarch64-apple-darwin-'; BinutilsPackage: ''),
+    { an app's libmain.so; "pastel package apk" makes the installable app }
+    (Name: 'android-arm64'; CPU: 'aarch64'; OS: 'android'; Options: '';
+     ExeExt: '.so';  Description: 'Android phones and tablets (ARM 64-bit)';
+     Binutils: 'aarch64-linux-android- aarch64-linux-gnu- aarch64-linux-'; BinutilsPackage: 'binutils-aarch64-linux-gnu')
   );
 
   { Friendly names people are likely to type. }
-  TargetAliases: array[0..5, 0..1] of string = (
+  TargetAliases: array[0..6, 0..1] of string = (
     ('rpi',   'linux-arm64'),
     ('rpi64', 'linux-arm64'),
     ('rpi32', 'linux-arm'),
     ('win',   'windows'),
     ('win64', 'windows'),
-    ('win32', 'windows32')
+    ('win32', 'windows32'),
+    ('android', 'android-arm64')
   );
 
 function FindTarget(const AName: string; out T: TTarget): Boolean;

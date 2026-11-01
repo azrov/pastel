@@ -129,7 +129,17 @@ begin
   Code := TStringList.Create;
   Args := TStringList.Create;
   try
-    Code.Text := 'program probe; uses SysUtils; begin end.';
+    if T.OS = 'android' then
+    begin
+      { an Android app is a library, linked with Pastel's stand-ins for the system libraries }
+      if not AndroidLibsReady then
+        Exit(False);
+      Code.Text := 'library probe; uses SysUtils; procedure P; cdecl; begin end; exports P; begin end.';
+      Args.Add('-Fl' + AndroidLibDir);
+      Args.Add('-Fo' + AndroidLibDir);
+    end
+    else
+      Code.Text := 'program probe; uses SysUtils; begin end.';
     Code.SaveToFile(Src);
     Args.Add('-P' + T.CPU);
     Args.Add('-T' + T.OS);
@@ -142,7 +152,10 @@ begin
     if Prefix <> '' then
       Args.Add('-XP' + Prefix);
     Args.Add('-FU' + Tmp);
-    Args.Add('-o' + Tmp + 'probe' + T.ExeExt);
+    if T.OS = 'android' then
+      Args.Add('-o' + Tmp + 'libprobe.so')
+    else
+      Args.Add('-o' + Tmp + 'probe' + T.ExeExt);
     Args.Add('-vew');
     Args.Add(Src);
     Result := RunCapture(Fpc, Args, Tmp, Output) = 0;
@@ -229,8 +242,8 @@ begin
     Tip('building for other platforms needs Free Pascal cross-compilers.');
     WriteLn('  Today the easiest way is fpcupdeluxe (Cross tab):');
     WriteLn('    https://github.com/LongDirtyAnimAlf/fpcupdeluxe');
-    WriteLn('  macOS targets also need Apple''s SDK. Automatic installation');
-    WriteLn('  ("pastel doctor --install") is planned.');
+    WriteLn('  Windows (from Linux) and Android: pastel doctor --install windows (or android).');
+    WriteLn('  macOS targets also need Apple''s SDK.');
   end;
 end;
 

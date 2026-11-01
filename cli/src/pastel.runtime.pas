@@ -39,6 +39,18 @@ function CanBuildRtl(const Target: TTarget): Boolean;
 { Compiles the RTL for the target from the Free Pascal sources (fpc-source)
   into UserRtlDir; '' when it worked, else what went wrong. }
 function BuildRtl(const Fpc: string; const Target: TTarget): string;
+{ ~/.pastel/ (or $PASTEL_CACHE/), '' when the home folder is unknown. }
+function PastelHome: string;
+
+{ Android: what an app's libmain.so is linked with — the start of a library
+  (dllprt0.o, crtbegin_so.o, crtend_so.o) and stand-ins for the system
+  libraries (libc.so, libandroid.so, liblog.so...: only their names, the
+  phone has the real ones). Made with the ARM 64-bit binutils, so the NDK is
+  not needed: ~/.pastel/android/arm64/lib/. }
+function AndroidLibDir: string;
+function AndroidLibsReady: Boolean;
+{ Makes them; '' when it worked, else what went wrong. }
+function MakeAndroidLibs(const BinPrefix: string): string;
 
 implementation
 
@@ -189,6 +201,10 @@ end;
 
 function CanBuildRtl(const Target: TTarget): Boolean;
 begin
+  { Android: with the ARM 64-bit compiler of the fpc package (ppcrossa64) }
+  if (Target.OS = 'android') and (Target.CPU = 'aarch64') then
+    Exit((ExeSearch('ppcrossa64', GetEnvironmentVariable('PATH')) <> '') or
+      (ExeSearch('ppca64', GetEnvironmentVariable('PATH')) <> ''));
   {$IFDEF CPUX86_64}
   Result := (Target.CPU = 'x86_64') and (Target.OS = 'win64');
   {$ELSE}
@@ -196,10 +212,104 @@ begin
   {$ENDIF}
 end;
 
+function AndroidLibDir: string;
+begin
+  if PastelHome = '' then
+    Exit('');
+  Result := PastelHome + 'android' + PathDelim + 'arm64' + PathDelim + 'lib' + PathDelim;
+end;
+
+function AndroidLibsReady: Boolean;
+var
+  F: string;
+begin
+  Result := AndroidLibDir <> '';
+  if Result then
+    for F in TStringArray.Create('dllprt0.o', 'crtbegin_so.o', 'crtend_so.o', 'libc.so', 'libm.so', 'libdl.so', 'liblog.so',
+      'libandroid.so') do
+      if not FileExists(AndroidLibDir + F) then
+        Exit(False);
+end;
+
+function MakeAndroidLibs(const BinPrefix: string): string;
+const
+  NoExecStack = #9'.section .note.GNU-stack,"",%progbits' + LineEnding;
+  { the libc start of a library: __dso_handle, and atexit for this library }
+  CrtBegin =
+    #9'.data' + LineEnding + #9'.align 3' + LineEnding +
+    #9'.globl __dso_handle' + LineEnding + #9'.hidden __dso_handle' + LineEnding +
+    #9'.type __dso_handle,%object' + LineEnding +
+    '__dso_handle:' + LineEnding + #9'.quad __dso_handle' + LineEnding +
+    #9'.text' + LineEnding + #9'.align 2' + LineEnding +
+    #9'.globl atexit' + LineEnding + #9'.hidden atexit' + LineEnding + #9'.type atexit,%function' + LineEnding +
+    'atexit:' + LineEnding +
+    #9'mov x1, xzr' + LineEnding +
+    #9'adrp x2, __dso_handle' + LineEnding +
+    #9'add x2, x2, :lo12:__dso_handle' + LineEnding +
+    #9'b __cxa_atexit' + LineEnding + NoExecStack;
+  { Free Pascal's start of an Android library: run by the system's loader }
+  DllPrt0 =
+    #9'.section .init_array,"aw"' + LineEnding + #9'.align 3' + LineEnding +
+    #9'.quad FPC_LIB_START_ANDROID' + LineEnding + NoExecStack;
+var
+  Dir, Output, Lib: string;
+  Args: TStringList;
+
+  function Run(const Tool: string; const A: array of string): Boolean;
+  var
+    S: string;
+  begin
+    Args.Clear;
+    for S in A do
+      Args.Add(S);
+    Result := RunCapture(BinPrefix + Tool, Args, Dir, Output) = 0;
+    if not Result then
+      MakeAndroidLibs := Format('%s%s did not work: %s', [BinPrefix, Tool, Trim(Output)]);
+  end;
+
+  procedure Save(const Name, Text: string);
+  var
+    L: TStringList;
+  begin
+    L := TStringList.Create;
+    try
+      L.Text := Text;
+      L.SaveToFile(Dir + Name);
+    finally
+      L.Free;
+    end;
+  end;
+
+begin
+  Result := '';
+  Dir := AndroidLibDir;
+  if Dir = '' then
+    Exit('the home folder is not known (set PASTEL_CACHE)');
+  ForceDirectories(Dir);
+  Save('crtbegin_so.s', CrtBegin);
+  Save('crtend_so.s', NoExecStack);
+  Save('dllprt0.s', DllPrt0);
+  Save('empty.s', NoExecStack);
+  Args := TStringList.Create;
+  try
+    if not Run('as', ['crtbegin_so.s', '-o', 'crtbegin_so.o']) then Exit;
+    if not Run('as', ['crtend_so.s', '-o', 'crtend_so.o']) then Exit;
+    if not Run('as', ['dllprt0.s', '-o', 'dllprt0.o']) then Exit;
+    if not Run('as', ['empty.s', '-o', 'empty.o']) then Exit;
+    { the system libraries by name: an app's library may leave their functions open }
+    for Lib in TStringArray.Create('c', 'm', 'dl', 'log', 'android') do
+      if not Run('ld', ['-shared', '-soname', 'lib' + Lib + '.so', '-o', 'lib' + Lib + '.so', 'empty.o']) then
+        Exit;
+  finally
+    Args.Free;
+  end;
+end;
+
 function BuildRtl(const Fpc: string; const Target: TTarget): string;
 var
-  Src, Rtl, OsDir, Out_, Output: string;
+  Src, Rtl, OsDir, Out_, Output, BinPrefix, U: string;
   Base: TStringArray;
+  HaveBinutils: Boolean;
 
   { one compiler run in the target's RTL folder; False (and Result set) on errors }
   function Compile(const Extra: array of string): Boolean;
@@ -238,6 +348,31 @@ begin
     Exit('the home folder is not known (set PASTEL_CACHE)');
   ForceDirectories(Out_);
   Status('Compiling', Format('Free Pascal''s RTL for %s into %s', [Target.Name, Out_]));
+  if Target.OS = 'android' then
+  begin
+    BinPrefix := FindBinutilsPrefix(Target, HaveBinutils);
+    if not HaveBinutils then
+      Exit('the ARM 64-bit binutils are needed: sudo apt install ' + Target.BinutilsPackage);
+    { O_LARGEFILE and a few others are only defined for "aarch64" in Free Pascal 3.2.2 }
+    Base := ['-T' + Target.OS, '-P' + Target.CPU, '-XP' + BinPrefix, '-dAARCH64', '-n', '-O2', '-Ur', '-Xs', '-vew',
+      '-FU' + Out_, '-Fu' + Out_, '-Fi../inc', '-Fi../aarch64', '-Fi../unix', '-Fiaarch64', '-Fi../linux',
+      '-Fi../linux/aarch64', '-Fu../inc', '-Fu../aarch64', '-Fu../unix', '-Fu../linux', '-Fu../common',
+      '-Fu../objpas', '-Fi../objpas', '-Fi../objpas/sysutils', '-Fi../objpas/classes'];
+    if not Compile(['-Us', '-Sg', '../linux/system.pp']) then Exit;
+    for U in TStringArray.Create('../inc/uuchar.pp', '../objpas/objpas.pp', '../unix/unixtype.pp', '../inc/ctypes.pp',
+      '../unix/baseunix.pp', '../inc/strings.pp', '../unix/syscall.pp', '../unix/unixutil.pp',
+      '../inc/fpintres.pp', '../inc/heaptrc.pp', '../linux/termio.pp', '../unix/unix.pp', '../linux/linux.pp',
+      '../unix/initc.pp', '../inc/cmem.pp', '../objpas/typinfo.pp', '../inc/charset.pp', '../objpas/sysconst.pp',
+      '../objpas/sysutils.pp', '../objpas/math.pp', '../objpas/character.pas', '../inc/getopts.pp',
+      '../unix/errors.pp', '../unix/dl.pp', '../inc/dynlibs.pas', '../objpas/types.pp', '../unix/cthreads.pp',
+      '../objpas/rtlconsts.pp', '../unix/classes.pp', '../objpas/fgl.pp', '../unix/dos.pp', '../unix/unixcp.pp',
+      '../objpas/fpwidestring.pp', 'cwstring.pp', '../inc/macpas.pp', '../inc/iso7185.pp', '../inc/extpas.pp',
+      '../inc/lineinfo.pp', '../inc/lnfodwrf.pp', '../objpas/unicodedata.pas') do
+      if FileExists(OsDir + PathDelim + StringReplace(U, '/', PathDelim, [rfReplaceAll])) then
+        if not Compile([U]) then Exit;
+    if not Compile(['-Fi../charmaps', '../charmaps/cpall.pas']) then Exit;
+    Exit;
+  end;
   Base := ['-T' + Target.OS, '-P' + Target.CPU, '-n', '-O2', '-Ur', '-Xs', '-vew', '-FU' + Out_, '-Fu' + Out_,
     '-Fi../inc', '-Fi../' + Target.CPU, '-Fu../inc', '-Fu../' + Target.CPU, '-Fu../common'];
   { the steps of the RTL's Makefile.fpc for Windows }

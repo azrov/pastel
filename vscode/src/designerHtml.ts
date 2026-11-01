@@ -853,7 +853,7 @@ export function designerHtml(nonce: string): string {
     const c = controlsInfo.find(x => x.name === className);
     if (!c) return '';
     const now = (c.platforms || ['Windows', 'Linux']).map(p => p + ' ✓').join('  ');
-    const android = c.android === 'desktop only' ? 'Android: desktop only' : 'Android: coming in 1.5';
+    const android = c.android === 'desktop only' ? 'Android: desktop only' : c.android === 'planned' ? 'Android: coming' : 'Android ✓ (preview)';
     return now + '  ·  ' + android;
   }
   function isNonVisual(className) {

@@ -10,7 +10,7 @@ uses
   SysUtils;
 
 const
-  PastelVersion = '1.4.3';
+  PastelVersion = '1.5.0-beta.1';
   ProjectFileName = 'pastel.toml';
 
 { '0.7' for Pastel 0.7.x: what [project] pastel records. }
@@ -58,6 +58,8 @@ type
     Title: string;              { [project] title: the name people see; Name when not set }
     PastelFor: string;          { [project] pastel: the Pastel version it is made for ('0.7'); '' in old projects }
     UnknownKeys: TStringArray;  { settings in pastel.toml that Pastel does not know (typos) }
+    { [package.android]: the app's id (org.example.shop), the release key, the screen's direction }
+    AndroidId, AndroidKeystore, AndroidAlias, AndroidOrientation: string;
     Maintainer: string;         { [package] maintainer = "Name <mail>" }
     DebDepends: TStringArray;   { [package.deb] depends = ["libsqlite3-0"] }
     DockerBase: string;         { [package.docker] base = "debian:bookworm-slim" }
@@ -211,7 +213,7 @@ begin
           'build\.(main|mode|defines|unit_paths)|targets\.platforms|' +
           'profile\.(debug|release|test)\.(defines|options)|' +
           'dependencies\.[^.]+(\.(path|git|version|branch|rev))?|' +
-          'package\.(include|maintainer|deb\.depends|docker\.base|[a-z0-9-]+\.include)|' +
+          'package\.(include|maintainer|deb\.depends|docker\.base|android\.(id|keystore|alias|orientation)|[a-z0-9-]+\.include)|' +
           'format\.(indent|keywords))$', Doc.Values[I]) then
         begin
           SetLength(P.UnknownKeys, Length(P.UnknownKeys) + 1);
@@ -220,8 +222,12 @@ begin
       P.Maintainer := Doc.GetString('package.maintainer', '');
       P.DebDepends := Doc.GetArray('package.deb.depends');
       P.DockerBase := Doc.GetString('package.docker.base', 'debian:bookworm-slim');
+      P.AndroidId := Doc.GetString('package.android.id', '');
+      P.AndroidKeystore := Doc.GetString('package.android.keystore', '');
+      P.AndroidAlias := Doc.GetString('package.android.alias', '');
+      P.AndroidOrientation := Doc.GetString('package.android.orientation', '');
       for Dep in Doc.Keys('package') do
-        if (Dep <> 'include') and (Dep <> 'maintainer') and (Dep <> 'deb') and (Dep <> 'docker') then
+        if (Dep <> 'include') and (Dep <> 'maintainer') and (Dep <> 'deb') and (Dep <> 'docker') and (Dep <> 'android') then
         begin
           SetLength(P.PackageTargetInclude, Length(P.PackageTargetInclude) + 1);
           P.PackageTargetInclude[High(P.PackageTargetInclude)].Target := Dep;

@@ -561,11 +561,11 @@ begin
     Names.Free;
     FreeMem(Props);
   end;
-  { where it works: Windows and Linux now; Android is coming (1.5), except for desktop-only controls }
+  { where it works: Windows and Linux; Android (a preview in 1.5), except for desktop-only controls }
   if Cls.InheritsFrom(TControl) and TControlClass(Cls).DesktopOnly then
     Android := 'desktop only'
   else
-    Android := 'planned';
+    Android := 'preview';
   Result := Format('{"name":%s,"container":%s,"form":%s,"nonvisual":%s,"project":%s,' +
     '"platforms":["Windows","Linux"],"android":%s,"properties":[%s]}',
     [JsonStr(Cls.ClassName), BoolToStr(Cls.InheritsFrom(TBox), 'true', 'false'),

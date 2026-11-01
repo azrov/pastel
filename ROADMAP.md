@@ -251,16 +251,19 @@ The things every business app needs, built in instead of written again in every 
 - [x] Welcome page and New Project wizard; Place freely for older forms; platforms of each control; icon picker with pictures — 1.4.1, 1.4.2
 - [x] Delphi's standard components: TGroupBox, TRadioGroup, TShape, TBevel, TPaintBox, dialog components, TabOrder; snap lines in the designer — 1.4.3
 
-### 1.5 — Android
+### 1.5 — Android (in preview)
 
-The same Pascal code and `.pform` forms on an Android phone or tablet. The framework draws its own controls with SDL2 and FreeType, and Free Pascal 3.2.2 compiles for Android (ARM64 and ARM), so most of a desktop app carries over.
+The same Pascal code and `.pform` forms on an Android phone or tablet. The app is a NativeActivity (no Java); the framework draws its own controls in software and reads TrueType fonts in plain Pascal, and Free Pascal 3.2.2 compiles for ARM 64-bit Android without the NDK. See [docs/android.md](docs/android.md).
 
-- [ ] `pastel doctor --install android`: the Android NDK and the Free Pascal cross-compiler
-- [ ] `pastel build --target android-arm64`; `pastel package apk` (and `.aab` for Google Play), signed with the project's key
-- [ ] `pastel run --device`: installs on the connected phone (`adb`) and shows its log
-- [ ] Touch: tap, long press (= right click), scrolling and flinging lists with a finger; the on-screen keyboard moves the form so the edit stays visible
-- [ ] Phone layout: forms for small, upright screens (`pastel new form --phone`), bigger touch targets, the back button closes a form
-- [ ] The app's life: pausing and resuming, the folder for its data, settings that survive an update
+- [x] `pastel doctor --install android`: Free Pascal's units for Android and stand-ins for the system libraries (no NDK needed)
+- [x] `pastel build --target android-arm64`; `pastel package apk`, signed with the project's key or a debug key
+- [ ] `.aab` for Google Play
+- [x] `pastel run --target android`: installs on the connected phone (`adb`) and shows its log
+- [x] Touch: tap, double tap, long press (= right click), scrolling with a finger; the on-screen keyboard for edits; the back button
+- [ ] Flinging lists; the on-screen keyboard moves the form so the edit stays visible; letters beyond A–Z from the on-screen keyboard (a small Java bridge)
+- [ ] Tested on real phones (being done now)
+- [ ] Phone layout: forms for small, upright screens (`pastel new form --phone`), bigger touch targets
+- [x] The app's life: pausing and resuming, the folder for its data, settings that survive an update; dark mode and language from the phone
 - [ ] An example: the salon's agenda on the phone, syncing with the same server as the desktop
 
 ### 1.6 — The web, further

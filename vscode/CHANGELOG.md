@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.0
+
+- The New Project wizard makes Android apps (*Mobile → Android App*), and a desktop app can add Android to its platforms
+- The palette and the inspector show "Android ✓ (preview)" for the controls that work on phones
+
 ## 1.4.0
 
 - Designer: snap lines — an edge or the middle of a control snaps to its neighbours' while moving or resizing, shown by a purple line (`Alt` turns them off with the grid)

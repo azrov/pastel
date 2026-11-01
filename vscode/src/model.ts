@@ -22,7 +22,7 @@ export interface SchemaClass {
   nonvisual?: boolean;
   /** Where it works now (Windows, Linux). */
   platforms?: string[];
-  /** On Android: 'planned' (coming in 1.5) or 'desktop only'. */
+  /** On Android: 'preview' (works, being tested), 'planned' or 'desktop only'. */
   android?: string;
   properties: SchemaProperty[];
 }

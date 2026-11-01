@@ -39,6 +39,10 @@ chart = { git = "https://github.com/someone/pastel-chart", version = "^0.3" }   
 include = ["config.example.toml", "assets"]   # put into every package
 [package.windows]
 include = ["libs/windows/*.dll"]              # only into the Windows package
+[package.android]
+id = "com.example.shop"                       # the app's id on phones (see android.md)
+orientation = "portrait"                      # or "landscape"; default: turns with the phone
+keystore = "keys/shop.keystore"               # the release key; alias = "shop"; password in PASTEL_KEYSTORE_PASSWORD
 
 [format]
 indent = 2                  # pastel fmt: spaces per level

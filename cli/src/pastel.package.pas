@@ -40,6 +40,11 @@ function PackageInstaller(Project: TPastelProject; const Target: TTarget; Verbos
 function PackageAppImage(Project: TPastelProject; const Target: TTarget; Verbose: Boolean): string;
 
 { Lower-case hex SHA-256 of a file. }
+{ Android: an installable .apk in dist/, signed (with a debug key unless
+  [package.android] keystore names the release key). Debug: a debug build. }
+function PackageApk(Project: TPastelProject; const Target: TTarget; Verbose: Boolean; Debug: Boolean = False): string;
+{ The app's id on Android ([package.android] id, or dev.pastel.<name>). }
+function AndroidAppId(Project: TPastelProject): string;
 function FileSha256(const FileName: string): string;
 
 implementation
@@ -47,7 +52,7 @@ implementation
 uses
   Classes, {$IFDEF UNIX}BaseUnix,{$ENDIF}
   DateUtils, libtar, zstream, zipper,
-  Pastel.Console, Pastel.Builder, Pastel.Crypto, Pastel.Runtime, Pastel.WIcon, Pastel.Http, Process;
+  Math, Pastel.Console, Pastel.Builder, Pastel.Crypto, Pastel.Runtime, Pastel.WIcon, Pastel.Http, Process;
 
 function FileSha256(const FileName: string): string;
 begin
@@ -923,7 +928,7 @@ function FindLibrary(const Name: string): string;
 var
   D: string;
 begin
-  for D in ['/usr/lib/x86_64-linux-gnu/', '/usr/lib/aarch64-linux-gnu/', '/usr/lib64/', '/usr/lib/', '/lib/x86_64-linux-gnu/'] do
+  for D in TStringArray.Create('/usr/lib/x86_64-linux-gnu/', '/usr/lib/aarch64-linux-gnu/', '/usr/lib64/', '/usr/lib/', '/lib/x86_64-linux-gnu/') do
     if FileExists(D + Name) then
       Exit(D + Name);
   Result := '';
@@ -1074,6 +1079,328 @@ begin
   Status('Packaged', Format('dist%s%s (%s)', [PathDelim, ExtractFileName(Image), SizeText(Image)]));
   Hint(Format('run it on any Linux: chmod +x %s && ./%s', [ExtractFileName(Image), ExtractFileName(Image)]));
   Result := Image;
+end;
+
+{ ---- Android ---- }
+
+function AndroidAppId(Project: TPastelProject): string;
+var
+  C: Char;
+  N: string;
+begin
+  if Project.AndroidId <> '' then
+    Exit(Project.AndroidId);
+  N := '';
+  for C in LowerCase(Project.Name) do
+    if C in ['a'..'z', '0'..'9'] then
+      N := N + C
+    else if C in ['-', '_'] then
+      N := N + '_';
+  if (N = '') or (N[1] in ['0'..'9', '_']) then
+    N := 'app' + N;
+  Result := 'dev.pastel.' + N;
+end;
+
+{ the Android SDK folder: $ANDROID_HOME, $ANDROID_SDK_ROOT, ~/Android/Sdk or the one of the Linux packages }
+function AndroidSdkDirs: TStringArray;
+var
+  D: string;
+begin
+  Result := nil;
+  for D in TStringArray.Create(GetEnvironmentVariable('ANDROID_HOME'), GetEnvironmentVariable('ANDROID_SDK_ROOT'),
+    GetUserDir + 'Android' + PathDelim + 'Sdk', GetEnvironmentVariable('LOCALAPPDATA') + PathDelim + 'Android' + PathDelim + 'Sdk',
+    '/usr/lib/android-sdk') do
+    if (D <> '') and DirectoryExists(D) then
+    begin
+      SetLength(Result, Length(Result) + 1);
+      Result[High(Result)] := IncludeTrailingPathDelimiter(D);
+    end;
+end;
+
+{ '34.0.0' -> 340000 for comparing build-tools folders }
+function VersionNumber(const S: string): Int64;
+var
+  P: TStringArray;
+  I: Integer;
+begin
+  Result := 0;
+  P := S.Split(['.', '-']);
+  for I := 0 to 2 do
+  begin
+    Result := Result * 1000;
+    if I < Length(P) then
+      Result := Result + StrToIntDef(P[I], 0);
+  end;
+end;
+
+{ a tool on the PATH or in the SDK's newest build-tools }
+function AndroidTool(const Name: string): string;
+var
+  Sdk, Best: string;
+  SR: TSearchRec;
+  Ext: string;
+begin
+  {$IFDEF WINDOWS}
+  Ext := '.exe';
+  if (Name = 'apksigner') then Ext := '.bat';
+  {$ELSE}
+  Ext := '';
+  {$ENDIF}
+  Result := ExeSearch(Name + Ext, GetEnvironmentVariable('PATH'));
+  if Result <> '' then
+    Exit;
+  for Sdk in AndroidSdkDirs do
+  begin
+    Best := '';
+    if FindFirst(Sdk + 'build-tools' + PathDelim + '*', faDirectory, SR) = 0 then
+    begin
+      repeat
+        if (SR.Name <> '.') and (SR.Name <> '..') and FileExists(Sdk + 'build-tools' + PathDelim + SR.Name + PathDelim + Name + Ext) and
+          ((Best = '') or (VersionNumber(SR.Name) > VersionNumber(Best))) then
+          Best := SR.Name;
+      until FindNext(SR) <> 0;
+      FindClose(SR);
+    end;
+    if Best <> '' then
+      Exit(Sdk + 'build-tools' + PathDelim + Best + PathDelim + Name + Ext);
+  end;
+end;
+
+{ the newest android.jar, and its API level }
+function AndroidJar(out Api: Integer): string;
+var
+  Sdk: string;
+  SR: TSearchRec;
+  N: Integer;
+begin
+  Result := '';
+  Api := 0;
+  for Sdk in AndroidSdkDirs do
+    if FindFirst(Sdk + 'platforms' + PathDelim + 'android-*', faDirectory, SR) = 0 then
+    begin
+      repeat
+        N := StrToIntDef(Copy(SR.Name, 9, MaxInt), 0);
+        if (N > Api) and FileExists(Sdk + 'platforms' + PathDelim + SR.Name + PathDelim + 'android.jar') then
+        begin
+          Api := N;
+          Result := Sdk + 'platforms' + PathDelim + SR.Name + PathDelim + 'android.jar';
+        end;
+      until FindNext(SR) <> 0;
+      FindClose(SR);
+    end;
+end;
+
+function XmlText(const S: string): string;
+begin
+  Result := StringReplace(S, '&', '&amp;', [rfReplaceAll]);
+  Result := StringReplace(Result, '<', '&lt;', [rfReplaceAll]);
+  Result := StringReplace(Result, '>', '&gt;', [rfReplaceAll]);
+  Result := StringReplace(Result, '"', '&quot;', [rfReplaceAll]);
+  Result := StringReplace(Result, '''', '\''', [rfReplaceAll]);
+end;
+
+{ 1.2.3 -> 10203 }
+function VersionCode(const Version: string): Integer;
+var
+  P: TStringArray;
+  I: Integer;
+begin
+  Result := 0;
+  P := Version.Split(['.', '-', '+']);
+  for I := 0 to 2 do
+  begin
+    Result := Result * 100;
+    if I < Length(P) then
+      Result := Result + Min(99, StrToIntDef(P[I], 0));
+  end;
+  Result := Max(1, Result);
+end;
+
+function PackageApk(Project: TPastelProject; const Target: TTarget; Verbose: Boolean; Debug: Boolean): string;
+const
+  Densities: array[0..4] of record Name: string; Size: Integer; end = (
+    (Name: 'mdpi'; Size: 48), (Name: 'hdpi'; Size: 72), (Name: 'xhdpi'; Size: 96),
+    (Name: 'xxhdpi'; Size: 144), (Name: 'xxxhdpi'; Size: 192));
+var
+  Opts: TBuildOptions;
+  SoPath, Work, Res, Aapt, Zipalign, Signer, Keytool, Jar, Keystore, Alias, Pass, Icon, Orientation, Dist, Output,
+    Unaligned, Aligned, Err, Manifest: string;
+  Api, I: Integer;
+  Args: TStringList;
+  L: TStringList;
+
+  function Run(const Tool: string; const A: array of string; const Dir: string): Boolean;
+  var
+    S: string;
+  begin
+    Args.Clear;
+    for S in A do
+      Args.Add(S);
+    if Verbose then
+      WriteLn('  ', Tool, ' ', StringReplace(Args.Text, LineEnding, ' ', [rfReplaceAll]));
+    Result := RunCapture(Tool, Args, Dir, Output) = 0;
+    if not Result then
+      Fail(Format('%s did not work: %s', [ExtractFileName(Tool), Trim(Output)]));
+  end;
+
+  procedure Save(const FileName, Text: string);
+  begin
+    L.Text := Text;
+    ForceDirectories(ExtractFileDir(FileName));
+    L.SaveToFile(FileName);
+  end;
+
+begin
+  Result := '';
+  if Target.OS <> 'android' then
+  begin
+    Fail(Format('an .apk is for Android; "%s" is not an Android target', [Target.Name]));
+    Hint('pastel package apk (it builds for android-arm64)');
+    Exit;
+  end;
+  if Project.Kind <> 'app' then
+  begin
+    Fail('an .apk is made of an app project');
+    Exit;
+  end;
+  { the tools: Android's build tools and a platform (android.jar) }
+  Aapt := AndroidTool('aapt');
+  Zipalign := AndroidTool('zipalign');
+  Signer := AndroidTool('apksigner');
+  Keytool := ExeSearch({$IFDEF WINDOWS}'keytool.exe'{$ELSE}'keytool'{$ENDIF}, GetEnvironmentVariable('PATH'));
+  Jar := AndroidJar(Api);
+  if (Aapt = '') or (Zipalign = '') or (Signer = '') or (Keytool = '') or (Jar = '') then
+  begin
+    Fail('making an .apk needs Android''s build tools (aapt, zipalign, apksigner), a platform (android.jar) and Java (keytool)');
+    {$IFDEF LINUX}
+    Hint('on Ubuntu, Mint, Debian: sudo apt install aapt zipalign apksigner android-sdk-platform-23 default-jdk-headless');
+    {$ELSE}
+    Hint('install Android Studio (or its command-line tools) and set ANDROID_HOME; Java comes with it');
+    {$ENDIF}
+    Exit;
+  end;
+  { the program, as libmain.so }
+  Opts := Default(TBuildOptions);
+  Opts.Target := Target;
+  Opts.Release := not Debug;
+  Opts.Verbose := Verbose;
+  if not BuildProject(Project, Opts, SoPath) then
+    Exit;
+  Work := Project.Root + 'build' + PathDelim + Target.Name + PathDelim + 'apk' + PathDelim;
+  DeleteTree(ExcludeTrailingPathDelimiter(Work));
+  Res := Work + 'res' + PathDelim;
+  L := TStringList.Create;
+  Args := TStringList.Create;
+  try
+    { the name and the icon, as Android resources }
+    Save(Res + 'values' + PathDelim + 'strings.xml',
+      '<?xml version="1.0" encoding="utf-8"?>' + LineEnding +
+      '<resources><string name="app_name">' + XmlText(Project.Title) + '</string></resources>');
+    Icon := Project.Root + 'assets' + PathDelim + 'icon.png';
+    for I := Low(Densities) to High(Densities) do
+    begin
+      ForceDirectories(Res + 'mipmap-' + Densities[I].Name);
+      if FileExists(Icon) then
+        Err := WriteSizedPng(Icon, Res + 'mipmap-' + Densities[I].Name + PathDelim + 'ic_launcher.png', Densities[I].Size)
+      else
+      begin
+        WriteDefaultIcon(Work + 'icon.png');
+        Err := WriteSizedPng(Work + 'icon.png', Res + 'mipmap-' + Densities[I].Name + PathDelim + 'ic_launcher.png',
+          Densities[I].Size);
+      end;
+      if Err <> '' then
+      begin
+        Fail('assets/icon.png: ' + Err);
+        Exit;
+      end;
+    end;
+    Orientation := Project.AndroidOrientation;
+    if Orientation = '' then
+      Orientation := 'unspecified';
+    { a NativeActivity: no Java code, Android loads libmain.so }
+    Manifest :=
+      '<?xml version="1.0" encoding="utf-8"?>' + LineEnding +
+      '<manifest xmlns:android="http://schemas.android.com/apk/res/android"' + LineEnding +
+      '    package="' + AndroidAppId(Project) + '"' + LineEnding +
+      '    android:versionCode="' + IntToStr(VersionCode(Project.Version)) + '"' + LineEnding +
+      '    android:versionName="' + XmlText(Project.Version) + '">' + LineEnding +
+      '  <uses-sdk android:minSdkVersion="23" android:targetSdkVersion="' + IntToStr(Max(23, Api)) + '"/>' + LineEnding +
+      '  <uses-permission android:name="android.permission.INTERNET"/>' + LineEnding +
+      '  <application android:label="@string/app_name" android:icon="@mipmap/ic_launcher"' + LineEnding +
+      '      android:hasCode="false" android:extractNativeLibs="true"' + LineEnding +
+      '      android:theme="@android:style/Theme.NoTitleBar">' + LineEnding +
+      '    <activity android:name="android.app.NativeActivity" android:label="@string/app_name"' + LineEnding +
+      '        android:exported="true" android:launchMode="singleTask"' + LineEnding +
+      '        android:screenOrientation="' + XmlText(Orientation) + '"' + LineEnding +
+      '        android:windowSoftInputMode="adjustResize"' + LineEnding +
+      '        android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboard|keyboardHidden|uiMode|locale">' + LineEnding +
+      '      <meta-data android:name="android.app.lib_name" android:value="main"/>' + LineEnding +
+      '      <intent-filter>' + LineEnding +
+      '        <action android:name="android.intent.action.MAIN"/>' + LineEnding +
+      '        <category android:name="android.intent.category.LAUNCHER"/>' + LineEnding +
+      '      </intent-filter>' + LineEnding +
+      '    </activity>' + LineEnding +
+      '  </application>' + LineEnding +
+      '</manifest>';
+    Save(Work + 'AndroidManifest.xml', Manifest);
+    { the program goes in as lib/arm64-v8a/libmain.so }
+    ForceDirectories(Work + 'lib' + PathDelim + 'arm64-v8a');
+    CopyFile(Project.Root + SoPath, Work + 'lib' + PathDelim + 'arm64-v8a' + PathDelim + 'libmain.so', False);
+    Unaligned := Work + 'unaligned.apk';
+    Aligned := Work + 'aligned.apk';
+    Status('Packing', 'the .apk (' + AndroidAppId(Project) + ', Android 6 and newer)');
+    if not Run(Aapt, ['package', '-f', '-M', 'AndroidManifest.xml', '-S', 'res', '-I', Jar, '-F', 'unaligned.apk'], Work) then
+      Exit;
+    if not Run(Aapt, ['add', 'unaligned.apk', 'lib/arm64-v8a/libmain.so'], Work) then
+      Exit;
+    if not Run(Zipalign, ['-p', '-f', '4', Unaligned, Aligned], Work) then
+      Exit;
+    { the key: the project's release key, or a debug key made once }
+    if Project.AndroidKeystore <> '' then
+    begin
+      Keystore := ExpandFileName(Project.Root + Project.AndroidKeystore);
+      Alias := Project.AndroidAlias;
+      Pass := GetEnvironmentVariable('PASTEL_KEYSTORE_PASSWORD');
+      if not FileExists(Keystore) or (Alias = '') or (Pass = '') then
+      begin
+        Fail('signing with ' + Project.AndroidKeystore + ' needs the file, [package.android] alias and the password in PASTEL_KEYSTORE_PASSWORD');
+        Exit;
+      end;
+    end
+    else
+    begin
+      Keystore := PastelHome + 'android' + PathDelim + 'debug.keystore';
+      Alias := 'androiddebugkey';
+      Pass := 'android';
+      if not FileExists(Keystore) then
+      begin
+        ForceDirectories(ExtractFileDir(Keystore));
+        if not Run(Keytool, ['-genkeypair', '-keystore', Keystore, '-storepass', Pass, '-keypass', Pass, '-alias', Alias,
+          '-keyalg', 'RSA', '-keysize', '2048', '-validity', '10000', '-dname', 'CN=Pastel Debug,O=Pastel,C=US'], Work) then
+          Exit;
+      end;
+    end;
+    Dist := Project.Root + 'dist' + PathDelim;
+    ForceDirectories(Dist);
+    Result := Dist + Project.Name + '-' + Project.Version;
+    if Debug then
+      Result := Result + '-debug';
+    Result := Result + '.apk';
+    if not Run(Signer, ['sign', '--ks', Keystore, '--ks-pass', 'pass:' + Pass, '--key-pass', 'pass:' + Pass,
+      '--ks-key-alias', Alias, '--out', Result, Aligned], Work) then
+    begin
+      Result := '';
+      Exit;
+    end;
+    DeleteFile(Result + '.idsig');
+    Status('Packed', Format('%s (%s)', [ExtractRelativePath(Project.Root, Result), SizeText(Result)]));
+    if Project.AndroidKeystore = '' then
+      Hint('signed with a debug key: fine for phones you install it on; Google Play needs [package.android] keystore');
+    Hint('install it: adb install -r ' + ExtractRelativePath(Project.Root, Result) + '  (or copy it to the phone and open it)');
+  finally
+    Args.Free;
+    L.Free;
+  end;
 end;
 
 end.

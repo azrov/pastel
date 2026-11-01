@@ -144,6 +144,24 @@ if command -v makensis >/dev/null && "$PASTEL" doctor 2>/dev/null | grep -q "✓
   expect "a Windows installer"            '[ -s "$WORK"/ex-notepad/dist/notepad-1.0.0-windows-setup.exe ]'
   expect "the app for Windows was built"  '[ -s "$WORK"/ex-notepad/build/windows/release/notepad.exe ]'
 fi
+# --- Android (when the ARM 64-bit compiler and binutils are here) ---
+if command -v ppcrossa64 >/dev/null && command -v aarch64-linux-gnu-ld >/dev/null; then
+  "$PASTEL" doctor --install android >/dev/null 2>&1 || true
+  rm -rf "$WORK/droid" && (cd "$WORK" && "$PASTEL" new app droid >/dev/null)
+  set +e; out="$(cd "$WORK/droid" && "$PASTEL" build --target android 2>&1)"; code=$?; set -e
+  expect "an app builds for Android"        '[ "$code" = 0 ] && [ -s "$WORK"/droid/build/android-arm64/debug/libmain.so ]'
+  expect "as a NativeActivity library"      'LC_ALL=C grep -a -q ANativeActivity_onCreate "$WORK"/droid/build/android-arm64/debug/libmain.so'
+  rm -rf "$WORK/droid-cli" && (cd "$WORK" && "$PASTEL" new console droid-cli >/dev/null)
+  set +e; out="$(cd "$WORK/droid-cli" && "$PASTEL" build --target android 2>&1)"; code=$?; set -e
+  expect "a console program is not for Android" '[ "$code" = 1 ] && echo "$out" | grep -q "Android builds are made of app projects"'
+  if command -v aapt >/dev/null && command -v apksigner >/dev/null && command -v zipalign >/dev/null && [ -d /usr/lib/android-sdk/platforms ]; then
+    (cd "$WORK/droid" && "$PASTEL" package apk >/dev/null 2>&1)
+    expect "pastel package apk"             '[ -s "$WORK"/droid/dist/droid-0.1.0.apk ]'
+    expect "the .apk holds the app"         'unzip -l "$WORK"/droid/dist/droid-0.1.0.apk | grep -q lib/arm64-v8a/libmain.so'
+    expect "with its id and a launcher"     'aapt dump badging "$WORK"/droid/dist/droid-0.1.0.apk | grep -q "package: name=.dev.pastel.droid." && aapt dump badging "$WORK"/droid/dist/droid-0.1.0.apk | grep -q "launchable-activity: name=.android.app.NativeActivity."'
+    expect "and it is signed"               'apksigner verify "$WORK"/droid/dist/droid-0.1.0.apk 2>/dev/null'
+  fi
+fi
 # --- translations ---
 rm -rf "$WORK/tr-demo" && cp -r "$ROOT/examples/notepad" "$WORK/tr-demo" && rm -rf "$WORK/tr-demo/build" "$WORK/tr-demo/assets/lang"
 cd "$WORK/tr-demo"

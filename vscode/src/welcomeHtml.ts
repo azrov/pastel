@@ -12,6 +12,7 @@ export interface ProjectTemplate {
   icon: string;
   platforms: string[];     // where it runs
   forms: boolean;          // has windows and the designer
+  phone?: boolean;         // made for Android (an app project with android in its platforms)
   soon?: string;           // not there yet: when it comes
 }
 
@@ -26,8 +27,8 @@ export const TEMPLATES: ProjectTemplate[] = [
     description: 'Keeps running in the background: jobs on a timer, settings, logs; a systemd or Windows service.' },
   { kind: 'lib', category: 'Library', title: 'Library', icon: '📦', platforms: ['Windows', 'Linux'], forms: false,
     description: 'Units (and controls) that other projects use, with tests; shared with "pastel add".' },
-  { kind: 'android', category: 'Mobile', title: 'Android App', icon: '📱', platforms: ['Android'], forms: true, soon: 'Pastel 1.5',
-    description: 'The same forms and code on phones and tablets.' },
+  { kind: 'app', category: 'Mobile', title: 'Android App', icon: '📱', platforms: ['Android'], forms: true, phone: true,
+    description: 'The same forms and code on phones and tablets: a NativeActivity, no Java. A preview: try it on your phone.' },
 ];
 
 export const CATEGORIES = ['Desktop', 'Console', 'Server', 'Library', 'Mobile'];
@@ -124,7 +125,7 @@ export function welcomeHtml(nonce: string, data: { recent: RecentProject[]; loca
   <main>
     <section id="projects">
       <h1>Welcome to Pastel</h1>
-      <div class="sub">Object Pascal apps for Windows and Linux — Android is coming.</div>
+      <div class="sub">Object Pascal apps for Windows and Linux, and Android (preview).</div>
       <div class="actions">
         <button id="newProject">New Project</button>
         <button class="secondary" id="open">Open…</button>
@@ -158,7 +159,7 @@ export function welcomeHtml(nonce: string, data: { recent: RecentProject[]; loca
         <div class="hint" id="where"></div>
         <label>Platforms</label>
         <span class="checks" id="platforms"></span>
-        <div class="hint">What "pastel build --all" builds; any platform can still be built with --target.</div>
+        <div class="hint">What "pastel build --all" builds; any platform can still be built with --target. Android: "pastel package apk", or "pastel run --target android" with the phone connected.</div>
       </div>
       <div class="foot">
         <span class="msg" id="msg"></span>
@@ -229,7 +230,7 @@ export function welcomeHtml(nonce: string, data: { recent: RecentProject[]; loca
     for (const t of D.templates.filter(x => x.category === category)) {
       const c = document.createElement('div');
       c.className = 'card' + (chosen === t ? ' on' : '') + (t.soon ? ' soon' : '');
-      c.dataset.kind = t.kind;
+      c.dataset.kind = t.phone ? 'android' : t.kind;
       c.innerHTML = '<div class="ic"></div><div class="t"></div><div class="ds"></div><div class="pl"></div>';
       c.querySelector('.ic').textContent = t.icon;
       c.querySelector('.t').textContent = t.title;
@@ -252,13 +253,16 @@ export function welcomeHtml(nonce: string, data: { recent: RecentProject[]; loca
     $('chosenDesc').textContent = chosen.description;
     const pl = $('platforms');
     pl.innerHTML = '';
-    for (const p of ['Windows', 'Linux']) {
+    // Android is offered for apps (desktop apps can be built for it too)
+    const choices = chosen.kind === 'app' ? ['Windows', 'Linux', 'Android'] : ['Windows', 'Linux'];
+    for (const p of choices) {
       const l = document.createElement('label');
-      const c = document.createElement('input'); c.type = 'checkbox'; c.checked = true; c.value = p;
+      const c = document.createElement('input'); c.type = 'checkbox'; c.value = p;
+      c.checked = chosen.phone ? p === 'Android' : p !== 'Android';
       l.append(c, document.createTextNode(p));
       pl.appendChild(l);
     }
-    if (!$('name').dataset.typed) $('name').value = { app: 'my-app', console: 'my-tool', api: 'my-api', service: 'my-service', lib: 'my-library' }[chosen.kind] || 'my-project';
+    if (!$('name').dataset.typed) $('name').value = chosen.phone ? 'my-phone-app' : { app: 'my-app', console: 'my-tool', api: 'my-api', service: 'my-service', lib: 'my-library' }[chosen.kind] || 'my-project';
     $('msg').textContent = ''; $('msg').className = 'msg';
     show('wizard2');
     validate();

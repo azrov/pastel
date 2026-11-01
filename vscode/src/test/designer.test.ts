@@ -328,7 +328,7 @@ test('the palette is grouped and can be searched; non-visual components sit in t
   search.dispatchEvent(new w.Event('input'));
   assert.deepStrictEqual([...doc.querySelectorAll('.chip:not(.hidden)')].map((c: any) => c.textContent), ['Grid']);
   const grid = doc.querySelector('.chip:not(.hidden)');
-  assert.ok(grid.title.includes('Windows ✓') && grid.title.includes('Linux ✓') && grid.title.includes('Android: coming'), grid.title);
+  assert.ok(grid.title.includes('Windows ✓') && grid.title.includes('Linux ✓') && grid.title.includes('Android ✓ (preview)'), grid.title);
   post({ type: 'tree', items: [{ name: 'LoginForm', className: 'TLoginForm', depth: 0 }, { name: 'Tick', className: 'TTimer', depth: 1, nonvisual: true }] });
   const nv = doc.querySelector('#tray .nv');
   assert.ok(nv && nv.textContent.includes('Tick'));
