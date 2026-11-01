@@ -593,12 +593,17 @@ var
   NeedsWindowSync: Boolean = False;
   { Internal: set by TForm.Close; the application loop handles it. }
   CloseRequested: Boolean = False;
+  { Internal: when set, rows whose children do not fit add Name=needed,available
+    (pastel check reports them). }
+  LayoutWarnings: TStrings = nil;
   { Internal: clipboard access, provided by the platform layer. }
   ClipboardGetText: function: string = nil;
   { Internal: see ClipboardGetText. }
   ClipboardSetText: procedure(const S: string) = nil;
 
 const
+  { A growing control in a row that is too narrow gets no narrower than this. }
+  MinShrink = 48;
   { Platform-independent key codes (same values as SDL key codes). }
   KEY_BACKSPACE = 8;
   KEY_TAB = 9;
@@ -1452,6 +1457,25 @@ begin
     end;
     if FRow then Main := Inner.W else Main := Inner.H;
     FreeSpace := Main - Total - FGap * (N - 1);
+
+    { Too little room in a row: the growing children give some of their
+      width (not below MinShrink), like flex-shrink in CSS. }
+    if (FreeSpace < 0) and FRow and (GrowSum > 0) then
+    begin
+      Extra := -FreeSpace;
+      for I := 0 to N - 1 do
+        if (TControl(Items[I]).Grow > 0) and (TControl(Items[I]).Width = 0) then
+        begin
+          Step := Min(Max(0, Sizes[I] - MinShrink), (-FreeSpace) * TControl(Items[I]).Grow div GrowSum + 1);
+          Step := Min(Step, Extra);
+          Dec(Sizes[I], Step);
+          Dec(Extra, Step);
+        end;
+      FreeSpace := -Extra;
+    end;
+    { still too little: the last children are cut off; tools report it }
+    if (FreeSpace < 0) and FRow and (LayoutWarnings <> nil) and (Name <> '') then
+      LayoutWarnings.Add(Format('%s=%d,%d', [Name, Main - FreeSpace, Main]));
 
     { Grow: share the free space. }
     if (FreeSpace > 0) and (GrowSum > 0) then

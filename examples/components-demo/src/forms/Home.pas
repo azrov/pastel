@@ -5,7 +5,7 @@ unit Home;
 interface
 
 uses
-  SysUtils, Pastel.UI, Pastel.Dialogs, Pastel.Lang, Money, Home.g;
+  SysUtils, Pastel.UI, Pastel.Dialogs, Pastel.Lang, Pastel.Inputs, Home.g;
 { Money comes from the components library like the controls; the controls'
   units (StarRating, CurrencyEdit, ...) are added by Pastel itself. }
 
@@ -62,7 +62,7 @@ begin
     Exit;
   end;
   Orders.AddRow([CustomerEdit.Text, FormatMoney(Total, 2, PriceEdit.Symbol),
-    FormatDateShort(DuePicker.Date), StringOfChar('*', Rating.Value)]);
+    FormatDateShort(DuePicker.Date) + ' ' + DueTime.Text, StringOfChar('*', Rating.Value)]);
   Orders.Row := Orders.RowCount - 1;
 end;
 

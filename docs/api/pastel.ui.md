@@ -596,6 +596,7 @@ function NonVisualClassAt(Index: Integer): TComponentClass
 | `var KeyAlt: Boolean` | Alt is held (with KeyDown). |
 | `var MainForm: TForm` | The main window's form; dialogs are shown on it. Set by Pastel.App. |
 | `var PartialRepaint: Boolean` | False: always paint the whole window (PASTEL_FULL_REPAINT=1). |
+| `const MinShrink = 48` | A growing control in a row that is too narrow gets no narrower than this. |
 | `const KEY_BACKSPACE = 8` | Platform-independent key codes (same values as SDL key codes). |
 | `const KEY_TAB = 9` |  |
 | `const KEY_ENTER = 13` |  |

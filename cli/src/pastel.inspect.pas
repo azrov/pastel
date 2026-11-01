@@ -42,7 +42,7 @@ function JsonStr(const S: string): string;
 implementation
 
 uses
-  TypInfo, Pastel.Console, Pastel.PForm, Pastel.UI, Pastel.Forms, Pastel.Graphics,
+  TypInfo, Pastel.Console, Pastel.PForm, Pastel.UI, Pastel.Forms, Pastel.Graphics, Pastel.Controls,
   Pastel.Project, Pastel.Builder;
 
 function JsonStr(const S: string): string;
@@ -172,11 +172,87 @@ begin
   CheckNodeEvents(Node, FindControlClass(Node.ClassName_), Data);
 end;
 
+type
+  TLineSearch = record
+    Name: string;
+    Line: Integer;
+  end;
+  PLineSearch = ^TLineSearch;
+
+procedure FindLine(Node: TPFormNode; Data: Pointer);
+begin
+  if SameText(Node.Name, PLineSearch(Data)^.Name) then
+    PLineSearch(Data)^.Line := Node.Line;
+end;
+
+{ Lays the form out at its size (every page of its tab controls) and reports
+  rows whose controls do not fit: the last ones would be cut off. }
+procedure CheckLayout(Form: TForm; Root: TPFormNode; const FileName: string; var Issues: TIssues);
+var
+  Warnings: TStringList;
+  Tabs: TFPList;
+  I, J, K, W, H, Needed, Avail: Integer;
+  S: TLineSearch;
+  Parts: TStringArray;
+
+  procedure FindTabs(C: TControl);
+  var
+    N: Integer;
+  begin
+    if C is TTabControl then
+      Tabs.Add(C);
+    for N := 0 to C.ChildCount - 1 do
+      FindTabs(C.Children[N]);
+  end;
+
+begin
+  if InitFonts <> '' then
+    Exit;     { no fonts here: sizes of texts are unknown }
+  W := Form.Width;
+  H := Form.Height;
+  if W <= 0 then W := 480;
+  if H <= 0 then H := 360;
+  Warnings := TStringList.Create;
+  Warnings.Sorted := True;
+  Warnings.Duplicates := dupIgnore;
+  Tabs := TFPList.Create;
+  LayoutWarnings := Warnings;
+  try
+    FindTabs(Form);
+    Form.Layout(W, H);
+    for I := 0 to Tabs.Count - 1 do
+      for J := 0 to TTabControl(Tabs[I]).ChildCount - 1 do
+        if TTabControl(Tabs[I]).Children[J] is TTabSheet then
+        begin
+          TTabControl(Tabs[I]).TabIndex := J;
+          Form.Layout(W, H);
+        end;
+    for K := 0 to Warnings.Count - 1 do
+    begin
+      S.Name := Warnings.Names[K];
+      S.Line := Root.Line;
+      VisitPForm(Root, @FindLine, @S);
+      Parts := Warnings.ValueFromIndex[K].Split([',']);
+      Needed := StrToIntDef(Parts[0], 0);
+      Avail := StrToIntDef(Parts[1], 0);
+      AddIssue(Issues, FileName, S.Line, 'warning',
+        Format('%s: its controls need %d pixels but there are %d at the form''s size (%dx%d); the last ones are cut off. ' +
+        'Give it more room, shorter texts, Grow = 1 on a control that may get narrower, or put the controls in two rows',
+        [S.Name, Needed, Avail, W, H]));
+    end;
+  finally
+    LayoutWarnings := nil;
+    Tabs.Free;
+    Warnings.Free;
+  end;
+end;
+
 function CheckFormText(const FileName, Text: string): TIssues;
 var
   Root: TPFormNode;
   Form: TForm;
   E: TEventCheck;
+  Built: Boolean;
 begin
   Result := nil;
   try
@@ -195,14 +271,18 @@ begin
     StrictEvents := False;
     Form := TForm.Create(nil);
     try
+      Built := False;
       try
         BuildForm(Form, Root);
+        Built := True;
       except
         on Ex: EPFormError do
           AddIssue(Result, FileName, Ex.Line, 'error', StripLinePrefix(Ex.Message));
         on Ex: Exception do
           AddIssue(Result, FileName, Root.Line, 'error', Ex.Message);
       end;
+      if Built then
+        CheckLayout(Form, Root, FileName, Result);
     finally
       Form.Free;
       StrictEvents := True;

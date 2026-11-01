@@ -2,7 +2,7 @@
   "name": "pastel-vscode",
   "displayName": "Pastel",
   "description": "Build cross-platform apps in Object Pascal with Pastel: run, build, live form preview, .pform completion and checks.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "pastel",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -198,6 +198,11 @@
       {
         "command": "pastel.newForm",
         "title": "New Form…",
+        "category": "Pastel"
+      },
+      {
+        "command": "pastel.chooseRunProject",
+        "title": "Choose the Program to Run",
         "category": "Pastel"
       }
     ],
@@ -476,7 +481,7 @@
   "scripts": {
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "test": "node ./out/test/unit.js && node ./out/test/edit.test.js && node ./out/test/designer.test.js && node ./out/test/pascal.test.js && node ./out/test/testparse.test.js && node ./out/test/routes.test.js && node ./out/test/analyzer.test.js",
+    "test": "node ./out/test/unit.js && node ./out/test/edit.test.js && node ./out/test/designer.test.js && node ./out/test/pascal.test.js && node ./out/test/testparse.test.js && node ./out/test/routes.test.js && node ./out/test/analyzer.test.js && node ./out/test/projectinfo.test.js",
     "package": "vsce package --no-dependencies --allow-missing-repository",
     "test:integration": "node ./out/test/integration.js",
     "apidoc": "node ./out/lang/apidoc.js ../framework/src ../docs/api"

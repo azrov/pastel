@@ -30,6 +30,12 @@ expect DuePicker.DateText 2026-11-04
 key delete
 expect DuePicker.DateText 
 set DuePicker.DateText 2026-11-20
+click DueTime
+key up
+expect DueTime 10:30
+set DueTime.Text 930
+click CustomerEdit
+expect DueTime 09:30
 click AddButton
 expect Orders.Row 0
 set CustomerEdit.Text 

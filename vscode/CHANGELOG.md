@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.1
+
+- F9 (Run) in a library's file runs a program that uses it; with several, it asks once and remembers (*Pastel: Choose the Program to Run* asks again); with none, it offers the library's tests
+- `.pform` files show a warning on rows whose controls do not fit the form
+
 ## 1.0.0
 
 - The toolbox shows the controls of the libraries a project uses, and non-visual components (◇): timers, actions, data bindings and your own; adding one puts it at the top of the form

@@ -2,6 +2,9 @@ import * as cp from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { ProjectInfo, readProjectInfo, runCandidates } from './projectinfo';
+
+export { ProjectInfo, readProjectInfo };
 
 export interface RunResult {
   code: number;
@@ -80,4 +83,41 @@ export function runPastel(args: string[], cwd: string, stdin?: string): Promise<
       child.stdin?.end(stdin, 'utf8');
     }
   });
+}
+
+/** Every Pastel project in the workspace (not in build folders). */
+export async function workspaceProjects(): Promise<ProjectInfo[]> {
+  const found = await vscode.workspace.findFiles('**/pastel.toml', '{**/build/**,**/node_modules/**}', 500);
+  return found.map(f => readProjectInfo(path.dirname(f.fsPath))).filter((p): p is ProjectInfo => !!p)
+    .sort((a, b) => a.root.localeCompare(b.root));
+}
+
+/**
+ * The project F9 runs. The active file's project when it is a program; for a
+ * library, the programs that use it; else every program of the workspace.
+ * With several, the user chooses once (remembered for the workspace).
+ */
+export async function runnableProjectRoot(state: vscode.Memento | undefined): Promise<string | undefined> {
+  const all = await workspaceProjects();
+  const activeFile = vscode.window.activeTextEditor?.document.uri;
+  const activeRoot = activeFile?.scheme === 'file' ? findProjectRoot(activeFile.fsPath) : undefined;
+  const active = activeRoot ? readProjectInfo(activeRoot) : undefined;
+  const choices = runCandidates(all, active);
+  if (choices.length === 0) {
+    return undefined;
+  }
+  if (choices.length === 1) {
+    return choices[0].root;
+  }
+  const remembered = state?.get<string>('pastel.runProject');
+  if (remembered && choices.some(c => c.root === remembered)) {
+    return remembered;
+  }
+  const pick = await vscode.window.showQuickPick(
+    choices.map(c => ({ label: c.name, description: `${c.kind} · ${vscode.workspace.asRelativePath(c.root)}`, root: c.root })),
+    { placeHolder: active?.kind === 'lib' ? `${active.name} is a library: which program should run?` : 'Which program should run?' });
+  if (pick) {
+    await state?.update('pastel.runProject', pick.root);
+  }
+  return pick?.root;
 }

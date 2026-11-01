@@ -65,7 +65,7 @@ Everything about Pastel, by topic. Every page has examples you can copy; the [ex
 | [notes-api](../examples/notes-api/README.md) | A web API with a web page, run as a service |
 | [contacts](../examples/contacts/README.md) | A desktop address book with SQLite, a list and data binding |
 | [notepad](../examples/notepad/README.md) | A desktop text editor: menus, file dialogs, translated into Turkish |
-| [components](../examples/components/README.md) | A library of components: a star rating, an amount field, a date picker |
+| [components](../examples/components/README.md) | A library of components: a star rating, a component that remembers a form |
 | [components-demo](../examples/components-demo/README.md) | An order form that uses that library |
 | [salon-core](../examples/salon-core/README.md) | The shared part of a business system: customers, appointments, invoices, sync |
 | [salon-desk](../examples/salon-desk/README.md) | Its desktop app: works offline on SQLite, syncs with the server; English and Turkish |

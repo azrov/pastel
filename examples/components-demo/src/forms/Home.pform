@@ -46,8 +46,17 @@ object HomeForm: THomeForm
       object DueLabel: TLabel
         Text = 'Delivery date'
       end
-      object DuePicker: TDatePicker
-        Placeholder = 'Choose a date'
+      object DueRow: TRow
+        Gap = 8
+        object DuePicker: TDatePicker
+          Grow = 1
+          Placeholder = 'Choose a date'
+        end
+        object DueTime: TTimeEdit
+          Width = 90
+          Text = '10:00'
+          Step = 30
+        end
       end
       object RatingLabel: TLabel
         Text = 'How important is the customer?'

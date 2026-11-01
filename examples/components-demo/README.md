@@ -7,10 +7,8 @@ An order form that uses the components of [`examples/components`](../components)
 components = { path = "../components" }
 ```
 
-- `TCurrencyEdit` for the price (`PriceEdit.Value` is a `Currency`),
-- `TDatePicker` for the delivery date,
-- `TStarRating` for the customer's priority,
-- `TFormMemory` remembers the customer and the price for the next start.
+- from the library: `TStarRating` for the customer's priority, and `TFormMemory`, which remembers the customer and the price for the next start;
+- from the framework (`Pastel.Inputs`): `TCurrencyEdit` for the price (`PriceEdit.Value` is a `Currency`), `TDatePicker` and `TTimeEdit` for the delivery.
 
 Open `src/forms/Home.pform` in VS Code: the library's controls are at the front of the designer's toolbox.
 

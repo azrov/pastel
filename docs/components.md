@@ -7,7 +7,7 @@ Like in Delphi, you can add your own components to Pastel. They are used in `.pf
 | **Control**: drawn on the form, the user sees and uses it | a star rating, a date picker, an amount field | `TControl` (or a control to build on, like `TEdit`) | `RegisterControl` |
 | **Non-visual component**: part of the form, but not drawn | a timer, an action, a connection to a service | `TComponent` | `RegisterNonVisual` |
 
-Complete examples are in [`examples/components`](../examples/components) (a library with `TStarRating`, `TCurrencyEdit`, `TDatePicker` and `TFormMemory`) and [`examples/components-demo`](../examples/components-demo) (an app that uses them). This page explains them step by step.
+Complete examples are in [`examples/components`](../examples/components) (a library with `TStarRating` and `TFormMemory`); `TCurrencyEdit` and `TDatePicker`, explained below, are in the framework's [`pastel.inputs.pas`](../framework/src/pastel.inputs.pas) and [`examples/components-demo`](../examples/components-demo) (an app that uses them). This page explains them step by step.
 
 ## Units and `uses`: how code finds other code
 
@@ -15,7 +15,7 @@ A Pascal **unit** is one file with a name (`unit StarRating;`). What is in its `
 
 ```pascal
 uses
-  SysUtils, Pastel.UI, Money;     // Money: src/services/money.pas of this project or of a library
+  SysUtils, Pastel.UI, Pastel.Inputs, Prices;     // Prices: src/services/prices.pas of this project or of a library
 ```
 
 Units are found in the project's `src/` folder (and its sub-folders), in the libraries the project depends on, and in the framework (`Pastel.*`). For the controls in a `.pform` file you write no `uses`: the code Pastel generates for the form names their units.
@@ -260,7 +260,7 @@ Now the library's controls are in the app's `.pform` files and the designer's to
 
 ## Testing components
 
-- **The logic** (parsing amounts, calendar arithmetic) belongs in units without a window, tested with `pastel test`: [`tests/money_test.pas`](../examples/components/tests/money_test.pas).
+- **The logic** (parsing amounts, calendar arithmetic) belongs in units without a window, tested with `pastel test`: [`inputs_test.pas`](../framework/tests/tests/inputs_test.pas), [`starrating_test.pas`](../examples/components/tests/starrating_test.pas).
 - **The control in a form**: a UI script drives it like a user, without a screen: [`tests/ui.txt`](../examples/components-demo/tests/ui.txt).
 
 ```

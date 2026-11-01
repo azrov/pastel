@@ -9,7 +9,7 @@ interface
 
 uses
   SysUtils, DateUtils, fpjson, Pastel.App, Pastel.UI, Pastel.Controls, Pastel.Dialogs, Pastel.Lang, Pastel.Json, Pastel.Db, Pastel.Files,
-  SalonStore, SalonSync, SalonMoney, Calendar, Settings, Home.g;
+  SalonStore, SalonSync, SalonMoney, Pastel.Inputs, Settings, Home.g;
 
 type
   THomeForm = class(THomeFormBase)

@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import { registerFormatter } from './format';
 import { registerDebugging } from './debug';
 import { registerTesting } from './testing';
-import { currentProjectRoot, findProjectRoot, pastelPath, runPastel } from './cli';
+import { currentProjectRoot, findProjectRoot, pastelPath, readProjectInfo, runnableProjectRoot, runPastel } from './cli';
 import {
   allObjects, classFor, completionContext, declaredProcedures, enclosingObjects,
   findProcedure, handlerInserts, missingHandlerName, missingHandlerParams, parseIssues, Schema, SchemaClass,
@@ -32,7 +32,10 @@ const PLATFORMS: { label: string; description: string }[] = [
   { label: 'macos-arm64', description: 'macOS, Apple Silicon' },
 ];
 
+let extensionContext: vscode.ExtensionContext | undefined;
+
 export function activate(context: vscode.ExtensionContext): void {
+  extensionContext = context;
   diagnostics = vscode.languages.createDiagnosticCollection('pastel');
   context.subscriptions.push(diagnostics);
 
@@ -84,6 +87,10 @@ export function activate(context: vscode.ExtensionContext): void {
 
   context.subscriptions.push(
     vscode.commands.registerCommand('pastel.run', () => runTask('run')),
+    vscode.commands.registerCommand('pastel.chooseRunProject', async () => {
+      await context.workspaceState.update('pastel.runProject', undefined);
+      await runTask('run');
+    }),
     vscode.commands.registerCommand('pastel.runWatch', () => runTask('run', { watch: true })),
     vscode.commands.registerCommand('pastel.testWatch', () => runTask('test', { watch: true })),
     vscode.commands.registerCommand('pastel.formatAll', () => runTask('fmt')),
@@ -244,10 +251,28 @@ function makeTask(command: string, root: string,
 }
 
 async function runTask(command: string, opts: { target?: string; release?: boolean; watch?: boolean } = {}): Promise<void> {
-  const root = await currentProjectRoot();
+  let root = await currentProjectRoot();
   if (!root) {
     vscode.window.showWarningMessage('Pastel: no pastel.toml found in this workspace. Create a project with "Pastel: New Project".');
     return;
+  }
+  if (command === 'run') {
+    // a library has no program: run one that uses it, or offer its tests
+    const runnable = await runnableProjectRoot(extensionContext?.workspaceState);
+    if (!runnable) {
+      const info = readProjectInfo(root);
+      if (info?.kind === 'lib') {
+        const choice = await vscode.window.showInformationMessage(
+          `Pastel: ${info.name} is a library and has no program to run. Run its tests instead?`, 'Run Tests');
+        if (choice === 'Run Tests') {
+          command = 'test';
+        } else {
+          return;
+        }
+      }
+    } else {
+      root = runnable;
+    }
   }
   await vscode.workspace.saveAll(false);
   if (command === 'run' || opts.watch) {

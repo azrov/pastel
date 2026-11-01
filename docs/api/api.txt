@@ -458,6 +458,55 @@ Pastel.Http: type EHttpError = class(Exception)
 Pastel.Http: type THttpClient = class
 Pastel.Http: type THttpProgressEvent = procedure(Done: Int64; Total: Int64)
 Pastel.Http: type THttpResponse = record
+Pastel.Inputs: TCalendarView.constructor Create(AOwner: TComponent)
+Pastel.Inputs: TCalendarView.procedure NextMonth
+Pastel.Inputs: TCalendarView.procedure PreviousMonth
+Pastel.Inputs: TCalendarView.procedure ShowDate(D: TDateTime)
+Pastel.Inputs: TCalendarView.property Month: Word
+Pastel.Inputs: TCalendarView.property OnPick: TNotifyEvent
+Pastel.Inputs: TCalendarView.property Selected: TDateTime
+Pastel.Inputs: TCalendarView.property Year: Word
+Pastel.Inputs: TCurrencyEdit.constructor Create(AOwner: TComponent)
+Pastel.Inputs: TCurrencyEdit.procedure Reformat
+Pastel.Inputs: TCurrencyEdit.property Decimals: Integer
+Pastel.Inputs: TCurrencyEdit.property Symbol: string
+Pastel.Inputs: TCurrencyEdit.property Valid: Boolean
+Pastel.Inputs: TCurrencyEdit.property Value: Currency
+Pastel.Inputs: TDatePicker.function DroppedDown: Boolean
+Pastel.Inputs: TDatePicker.function HasDate: Boolean
+Pastel.Inputs: TDatePicker.procedure Clear
+Pastel.Inputs: TDatePicker.procedure CloseUp
+Pastel.Inputs: TDatePicker.procedure DropDown
+Pastel.Inputs: TDatePicker.property Calendar: TCalendarView
+Pastel.Inputs: TDatePicker.property Date: TDateTime
+Pastel.Inputs: TDatePicker.property DateText: string
+Pastel.Inputs: TDatePicker.property OnChange: TNotifyEvent
+Pastel.Inputs: TDatePicker.property Placeholder: string
+Pastel.Inputs: TNumberEdit.constructor Create(AOwner: TComponent)
+Pastel.Inputs: TNumberEdit.procedure StepBy(Count: Integer)
+Pastel.Inputs: TNumberEdit.property Max: Integer
+Pastel.Inputs: TNumberEdit.property Min: Integer
+Pastel.Inputs: TNumberEdit.property Step: Integer
+Pastel.Inputs: TNumberEdit.property Value: Integer
+Pastel.Inputs: TTimeEdit.constructor Create(AOwner: TComponent)
+Pastel.Inputs: TTimeEdit.function HasTime: Boolean
+Pastel.Inputs: TTimeEdit.function Time: TDateTime
+Pastel.Inputs: TTimeEdit.property Minutes: Integer
+Pastel.Inputs: TTimeEdit.property Step: Integer
+Pastel.Inputs: function DateToIso(D: TDateTime): string
+Pastel.Inputs: function FormatMoney(Value: Currency; Decimals: Integer = 2; const Symbol: string = ''): string
+Pastel.Inputs: function MonthCells(Year: Word; Month: Word): TMonthCells
+Pastel.Inputs: function MonthTitle(Year: Word; Month: Word): string
+Pastel.Inputs: function ParseTimeOfDay(const S: string): Integer
+Pastel.Inputs: function TryIsoToDate(const S: string; out D: TDateTime): Boolean
+Pastel.Inputs: function TryParseMoney(const S: string; out Value: Currency): Boolean
+Pastel.Inputs: function WeekdayShort(Index: Integer): string
+Pastel.Inputs: type TCalendarView = class(TControl)
+Pastel.Inputs: type TCurrencyEdit = class(TEdit)
+Pastel.Inputs: type TDatePicker = class(TControl)
+Pastel.Inputs: type TMonthCells = array [0 ..41] of TDateTime
+Pastel.Inputs: type TNumberEdit = class(TEdit)
+Pastel.Inputs: type TTimeEdit = class(TEdit)
 Pastel.Json: EJsonError.Column: Integer
 Pastel.Json: EJsonError.Line: Integer
 Pastel.Json: function JArray(Data: TJSONData; const Path: string): TJsonItems
@@ -981,6 +1030,7 @@ Pastel.UI: const KEY_RIGHT = $4000004F
 Pastel.UI: const KEY_SPACE = 32
 Pastel.UI: const KEY_TAB = 9
 Pastel.UI: const KEY_UP = $40000052
+Pastel.UI: const MinShrink = 48
 Pastel.UI: const mrAbort = 3
 Pastel.UI: const mrCancel = 2
 Pastel.UI: const mrClose = 8

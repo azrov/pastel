@@ -208,16 +208,69 @@ Everything for 1.0 is in the repository; what is left needs the public repositor
 
 ---
 
-## After 1.0
+## From 1.0 to 2.0
 
-- SDL3 instead of SDL2
-- Cross-compilers for Raspberry Pi installed by `pastel doctor --install`
-- Android and iOS apps
-- macOS (desktop) packages and signing
-- GPU drawing (Skia) for heavy graphics
-- Web target (WebAssembly)
-- Package registry for sharing libraries
-- Accessibility (screen readers)
+Everything in 1.x stays compatible with 1.0 (see [compatibility.md](docs/compatibility.md)): new things are added, nothing is taken away. What would break existing programs waits for 2.0. The order may change with what people need most; each version ends with docs, examples and tests like the ones before.
+
+### 1.1 — Everyday desktop comfort
+
+The things every business app needs, built in instead of written again in every project.
+
+- [x] Controls in the framework (`Pastel.Inputs`): `TDatePicker` and `TCurrencyEdit` (from the components example), `TNumberEdit` (a number with up/down), `TTimeEdit` — done in 1.0.0-rc.4
+- [ ] `TSplitter` (two panes the user resizes), `TStatusBar`, `TToolBar` with buttons and icons
+- [ ] A set of built-in icons (save, open, delete, search, add...) for buttons, menus and toolbars
+- [ ] Layout: a growing control gives up width when a row is too narrow; `pastel check` warns when controls are still cut off (done in 1.0.0-rc.4); `TFlow` (a row that wraps)
+- [ ] Grid: number and date columns that format and sort right, a check box column, filtering, export to CSV
+- [ ] Designer: the warnings of `pastel check` drawn on the form; align and distribute several selected controls
+- [ ] F9 runs the right program when the open file belongs to a library (done in 1.0.0-rc.4)
+
+### 1.2 — Reports and documents
+
+- [ ] `Pastel.Report`: invoices, lists and labels as PDF, from code (text, tables, totals, images, page breaks, headers and footers)
+- [ ] Print preview and printing on Linux and Windows
+- [ ] Reading and writing spreadsheets: CSV with the language's separators, `.xlsx` (the common cases)
+- [ ] An example: the salon prints its invoices as PDF
+
+### 1.3 — Data made easier
+
+- [ ] `pastel new model Customer`: a model unit, its migration and tests from a few lines
+- [ ] `Pastel.Sync`: the offline-first synchronization of the salon example as a library (ids, `updated_at`, the newer change wins, deletions), with server routes and a desktop client
+- [ ] Login for apps: users and roles on the server, a login form on the desktop, tokens that renew
+- [ ] Backups of SQLite and PostgreSQL from the app or the server, and restoring them
+- [ ] Data binding: `TDataBinding` checks values (required, ranges) and shows the problem next to the control
+
+### 1.4 — The web, further
+
+- [ ] HTTP keep-alive and streaming answers; WebSockets and server-sent events (live updates for apps and pages)
+- [ ] OpenAPI description made from the routes; `pastel new client` makes the Pascal client for an API
+- [ ] HTML pages from templates on the server
+- [ ] Jobs that survive a restart: a queue in the database
+- [ ] Metrics (Prometheus) and request tracing
+
+### 1.5 — Platforms and distribution
+
+- [ ] SDL3 (when the Linux distributions ship it)
+- [ ] Raspberry Pi: `pastel doctor --install rpi` sets up the cross-compiler
+- [ ] macOS: apps as `.app` bundles and `.dmg`, signing and notarization
+- [ ] Windows: signing the `.exe` and the installer; updates of desktop apps from a server
+- [ ] A package registry: `pastel add text-tools` for libraries others published
+
+### 1.6 — Tooling
+
+- [ ] `pastel test --coverage`, and a profiler view in VS Code
+- [ ] The debugger shows JSON, lists and records readably
+- [ ] Refactorings: extract method, rename a unit, move a class
+- [ ] Hot reload of code changes for desktop apps (reload the window's code without restarting)
+
+### 2.0 — Mobile and beyond
+
+A major version: what had to wait for compatibility can change here (with `pastel upgrade` doing as much of the work as possible).
+
+- [ ] Android and iOS apps from the same `.pform` forms: touch, screen sizes, the phone's look
+- [ ] GPU drawing (Skia) for animations and heavy graphics
+- [ ] Forms in the browser (WebAssembly)
+- [ ] Accessibility: screen readers, high contrast, keyboard everywhere
+- [ ] Clean-up: what 1.x marked deprecated is removed; a new stable API list
 
 ---
 

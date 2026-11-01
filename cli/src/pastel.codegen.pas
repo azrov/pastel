@@ -34,7 +34,7 @@ var
 implementation
 
 uses
-  Pastel.PForm, Pastel.Console, Pastel.UI, Pastel.Controls, Pastel.Menus, Pastel.Grids, Pastel.Binding,
+  Pastel.PForm, Pastel.Console, Pastel.UI, Pastel.Controls, Pastel.Menus, Pastel.Grids, Pastel.Binding, Pastel.Inputs,
   Pastel.CustomCtl;
 
 function PascalString(const S: string): string;

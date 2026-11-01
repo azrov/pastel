@@ -1,15 +1,15 @@
-{ Tests for src/services/money.pas and calendar.pas. Run them with: pastel test }
-unit Money_Test;
+{ Tests for Pastel.Inputs: money, dates, numbers and times. }
+unit Inputs_Test;
 
 {$mode objfpc}{$H+}
 
 interface
 
 uses
-  SysUtils, DateUtils, Pastel.Testing, Pastel.Lang, Money, Calendar;
+  SysUtils, DateUtils, Pastel.Testing, Pastel.Lang, Pastel.Inputs;
 
 type
-  TMoneyTests = class(TTestSuite)
+  TInputsTests = class(TTestSuite)
   public
     procedure TearDown; override;
   published
@@ -18,16 +18,19 @@ type
     procedure WritesItTheLanguagesWay;
     procedure MonthStartsOnMonday;
     procedure IsoDates;
+    procedure TimesOfDay;
+    procedure NumberEditStaysInRange;
+    procedure TimeEditSteps;
   end;
 
 implementation
 
-procedure TMoneyTests.TearDown;
+procedure TInputsTests.TearDown;
 begin
   UseLanguage('en');
 end;
 
-procedure TMoneyTests.ReadsWhatPeopleType;
+procedure TInputsTests.ReadsWhatPeopleType;
 var
   V: Currency;
 begin
@@ -45,7 +48,7 @@ begin
   AssertEquals(1000, Double(V), 1e-9);
 end;
 
-procedure TMoneyTests.RefusesWhatIsNotMoney;
+procedure TInputsTests.RefusesWhatIsNotMoney;
 var
   V: Currency;
 begin
@@ -54,7 +57,7 @@ begin
   AssertFalse(TryParseMoney('12a', V));
 end;
 
-procedure TMoneyTests.WritesItTheLanguagesWay;
+procedure TInputsTests.WritesItTheLanguagesWay;
 begin
   UseLanguage('tr');
   AssertEquals('1.234,50 ₺', FormatMoney(1234.5, 2, '₺'));
@@ -62,7 +65,7 @@ begin
   AssertEquals('1,234.50', FormatMoney(1234.5));
 end;
 
-procedure TMoneyTests.MonthStartsOnMonday;
+procedure TInputsTests.MonthStartsOnMonday;
 var
   Cells: TMonthCells;
 begin
@@ -72,7 +75,7 @@ begin
   AssertEquals(1, DayOfTheWeek(Cells[7]), 'every row starts on Monday');
 end;
 
-procedure TMoneyTests.IsoDates;
+procedure TInputsTests.IsoDates;
 var
   D: TDateTime;
 begin
@@ -82,6 +85,53 @@ begin
   AssertFalse(TryIsoToDate('01.11.2026', D));
 end;
 
+procedure TInputsTests.TimesOfDay;
+begin
+  AssertEquals(570, ParseTimeOfDay('9:30'));
+  AssertEquals(570, ParseTimeOfDay('930'));
+  AssertEquals(570, ParseTimeOfDay('09.30'));
+  AssertEquals(540, ParseTimeOfDay('9'));
+  AssertEquals(-1, ParseTimeOfDay('25:00'));
+  AssertEquals(-1, ParseTimeOfDay('abc'));
+end;
+
+procedure TInputsTests.NumberEditStaysInRange;
+var
+  E: TNumberEdit;
+begin
+  E := TNumberEdit.Create(nil);
+  try
+    E.Min := 1;
+    E.Max := 10;
+    E.Value := 50;
+    AssertEquals(10, E.Value);
+    E.StepBy(-3);
+    AssertEquals(7, E.Value);
+    E.Text := '';
+    AssertEquals(1, E.Value);
+  finally
+    E.Free;
+  end;
+end;
+
+procedure TInputsTests.TimeEditSteps;
+var
+  E: TTimeEdit;
+begin
+  E := TTimeEdit.Create(nil);
+  try
+    E.Text := '9:10';
+    AssertEquals(550, E.Minutes);
+    E.Minutes := 23 * 60 + 50;
+    AssertEquals('23:50', E.Text);
+    E.Text := '';
+    AssertFalse(E.HasTime);
+  finally
+    E.Free;
+  end;
+end;
+
 initialization
-  RegisterTests(TMoneyTests);
+  RegisterTests(TInputsTests);
+
 end.

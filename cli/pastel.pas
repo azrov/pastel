@@ -290,10 +290,51 @@ begin
   end;
 end;
 
+{ the projects next to a library (in the folder above it) that depend on it:
+  '../salon-desk, ../salon-api' }
+function ProgramsUsing(const LibRoot: string): string;
+var
+  SR: TSearchRec;
+  Parent, Dir: string;
+  P: TPastelProject;
+  D: TDependency;
+begin
+  Result := '';
+  Parent := ExtractFileDir(ExcludeTrailingPathDelimiter(LibRoot));
+  if FindFirst(Parent + PathDelim + '*', faDirectory, SR) = 0 then
+  try
+    repeat
+      Dir := IncludeTrailingPathDelimiter(Parent + PathDelim + SR.Name);
+      if (SR.Name = '.') or (SR.Name = '..') or not FileExists(Dir + ProjectFileName) then
+        Continue;
+      try
+        P := TPastelProject.Load(Dir);
+      except
+        Continue;
+      end;
+      try
+        if P.Kind <> 'lib' then
+          for D in P.Dependencies do
+            if SameText(ExcludeTrailingPathDelimiter(D.Root), ExcludeTrailingPathDelimiter(ExpandFileName(LibRoot))) then
+            begin
+              if Result <> '' then
+                Result := Result + ', ';
+              Result := Result + '../' + SR.Name;
+            end;
+      finally
+        P.Free;
+      end;
+    until FindNext(SR) <> 0;
+  finally
+    FindClose(SR);
+  end;
+end;
+
 function CmdRun(const CL: TCommandLine): Integer;
 var
   Project: TPastelProject;
   T: TTarget;
+  Users: string;
 begin
   if (CL.Target <> '') and FindTarget(CL.Target, T) and not IsHost(T) then
   begin
@@ -308,7 +349,11 @@ begin
     if Project.Kind = 'lib' then
     begin
       Fail('a library has no program to run');
-      Hint('"pastel test" runs its tests; other projects use it as a dependency');
+      Users := ProgramsUsing(Project.Root);
+      if Users <> '' then
+        Hint('these programs use it: ' + Users + '; run one of them (cd there, then pastel run)')
+      else
+        Hint('"pastel test" runs its tests; other projects use it as a dependency');
       Exit(ExitUsage);
     end;
     if CL.Watch then

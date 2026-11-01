@@ -4,6 +4,7 @@ Every control and component of Pastel, each with an example for the `.pform` fil
 
 **Layout:** [TColumn](#tcolumn) · [TRow](#trow) · [TCard](#tcard) · [TScrollBox](#tscrollbox) · [TTabControl](#ttabcontrol) · [TTabSheet](#ttabsheet) · [TSpacer](#tspacer)
 **Text:** [TLabel](#tlabel) · [TEdit](#tedit) · [TMemo](#tmemo)
+**Dates, numbers and money:** [TDatePicker](#tdatepicker) · [TCalendarView](#tcalendarview) · [TTimeEdit](#ttimeedit) · [TNumberEdit](#tnumberedit) · [TCurrencyEdit](#tcurrencyedit)
 **Choices:** [TButton](#tbutton) · [TCheckBox](#tcheckbox) · [TSwitch](#tswitch) · [TRadioButton](#tradiobutton) · [TComboBox](#tcombobox) · [TListBox](#tlistbox) · [TSlider](#tslider)
 **Tables and trees:** [TGrid](#tgrid) · [TGridColumn](#tgridcolumn) · [TListView](#tlistview) · [TTreeView](#ttreeview)
 **Pictures and progress:** [TImage](#timage) · [TProgressBar](#tprogressbar) · [TSpinner](#tspinner)
@@ -209,6 +210,122 @@ Count := NotesMemo.Lines.Count;
 ```
 
 Same properties as [TEdit](#tedit) (without `Password` and `OnSubmit`), plus `Lines` (a `TStrings`) and `WordWrap`.
+
+## Dates, numbers and money
+
+These are in the unit `Pastel.Inputs`. In a `.pform` you write nothing extra; in code that calls its routines (`FormatMoney`, `TryParseMoney`, `TryIsoToDate`, `ParseTimeOfDay`) add `Pastel.Inputs` to `uses`.
+
+### TDatePicker
+
+A date, chosen from a calendar that opens under it. Keys: Enter, Space or Alt+Down opens it; arrows move by days and weeks, Page Up/Down by months, Enter chooses, Escape closes, Delete empties it. The date is shown the way the [language](forms.md) writes dates.
+
+```
+object DueDate: TDatePicker
+  DateText = '2026-11-01'      // '' = no date
+  Placeholder = 'Due date'
+  OnChange = DueDateChange
+end
+```
+
+```pascal
+DueDate.Date := Date + 14;
+if DueDate.HasDate then
+  Order.Put('due', DueDate.DateText);    // '2026-11-15'
+DueDate.Clear;
+```
+
+| | |
+|---|---|
+| `Date` | A `TDateTime` without time; `0` when there is none |
+| `DateText` | The date as `'2026-11-01'`, `''` for none — for `.pform` files, [`TDataBinding`](#tdatabinding) and UI scripts (`set DueDate.DateText 2026-11-03`) |
+| `Placeholder` | Shown when there is no date |
+| `OnChange` | The date changed |
+
+From code: `HasDate`, `Clear`, `DropDown`, `CloseUp`, `DroppedDown`. Helpers: `TryIsoToDate('2026-11-01', D)`, `DateToIso(D)`, `MonthTitle(2026, 11)` (*November 2026* in the language).
+
+### TCalendarView
+
+The month grid that `TDatePicker` opens. Put it on a form when the calendar should always be visible (an agenda, a booking page).
+
+```
+object Month: TCalendarView
+  OnPick = MonthPick
+end
+```
+
+```pascal
+procedure THomeForm.MonthPick(Sender: TObject);
+begin
+  LoadDay(Month.Selected);
+end;
+
+Month.ShowDate(Date);       // this month, today chosen
+Month.NextMonth;
+```
+
+`Selected` (the chosen day), `Year`, `Month`, `ShowDate`, `NextMonth`, `PreviousMonth`, `OnPick` (a click or Enter on a day). Weeks start on Monday.
+
+### TTimeEdit
+
+A time of day as `HH:MM`. Up/Down (and the mouse wheel) move it by `Step` minutes; `930`, `9.30` or `9` become `09:30`, `09:30`, `09:00` when the field is left.
+
+```
+object StartTime: TTimeEdit
+  Text = '09:00'
+  Step = 30
+end
+```
+
+```pascal
+if not StartTime.HasTime then
+  ShowMessage('When does it start?');
+Start := DueDate.Date + StartTime.Time;     // a TDateTime with the time
+StartTime.Minutes := 14 * 60;              // 14:00
+```
+
+`Minutes` (since midnight, `-1` without a time), `Time` (a `TDateTime` fraction), `HasTime`, `Step`; everything of [TEdit](#tedit).
+
+### TNumberEdit
+
+A whole number, with ▲▼ at its right edge. Only digits can be typed; Up/Down, the wheel and the arrows change it by `Step` (Page Up/Down by ten steps); leaving the field puts it between `Min` and `Max`.
+
+```
+object QuantityEdit: TNumberEdit
+  Min = 1
+  Max = 99
+  Value = 1
+  OnChange = QuantityChange
+end
+```
+
+```pascal
+Total := QuantityEdit.Value * PriceEdit.Value;
+QuantityEdit.StepBy(1);
+```
+
+`Value`, `Min`, `Max`, `Step`, `StepBy(Count)`; everything of [TEdit](#tedit).
+
+### TCurrencyEdit
+
+An amount of money: what people type (`1.234,50` or `1,234.50`, in the language's way) becomes a `Currency`; leaving the field writes it nicely. `Valid` tells whether the text is an amount.
+
+```
+object PriceEdit: TCurrencyEdit
+  Symbol = '₺'
+  Decimals = 2
+  OnChange = PriceChange
+end
+```
+
+```pascal
+if not PriceEdit.Valid then
+  Exit;
+Cents := Round(PriceEdit.Value * 100);
+PriceEdit.Value := 1250.5;              // shows 1,250.50 ₺
+TotalLabel.Text := FormatMoney(Total, 2, '₺');
+```
+
+`Value`, `Valid`, `Symbol`, `Decimals`; everything of [TEdit](#tedit). Helpers: `TryParseMoney(Text, V)`, `FormatMoney(V, Decimals, Symbol)`.
 
 ## Choices
 

@@ -19,6 +19,7 @@ Made from the declarations and comments in `framework/src` (`npm run apidoc` in 
 | [Pastel.Graphics](pastel.graphics.md) | Software 2D drawing: colors, an anti-aliased canvas and fonts. |
 | [Pastel.Grids](pastel.grids.md) | Tables and trees. |
 | [Pastel.Http](pastel.http.md) | HTTP and HTTPS client. |
+| [Pastel.Inputs](pastel.inputs.md) | Inputs for business apps: dates, amounts of money, numbers and times. |
 | [Pastel.Json](pastel.json.md) | JSON made easy, on top of Free Pascal's fpjson. |
 | [Pastel.Jwt](pastel.jwt.md) | JSON Web Tokens (JWT) signed with HS256. |
 | [Pastel.Lang](pastel.lang.md) | Translations and the number and date formats of a language. |

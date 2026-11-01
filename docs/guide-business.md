@@ -105,7 +105,7 @@ object DayList: TListView              // Time, Customer, Service, Price, Status
 object AppointmentCard: TCard          // the selected appointment, or a new one
   object CustomerCombo: TComboBox
   object TimeCombo: TComboBox
-  object PriceEdit: TCurrencyEdit      // from examples/components
+  object PriceEdit: TCurrencyEdit      // Pastel.Inputs
 ```
 
 - The day is a `TDatePicker` with ‹ › and *Today* buttons; changing it reloads the list (`OnChange`).

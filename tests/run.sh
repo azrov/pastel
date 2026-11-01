@@ -105,7 +105,7 @@ for t in ui ui-memory; do
   expect "components-demo: $t.txt"        '[ "$code" = 0 ] && ! echo "$out" | grep -q FAIL'
   [ "$code" = 0 ] || echo "$out" | grep -v "^ok" | head
 done
-expect "a library's controls are in the toolbox" '(cd "$WORK/ex-components-demo" && "$PASTEL" schema 2>/dev/null) | grep -q "\"name\":\"TDatePicker\",\"container\":false,\"form\":false,\"nonvisual\":false,\"project\":true"'
+expect "a library's controls are in the toolbox" '(cd "$WORK/ex-components-demo" && "$PASTEL" schema 2>/dev/null) | grep -q "\"name\":\"TStarRating\",\"container\":false,\"form\":false,\"nonvisual\":false,\"project\":true"'
 expect "and its non-visual components"     '(cd "$WORK/ex-components-demo" && "$PASTEL" schema 2>/dev/null) | grep -q "\"name\":\"TFormMemory\",\"container\":false,\"form\":false,\"nonvisual\":true,\"project\":true"'
 # the salon system: a desktop app and its server, sharing salon-core
 for p in salon-desk salon-api; do
@@ -645,6 +645,16 @@ set +e; out="$(cd "$WORK" && PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT="$WORK/asset.t
 expect "a release build carries its assets"  '[ "$code" = 0 ] && echo "$out" | grep -q "ok: Logo.LoadError"'
 expect "assets are compiled in"         'grep -q "RegisterAsset(.logo.png., @Asset0" build/linux/release/gen/appassets.pas'
 cd "$WORK/gui-demo"
+
+# --- running a library; rows that do not fit ---
+set +e; out="$(cd "$ROOT/examples/salon-core" && "$PASTEL" run 2>&1)"; code=$?; set -e
+expect "run in a library names its programs" '[ "$code" = 2 ] && echo "$out" | grep -q "these programs use it: ../salon-api, ../salon-desk"'
+cd "$WORK" && rm -rf narrow && "$PASTEL" new app narrow >/dev/null && cd narrow
+sed -i 's/^  Width = 460$/  Width = 200/' src/forms/Home.pform
+out="$("$PASTEL" check 2>&1)"
+expect "check warns about a row that is cut off" 'echo "$out" | grep -q "Warning: Buttons: its controls need"'
+out="$("$PASTEL" build 2>&1)"
+expect "but it still builds"               'echo "$out" | grep -q "Output"'
 
 # --- pastel upgrade ---
 cd "$WORK"

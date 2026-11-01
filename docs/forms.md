@@ -118,6 +118,7 @@ Containers place their children one after another:
 - `Justify` (along the stacking direction): `Start`, `Center`, `End`, `SpaceBetween`.
 - `Grow`: a child with `Grow = 1` takes the free space; `Grow = 2` takes twice as much as `Grow = 1`.
 - `Width` / `Height`: fixed size in pixels; `0` (the default) means "as big as the content".
+- When a row is too narrow, its growing children (`Grow`) give up width, down to 48 pixels. If the controls still do not fit, the last ones are cut off; `pastel check` (and the editor) warns about such rows at the form's size.
 
 ## Controls
 
@@ -142,6 +143,8 @@ All controls have `Width`, `Height`, `Grow`, `Visible`, `Enabled`, `Hint` (a too
 | `TProgressBar` | `Position`, `Max`, `Indeterminate` | |
 | `TSlider` | `Position`, `Min`, `Max`, `Step` | `OnChange` |
 | `TSpinner` | `Active` | |
+| `TDatePicker`, `TCalendarView` | A date: `DateText = '2026-11-01'`, `Placeholder`; `Date`, `HasDate`, `Clear` from code | `OnChange`, `OnPick` |
+| `TTimeEdit`, `TNumberEdit`, `TCurrencyEdit` | A time (`Step` minutes), a whole number (`Min`, `Max`, `Step`, `Value`), an amount (`Symbol`, `Decimals`, `Value`) — [controls.md](controls.md#dates-numbers-and-money) | `OnChange` |
 | `TGrid`, `TListView` | A table: `TGridColumn` children (`Title`, `Field`, `Width`), `Editable`, `Sortable`; `LoadJson` from code | `OnChange`, `OnDblClick`, `OnCellEdit` |
 | `TTreeView` | A tree: `Items = ('Documents', '  Letters')` | `OnChange`, `OnDblClick` |
 | `TDataBinding` | Fills edits from a record and back: `Fields = ('NameEdit', 'EmailEdit')` | |

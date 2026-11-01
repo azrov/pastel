@@ -47,6 +47,7 @@ type
     procedure ListsAndReferencesInPForms;
     procedure CanvasScales;
     procedure OnlyWhatChangedIsRepainted;
+    procedure ATooNarrowRowShrinksWhatGrows;
     procedure GridRowsAndSorting;
     procedure GridLoadsJson;
     procedure TreeFromLines;
@@ -644,6 +645,43 @@ begin
     AssertEquals(Cardinal(RGB(255, 255, 255)), Cardinal(C.GetPixel(16, 12)), 'right of it');
   finally
     C.Free;
+  end;
+end;
+
+procedure TUITests.ATooNarrowRowShrinksWhatGrows;
+var
+  Row: TRow;
+  E: TEdit;
+  B, B2: TButton;
+  W: TStringList;
+begin
+  Row := TRow.Create(Form);
+  Row.Parent := Form;
+  Row.Name := 'Bar';
+  E := TEdit.Create(Form);
+  E.Parent := Row;
+  E.Grow := 1;                     { wants 200 }
+  B := TButton.Create(Form);
+  B.Parent := Row;
+  B.Text := 'Search';
+  Form.Padding := 0;
+  Form.Layout(260, 100);
+  AssertTrue(B.Bounds.X + B.Bounds.W <= 260, 'the button is inside the window');
+  AssertTrue(E.Bounds.W < 200, 'the edit gave some of its width');
+  { when even that is not enough, tools hear of it }
+  B2 := TButton.Create(Form);
+  B2.Parent := Row;
+  B2.Text := 'Another long button';
+  W := TStringList.Create;
+  LayoutWarnings := W;
+  try
+    Form.Layout(260, 100);
+    AssertEquals(1, W.Count);
+    AssertEquals('Bar', W.Names[0]);
+    AssertEquals(MinShrink, E.Bounds.W, 'not narrower than MinShrink');
+  finally
+    LayoutWarnings := nil;
+    W.Free;
   end;
 end;
 
