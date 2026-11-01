@@ -7,7 +7,7 @@ unit Store_Test;
 interface
 
 uses
-  SysUtils, fpjson, Pastel.Testing, Pastel.Json, Pastel.Db, Pastel.Files, Pastel.Lang, SalonStore, SalonMoney;
+  SysUtils, fpjson, Pastel.Testing, Pastel.Json, Pastel.Db, Pastel.Files, Pastel.Lang, SalonStore, SalonMoney, SalonPrint, Pastel.Report, Pastel.Pdf;
 
 type
   TStoreTests = class(TTestSuite)
@@ -28,6 +28,7 @@ type
     procedure Checks;
     procedure ADayOfAppointments;
     procedure InvoicesDoneAppointments;
+    procedure AnInvoiceAsPdfAndHtml;
     procedure SyncBringsRecordsToTheOtherComputer;
     procedure TheNewerChangeWins;
     procedure DeletionsAreSynced;
@@ -243,6 +244,36 @@ begin
   Open := Desk.Uninvoiced(C);
   AssertEquals(0, Open.Count, 'invoiced once');
   Open.Free;
+end;
+
+procedure TStoreTests.AnInvoiceAsPdfAndHtml;
+var
+  C, A1, InvId, Html: string;
+  A: TJSONObject;
+  R: TReport;
+  Pdf: TBytes;
+  Font, Bold: string;
+begin
+  C := Customer('Ayşe');
+  A := JObject(['customer_id', C, 'starts_at', '2026-11-03 09:00', 'service', 'Color', 'price_cents', 90050,
+    'status', 'done']);
+  A1 := Desk.Save(skAppointment, A);
+  A.Free;
+  InvId := Desk.Invoice(C, [A1], 20);
+  R := InvoiceReport(Desk, InvId, 'Salon Ayşe'#10'Kadıköy');
+  try
+    Html := R.ToHtml;
+    FindPdfFonts(Font, Bold);
+    if Font <> '' then
+      Pdf := R.ToBytes;
+  finally
+    R.Free;
+  end;
+  AssertContains('<td>Ayşe</td>', Html);
+  AssertContains('Color', Html);
+  AssertContains('<span>1,080.60</span>', Html, 'the total');
+  if Font <> '' then
+    AssertEquals('%PDF-', Chr(Pdf[0]) + Chr(Pdf[1]) + Chr(Pdf[2]) + Chr(Pdf[3]) + Chr(Pdf[4]));
 end;
 
 procedure TStoreTests.SyncBringsRecordsToTheOtherComputer;

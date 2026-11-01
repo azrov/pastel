@@ -41,7 +41,8 @@ begin
   Log.Info('database %s', [Db.SafeUrl]);
   FStore := TSalonStore.Create(Db, True);
   FStore.CreateTables;
-  FController := TSalonController.Create(FStore);
+  { the salon on invoices: its name, then its address lines }
+  FController := TSalonController.Create(FStore, StringReplace(Config.Get('salon.address', 'Salon'), '\n', #10, [rfReplaceAll]));
   inherited Started;                  { starts the web server; it calls Routes }
 end;
 

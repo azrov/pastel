@@ -162,10 +162,47 @@ begin
   end;
 end;
 
+{ the folders of the project's dependencies, and of theirs }
+function DependencyRoots(const Root: string): TStringArray;
+var
+  Seen: TStringList;
+
+  procedure Walk(const Dir: string);
+  var
+    P: TPastelProject;
+    D: TDependency;
+  begin
+    try
+      P := TPastelProject.Load(Dir);
+    except
+      Exit;
+    end;
+    try
+      for D in P.Dependencies do
+        if (D.Root <> '') and (Seen.IndexOf(D.Root) < 0) then
+        begin
+          Seen.Add(D.Root);
+          Walk(D.Root);
+        end;
+    finally
+      P.Free;
+    end;
+  end;
+
+begin
+  Seen := TStringList.Create;
+  try
+    Walk(Root);
+    Result := Seen.ToStringArray;
+  finally
+    Seen.Free;
+  end;
+end;
+
 function CollectTexts(const Root: string): TStringArray;
 var
   L: TStringList;
-  F: string;
+  F, D: string;
   I: Integer;
 begin
   L := TStringList.Create;
@@ -180,6 +217,15 @@ begin
       for F in ListFiles(JoinPath([Root, 'src']), '*.pas', True) do
         ScanPascal(ReadText(F), L);
     end;
+    { the texts of libraries the app uses are shown by the app too }
+    for F in DependencyRoots(Root) do
+      if DirectoryExists(JoinPath([F, 'src'])) then
+      begin
+        for D in ListFiles(JoinPath([F, 'src']), '*.pform', True) do
+          ScanPForm(D, L);
+        for D in ListFiles(JoinPath([F, 'src']), '*.pas', True) do
+          ScanPascal(ReadText(D), L);
+      end;
     Result := nil;
     SetLength(Result, L.Count);
     for I := 0 to L.Count - 1 do

@@ -10,6 +10,9 @@ address = "127.0.0.1"        # only this computer while developing
 url = "sqlite:data/salon.db" # or postgres://user:password@localhost/salon
                              # or mysql://user:password@localhost/salon
 
+[salon]
+address = "Salon Ayşe\nAtatürk Cad. 12, Kadıköy, İstanbul"   # on invoices (PDF): the name, then the address
+
 [api]
 # keys = ["make-one-with: openssl rand -base64 32"]   # then the API needs X-API-Key
 

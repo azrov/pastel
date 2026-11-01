@@ -265,6 +265,13 @@ object HomeForm: THomeForm
           Text = 'Invoice the done appointments'
           OnClick = CreateInvoiceClick
         end
+        object ExcelButton: TButton
+          Text = 'Excel'
+          Icon = 'download'
+          Style = Secondary
+          Hint = 'All invoices as an Excel file'
+          OnClick = ExcelClick
+        end
       end
       object InvoiceList: TListView
         Grow = 1
@@ -302,6 +309,19 @@ object HomeForm: THomeForm
           Text = 'Mark as paid'
           Style = Secondary
           OnClick = PaidClick
+        end
+        object PdfButton: TButton
+          Text = 'PDF'
+          Icon = 'file'
+          Style = Secondary
+          Hint = 'Save the invoice as PDF and open it'
+          OnClick = PdfClick
+        end
+        object PrintButton: TButton
+          Text = 'Print'
+          Icon = 'print'
+          Hint = 'Print the invoice'
+          OnClick = PrintClick
         end
       end
     end

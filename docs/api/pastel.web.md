@@ -130,6 +130,7 @@ type TWebResponse = class
 | `procedure JsonText(const S: string; AStatus: Integer = 200)` |  |
 | `procedure Error(AStatus: Integer; const Message: string)` | answers {"error": Message} |
 | `procedure SendFile(const FileName: string; const ContentType: string = '')` |  |
+| `procedure Bytes(const Data: TBytes; const ContentType: string; const FileName: string = '')` | Bytes made by the program: a PDF (TReport.ToBytes), a spreadsheet... With a FileName the browser saves it under that name instead of showing it. |
 | `procedure Redirect(const Url: string; AStatus: Integer = 302)` |  |
 | `procedure NoContent` | 204, no body |
 | `property Status: Integer` |  |

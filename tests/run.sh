@@ -116,6 +116,8 @@ done
 rm -rf "$WORK/salon" && mkdir -p "$WORK/salon"
 set +e; out="$(cd "$WORK/ex-salon-desk" && SALON_DB="$WORK/salon/ui.db" XDG_CONFIG_HOME="$WORK/salon/cfg0" PASTEL_LANG=en PASTEL_CHECK_REPAINT=1 PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT=tests/ui.txt ./build/*/debug/salon-desk 2>&1)"; code=$?; set -e
 expect "salon: customers, appointments, invoices" '[ "$code" = 0 ] && ! echo "$out" | grep -q FAIL'
+expect "salon: the invoice as PDF"          '[ "$(head -c 5 "$WORK/salon/invoices/2026-0001.pdf")" = "%PDF-" ]'
+expect "salon: the invoices as Excel"       '[ "$(head -c 2 "$WORK/ex-salon-desk/invoices-test.xlsx")" = "PK" ]'
 [ "$code" = 0 ] || echo "$out" | grep -v "^ok" | head
 sport=$((20000 + ($$ + 77) % 20000))
 (cd "$WORK/ex-salon-api" && SALON_API_SERVER_PORT=$sport SALON_API_DATABASE_URL="sqlite:$WORK/salon/server.db" ./build/*/debug/salon-api > "$WORK/salon/api.log" 2>&1) &
@@ -128,6 +130,8 @@ for n in 1 2; do
   [ "$code" = 0 ] || echo "$out" | grep -v "^ok" | head
 done
 expect "salon: the server has the customer"  'curl -s "localhost:$sport/api/customers?q=zeynep" | grep -q "\"name\":\"Zeynep Kaya\""'
+expect "salon: the server gives Excel"      '[ "$(curl -s "localhost:$sport/api/invoices.xlsx" | head -c 2)" = "PK" ]'
+expect "salon: no PDF of a missing invoice" '[ "$(curl -s -o /dev/null -w "%{http_code}" "localhost:$sport/api/invoices/nothing/pdf")" = 404 ]'
 pkill -TERM -x salon-api || true
 echo "== end-to-end tests"
 # --- desktop packages ---

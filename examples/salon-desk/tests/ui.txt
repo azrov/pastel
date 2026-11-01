@@ -58,4 +58,9 @@ expect InvoiceList.Row 0
 expect InvoiceLinesLabel 2026-11-03 Color: 900.50|Net 900.50 + VAT 20% 180.10 = 1,080.60
 click PaidButton
 expect PaidButton.Enabled False
+# --- the invoice as PDF (next to the database, in invoices/), all invoices as Excel ---
+click PdfButton
+click ExcelButton
+type FileNameEdit invoices-test.xlsx\n
+expect StatusLabel Saved invoices-test.xlsx
 quit

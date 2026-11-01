@@ -27,9 +27,13 @@ Made from the declarations and comments in `framework/src` (`npm run apidoc` in 
 | [Pastel.Log](pastel.log.md) | Logging. |
 | [Pastel.Menus](pastel.menus.md) | Menus: a menu bar, pop-up (right click) menus and keyboard |
 | [Pastel.NativeDialogs](pastel.nativedialogs.md) | The system's own open, save and folder dialogs. |
+| [Pastel.Pdf](pastel.pdf.md) | PDF files: pages with text, lines, boxes and pictures. |
 | [Pastel.PForm](pastel.pform.md) | Reader for .pform files. |
+| [Pastel.Print](pastel.print.md) | Printing and opening documents with the system. |
 | [Pastel.Process](pastel.process.md) | Running other programs. |
+| [Pastel.Report](pastel.report.md) | Reports: invoices, lists, letters as PDF (and HTML), written |
 | [Pastel.Service](pastel.service.md) | Long-running programs (services, daemons). |
+| [Pastel.Sheets](pastel.sheets.md) | Spreadsheets: Excel files (.xlsx) and CSV, written and read. |
 | [Pastel.Term](pastel.term.md) | Terminal output and input for console programs. |
 | [Pastel.Testing](pastel.testing.md) | Unit testing. |
 | [Pastel.Text](pastel.text.md) | Text helpers that understand UTF-8. |
@@ -37,3 +41,4 @@ Made from the declarations and comments in `framework/src` (`npm run apidoc` in 
 | [Pastel.UI](pastel.ui.md) | Controls, layout and input handling. |
 | [Pastel.Web](pastel.web.md) | HTTP server for web APIs and sites. |
 | [Pastel.Workers](pastel.workers.md) | Background work: a thread-safe queue and a pool of worker threads. |
+| [Pastel.Xml](pastel.xml.md) | Writing XML: e-invoices, exports, feeds, settings for other programs. |

@@ -33,6 +33,7 @@ Everything about Pastel, by topic. Every page has examples you can copy; the [ex
 |---|---|
 | [Console programs](console.md) | Arguments, colors, tables, questions, progress |
 | [JSON, settings and logging](data.md) | `Pastel.Json`, `Pastel.Config`, `Pastel.Log` |
+| [Reports, PDF, Excel, printing](documents.md) | Invoices and lists as PDF or HTML, `.xlsx` and CSV, XML, printers |
 | [Files, programs, HTTP](system.md) | `Pastel.Files`, `Pastel.Process`, `Pastel.Http`, `Pastel.Env` |
 | [Services](services.md) | Programs that keep running: jobs, signals, systemd |
 | [Web APIs and sites](web.md) | Routes, JSON, validation, API keys, JWT, CORS, limits |

@@ -2,6 +2,18 @@
 
 The `pastel` tool and the framework. The VS Code extension has its own list: [vscode/CHANGELOG.md](vscode/CHANGELOG.md). What is planned is in [ROADMAP.md](ROADMAP.md).
 
+## 1.1.0
+
+Reports and documents.
+
+- `Pastel.Report`: invoices, lists, letters as PDF or HTML, written from top to bottom; tables repeat their heads on new pages; footers with page numbers; a logo
+- `Pastel.Pdf`: PDF pages drawn by the program (text, lines, boxes, PNG and JPEG pictures); TrueType fonts with only the used letters
+- `Pastel.Sheets`: Excel files (`.xlsx`) written and read, CSV; `Pastel.Xml`: XML; `Pastel.Print`: printers, printing, opening a file with the system's program
+- `TWebResponse.Bytes`: a PDF or a spreadsheet as the answer, shown or downloaded
+- `pastel lang` collects the texts of the libraries an app uses too
+- The salon: invoices as PDF, printed, all invoices as Excel, on the desktop and from the server (`/api/invoices/:id/pdf`, `/api/invoices.xlsx`); the salon's address in the settings
+- Documentation: [docs/documents.md](docs/documents.md)
+
 ## 1.0.0
 
 The first stable version: what the release candidates below brought, tested on Linux and Windows. From now on the framework API in `docs/api/stable.txt`, `pastel.toml`, `.pform` files and the `pastel` commands stay compatible for all of 1.x ([docs/compatibility.md](docs/compatibility.md)).

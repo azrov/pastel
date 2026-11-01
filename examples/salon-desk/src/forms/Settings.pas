@@ -18,6 +18,8 @@ type
     function ServerUrl: string;
     function ApiKey: string;
     function VatRate: Integer;
+    { The salon's name, and its address on the lines after (for invoices). }
+    function Shop: string;
   end;
 
 var
@@ -53,9 +55,14 @@ end;
 
 function TSettingsForm.VatRate: Integer;
 begin
-  Result := StrToIntDef(Trim(VatEdit.Text), 20);
-  if (Result < 0) or (Result > 100) then
-    Result := 20;
+  Result := VatEdit.Value;
+end;
+
+function TSettingsForm.Shop: string;
+begin
+  Result := Trim(StringReplace(ShopMemo.Text, #13, '', [rfReplaceAll]));
+  if Result = '' then
+    Result := 'Salon';
 end;
 
 end.

@@ -214,7 +214,16 @@ Released on November 1, 2026: [github.com/azrov/pastel](https://github.com/azrov
 
 Everything in 1.x stays compatible with 1.0 (see [compatibility.md](docs/compatibility.md)): new things are added, nothing is taken away. What would break existing programs waits for 2.0. The order may change with what people need most; each version ends with docs, examples and tests like the ones before.
 
-### 1.1 — Everyday desktop comfort
+### 1.1 — Reports and documents (done)
+
+- [x] `Pastel.Report`: invoices, lists and letters as PDF or HTML, from code (headings, text, tables that repeat their heads, totals, images, page breaks, headers and footers with page numbers)
+- [x] `Pastel.Pdf`: pages drawn at exact places; TrueType fonts put in with only the used letters (every Turkish letter right)
+- [x] Printing on Linux (CUPS) and Windows, the system's PDF viewer as the preview (`Pastel.Print`)
+- [x] Spreadsheets: `.xlsx` written and read, CSV with the separator Excel expects (`Pastel.Sheets`); XML (`Pastel.Xml`)
+- [x] The salon prints its invoices as PDF and exports them to Excel, on the desktop and from its server
+- [ ] A preview inside the app (the report drawn into a control), labels on label printers
+
+### 1.2 — Everyday desktop comfort
 
 The things every business app needs, built in instead of written again in every project.
 
@@ -226,13 +235,6 @@ The things every business app needs, built in instead of written again in every 
 - [ ] Grid: number and date columns that format and sort right, a check box column, filtering, export to CSV
 - [x] Designer: the warnings of `pastel check` drawn on the form; several selected controls (common properties, put into a row, column or card); a structure list — done in 1.0.0-rc.7
 - [ ] F9 runs the right program when the open file belongs to a library (done in 1.0.0-rc.4)
-
-### 1.2 — Reports and documents
-
-- [ ] `Pastel.Report`: invoices, lists and labels as PDF, from code (text, tables, totals, images, page breaks, headers and footers)
-- [ ] Print preview and printing on Linux and Windows
-- [ ] Reading and writing spreadsheets: CSV with the language's separators, `.xlsx` (the common cases)
-- [ ] An example: the salon prints its invoices as PDF
 
 ### 1.3 — Android
 

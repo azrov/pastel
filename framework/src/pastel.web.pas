@@ -153,6 +153,9 @@ type
     // answers {"error": Message}
     procedure Error(AStatus: Integer; const Message: string);
     procedure SendFile(const FileName: string; const ContentType: string = '');
+    { Bytes made by the program: a PDF (TReport.ToBytes), a spreadsheet...
+      With a FileName the browser saves it under that name instead of showing it. }
+    procedure Bytes(const Data: TBytes; const ContentType: string; const FileName: string = '');
     procedure Redirect(const Url: string; AStatus: Integer = 302);
     { 204, no body }
     procedure NoContent;
@@ -987,6 +990,30 @@ begin
   FRes.FreeContentStream := True;
   FBodyLength := F.Size;
   SetHeader('Last-Modified', HttpDate(LocalTimeToUniversal(FileDateToDateTime(FileAge(FileName)))));
+  FSent := True;
+end;
+
+procedure TWebResponse.Bytes(const Data: TBytes; const ContentType: string; const FileName: string);
+var
+  M: TMemoryStream;
+begin
+  FStatus := 200;
+  FRes.ContentType := ContentType;
+  if FRes.ContentStream <> nil then
+  begin
+    if FRes.FreeContentStream then
+      FRes.ContentStream.Free;
+    FRes.ContentStream := nil;
+  end;
+  M := TMemoryStream.Create;
+  if Length(Data) > 0 then
+    M.WriteBuffer(Data[0], Length(Data));
+  M.Position := 0;
+  FRes.ContentStream := M;
+  FRes.FreeContentStream := True;
+  FBodyLength := Length(Data);
+  if FileName <> '' then
+    SetHeader('Content-Disposition', 'attachment; filename="' + StringReplace(FileName, '"', '', [rfReplaceAll]) + '"');
   FSent := True;
 end;
 

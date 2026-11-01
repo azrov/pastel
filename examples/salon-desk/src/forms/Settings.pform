@@ -1,10 +1,10 @@
 object SettingsForm: TSettingsForm
   Title = 'Settings'
   Width = 460
-  Height = 330
+  Height = 460
   OnCreate = FormCreate
   object Memory: TFormMemory
-    Fields = ('ServerEdit', 'KeyEdit', 'VatEdit')
+    Fields = ('ServerEdit', 'KeyEdit', 'VatEdit', 'ShopMemo')
     FileName = 'settings.json'
   end
   object ServerLabel: TLabel
@@ -22,8 +22,16 @@ object SettingsForm: TSettingsForm
   object VatLabel: TLabel
     Text = 'VAT on invoices (%)'
   end
-  object VatEdit: TEdit
-    Text = '20'
+  object VatEdit: TNumberEdit
+    Value = 20
+    Max = 100
+  end
+  object ShopLabel: TLabel
+    Text = 'The salon on invoices: its name, then its address'
+  end
+  object ShopMemo: TMemo
+    Height = 80
+    Text = 'Salon'
   end
   object Space: TSpacer
   end

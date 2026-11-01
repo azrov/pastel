@@ -640,6 +640,58 @@ Pastel.Menus: type TMenuBar = class(TControl)
 Pastel.Menus: type TMenuItem = class(TControl)
 Pastel.Menus: type TMenuView = class(TPopup)
 Pastel.Menus: type TPopupMenu = class(TControl)
+Pastel.Pdf: TPdfAlign.paCenter
+Pastel.Pdf: TPdfAlign.paLeft
+Pastel.Pdf: TPdfAlign.paRight
+Pastel.Pdf: TPdfDocument.constructor Create(const Size: string = 'A4'; Landscape: Boolean = False)
+Pastel.Pdf: TPdfDocument.destructor Destroy
+Pastel.Pdf: TPdfDocument.function LineHeight: Single
+Pastel.Pdf: TPdfDocument.function PageCount: Integer
+Pastel.Pdf: TPdfDocument.function PageHeight: Single
+Pastel.Pdf: TPdfDocument.function PageWidth: Single
+Pastel.Pdf: TPdfDocument.function TextBox(X: Single; Y: Single; W: Single; const S: string; Align: TPdfAlign = paLeft): Single
+Pastel.Pdf: TPdfDocument.function TextWidth(const S: string): Single
+Pastel.Pdf: TPdfDocument.function ToBytes: TBytes
+Pastel.Pdf: TPdfDocument.function WrapText(const S: string; Width: Single): TStringArray
+Pastel.Pdf: TPdfDocument.procedure Image(X: Single; Y: Single; W: Single; H: Single; const FileName: string)
+Pastel.Pdf: TPdfDocument.procedure ImageSize(const FileName: string; out W: Integer; out H: Integer)
+Pastel.Pdf: TPdfDocument.procedure Line(X1: Single; Y1: Single; X2: Single; Y2: Single)
+Pastel.Pdf: TPdfDocument.procedure LoadFonts(const Regular: string; const Bold: string = '')
+Pastel.Pdf: TPdfDocument.procedure NewPage
+Pastel.Pdf: TPdfDocument.procedure Rect(X: Single; Y: Single; W: Single; H: Single; Fill: Boolean = False; Stroke: Boolean = True)
+Pastel.Pdf: TPdfDocument.procedure SaveToFile(const FileName: string)
+Pastel.Pdf: TPdfDocument.procedure SaveToStream(Stream: TStream)
+Pastel.Pdf: TPdfDocument.procedure SetFont(Size: Single; Bold: Boolean = False)
+Pastel.Pdf: TPdfDocument.procedure SetPage(Index: Integer)
+Pastel.Pdf: TPdfDocument.procedure Text(X: Single; Y: Single; const S: string)
+Pastel.Pdf: TPdfDocument.procedure TextAligned(X: Single; Y: Single; W: Single; const S: string; Align: TPdfAlign)
+Pastel.Pdf: TPdfDocument.property Author: string
+Pastel.Pdf: TPdfDocument.property Bold: Boolean
+Pastel.Pdf: TPdfDocument.property FillColor: string
+Pastel.Pdf: TPdfDocument.property FontSize: Single
+Pastel.Pdf: TPdfDocument.property LineWidth: Single
+Pastel.Pdf: TPdfDocument.property Page: Integer
+Pastel.Pdf: TPdfDocument.property StrokeColor: string
+Pastel.Pdf: TPdfDocument.property Subject: string
+Pastel.Pdf: TPdfDocument.property TextColor: string
+Pastel.Pdf: TPdfDocument.property Title: string
+Pastel.Pdf: TPdfFont.constructor Create(const FileName: string)
+Pastel.Pdf: TPdfFont.destructor Destroy
+Pastel.Pdf: TPdfFont.function Advance(G: Integer): Single
+Pastel.Pdf: TPdfFont.function GlyphOf(CodePoint: Cardinal): Integer
+Pastel.Pdf: TPdfFont.function Subset: TBytes
+Pastel.Pdf: TPdfFont.property Name: string
+Pastel.Pdf: TPdfFont.property UnitsPerEm: Integer
+Pastel.Pdf: procedure FindPdfFonts(out Regular: string; out Bold: string)
+Pastel.Pdf: type EPdfError = class(Exception)
+Pastel.Pdf: type TPdfAlign = (paLeft, paCenter, paRight)
+Pastel.Pdf: type TPdfDocument = class
+Pastel.Pdf: type TPdfFont = class
+Pastel.Print: function DefaultPrinter: string
+Pastel.Print: function Printers: TStringArray
+Pastel.Print: procedure OpenDocument(const FileNameOrUrl: string)
+Pastel.Print: procedure PrintFile(const FileName: string; const Printer: string = ''; Copies: Integer = 1)
+Pastel.Print: type EPrintError = class(Exception)
 Pastel.Process: EProcessError.Errors: string
 Pastel.Process: EProcessError.ExitCode: Integer
 Pastel.Process: TRunOptions.Dir: string
@@ -666,6 +718,39 @@ Pastel.Process: function Which(const Name: string): string
 Pastel.Process: type EProcessError = class(Exception)
 Pastel.Process: type TRunOptions = record
 Pastel.Process: type TRunResult = record
+Pastel.Report: TReport.constructor Create(const Size: string = 'A4'; Landscape: Boolean = False)
+Pastel.Report: TReport.destructor Destroy
+Pastel.Report: TReport.function ContentWidth: Single
+Pastel.Report: TReport.function ToBytes: TBytes
+Pastel.Report: TReport.function ToHtml: string
+Pastel.Report: TReport.procedure EndTable
+Pastel.Report: TReport.procedure Fields(const NamesAndValues: array of string)
+Pastel.Report: TReport.procedure Heading(const S: string)
+Pastel.Report: TReport.procedure Image(const FileName: string; Width: Single = 0; Align: TPdfAlign = paLeft)
+Pastel.Report: TReport.procedure NeedSpace(H: Single)
+Pastel.Report: TReport.procedure NewPage
+Pastel.Report: TReport.procedure Note(const S: string)
+Pastel.Report: TReport.procedure Row(const Cells: array of string; Bold: Boolean = False)
+Pastel.Report: TReport.procedure Rule
+Pastel.Report: TReport.procedure SaveToFile(const FileName: string)
+Pastel.Report: TReport.procedure SaveToStream(Stream: TStream)
+Pastel.Report: TReport.procedure Space(H: Single = 4)
+Pastel.Report: TReport.procedure Table(const Heads: array of string; const Widths: array of Single; const Aligns: string = '')
+Pastel.Report: TReport.procedure Text(const S: string; Align: TPdfAlign = paLeft)
+Pastel.Report: TReport.procedure Title(const S: string)
+Pastel.Report: TReport.procedure Total(const Name: string; const Value: string; Bold: Boolean = False)
+Pastel.Report: TReport.property Accent: string
+Pastel.Report: TReport.property Footer: string
+Pastel.Report: TReport.property Header: string
+Pastel.Report: TReport.property Logo: string
+Pastel.Report: TReport.property Margin: Single
+Pastel.Report: TReport.property OnNewPage: TReportEvent
+Pastel.Report: TReport.property Pdf: TPdfDocument
+Pastel.Report: TReport.property Striped: Boolean
+Pastel.Report: TReport.property TextSize: Single
+Pastel.Report: TReport.property Y: Single
+Pastel.Report: type TReport = class
+Pastel.Report: type TReportEvent = procedure(Report: TReport)
 Pastel.Service: TService.constructor Create(const AName: string; const AVersion: string = '')
 Pastel.Service: TService.destructor Destroy
 Pastel.Service: TService.function Run: Integer
@@ -695,6 +780,25 @@ Pastel.Service: type TJobMethod = procedure
 Pastel.Service: type TJobProc = procedure
 Pastel.Service: type TService = class
 Pastel.Service: type TServiceJob = class
+Pastel.Sheets: TSpreadsheet.constructor Create(const FirstSheet: string = 'Sheet1')
+Pastel.Sheets: TSpreadsheet.destructor Destroy
+Pastel.Sheets: TSpreadsheet.function ToBytes: TBytes
+Pastel.Sheets: TSpreadsheet.procedure AddJson(Items: TJSONArray; const Fields: array of string; const Titles: array of string)
+Pastel.Sheets: TSpreadsheet.procedure AddSheet(const Name: string)
+Pastel.Sheets: TSpreadsheet.procedure Row(const Values: array of Variant; Bold: Boolean = False)
+Pastel.Sheets: TSpreadsheet.procedure SaveToFile(const FileName: string)
+Pastel.Sheets: TSpreadsheet.procedure SaveToStream(Stream: TStream)
+Pastel.Sheets: TSpreadsheet.procedure Widths(const W: array of Single)
+Pastel.Sheets: function CsvText(const Rows: TSheetRows; Separator: Char = ','): string
+Pastel.Sheets: function ParseCsv(const Text: string; Separator: Char = ''): TSheetRows
+Pastel.Sheets: function ReadCsv(const FileName: string; Separator: Char = ''): TSheetRows
+Pastel.Sheets: function ReadSpreadsheet(const FileName: string; Sheet: Integer = 0): TSheetRows
+Pastel.Sheets: function ReadXlsx(const FileName: string; Sheet: Integer = 0): TSheetRows
+Pastel.Sheets: function RowsToJson(const Rows: TSheetRows): TJSONArray
+Pastel.Sheets: procedure WriteCsv(const FileName: string; const Rows: TSheetRows; Separator: Char = ',')
+Pastel.Sheets: type ESheetError = class(Exception)
+Pastel.Sheets: type TSheetRows = array of TStringArray
+Pastel.Sheets: type TSpreadsheet = class
 Pastel.Term: TProgress.constructor Create(ATotal: Int64; const ALabel: string = '')
 Pastel.Term: TProgress.destructor Destroy
 Pastel.Term: TProgress.procedure Finish
@@ -1150,6 +1254,7 @@ Pastel.Web: TWebRequest.property Params: TStringList
 Pastel.Web: TWebRequest.property Path: string
 Pastel.Web: TWebRequest.property Values: TStringList
 Pastel.Web: TWebResponse.constructor Create(ARes: TFPHTTPConnectionResponse)
+Pastel.Web: TWebResponse.procedure Bytes(const Data: TBytes; const ContentType: string; const FileName: string = '')
 Pastel.Web: TWebResponse.procedure Error(AStatus: Integer; const Message: string)
 Pastel.Web: TWebResponse.procedure Html(const S: string; AStatus: Integer = 200)
 Pastel.Web: TWebResponse.procedure Json(Data: TJSONData; AStatus: Integer = 200)
@@ -1242,3 +1347,17 @@ Pastel.Workers: type TMessageQueue = class
 Pastel.Workers: type TWorkHandler = procedure(Msg: string)
 Pastel.Workers: type TWorkHandlerProc = procedure(Msg: string)
 Pastel.Workers: type TWorkerPool = class
+Pastel.Xml: TXmlWriter.constructor Create(const Indent: string = ' ')
+Pastel.Xml: TXmlWriter.destructor Destroy
+Pastel.Xml: TXmlWriter.function ToString: string
+Pastel.Xml: TXmlWriter.procedure Close
+Pastel.Xml: TXmlWriter.procedure Comment(const Text: string)
+Pastel.Xml: TXmlWriter.procedure Element(const Name: string; const Text: string)
+Pastel.Xml: TXmlWriter.procedure Element(const Name: string; const Text: string; const Attributes: array of string)
+Pastel.Xml: TXmlWriter.procedure Open(const Name: string)
+Pastel.Xml: TXmlWriter.procedure Open(const Name: string; const Attributes: array of string)
+Pastel.Xml: TXmlWriter.procedure Raw(const Xml: string)
+Pastel.Xml: TXmlWriter.procedure SaveToFile(const FileName: string)
+Pastel.Xml: function XmlEscape(const S: string): string
+Pastel.Xml: type EXmlError = class(Exception)
+Pastel.Xml: type TXmlWriter = class

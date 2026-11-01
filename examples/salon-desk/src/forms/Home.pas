@@ -9,7 +9,8 @@ interface
 
 uses
   SysUtils, DateUtils, fpjson, Pastel.App, Pastel.UI, Pastel.Controls, Pastel.Dialogs, Pastel.Lang, Pastel.Json, Pastel.Db, Pastel.Files,
-  SalonStore, SalonSync, SalonMoney, Pastel.Inputs, Settings, Home.g;
+  SalonStore, SalonSync, SalonMoney, SalonPrint, Pastel.Inputs, Pastel.Report, Pastel.Sheets, Pastel.Print,
+  Settings, Home.g;
 
 type
   THomeForm = class(THomeFormBase)
@@ -40,6 +41,9 @@ type
     procedure CreateInvoiceClick(Sender: TObject);
     procedure InvoiceListChange(Sender: TObject);
     procedure PaidClick(Sender: TObject);
+    procedure PdfClick(Sender: TObject);
+    procedure PrintClick(Sender: TObject);
+    procedure ExcelClick(Sender: TObject);
   private
     FStore: TSalonStore;
     FDayRows, FCustomerRows, FInvoiceRows, FAllCustomers: TJSONArray;
@@ -54,6 +58,8 @@ type
     procedure SetStatus(const Id, Status: string);
     procedure UpdateCounts;
     function SyncFile: string;
+    { the selected invoice as a PDF file in the invoices folder; '' when none is selected }
+    function SaveInvoicePdf: string;
   public
     destructor Destroy; override;
   end;
@@ -565,6 +571,79 @@ procedure THomeForm.AboutClick(Sender: TObject);
 begin
   ShowMessage(_('Salon - customers, appointments and invoices.') + LineEnding +
     _('An example of Pastel: a desktop app and a server that share their code.'), _('About'));
+end;
+
+function THomeForm.SaveInvoicePdf: string;
+var
+  R: TReport;
+  Row: Integer;
+  Dir: string;
+begin
+  Result := '';
+  Row := InvoiceList.Row;
+  if (Row < 0) or (Row >= FInvoiceRows.Count) then
+    Exit;
+  { next to the database: <settings folder>/invoices/2026-0001.pdf }
+  Dir := JoinPath([ExtractFileDir(Copy(DatabaseUrl, 8, MaxInt)), 'invoices']);
+  ForceDirectories(Dir);
+  Result := JoinPath([Dir, JStr(FInvoiceRows[Row], 'number') + '.pdf']);
+  R := InvoiceReport(FStore, JStr(FInvoiceRows[Row], 'id'), SettingsForm.Shop);
+  try
+    R.SaveToFile(Result);
+  finally
+    R.Free;
+  end;
+end;
+
+procedure THomeForm.PdfClick(Sender: TObject);
+var
+  F: string;
+begin
+  F := SaveInvoicePdf;
+  if F = '' then
+    Exit;
+  StatusLabel.Text := Format(_('Saved %s'), [ExtractFileName(F)]);
+  try
+    OpenDocument(F);
+  except
+    on E: EPrintError do
+      StatusLabel.Text := Format(_('Saved %s'), [F]);
+  end;
+end;
+
+procedure THomeForm.PrintClick(Sender: TObject);
+var
+  F: string;
+begin
+  F := SaveInvoicePdf;
+  if F = '' then
+    Exit;
+  try
+    PrintFile(F);
+    StatusLabel.Text := Format(_('%s goes to the printer.'), [ExtractFileName(F)]);
+  except
+    on E: EPrintError do
+      ShowMessage(E.Message, _('Print'));
+  end;
+end;
+
+procedure THomeForm.ExcelClick(Sender: TObject);
+var
+  F: string;
+  S: TSpreadsheet;
+begin
+  F := _('invoices') + '.xlsx';
+  if not SaveFileDialog(F, _('Excel files') + '|*.xlsx') then
+    Exit;
+  if ExtractFileExt(F) = '' then
+    F := F + '.xlsx';
+  S := InvoicesSheet(FInvoiceRows);
+  try
+    S.SaveToFile(F);
+  finally
+    S.Free;
+  end;
+  StatusLabel.Text := Format(_('Saved %s'), [ExtractFileName(F)]);
 end;
 
 end.

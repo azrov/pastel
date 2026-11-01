@@ -11,6 +11,9 @@ trust_proxy = true
 url = "sqlite:/var/lib/salon-api/app.db"
 # url = "postgres://salon_api:PASSWORD@localhost/salon_api"
 
+[salon]
+address = "Salon Ayşe\nAtatürk Cad. 12, Kadıköy, İstanbul"   # on invoices (PDF): the name, then the address
+
 [api]
 keys = ["CHANGE-ME-openssl-rand-base64-32"]
 

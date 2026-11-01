@@ -131,7 +131,19 @@ pastel package deb      # then on the server: sudo apt install ./dist/salon-api_
 
 Put it behind HTTPS ([deploy.md](deploy.md)); the read-only routes (`/api/customers`, `/api/appointments?date=`, `/api/invoices`) are there for a web page or a phone app.
 
-## 6. Test it like a user
+## 6. Invoices on paper, in Excel
+
+The invoice is made by the shared library ([`SalonPrint`](../examples/salon-core/src/salonprint.pas)), so the desktop and the server print the same one:
+
+```pascal
+R := InvoiceReport(Store, InvoiceId, SettingsForm.Shop);     // a TReport (Pastel.Report)
+R.SaveToFile(FileName);        // desktop: PDF next to the database, then OpenDocument / PrintFile
+Res.Bytes(R.ToBytes, 'application/pdf');                       // server: GET /api/invoices/:id/pdf
+```
+
+`InvoicesSheet` writes every invoice into an Excel file — the desktop's **Excel** button, the server's `GET /api/invoices.xlsx` — with numbers and dates Excel can calculate with. How reports, PDF, spreadsheets and printing work: [documents.md](documents.md).
+
+## 7. Test it like a user
 
 The UI scripts drive the real app without a screen ([`tests/ui.txt`](../examples/salon-desk/tests/ui.txt)):
 

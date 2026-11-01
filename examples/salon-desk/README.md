@@ -1,6 +1,6 @@
 # salon-desk
 
-The desktop app of the salon system: the computer at the reception of a hair salon (or a clinic, a repair shop...). It uses [salon-core](../salon-core) for the data and [components](../components) for the date picker and the price field.
+The desktop app of the salon system: the computer at the reception of a hair salon (or a clinic, a repair shop...). It uses [salon-core](../salon-core) for the data and the invoices' PDF, and [components](../components) for remembering the settings.
 
 ![The salon app in Turkish: a day of appointments](../../docs/images/salon.png)
 
@@ -8,9 +8,9 @@ The desktop app of the salon system: the computer at the reception of a hair sal
 |---|---|
 | **Appointments** | One day (‹ › Today, or the date picker): the appointments with time, customer, service, price and status; a form to add or change one; *Done* and *Cancel* |
 | **Customers** | Search, the list, and the customer's details (a `TDataBinding`) |
-| **Invoices** | Invoices of the done appointments of a customer, with VAT; *Mark as paid* |
+| **Invoices** | Invoices of the done appointments of a customer, with VAT; *Mark as paid*; **PDF** (saved next to the database and opened), **Print**, **Excel** (all invoices as `.xlsx`) |
 
-The data is a SQLite file in the user's settings folder (`SALON_DB=file.db` for another one), so the app works without a network. **File > Sync** (Ctrl+R) exchanges the changes with the server ([salon-api](../salon-api)); its address and API key are in **File > Settings**. The app is in English and Turkish (`assets/lang/tr.json`; `PASTEL_LANG=tr` to try it).
+The data is a SQLite file in the user's settings folder (`SALON_DB=file.db` for another one), so the app works without a network. **File > Sync** (Ctrl+R) exchanges the changes with the server ([salon-api](../salon-api)); its address and API key, the VAT and the salon's name and address for invoices are in **File > Settings**. The app is in English and Turkish (`assets/lang/tr.json`; `PASTEL_LANG=tr` to try it).
 
 ```sh
 pastel run
