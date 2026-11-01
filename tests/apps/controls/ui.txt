@@ -121,6 +121,17 @@ expect Table.SortColumn 0
 key ctrl+end
 expect Table.Row 999
 shot grid2.png
+click MorePage
+click PayBy 30 70
+expect Status pay Card
+expect PayBy.ItemIndex 1
+key down
+expect PayBy.ItemIndex 1
+key up
+expect Status pay Cash
+click Sketch 10 20
+expect Status sketch 10,20
+shot more.png
 key ctrl+q
 click NoButton
 expect Status stay

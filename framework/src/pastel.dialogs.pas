@@ -62,6 +62,50 @@ var
 { The caption of a modal result: 'OK', 'Cancel', 'Yes'... }
 function ModalResultCaption(R: Integer): string;
 
+type
+  { The file dialogs as components, like Delphi's: put one on the form (it is not
+    drawn), set its properties in the designer and call Execute:
+
+      if OpenDialog1.Execute then
+        Memo.Lines.LoadFromFile(OpenDialog1.FileName); }
+  TOpenDialog = class(TComponent)
+  private
+    FFileName, FFilter, FTitle: string;
+  public
+    constructor Create(AOwner: TComponent); override;
+    { Shows the dialog; True when the user chose a file (then in FileName). }
+    function Execute: Boolean; virtual;
+  published
+    { Where it starts (a file or a folder); the chosen file after Execute. }
+    property FileName: string read FFileName write FFileName;
+    { 'Pictures|*.png;*.jpg|All files|*' }
+    property Filter: string read FFilter write FFilter;
+    property Title: string read FTitle write FTitle;
+  end;
+
+  { Asks before replacing a file that exists; DefaultExt ('.txt') is added when the name has none. }
+  TSaveDialog = class(TOpenDialog)
+  private
+    FDefaultExt: string;
+  public
+    constructor Create(AOwner: TComponent); override;
+    function Execute: Boolean; override;
+  published
+    property DefaultExt: string read FDefaultExt write FDefaultExt;
+  end;
+
+  TSelectFolderDialog = class(TComponent)
+  private
+    FFolder, FTitle: string;
+  public
+    constructor Create(AOwner: TComponent); override;
+    function Execute: Boolean;
+  published
+    { Where it starts; the chosen folder after Execute. }
+    property Folder: string read FFolder write FFolder;
+    property Title: string read FTitle write FTitle;
+  end;
+
 implementation
 
 uses
@@ -722,5 +766,60 @@ begin
     D.Free;
   end;
 end;
+
+{ ---- the dialog components ---- }
+
+constructor TOpenDialog.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FTitle := 'Open';
+end;
+
+function TOpenDialog.Execute: Boolean;
+var
+  F: string;
+begin
+  F := FFileName;
+  Result := OpenFileDialog(F, FFilter, FTitle);
+  if Result then
+    FFileName := F;
+end;
+
+constructor TSaveDialog.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  Title := 'Save';
+end;
+
+function TSaveDialog.Execute: Boolean;
+var
+  F: string;
+begin
+  F := FileName;
+  Result := SaveFileDialog(F, Filter, Title, FDefaultExt);
+  if Result then
+    FileName := F;
+end;
+
+constructor TSelectFolderDialog.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FTitle := 'Choose a folder';
+end;
+
+function TSelectFolderDialog.Execute: Boolean;
+var
+  F: string;
+begin
+  F := FFolder;
+  Result := SelectFolderDialog(F, FTitle);
+  if Result then
+    FFolder := F;
+end;
+
+initialization
+  RegisterNonVisual(TOpenDialog);
+  RegisterNonVisual(TSaveDialog);
+  RegisterNonVisual(TSelectFolderDialog);
 
 end.

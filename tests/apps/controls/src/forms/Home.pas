@@ -5,7 +5,7 @@ unit Home;
 interface
 
 uses
-  SysUtils, Pastel.UI, Pastel.Grids, Pastel.Dialogs, Settings, Home.g;
+  SysUtils, Pastel.Graphics, Pastel.UI, Pastel.Grids, Pastel.Dialogs, Pastel.Additional, Settings, Home.g;
 
 type
   THomeForm = class(THomeFormBase)
@@ -25,6 +25,9 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FoldersChange(Sender: TObject);
     procedure TableCellEdit(Sender: TObject; ACol, ARow: Integer; var Value: string; var Accept: Boolean);
+    procedure PayByChange(Sender: TObject);
+    procedure SketchPaint(Sender: TObject; Canvas: TCanvas32);
+    procedure SketchMouseDown(Sender: TObject; X, Y: Integer);
   private
     FTicks: Integer;
   end;
@@ -139,6 +142,22 @@ begin
   if ACol = 1 then
     Accept := StrToIntDef(Value, -1) >= 0;
   Value := Trim(Value);
+end;
+
+procedure THomeForm.PayByChange(Sender: TObject);
+begin
+  Status.Text := 'pay ' + PayBy.Value;
+  if PayBy.ItemIndex = 1 then Lamp.Color := RGB(22, 163, 74) else Lamp.Color := RGB(220, 38, 38);
+end;
+
+procedure THomeForm.SketchPaint(Sender: TObject; Canvas: TCanvas32);
+begin
+  Canvas.FillRect(Sketch.Bounds.X, Sketch.Bounds.Y, 40, 20, RGB(79, 70, 229));
+end;
+
+procedure THomeForm.SketchMouseDown(Sender: TObject; X, Y: Integer);
+begin
+  Status.Text := Format('sketch %d,%d', [X, Y]);
 end;
 
 end.

@@ -8,9 +8,10 @@ Every control and component of Pastel, each with an example for the `.pform` fil
 **Choices:** [TButton](#tbutton) · [TCheckBox](#tcheckbox) · [TSwitch](#tswitch) · [TRadioButton](#tradiobutton) · [TComboBox](#tcombobox) · [TListBox](#tlistbox) · [TSlider](#tslider)
 **Tables and trees:** [TGrid](#tgrid) · [TGridColumn](#tgridcolumn) · [TListView](#tlistview) · [TTreeView](#ttreeview)
 **Pictures and progress:** [TImage](#timage) · [TProgressBar](#tprogressbar) · [TSpinner](#tspinner)
+**Groups, shapes and drawing:** [TGroupBox](#tgroupbox) · [TRadioGroup](#tradiogroup) · [TShape](#tshape) · [TBevel](#tbevel) · [TPaintBox](#tpaintbox)
 **Menus:** [TMenuBar](#tmenubar) · [TMenuItem](#tmenuitem) · [TPopupMenu](#tpopupmenu)
 **Icons:** [the built-in icons, your own](#icons)
-**Without a place on the form:** [TAction](#taction) · [TTimer](#ttimer) · [TDataBinding](#tdatabinding)
+**Without a place on the form:** [TAction](#taction) · [TTimer](#ttimer) · [TDataBinding](#tdatabinding) · [TOpenDialog](#topendialog) · [TSaveDialog](#tsavedialog) · [TSelectFolderDialog](#tselectfolderdialog)
 
 ## Common properties
 
@@ -20,6 +21,8 @@ Every control and component of Pastel, each with an example for the `.pform` fil
 | `Left`, `Top` | The place in a parent with `Layout = Free` ([free placement](forms.md#free-placement)) | `Left = 24` |
 | `Anchors` | In a free parent: the edges that follow the parent's when it is resized | `Anchors = [Left, Top, Right]` |
 | `Dock` | In a free parent: `Top`, `Bottom`, `Left`, `Right` or `Fill` (Delphi's `Align`) | `Dock = Bottom` |
+| `TabOrder` | The Tab key goes through a parent's controls by `TabOrder`; equal ones in their `.pform` order | `TabOrder = 1` |
+| `TabStop` | `False`: Tab passes it by (a click still focuses it) | `TabStop = False` |
 | `Grow` | Takes the free space of its row or column; `2` takes twice as much as `1` | `Grow = 1` |
 | `Visible` | `False` hides it and gives its space to the others | `Visible = False` |
 | `Enabled` | `False` makes it grey and ignores clicks and keys | `Enabled = False` |
@@ -838,6 +841,127 @@ end
 Busy.Active := True;     // while loading
 ```
 
+## Groups, shapes and drawing
+
+These are in the *Additional* group of the designer's palette, like in Delphi.
+
+### TGroupBox
+
+A frame with a title around controls that belong together. Its controls are placed freely, like in Delphi (start them below the title: `Top = 32`); `Layout = Flow` stacks them under the title instead.
+
+```
+object Delivery: TGroupBox
+  Left = 16
+  Top = 16
+  Width = 240
+  Height = 140
+  Text = 'Delivery'
+  object AddressEdit: TEdit
+    Left = 12
+    Top = 32
+    Width = 216
+  end
+  object ExpressCheck: TCheckBox
+    Left = 12
+    Top = 80
+    Text = 'Express'
+  end
+end
+```
+
+```pascal
+Delivery.Enabled := not PickUpCheck.Checked;
+```
+
+### TRadioGroup
+
+A framed list of choices; one is chosen at a time. Click an item or use the arrow keys.
+
+```
+object PayBy: TRadioGroup
+  Text = 'Pay by'
+  Items = ('Cash', 'Card', 'Transfer')
+  ItemIndex = 0
+  Columns = 1                // 2: the items fill two columns
+  OnChange = PayByChange
+end
+```
+
+```pascal
+procedure THomeForm.PayByChange(Sender: TObject);
+begin
+  CardPanel.Visible := PayBy.Value = 'Card';     // or PayBy.ItemIndex = 1
+end;
+```
+
+![A group box, a radio group in two columns, a bevel and shapes](images/additional.png)
+
+### TShape
+
+A rectangle, rounded rectangle, ellipse or circle (the biggest one in its place).
+
+```
+object Status: TShape
+  Width = 16
+  Height = 16
+  Shape = Circle             // Rectangle (default), RoundRect, Ellipse, Circle
+  Color = '#16A34A'          // the fill; default: the theme's surface
+  BorderWidth = 0            // BorderColor, BorderWidth: the outline
+end
+```
+
+```pascal
+if Online then Status.Color := $FF16A34A else Status.Color := $FFDC2626;
+```
+
+### TBevel
+
+A thin line across a form (`Kind = Horizontal`, the default), down (`Vertical`), or a frame (`Frame`).
+
+```
+object Divider: TBevel
+  Left = 16
+  Top = 172
+  Width = 488
+end
+```
+
+```pascal
+Divider.Visible := DetailsVisible;
+```
+
+### TPaintBox
+
+A place to draw on yourself. `OnPaint` gets the canvas, clipped to the box; `Bounds` tells where the box is. `Invalidate` draws it again; the mouse events give X and Y inside the box. Without `OnPaint` a thin frame shows where it is.
+
+```
+object Chart: TPaintBox
+  Width = 300
+  Height = 160
+  OnPaint = ChartPaint
+  OnMouseDown = ChartMouseDown
+end
+```
+
+```pascal
+procedure THomeForm.ChartPaint(Sender: TObject; Canvas: TCanvas32);
+var
+  B: TRectI;
+  I: Integer;
+begin
+  B := Chart.Bounds;
+  for I := 0 to High(FValues) do
+    Canvas.FillRect(B.X + I * 20, B.Y + B.H - FValues[I], 16, FValues[I], $FF4F46E5);
+end;
+
+procedure THomeForm.ChartMouseDown(Sender: TObject; X, Y: Integer);
+begin
+  ShowMessage(Format('%d, %d', [X, Y]));
+end;
+```
+
+The canvas draws with `FillRect`, `FillRoundRect`, `StrokeRoundRect`, `FillCircle`, `DrawLine`, `DrawText` and `DrawBitmap` (Pastel.Graphics; [components.md](components.md) shows more).
+
 ## Menus
 
 ### TMenuBar
@@ -983,6 +1107,54 @@ begin
 end;
 
 Clock.Enabled := False;      // stop it
+```
+
+### TOpenDialog
+
+The open-file dialog as a component, like Delphi's: put it on the form (it is not drawn), set its properties in the designer and call `Execute`. The same as `OpenFileDialog` in [Pastel.Dialogs](guide-desktop.md#5-dialogs).
+
+```
+object OpenNotes: TOpenDialog
+  Filter = 'Notes|*.txt;*.md|All files|*'
+  Title = 'Open a note'
+end
+```
+
+```pascal
+if OpenNotes.Execute then
+  Memo.Lines.LoadFromFile(OpenNotes.FileName);
+```
+
+### TSaveDialog
+
+Like TOpenDialog, and asks before replacing a file; `DefaultExt` is added when the name has none.
+
+```
+object SaveNotes: TSaveDialog
+  Filter = 'Notes|*.txt'
+  DefaultExt = '.txt'
+end
+```
+
+```pascal
+SaveNotes.FileName := FCurrentFile;
+if SaveNotes.Execute then
+  Memo.Lines.SaveToFile(SaveNotes.FileName);
+```
+
+### TSelectFolderDialog
+
+Chooses a folder.
+
+```
+object PickFolder: TSelectFolderDialog
+  Title = 'Where should the backups go?'
+end
+```
+
+```pascal
+if PickFolder.Execute then
+  BackupEdit.Text := PickFolder.Folder;
 ```
 
 ### TDataBinding

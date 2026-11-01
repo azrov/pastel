@@ -4,6 +4,7 @@ Made from the declarations and comments in `framework/src` (`npm run apidoc` in 
 
 | Unit | |
 |---|---|
+| [Pastel.Additional](pastel.additional.md) | More standard controls, like the "Additional" page of Delphi's palette: |
 | [Pastel.App](pastel.app.md) | The application: window, event loop, hot reload. |
 | [Pastel.Args](pastel.args.md) | Command-line arguments. |
 | [Pastel.Assets](pastel.assets.md) | The files of a project's assets/ folder, inside the program. |

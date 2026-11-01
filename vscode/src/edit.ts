@@ -142,6 +142,8 @@ export function defaultProps(className: string, name: string): [string, string][
     case 'tlabel': return [['Text', `'${name}'`]];
     case 'tedit': return [['Placeholder', `'${name}'`]];
     case 'trow': return [['Gap', '8']];
+    case 'tgroupbox': return [['Text', `'${name}'`]];
+    case 'tradiogroup': return [['Text', `'${name}'`], ['Items', "('First', 'Second')"]];
     case 'tcolumn': return [['Gap', '8']];
     default: return [];
   }
@@ -492,7 +494,7 @@ function isInsideBlock(b: Block, ancestor: Block): boolean {
   return false;
 }
 
-const containerClasses = /^(TPanel|TCard|TColumn|TRow|TFlow|TScrollBox|TTabControl|TToolBar|TStatusBar)$/i;
+const containerClasses = /^(TPanel|TGroupBox|TCard|TColumn|TRow|TFlow|TScrollBox|TTabControl|TToolBar|TStatusBar)$/i;
 
 /** Adds a new control at a place in a parent with Layout = Free (containers get a size to draw). */
 export function insertObjectAt(text: string, parentName: string, className: string, left: number, top: number):

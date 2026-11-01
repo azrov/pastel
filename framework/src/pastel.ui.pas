@@ -48,6 +48,8 @@ type
     FLeft, FTop: Integer;
     FAnchors: TAnchors;
     FDock: TDock;
+    FTabOrder: Integer;
+    FTabStop: Boolean;
     FVisible, FEnabled: Boolean;
     FBounds: TRectI;
     FHint: string;
@@ -124,6 +126,10 @@ type
     property Anchors: TAnchors read FAnchors write SetAnchors default [akLeft, akTop];
     { In a parent with Layout = Free: docked to an edge (Top, Bottom, Left, Right) or Fill. }
     property Dock: TDock read FDock write SetDock default dkNone;
+    { The Tab key goes through the controls of a parent in TabOrder (equal ones in their order in the .pform). }
+    property TabOrder: Integer read FTabOrder write FTabOrder default 0;
+    { False: the Tab key passes it by (a click still focuses it). }
+    property TabStop: Boolean read FTabStop write FTabStop default True;
     property Visible: Boolean read FVisible write SetVisible default True;
     property Enabled: Boolean read FEnabled write SetEnabled default True;
     { Shown in a tooltip when the mouse rests on the control. }
@@ -1126,6 +1132,7 @@ begin
   FVisible := True;
   FEnabled := True;
   FAnchors := [akLeft, akTop];
+  FTabStop := True;
 end;
 
 destructor TControl.Destroy;
@@ -2926,14 +2933,29 @@ end;
 
 procedure TForm.CollectFocusable(C: TControl; List: TFPList);
 var
-  I: Integer;
+  I, J: Integer;
+  Kids: array of TControl;
+  K: TControl;
 begin
   if not C.Visible then
     Exit;
-  if C.Focusable then
+  if C.Focusable and C.FTabStop then
     List.Add(C);
+  { the children in TabOrder; a stable sort keeps the .pform order for equal ones }
+  SetLength(Kids, C.ChildCount);
   for I := 0 to C.ChildCount - 1 do
-    CollectFocusable(C.Children[I], List);
+  begin
+    K := C.Children[I];
+    J := I;
+    while (J > 0) and (Kids[J - 1].FTabOrder > K.FTabOrder) do
+    begin
+      Kids[J] := Kids[J - 1];
+      Dec(J);
+    end;
+    Kids[J] := K;
+  end;
+  for I := 0 to High(Kids) do
+    CollectFocusable(Kids[I], List);
 end;
 
 procedure TForm.SetAppearance(AValue: TThemeMode);

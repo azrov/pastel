@@ -18,7 +18,55 @@ Dialogs: messages, questions, input, choosing files and folders.
 
 `uses Pastel.Dialogs;` · source: [framework/src/pastel.dialogs.pas](../../framework/src/pastel.dialogs.pas)
 
-**Contents:** [ShowMessage](#showmessage) · [Ask](#ask) · [MessageDlg](#messagedlg) · [InputBox](#inputbox) · [InputQuery](#inputquery) · [LoginDialog](#logindialog) · [OpenFileDialog](#openfiledialog) · [SaveFileDialog](#savefiledialog) · [SelectFolderDialog](#selectfolderdialog) · [ModalResultCaption](#modalresultcaption)
+**Contents:** [TOpenDialog](#topendialog) · [TSaveDialog](#tsavedialog) · [TSelectFolderDialog](#tselectfolderdialog) · [ShowMessage](#showmessage) · [Ask](#ask) · [MessageDlg](#messagedlg) · [InputBox](#inputbox) · [InputQuery](#inputquery) · [LoginDialog](#logindialog) · [OpenFileDialog](#openfiledialog) · [SaveFileDialog](#savefiledialog) · [SelectFolderDialog](#selectfolderdialog) · [ModalResultCaption](#modalresultcaption)
+
+## Types
+
+### TOpenDialog
+
+```pascal
+type TOpenDialog = class(TComponent)
+```
+
+The file dialogs as components, like Delphi's: put one on the form (it is not
+drawn), set its properties in the designer and call Execute:
+if OpenDialog1.Execute then
+Memo.Lines.LoadFromFile(OpenDialog1.FileName);
+
+| | |
+|---|---|
+| `constructor Create(AOwner: TComponent)` |  |
+| `function Execute: Boolean` | Shows the dialog; True when the user chose a file (then in FileName). |
+| `property FileName: string` | Where it starts (a file or a folder); the chosen file after Execute. |
+| `property Filter: string` | 'Pictures\|*.png;*.jpg\|All files\|*' |
+| `property Title: string` |  |
+
+### TSaveDialog
+
+```pascal
+type TSaveDialog = class(TOpenDialog)
+```
+
+Asks before replacing a file that exists; DefaultExt ('.txt') is added when the name has none.
+
+| | |
+|---|---|
+| `constructor Create(AOwner: TComponent)` |  |
+| `function Execute: Boolean` |  |
+| `property DefaultExt: string` |  |
+
+### TSelectFolderDialog
+
+```pascal
+type TSelectFolderDialog = class(TComponent)
+```
+
+| | |
+|---|---|
+| `constructor Create(AOwner: TComponent)` |  |
+| `function Execute: Boolean` |  |
+| `property Folder: string` | Where it starts; the chosen folder after Execute. |
+| `property Title: string` |  |
 
 ## Routines
 

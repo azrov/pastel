@@ -248,6 +248,8 @@ The things every business app needs, built in instead of written again in every 
 
 - [x] Free placement: `Layout = Free`, `TPanel`, `Left`/`Top`, `Anchors`, `Dock` (Delphi's `Align`); new forms are free-placed
 - [x] The designer laid out like Delphi's IDE: Structure, Object Inspector (Properties/Events), Tool Palette in groups, non-visual components in a tray; drop where it goes, drag, eight grips, grid, align tools
+- [x] Welcome page and New Project wizard; Place freely for older forms; platforms of each control; icon picker with pictures — 1.4.1, 1.4.2
+- [x] Delphi's standard components: TGroupBox, TRadioGroup, TShape, TBevel, TPaintBox, dialog components, TabOrder; snap lines in the designer — 1.4.3
 
 ### 1.5 — Android
 

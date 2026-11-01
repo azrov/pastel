@@ -165,6 +165,8 @@ type TControl = class(TComponent)
 | `property Top: Integer` |  |
 | `property Anchors: TAnchors` | In a parent with Layout = Free: which edges follow the parent's when it is resized. |
 | `property Dock: TDock` | In a parent with Layout = Free: docked to an edge (Top, Bottom, Left, Right) or Fill. |
+| `property TabOrder: Integer` | The Tab key goes through the controls of a parent in TabOrder (equal ones in their order in the .pform). |
+| `property TabStop: Boolean` | False: the Tab key passes it by (a click still focuses it). |
 | `property Visible: Boolean` |  |
 | `property Enabled: Boolean` |  |
 | `property Hint: string` | Shown in a tooltip when the mouse rests on the control. |

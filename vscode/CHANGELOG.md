@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.0
+
+- Designer: snap lines — an edge or the middle of a control snaps to its neighbours' while moving or resizing, shown by a purple line (`Alt` turns them off with the grid)
+- The palette's *Additional* group: GroupBox, RadioGroup, Shape, Bevel, PaintBox; the dialog components in *Non-visual*
+
 ## 1.3.0
 
 - The icon picker (… next to `Icon`): the built-in icons drawn as they look, with a search box; the pictures in `assets/`; *Choose a picture file…* copies one into `assets/icons/`. `FileName` and `BackgroundImage` get the picture picker

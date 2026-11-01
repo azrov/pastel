@@ -100,6 +100,7 @@ In a form or panel with `Layout = Free`:
 
 - drop a control from the palette where it should be; it snaps to an 8 pixel grid (*Snap to grid*; hold `Alt` to place it freely)
 - drag controls to move them — also into a panel — and pull the eight grips to resize them; the position and size are shown at the top right
+- snap lines: an edge or the middle of a control near the same of a neighbour snaps to it, and a purple line shows it (they win over the grid; `Alt` turns both off)
 - `Ctrl+arrows` move the selection by one pixel, `Shift+arrows` change its size
 - select several (`Ctrl+click`) to move them together, or line them up with the align buttons at the top (left, right, top, bottom edges, same width, same height — the control clicked last is the model)
 - double-click an event in the inspector to write its handler, like in Delphi

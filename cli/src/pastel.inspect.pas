@@ -43,7 +43,7 @@ implementation
 
 uses
   TypInfo, Pastel.Console, Pastel.PForm, Pastel.UI, Pastel.Forms, Pastel.Graphics, Pastel.Controls,
-  Pastel.Icons, Pastel.Project, Pastel.Builder;
+  Pastel.Icons, Pastel.Project, Pastel.Builder, Pastel.Additional, Pastel.Dialogs;
 
 function JsonStr(const S: string): string;
 var

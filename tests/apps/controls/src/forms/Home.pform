@@ -150,5 +150,51 @@ object HomeForm: THomeForm
         end
       end
     end
+    object MorePage: TTabSheet
+      Caption = 'More'
+      object MoreBox: TPanel
+        Grow = 1
+        object Delivery: TGroupBox
+          Left = 8
+          Top = 8
+          Width = 200
+          Height = 110
+          Text = 'Delivery'
+          object Express: TCheckBox
+            Left = 12
+            Top = 36
+            Text = 'Express'
+          end
+        end
+        object PayBy: TRadioGroup
+          Left = 224
+          Top = 8
+          Width = 180
+          Text = 'Pay by'
+          Items = ('Cash', 'Card')
+          OnChange = PayByChange
+        end
+        object Divider: TBevel
+          Left = 8
+          Top = 128
+          Width = 396
+        end
+        object Lamp: TShape
+          Left = 8
+          Top = 148
+          Width = 24
+          Height = 24
+          Shape = Circle
+        end
+        object Sketch: TPaintBox
+          Left = 48
+          Top = 148
+          Width = 120
+          Height = 60
+          OnPaint = SketchPaint
+          OnMouseDown = SketchMouseDown
+        end
+      end
+    end
   end
 end

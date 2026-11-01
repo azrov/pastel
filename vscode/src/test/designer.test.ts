@@ -304,6 +304,21 @@ test('free layout: several controls are aligned to the one chosen last', () => {
   ]);
 });
 
+test('free layout: snap lines line a control up with its neighbours', () => {
+  const snapBox = doc.getElementById('snap');
+  snapBox.checked = false;
+  post({ type: 'select', name: 'OkButton', names: ['OkButton'], className: 'TButton', isRoot: false, handlers: [], props: [] });
+  sent.length = 0;
+  mouse(stage, 'mousedown', 20, 70);
+  mouse(stage, 'mousemove', 21, 120);
+  mouse(stage, 'mousemove', 23, 150);
+  assert.ok(doc.querySelectorAll('.guide').length === 2, 'a line for the left edge and one for the bottom');
+  mouse(w, 'mouseup', 23, 150);
+  assert.deepStrictEqual(last('place').items, [{ name: 'OkButton', left: 16, top: 140 }],
+    'its left on NameEdit\'s left (19 → 16), its bottom on the middle of Box (184 → 180)');
+  snapBox.checked = true;
+});
+
 test('the palette is grouped and can be searched; non-visual components sit in the tray', () => {
   post({ type: 'schema', controls: [{ name: 'TButton' }, { name: 'TPanel', container: true }, { name: 'TGrid' }, { name: 'TTimer', nonvisual: true }] });
   const cats = [...doc.querySelectorAll('.cat')].map((c: any) => c.textContent);

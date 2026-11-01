@@ -94,6 +94,7 @@ export function designerHtml(nonce: string): string {
   .ghostbox .tag { background: var(--vscode-charts-orange, #f0a030); }
   .handle { position: absolute; width: 7px; height: 7px; margin: -4px 0 0 -4px; box-sizing: border-box; pointer-events: auto; z-index: 6;
     background: var(--vscode-editor-background); border: 1px solid var(--vscode-focusBorder); }
+  .guide { background: var(--vscode-charts-purple, #c74ded); z-index: 7; }
   .drop { position: absolute; background: var(--vscode-charts-orange, #f0a030); pointer-events: none; z-index: 3; }
   .ghost { opacity: .45; }
   .banner { display: none; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 6px; max-width: 640px; line-height: 1.4;
@@ -320,6 +321,7 @@ export function designerHtml(nonce: string): string {
   // the Tool Palette's groups, like Delphi's Standard, Additional...
   const CATEGORIES = [
     ['Standard', ['TButton', 'TLabel', 'TEdit', 'TMemo', 'TCheckBox', 'TRadioButton', 'TComboBox', 'TListBox', 'TSwitch', 'TImage', 'TPanel']],
+    ['Additional', ['TGroupBox', 'TRadioGroup', 'TShape', 'TBevel', 'TPaintBox']],
     ['Layout', ['TCard', 'TColumn', 'TRow', 'TFlow', 'TScrollBox', 'TTabControl', 'TTabSheet', 'TSplitter', 'TSpacer', 'TToolBar', 'TStatusBar']],
     ['Input', ['TDatePicker', 'TCalendarView', 'TTimeEdit', 'TNumberEdit', 'TCurrencyEdit', 'TSlider']],
     ['Lists and tables', ['TGrid', 'TGridColumn', 'TListView', 'TTreeView']],
@@ -436,6 +438,7 @@ export function designerHtml(nonce: string): string {
     }
     if (drag && drag.active && drag.ghosts) {
       for (const g of drag.ghosts) box(g, 'ghostbox', g.label);
+      for (const g of drag.guides || []) box(g, 'guide');
       if (drag.into) box(drag.into, 'hover');
     } else if (drag && drag.target) drawDrop(drag.target);
     drawTray();
@@ -579,6 +582,46 @@ export function designerHtml(nonce: string): string {
   }
 
   // ---- moving: free placement (Left, Top) or a new place among the children of a Flow parent ----
+  // snap lines: an edge or a middle near the same edge or middle of a neighbour snaps to it
+  // (positions relative to the parent; xs/ys are the moving control's edges to try)
+  const NEAR = 6;
+  function neighbourEdges(parentName, exclude) {
+    const p = byName(parentName);
+    const xs = [], ys = [];
+    for (const c of layout.controls) {
+      if (c.parent !== parentName || !c.visible || exclude.includes(c.name) || c.dock) continue;
+      const l = c.x - p.x, t = c.y - p.y;
+      xs.push(l, l + c.w, l + c.w / 2);
+      ys.push(t, t + c.h, t + c.h / 2);
+    }
+    return { xs, ys };
+  }
+  function nearest(values, targets) {
+    // the smallest move that puts one of the values on a target
+    let best = null;
+    for (const v of values) for (const t of targets) {
+      const d = t - v;
+      if (Math.abs(d) <= NEAR && (best === null || Math.abs(d) < Math.abs(best.d))) best = { d, at: t };
+    }
+    return best;
+  }
+  function guideLines(parentName, rect, xAt, yAt, exclude) {
+    // the lines drawn across the parent at the matched positions
+    const p = byName(parentName), lines = [];
+    const others = layout.controls.filter(c => c.parent === parentName && c.visible && !exclude.includes(c.name) && !c.dock);
+    if (xAt !== null) {
+      const hits = others.filter(c => [c.x - p.x, c.x - p.x + c.w, c.x - p.x + c.w / 2].some(v => Math.abs(v - xAt) < 0.5));
+      const y1 = Math.min(rect.y, ...hits.map(c => c.y - p.y)), y2 = Math.max(rect.y + rect.h, ...hits.map(c => c.y - p.y + c.h));
+      lines.push({ x: p.x + xAt, y: p.y + y1, w: 1, h: y2 - y1 });
+    }
+    if (yAt !== null) {
+      const hits = others.filter(c => [c.y - p.y, c.y - p.y + c.h, c.y - p.y + c.h / 2].some(v => Math.abs(v - yAt) < 0.5));
+      const x1 = Math.min(rect.x, ...hits.map(c => c.x - p.x)), x2 = Math.max(rect.x + rect.w, ...hits.map(c => c.x - p.x + c.w));
+      lines.push({ x: p.x + x1, y: p.y + yAt, w: x2 - x1, h: 1 });
+    }
+    return lines;
+  }
+
   function updateMove(e) {
     const s = scale();
     const p = pointFromEvent(e);
@@ -588,7 +631,18 @@ export function designerHtml(nonce: string): string {
     drag.ghosts = null; drag.into = null; drag.target = null; drag.place = null;
     if (into && into.free) {
       // where the lead control's top left goes, in the new parent; the others keep their distance to it
-      const left = snap(lead.x + dx - into.x, e), top = snap(lead.y + dy - into.y, e);
+      let left = snap(lead.x + dx - into.x, e), top = snap(lead.y + dy - into.y, e);
+      drag.guides = null;
+      if (!e.altKey) {
+        // the neighbours' edges win over the grid
+        const rawL = lead.x + dx - into.x, rawT = lead.y + dy - into.y;
+        const n = neighbourEdges(into.name, drag.names);
+        const gx = nearest([rawL, rawL + lead.w, rawL + lead.w / 2], n.xs);
+        const gy = nearest([rawT, rawT + lead.h, rawT + lead.h / 2], n.ys);
+        if (gx) left = Math.round(rawL + gx.d);
+        if (gy) top = Math.round(rawT + gy.d);
+        if (gx || gy) drag.guides = guideLines(into.name, { x: left, y: top, w: lead.w, h: lead.h }, gx ? gx.at : null, gy ? gy.at : null, drag.names);
+      }
       const ox = left - (lead.x - into.x), oy = top - (lead.y - into.y);
       const items = drag.names.map(byName).map(c => ({ name: c.name, left: c.x - into.x + ox, top: c.y - into.y + oy }));
       drag.place = { parent: into.name, items };
@@ -620,6 +674,18 @@ export function designerHtml(nonce: string): string {
     if (d.includes('e')) r = Math.max(snap(o.left + o.w + dx, e), l + GRID);
     if (d.includes('n')) t = Math.min(snap(o.top + dy, e), b - GRID);
     if (d.includes('s')) b = Math.max(snap(o.top + o.h + dy, e), t + GRID);
+    drag.guides = null;
+    const c0 = byName(drag.name);
+    if (drag.free && !e.altKey && c0) {
+      // a moving edge snaps to the neighbours' edges
+      const n = neighbourEdges(c0.parent, [drag.name]);
+      const at = (raw, list) => { const g = nearest([raw], list); return g ? g.at : null; };
+      const xAt = d.includes('e') ? at(o.left + o.w + dx, n.xs) : d.includes('w') ? at(o.left + dx, n.xs) : null;
+      const yAt = d.includes('s') ? at(o.top + o.h + dy, n.ys) : d.includes('n') ? at(o.top + dy, n.ys) : null;
+      if (xAt !== null) { if (d.includes('e')) r = Math.max(Math.round(xAt), l + 1); else l = Math.min(Math.round(xAt), r - 1); }
+      if (yAt !== null) { if (d.includes('s')) b = Math.max(Math.round(yAt), t + 1); else t = Math.min(Math.round(yAt), b - 1); }
+      if (xAt !== null || yAt !== null) drag.guides = guideLines(c0.parent, { x: l, y: t, w: r - l, h: b - t }, xAt, yAt, [drag.name]);
+    }
     const it = { name: drag.name, width: r - l, height: b - t };
     if (drag.free) { it.left = l; it.top = t; }
     if (!d.includes('e') && !d.includes('w')) delete it.width;

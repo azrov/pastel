@@ -1,5 +1,48 @@
 # The stable API: these declarations stay within this major version.
 # Made by "npm run apidoc -- --freeze"; tests/run.sh checks that every line still exists.
+Pastel.Additional: TBevel.property Color: TColor32
+Pastel.Additional: TBevel.property Kind: TBevelKind
+Pastel.Additional: TBevelKind.bkFrame
+Pastel.Additional: TBevelKind.bkHorizontal
+Pastel.Additional: TBevelKind.bkVertical
+Pastel.Additional: TGroupBox.constructor Create(AOwner: TComponent)
+Pastel.Additional: TGroupBox.function TitleHeight: Integer
+Pastel.Additional: TGroupBox.property Layout
+Pastel.Additional: TGroupBox.property Text: string
+Pastel.Additional: TPaintBox.property Color: TColor32
+Pastel.Additional: TPaintBox.property OnClick: TNotifyEvent
+Pastel.Additional: TPaintBox.property OnMouseDown: TPaintMouseEvent
+Pastel.Additional: TPaintBox.property OnMouseMove: TPaintMouseEvent
+Pastel.Additional: TPaintBox.property OnMouseUp: TPaintMouseEvent
+Pastel.Additional: TPaintBox.property OnPaint: TPaintEvent
+Pastel.Additional: TRadioGroup.constructor Create(AOwner: TComponent)
+Pastel.Additional: TRadioGroup.destructor Destroy
+Pastel.Additional: TRadioGroup.function ItemRect(Index: Integer): TRectI
+Pastel.Additional: TRadioGroup.property Columns: Integer
+Pastel.Additional: TRadioGroup.property ItemIndex: Integer
+Pastel.Additional: TRadioGroup.property Items: TStrings
+Pastel.Additional: TRadioGroup.property OnChange: TNotifyEvent
+Pastel.Additional: TRadioGroup.property Text: string
+Pastel.Additional: TRadioGroup.property Value: string
+Pastel.Additional: TShape.constructor Create(AOwner: TComponent)
+Pastel.Additional: TShape.property BorderColor: TColor32
+Pastel.Additional: TShape.property BorderWidth: Integer
+Pastel.Additional: TShape.property Color: TColor32
+Pastel.Additional: TShape.property Radius: Integer
+Pastel.Additional: TShape.property Shape: TShapeKind
+Pastel.Additional: TShapeKind.skCircle
+Pastel.Additional: TShapeKind.skEllipse
+Pastel.Additional: TShapeKind.skRectangle
+Pastel.Additional: TShapeKind.skRoundRect
+Pastel.Additional: type TBevel = class(TControl)
+Pastel.Additional: type TBevelKind = (bkHorizontal, bkVertical, bkFrame)
+Pastel.Additional: type TGroupBox = class(TBox)
+Pastel.Additional: type TPaintBox = class(TControl)
+Pastel.Additional: type TPaintEvent = procedure(Sender: TObject; Canvas: TCanvas32)
+Pastel.Additional: type TPaintMouseEvent = procedure(Sender: TObject; X: Integer; Y: Integer)
+Pastel.Additional: type TRadioGroup = class(TControl)
+Pastel.Additional: type TShape = class(TControl)
+Pastel.Additional: type TShapeKind = (skRectangle, skRoundRect, skEllipse, skCircle)
 Pastel.App: TApplication.constructor Create
 Pastel.App: TApplication.destructor Destroy
 Pastel.App: TApplication.procedure CreateForm(AFormClass: TFormClass; out AReference)
@@ -278,6 +321,18 @@ Pastel.Db: type TDatabase = class(TDbSession)
 Pastel.Db: type TDbKind = (dbSQLite, dbPostgres, dbMySQL)
 Pastel.Db: type TDbSession = class
 Pastel.Db: type TDbTransaction = class(TDbSession)
+Pastel.Dialogs: TOpenDialog.constructor Create(AOwner: TComponent)
+Pastel.Dialogs: TOpenDialog.function Execute: Boolean
+Pastel.Dialogs: TOpenDialog.property FileName: string
+Pastel.Dialogs: TOpenDialog.property Filter: string
+Pastel.Dialogs: TOpenDialog.property Title: string
+Pastel.Dialogs: TSaveDialog.constructor Create(AOwner: TComponent)
+Pastel.Dialogs: TSaveDialog.function Execute: Boolean
+Pastel.Dialogs: TSaveDialog.property DefaultExt: string
+Pastel.Dialogs: TSelectFolderDialog.constructor Create(AOwner: TComponent)
+Pastel.Dialogs: TSelectFolderDialog.function Execute: Boolean
+Pastel.Dialogs: TSelectFolderDialog.property Folder: string
+Pastel.Dialogs: TSelectFolderDialog.property Title: string
 Pastel.Dialogs: function Ask(const Msg: string; const Title: string = ''): Boolean
 Pastel.Dialogs: function InputBox(const Title: string; const Prompt: string; const Default: string): string
 Pastel.Dialogs: function InputQuery(const Title: string; const Prompt: string; var Value: string): Boolean
@@ -288,6 +343,9 @@ Pastel.Dialogs: function OpenFileDialog(var FileName: string; const Filter: stri
 Pastel.Dialogs: function SaveFileDialog(var FileName: string; const Filter: string = ''; const Title: string = 'Save'; const DefaultExt: string = ''): Boolean
 Pastel.Dialogs: function SelectFolderDialog(var Folder: string; const Title: string = 'Choose a folder'): Boolean
 Pastel.Dialogs: procedure ShowMessage(const Msg: string; const Title: string = '')
+Pastel.Dialogs: type TOpenDialog = class(TComponent)
+Pastel.Dialogs: type TSaveDialog = class(TOpenDialog)
+Pastel.Dialogs: type TSelectFolderDialog = class(TComponent)
 Pastel.Dialogs: var UseNativeDialogs: Boolean
 Pastel.Env: function EnvList: TStringArray
 Pastel.Env: function GetEnv(const Name: string; const Default: string = ''): string
@@ -1073,6 +1131,8 @@ Pastel.UI: TControl.property Hint: string
 Pastel.UI: TControl.property Left: Integer
 Pastel.UI: TControl.property Parent: TControl
 Pastel.UI: TControl.property PopupMenu: TControl
+Pastel.UI: TControl.property TabOrder: Integer
+Pastel.UI: TControl.property TabStop: Boolean
 Pastel.UI: TControl.property Top: Integer
 Pastel.UI: TControl.property Visible: Boolean
 Pastel.UI: TControl.property Width: Integer

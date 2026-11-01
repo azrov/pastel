@@ -2,6 +2,14 @@
 
 The `pastel` tool and the framework. The VS Code extension has its own list: [vscode/CHANGELOG.md](vscode/CHANGELOG.md). What is planned is in [ROADMAP.md](ROADMAP.md).
 
+## 1.4.3
+
+Delphi's standard components, completed.
+
+- `Pastel.Additional`: `TGroupBox` (a framed group, free placement inside), `TRadioGroup` (Items, ItemIndex, Value, Columns, OnChange), `TShape` (rectangle, rounded, ellipse, circle), `TBevel` (a line or a frame), `TPaintBox` (OnPaint with the canvas, mouse events)
+- The dialogs as components: `TOpenDialog`, `TSaveDialog`, `TSelectFolderDialog` with `Execute`
+- `TabOrder` and `TabStop` on every control
+
 ## 1.4.2
 
 - Icons can be pictures: `Icon = 'icons/logo.png'` on buttons, menu items, actions and grid icon columns, in their own colors; `LoadAppPicture`, `IconDrawing`, `IsPictureName`
