@@ -19,6 +19,7 @@ pastel new console hello        # a command-line program
 pastel new app notes            # a desktop app with a window (src/forms/Home.pform)
 pastel new service watcher      # a program that keeps running (systemd)
 pastel new api shop             # a web API with a database, models, migrations and tests
+pastel new site shop-site       # a web site: pages from templates (pages.md), Bootstrap, a contact form
 pastel new lib text-tools       # units for other projects (no program of its own)
 
 pastel new form Settings        # in an app: src/forms/Settings.pform/.pas, added to main.pas

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.2
+
+- The New Project wizard makes web sites (*Server → Web Site*)
+
 ## 1.5.1
 
 - The wizard's Android App and New Form… in an app made for phones make forms for phones (`--phone`)

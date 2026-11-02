@@ -30,6 +30,7 @@ Made from the declarations and comments in `framework/src` (`npm run apidoc` in 
 | [Pastel.Log](pastel.log.md) | Logging. |
 | [Pastel.Menus](pastel.menus.md) | Menus: a menu bar, pop-up (right click) menus and keyboard |
 | [Pastel.NativeDialogs](pastel.nativedialogs.md) | The system's own open, save and folder dialogs. |
+| [Pastel.Pages](pastel.pages.md) | HTML pages from templates, in the style of Laravel's Blade. |
 | [Pastel.Pdf](pastel.pdf.md) | PDF files: pages with text, lines, boxes and pictures. |
 | [Pastel.PForm](pastel.pform.md) | Reader for .pform files. |
 | [Pastel.Print](pastel.print.md) | Printing and opening documents with the system. |

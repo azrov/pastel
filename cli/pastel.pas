@@ -40,7 +40,7 @@ begin
   WriteLn(Bold('Usage:'), ' pastel <command> [options]');
   WriteLn;
   WriteLn(Bold('Commands:'));
-  WriteLn('  new <kind> <name>      Create a new project (kinds: console, app, lib, service, api)');
+  WriteLn('  new <kind> <name>      Create a new project (kinds: console, app, lib, service, api, site)');
   WriteLn('  new form <Name>        Add a window to an app (--phone: made for phones)');
   WriteLn('  new control <Name>     Add a control of your own (src/controls/)');
   WriteLn('  new model <Name> f:type  A table: migration, unit, tests (name:string! age:integer)');

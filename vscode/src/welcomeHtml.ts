@@ -23,6 +23,8 @@ export const TEMPLATES: ProjectTemplate[] = [
     description: 'A program for the terminal: arguments and options, text in and out, files. No windows.' },
   { kind: 'api', category: 'Server', title: 'Web API', icon: '🌐', platforms: ['Linux', 'Windows'], forms: false,
     description: 'A REST API with a database: models, controllers, migrations and tests.' },
+  { kind: 'site', category: 'Server', title: 'Web Site', icon: '🖥', platforms: ['Linux', 'Windows'], forms: false,
+    description: 'Pages from HTML templates (like Laravel\'s Blade) with Bootstrap: a home page, an about page, a contact form.' },
   { kind: 'service', category: 'Server', title: 'Service', icon: '⚙', platforms: ['Linux', 'Windows'], forms: false,
     description: 'Keeps running in the background: jobs on a timer, settings, logs; a systemd or Windows service.' },
   { kind: 'lib', category: 'Library', title: 'Library', icon: '📦', platforms: ['Windows', 'Linux'], forms: false,
@@ -262,7 +264,7 @@ export function welcomeHtml(nonce: string, data: { recent: RecentProject[]; loca
       l.append(c, document.createTextNode(p));
       pl.appendChild(l);
     }
-    if (!$('name').dataset.typed) $('name').value = chosen.phone ? 'my-phone-app' : { app: 'my-app', console: 'my-tool', api: 'my-api', service: 'my-service', lib: 'my-library' }[chosen.kind] || 'my-project';
+    if (!$('name').dataset.typed) $('name').value = chosen.phone ? 'my-phone-app' : { app: 'my-app', console: 'my-tool', api: 'my-api', site: 'my-site', service: 'my-service', lib: 'my-library' }[chosen.kind] || 'my-project';
     $('msg').textContent = ''; $('msg').className = 'msg';
     show('wizard2');
     validate();

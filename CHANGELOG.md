@@ -2,6 +2,12 @@
 
 The `pastel` tool and the framework. The VS Code extension has its own list: [vscode/CHANGELOG.md](vscode/CHANGELOG.md). What is planned is in [ROADMAP.md](ROADMAP.md).
 
+## 1.5.0-beta.3
+
+- `Pastel.Pages`: HTML pages from templates, like Laravel's Blade — `{{ }}` made safe for HTML, `{!! !!}`, `@if`/`@elseif`/`@else`, `@unless`, `@isset`, `@foreach` with `loop`, `@forelse`/`@empty`, `@extends`, `@section`, `@yield`, `@include`, `@json`, comments, filters (`upper`, `lower`, `number`, `default`, `length`, `trim`, `json`, your own); errors with the file and line; templates read again when they change; safe on the web server's threads
+- `pastel new site`: a web site with a layout, a menu, Bootstrap 5, a home, an about and a contact page (a form checked on the server), static files and tests; `pastel package` takes the templates along
+- [docs/pages.md](docs/pages.md)
+
 ## 1.5.0-beta.2
 
 - Android: every letter the on-screen keyboard types (ş, ğ, é, other alphabets, emoji) arrives, through a small Java activity in the `.apk` (`dev.pastel.PastelActivity`, built once into `framework/android/classes.dex`)

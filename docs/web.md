@@ -5,6 +5,8 @@ same program as the rest of your code. `examples/notes-api` is a complete
 example: an API with a web page, run as a service.
 `pastel new api myapi` makes a new API project with a database
 ([database.md](database.md)): models, controllers, migrations and tests.
+`pastel new site mysite` makes a web site with pages from templates and
+Bootstrap ([pages.md](pages.md)).
 
 ## A web service
 

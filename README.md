@@ -77,6 +77,7 @@ Building for another platform needs Free Pascal's units for it. `pastel doctor` 
 | `pastel new lib <name>` | Create a library that other projects use ([docs/workflow.md](docs/workflow.md)) |
 | `pastel new service <name>` | Create a program that keeps running, with jobs and a systemd unit ([docs/services.md](docs/services.md)); web APIs: [docs/web.md](docs/web.md) |
 | `pastel new api <name>` | Create a web API with a database: models, controllers, migrations, tests ([guide](docs/guide-api.md), [docs/web.md](docs/web.md), [docs/database.md](docs/database.md)) |
+| `pastel new site <name>` | Create a web site: pages from Blade-like templates, Bootstrap, a contact form ([docs/pages.md](docs/pages.md)) |
 | `pastel migrate` | Run the database migrations; `status`, `new <name>` |
 | `pastel package deb` / `docker` | A Debian package (with the systemd unit for services, a menu entry for apps), or a container image ([docs/deploy.md](docs/deploy.md)) |
 | `pastel package appimage` / `installer` | A Linux AppImage, or a Windows installer (`--target windows`) of a desktop app ([guide](docs/guide-desktop.md#12-shipping)) |

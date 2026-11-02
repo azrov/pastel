@@ -540,6 +540,16 @@ sed -i 's/interval = 2 /interval = "often" /' config.toml
 set +e; out="$(./build/*/debug/file-watch 2>&1)"; code=$?; set -e
 expect "bad settings stop the start with a reason" '[ "$code" = 1 ] && echo "$out" | grep -q "check.interval"'
 
+# --- a web site: pages from templates ---
+cd "$WORK" && rm -rf web-site && "$PASTEL" new site web-site >/dev/null
+expect "new site makes views and public"  '[ -f web-site/views/layouts/main.html ] && [ -f web-site/views/home.html ] && [ -f web-site/public/css/site.css ]'
+out="$(cd web-site && "$PASTEL" test 2>&1)"
+expect "the site's tests pass"            'echo "$out" | grep -q "3 passed"'
+(cd web-site && "$PASTEL" package >/dev/null 2>&1)
+expect "the package has the views"        'tar -tzf web-site/dist/web-site-0.1.0-linux.tar.gz | grep -q "views/home.html" && tar -tzf web-site/dist/web-site-0.1.0-linux.tar.gz | grep -q "public/css/site.css"'
+set +e; out="$(cd "$WORK" && "$PASTEL" new site webpages 2>&1)"; code=$?; set -e
+expect "a site called webpages is refused" '[ "$code" != 0 ] && echo "$out" | grep -q "also the name of a unit"'
+
 # --- web API with a database, migrations ---
 cd "$WORK"
 "$PASTEL" new api todo-api >/dev/null

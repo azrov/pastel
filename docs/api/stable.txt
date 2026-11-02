@@ -764,6 +764,20 @@ Pastel.Menus: type TMenuBar = class(TControl)
 Pastel.Menus: type TMenuItem = class(TControl)
 Pastel.Menus: type TMenuView = class(TPopup)
 Pastel.Menus: type TPopupMenu = class(TControl)
+Pastel.Pages: TPages.constructor Create(const AFolder: string)
+Pastel.Pages: TPages.destructor Destroy
+Pastel.Pages: TPages.function Render(const Name: string; Data: TJSONObject): string
+Pastel.Pages: TPages.function RenderText(const Template: string; Data: TJSONObject): string
+Pastel.Pages: TPages.property Folder: string
+Pastel.Pages: function FindAppFolder(const Name: string): string
+Pastel.Pages: function HtmlEscape(const S: string): string
+Pastel.Pages: function RenderPage(const Template: string; Data: TJSONObject = nil): string
+Pastel.Pages: function View(const Name: string; Data: TJSONObject = nil): string
+Pastel.Pages: procedure RegisterPageFilter(const Name: string; Filter: TPageFilter)
+Pastel.Pages: procedure SetViewsFolder(const Folder: string)
+Pastel.Pages: type EPageError = class(Exception)
+Pastel.Pages: type TPageFilter = function(Value: string; Arg: string): string
+Pastel.Pages: type TPages = class
 Pastel.Pdf: TPdfAlign.paCenter
 Pastel.Pdf: TPdfAlign.paLeft
 Pastel.Pdf: TPdfAlign.paRight

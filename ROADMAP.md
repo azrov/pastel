@@ -270,11 +270,11 @@ The same Pascal code and `.pform` forms on an Android phone or tablet. The app i
 
 - [ ] HTTP keep-alive and streaming answers; WebSockets and server-sent events (live updates for apps and pages)
 - [ ] OpenAPI description made from the routes; `pastel new client` makes the Pascal client for an API
-- [ ] HTML pages from templates on the server
+- [x] HTML pages from templates on the server (`Pastel.Pages`, `pastel new site`) — done early, in 1.5.0-beta.3
 - [ ] Jobs that survive a restart: a queue in the database
 - [ ] Metrics (Prometheus) and request tracing
 
-### 1.6 — Distribution
+### 1.7 — Distribution
 
 - [ ] Windows: signing the `.exe` and the installer; updates of desktop apps from a server
 - [ ] Android: updates outside Google Play (from your own server)
@@ -282,7 +282,7 @@ The same Pascal code and `.pform` forms on an Android phone or tablet. The app i
 - [x] Packages: `pastel add`, `remove`, `update`, `search`, `deps`; versions from git tags, `pastel.lock`, a registry ([pastel-packages](https://github.com/azrov/pastel-packages)) — done in 1.0.0-rc.6
 - [ ] [pastel-extras](https://github.com/azrov/pastel-extras): serial ports (done), barcodes and labels, charts, GPIO, cameras
 
-### 1.7 — Tooling
+### 1.8 — Tooling
 
 - [ ] `pastel test --coverage`, and a profiler view in VS Code
 - [x] The debugger shows objects as their real class, lists with their items and JSON as JSON — done in 1.0.0-rc.7

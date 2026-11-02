@@ -48,7 +48,7 @@ test('New Project shows the templates by category', () => {
   assert.deepStrictEqual([...doc.querySelectorAll('.card')].map((c: any) => c.dataset.kind), ['app']);
   assert.ok($('next').disabled, 'nothing chosen yet');
   doc.querySelectorAll('#cats button')[2].click();
-  assert.deepStrictEqual([...doc.querySelectorAll('.card')].map((c: any) => c.dataset.kind), ['api', 'service']);
+  assert.deepStrictEqual([...doc.querySelectorAll('.card')].map((c: any) => c.dataset.kind), ['api', 'site', 'service']);
   doc.querySelectorAll('#cats button')[4].click();
   const android = doc.querySelector('.card');
   assert.strictEqual(android.dataset.kind, 'android');

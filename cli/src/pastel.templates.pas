@@ -7,7 +7,7 @@ unit Pastel.Templates;
 interface
 
 const
-  ProjectKinds: array[0..4] of string = ('console', 'app', 'lib', 'service', 'api');
+  ProjectKinds: array[0..5] of string = ('console', 'app', 'lib', 'service', 'api', 'site');
 
 function CreateProject(const Kind, Name, ParentDir: string): Boolean;
 { "pastel new form Settings": src/forms/Settings.pform and .pas, created in main.pas. }
@@ -1726,6 +1726,490 @@ begin
   ], Name, Ident));
 end;
 
+{ "pastel new site": a web site with pages from templates (Pastel.Pages) and Bootstrap }
+procedure WriteSiteProject(const Dir, Name, Ident: string);
+
+  function Sub(const S: string): string;
+  begin
+    Result := StringReplace(S, '{{class}}', UnitNameFor(Name), [rfReplaceAll]);
+    Result := StringReplace(Result, '{{ENV}}', UpperCase(StringReplace(Name, '-', '_', [rfReplaceAll])), [rfReplaceAll]);
+  end;
+
+begin
+  WriteText(Dir + 'pastel.toml', Sub(Fill([
+    '# Pastel project file',
+    '',
+    '[project]',
+    'name = "{{name}}"',
+    'version = "0.1.0"',
+    'pastel = "{{pastelminor}}"          # the Pastel version this project is made for',
+    'description = "A web site"',
+    'type = "service"          # a web site is a service with a web server (docs/pages.md)',
+    '',
+    '[build]',
+    'main = "src/main.pas"',
+    'mode = "objfpc"           # objfpc or delphi',
+    'defines = []',
+    '',
+    '[targets]',
+    'platforms = ["linux", "linux-arm64"]',
+    '',
+    '[package]',
+    'include = ["config.example.toml", "views", "public", "deploy"]',
+    '# maintainer = "Your Name <you@example.com>"'
+  ], Name, Ident)));
+
+  WriteText(Dir + 'config.toml', Sub(Fill([
+    '# Settings while developing ("pastel run" reads ./config.toml). Every setting',
+    '# can also come from an environment variable: server.port -> {{ENV}}_SERVER_PORT.',
+    '',
+    '[server]',
+    'port = 8080',
+    'address = "127.0.0.1"        # only this computer while developing',
+    '',
+    '[site]',
+    'title = "{{title}}"',
+    '',
+    '[log]',
+    'level = "info"'
+  ], Name, Ident)));
+
+  WriteText(Dir + 'config.example.toml', Sub(Fill([
+    '# {{name}} settings for a server: /etc/{{name}}/config.toml',
+    '',
+    '[server]',
+    'port = 8080',
+    'address = "127.0.0.1"        # behind nginx/Caddy on the same machine',
+    'trust_proxy = true',
+    '',
+    '[site]',
+    'title = "{{title}}"',
+    '',
+    '[log]',
+    'level = "info"'
+  ], Name, Ident)));
+
+  WriteText(Dir + '.gitignore', Sub(Fill([
+    'build/',
+    'dist/',
+    'data/',
+    '*.o',
+    '*.ppu'
+  ], Name, Ident)));
+
+  WriteText(Dir + 'README.md', Sub(Fill([
+    '# {{name}}',
+    '',
+    'A web site made with Pastel: pages from templates in `views/`, Bootstrap for the looks.',
+    '',
+    '```sh',
+    'pastel run          # http://localhost:8080',
+    'pastel test',
+    'pastel package deb  # for a server (deploy/{{name}}.service)',
+    '```',
+    '',
+    '| | |',
+    '|---|---|',
+    '| `src/main.pas` | the service: settings and the web server |',
+    '| `src/webpages.pas` | the pages: one handler for each address |',
+    '| `views/` | the templates: `layouts/main.html` around every page, one file per page |',
+    '| `public/` | files served as they are: `/static/css/site.css`, pictures |',
+    '| `tests/` | the pages tested through real HTTP |',
+    '',
+    'Templates: `{{ value }}`, `@if`, `@foreach`, `@extends`, `@section`, `@include` — see docs/pages.md of Pastel.',
+    'Saved templates show on the next reload of the page; Pascal changes need `pastel run` again (or `pastel run --watch`).'
+  ], Name, Ident)));
+
+  WriteText(Dir + 'src' + PathDelim + 'main.pas', Sub(Fill([
+    '{ {{name}} - a web site.',
+    '',
+    '    pastel run       then open http://localhost:8080',
+    '',
+    '  src/webpages.pas  the pages: what each address shows',
+    '  views/            the HTML templates',
+    '  public/           CSS, pictures and other files served as they are }',
+    'program {{ident}}_site;',
+    '',
+    '{$mode objfpc}{$H+}',
+    '',
+    'uses',
+    '  SysUtils, Pastel.Service, Pastel.Web, Pastel.Config, Pastel.Log, Pastel.Pages, AppInfo, WebPages;',
+    '',
+    'type',
+    '  T{{class}}Site = class(TWebService)',
+    '  private',
+    '    FPages: TWebPages;',
+    '  protected',
+    '    procedure Routes(Web: TWebServer); override;',
+    '  public',
+    '    destructor Destroy; override;',
+    '  end;',
+    '',
+    'procedure T{{class}}Site.Routes(Web: TWebServer);',
+    'begin',
+    '  FPages := TWebPages.Create(Config.Get(''site.title'', ''{{title}}''));',
+    '  Web.Static(''/static'', FindAppFolder(''public''));',
+    '  FPages.Routes(Web);',
+    '  Web.Health(''/health'', AppVersion);',
+    'end;',
+    '',
+    'destructor T{{class}}Site.Destroy;',
+    'begin',
+    '  inherited Destroy;',
+    '  FPages.Free;',
+    'end;',
+    '',
+    'var',
+    '  Site: T{{class}}Site;',
+    'begin',
+    '  Site := T{{class}}Site.Create(AppName, AppVersion);',
+    '  try',
+    '    ExitCode := Site.Run;',
+    '  finally',
+    '    Site.Free;',
+    '  end;',
+    'end.'
+  ], Name, Ident)));
+
+  WriteText(Dir + 'src' + PathDelim + 'webpages.pas', Sub(Fill([
+    '{ The pages of the site: each address gets its data and a template from views/.',
+    '  View(''home'', Data) renders views/home.html with the data (a JSON object). }',
+    'unit WebPages;',
+    '',
+    '{$mode objfpc}{$H+}',
+    '',
+    'interface',
+    '',
+    'uses',
+    '  SysUtils, fpjson, Pastel.Web, Pastel.Json, Pastel.Pages, Pastel.Log;',
+    '',
+    'type',
+    '  TWebPages = class',
+    '  private',
+    '    FTitle: string;',
+    '    { what every page has: the site''s name and the address it is on }',
+    '    function Data(Req: TWebRequest; const Page: string): TJSONObject;',
+    '    procedure Home(Req: TWebRequest; Res: TWebResponse);',
+    '    procedure About(Req: TWebRequest; Res: TWebResponse);',
+    '    procedure Contact(Req: TWebRequest; Res: TWebResponse);',
+    '    procedure SendMessage(Req: TWebRequest; Res: TWebResponse);',
+    '  public',
+    '    constructor Create(const ATitle: string);',
+    '    procedure Routes(Web: TWebServer);',
+    '  end;',
+    '',
+    'implementation',
+    '',
+    'constructor TWebPages.Create(const ATitle: string);',
+    'begin',
+    '  inherited Create;',
+    '  FTitle := ATitle;',
+    'end;',
+    '',
+    'procedure TWebPages.Routes(Web: TWebServer);',
+    'begin',
+    '  Web.Get(''/'', @Home);',
+    '  Web.Get(''/about'', @About);',
+    '  Web.Get(''/contact'', @Contact);',
+    '  Web.Post(''/contact'', @SendMessage);',
+    'end;',
+    '',
+    'function TWebPages.Data(Req: TWebRequest; const Page: string): TJSONObject;',
+    'begin',
+    '  Result := JObject([''site'', FTitle, ''page'', Page, ''year'', FormatDateTime(''yyyy'', Now)]);',
+    'end;',
+    '',
+    'procedure TWebPages.Home(Req: TWebRequest; Res: TWebResponse);',
+    'var',
+    '  D: TJSONObject;',
+    'begin',
+    '  D := Data(Req, ''home'');',
+    '  D.Add(''features'', JArrayOf([',
+    '    JObject([''title'', ''Fast'', ''text'', ''Compiled Object Pascal: pages in microseconds.'']),',
+    '    JObject([''title'', ''Simple'', ''text'', ''Templates like Laravel''''s Blade, code in plain Pascal.'']),',
+    '    JObject([''title'', ''Yours'', ''text'', ''One program and a folder of templates on your server.''])]));',
+    '  Res.Html(View(''home'', D));',
+    'end;',
+    '',
+    'procedure TWebPages.About(Req: TWebRequest; Res: TWebResponse);',
+    'begin',
+    '  Res.Html(View(''about'', Data(Req, ''about'')));',
+    'end;',
+    '',
+    'procedure TWebPages.Contact(Req: TWebRequest; Res: TWebResponse);',
+    'begin',
+    '  Res.Html(View(''contact'', Data(Req, ''contact'')));',
+    'end;',
+    '',
+    '{ the form sent: checked; the page again with the mistakes, or with thanks }',
+    'procedure TWebPages.SendMessage(Req: TWebRequest; Res: TWebResponse);',
+    'var',
+    '  D, Errors: TJSONObject;',
+    '  Name, Email, Message: string;',
+    'begin',
+    '  Name := Trim(Req.Form(''name''));',
+    '  Email := Trim(Req.Form(''email''));',
+    '  Message := Trim(Req.Form(''message''));',
+    '  D := Data(Req, ''contact'');',
+    '  Errors := TJSONObject.Create;',
+    '  if Name = '''' then',
+    '    Errors.Add(''name'', ''Please write your name.'');',
+    '  if Pos(''@'', Email) < 2 then',
+    '    Errors.Add(''email'', ''This does not look like an e-mail address.'');',
+    '  if Length(Message) < 10 then',
+    '    Errors.Add(''message'', ''Please write at least a sentence.'');',
+    '  D.Add(''errors'', Errors);',
+    '  D.Add(''old'', JObject([''name'', Name, ''email'', Email, ''message'', Message]));',
+    '  if Errors.Count > 0 then',
+    '  begin',
+    '    Res.Html(View(''contact'', D), 422);',
+    '    Exit;',
+    '  end;',
+    '  Log.Info(''message from %s <%s>: %s'', [Name, Email, Message]);',
+    '  D.Add(''sent'', True);',
+    '  Res.Html(View(''contact'', D));',
+    'end;',
+    '',
+    'end.'
+  ], Name, Ident)));
+
+  WriteText(Dir + 'views' + PathDelim + 'layouts' + PathDelim + 'main.html', Sub(Fill([
+    '<!doctype html>',
+    '<html lang="en">',
+    '<head>',
+    '  <meta charset="utf-8">',
+    '  <meta name="viewport" content="width=device-width, initial-scale=1">',
+    '  <title>@yield(''title'') · {{ site }}</title>',
+    '  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">',
+    '  <link href="/static/css/site.css" rel="stylesheet">',
+    '</head>',
+    '<body class="d-flex flex-column min-vh-100">',
+    '  @include(''partials.nav'')',
+    '  <main class="flex-grow-1">',
+    '    @yield(''content'')',
+    '  </main>',
+    '  <footer class="border-top py-4 text-body-secondary small">',
+    '    <div class="container">© {{ year }} {{ site }} · Made with Pastel</div>',
+    '  </footer>',
+    '  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>',
+    '</body>',
+    '</html>'
+  ], Name, Ident)));
+
+  WriteText(Dir + 'views' + PathDelim + 'partials' + PathDelim + 'nav.html', Sub(Fill([
+    '<nav class="navbar navbar-expand-md bg-body-tertiary border-bottom">',
+    '  <div class="container">',
+    '    <a class="navbar-brand fw-semibold" href="/">{{ site }}</a>',
+    '    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu" aria-label="Menu">',
+    '      <span class="navbar-toggler-icon"></span>',
+    '    </button>',
+    '    <div class="collapse navbar-collapse" id="menu">',
+    '      <ul class="navbar-nav ms-auto">',
+    '        <li class="nav-item"><a class="nav-link {{ page == ''home'' ? ''active'' : '''' }}" href="/">Home</a></li>',
+    '        <li class="nav-item"><a class="nav-link {{ page == ''about'' ? ''active'' : '''' }}" href="/about">About</a></li>',
+    '        <li class="nav-item"><a class="nav-link {{ page == ''contact'' ? ''active'' : '''' }}" href="/contact">Contact</a></li>',
+    '      </ul>',
+    '    </div>',
+    '  </div>',
+    '</nav>'
+  ], Name, Ident)));
+
+  WriteText(Dir + 'views' + PathDelim + 'home.html', Sub(Fill([
+    '@extends(''layouts.main'')',
+    '',
+    '@section(''title'', ''Home'')',
+    '',
+    '@section(''content'')',
+    '<section class="hero py-5">',
+    '  <div class="container py-4">',
+    '    <h1 class="display-5 fw-bold">Welcome to {{ site }}</h1>',
+    '    <p class="lead col-lg-8">A site made with Pastel: the pages come from templates in <code>views/</code>, the code is Object Pascal.</p>',
+    '    <a class="btn btn-primary btn-lg" href="/contact">Get in touch</a>',
+    '  </div>',
+    '</section>',
+    '<section class="container py-5">',
+    '  <div class="row g-4">',
+    '    @foreach(features as feature)',
+    '    <div class="col-md-4">',
+    '      <div class="card h-100 shadow-sm">',
+    '        <div class="card-body">',
+    '          <h2 class="h5">{{ loop.iteration }}. {{ feature.title }}</h2>',
+    '          <p class="mb-0 text-body-secondary">{{ feature.text }}</p>',
+    '        </div>',
+    '      </div>',
+    '    </div>',
+    '    @endforeach',
+    '  </div>',
+    '</section>',
+    '@endsection'
+  ], Name, Ident)));
+
+  WriteText(Dir + 'views' + PathDelim + 'about.html', Sub(Fill([
+    '@extends(''layouts.main'')',
+    '',
+    '@section(''title'', ''About'')',
+    '',
+    '@section(''content'')',
+    '<div class="container py-5 col-lg-8">',
+    '  <h1 class="mb-3">About</h1>',
+    '  <p>Write about yourself here: <code>views/about.html</code>. The page around it is <code>views/layouts/main.html</code>.</p>',
+    '</div>',
+    '@endsection'
+  ], Name, Ident)));
+
+  WriteText(Dir + 'views' + PathDelim + 'contact.html', Sub(Fill([
+    '@extends(''layouts.main'')',
+    '',
+    '@section(''title'', ''Contact'')',
+    '',
+    '@section(''content'')',
+    '<div class="container py-5 col-lg-6">',
+    '  <h1 class="mb-4">Contact</h1>',
+    '  @if(sent)',
+    '  <div class="alert alert-success">Thank you, {{ old.name }}! Your message was sent.</div>',
+    '  @else',
+    '  <form method="post" action="/contact" novalidate>',
+    '    <div class="mb-3">',
+    '      <label class="form-label" for="name">Name</label>',
+    '      <input class="form-control {{ errors.name ? ''is-invalid'' : '''' }}" id="name" name="name" value="{{ old.name }}">',
+    '      <div class="invalid-feedback">{{ errors.name }}</div>',
+    '    </div>',
+    '    <div class="mb-3">',
+    '      <label class="form-label" for="email">E-mail</label>',
+    '      <input class="form-control {{ errors.email ? ''is-invalid'' : '''' }}" id="email" name="email" type="email" value="{{ old.email }}">',
+    '      <div class="invalid-feedback">{{ errors.email }}</div>',
+    '    </div>',
+    '    <div class="mb-3">',
+    '      <label class="form-label" for="message">Message</label>',
+    '      <textarea class="form-control {{ errors.message ? ''is-invalid'' : '''' }}" id="message" name="message" rows="5">{{ old.message }}</textarea>',
+    '      <div class="invalid-feedback">{{ errors.message }}</div>',
+    '    </div>',
+    '    <button class="btn btn-primary" type="submit">Send</button>',
+    '  </form>',
+    '  @endif',
+    '</div>',
+    '@endsection'
+  ], Name, Ident)));
+
+  WriteText(Dir + 'public' + PathDelim + 'css' + PathDelim + 'site.css', Sub(Fill([
+    '/* The site''s own looks, on top of Bootstrap (https://getbootstrap.com/docs/5.3/) */',
+    '.hero {',
+    '  background: linear-gradient(135deg, #eef2ff, #f8fafc);',
+    '}'
+  ], Name, Ident)));
+
+  WriteText(Dir + 'tests' + PathDelim + 'webpages_test.pas', Sub(Fill([
+    '{ Tests of the pages through real HTTP. Run them with: pastel test }',
+    'unit WebPages_Test;',
+    '',
+    '{$mode objfpc}{$H+}',
+    '',
+    'interface',
+    '',
+    'uses',
+    '  SysUtils, Pastel.Testing, Pastel.Web, Pastel.Http, Pastel.Pages, Pastel.Log, WebPages;',
+    '',
+    'type',
+    '  TWebPagesTests = class(TTestSuite)',
+    '  private',
+    '    Web: TWebServer;',
+    '    Pages: TWebPages;',
+    '    Base: string;',
+    '  public',
+    '    procedure SetUp; override;',
+    '    procedure TearDown; override;',
+    '  published',
+    '    procedure HomeShowsTheFeatures;',
+    '    procedure ContactChecksTheForm;',
+    '    procedure StaticFilesAreServed;',
+    '  end;',
+    '',
+    'implementation',
+    '',
+    'procedure TWebPagesTests.SetUp;',
+    'var',
+    '  Port: Integer;',
+    'begin',
+    '  Log.Console := False;',
+    '  Port := 23000 + Random(20000);',
+    '  Base := Format(''http://127.0.0.1:%d'', [Port]);',
+    '  Pages := TWebPages.Create(''Test Site'');',
+    '  Web := TWebServer.Create(Port, ''127.0.0.1'');',
+    '  Web.AccessLog := False;',
+    '  Web.Static(''/static'', FindAppFolder(''public''));',
+    '  Pages.Routes(Web);',
+    '  Web.Start;',
+    'end;',
+    '',
+    'procedure TWebPagesTests.TearDown;',
+    'begin',
+    '  Web.Free;',
+    '  Pages.Free;',
+    '  Log.Console := True;',
+    'end;',
+    '',
+    'procedure TWebPagesTests.HomeShowsTheFeatures;',
+    'var',
+    '  R: THttpResponse;',
+    'begin',
+    '  R := HttpGet(Base + ''/'');',
+    '  AssertEquals(200, R.Status);',
+    '  AssertContains(''<title>Home · Test Site</title>'', R.Body);',
+    '  AssertContains(''2. Simple'', R.Body);',
+    '  AssertContains(''Laravel&#39;s Blade'', R.Body, ''values are made safe for HTML'');',
+    '  AssertContains(''nav-link active" href="/"'', R.Body, ''the menu shows where we are'');',
+    'end;',
+    '',
+    'procedure TWebPagesTests.ContactChecksTheForm;',
+    'var',
+    '  R: THttpResponse;',
+    'begin',
+    '  R := HttpPost(Base + ''/contact'', ''name=&email=nope&message=hi'', ''application/x-www-form-urlencoded'');',
+    '  AssertEquals(422, R.Status);',
+    '  AssertContains(''Please write your name.'', R.Body);',
+    '  AssertContains(''value="nope"'', R.Body, ''what was typed stays'');',
+    '  R := HttpPost(Base + ''/contact'', ''name=Ay%C5%9Fe&email=ayse%40example.com&message=Merhaba%2C+nas%C4%B1ls%C4%B1n%C4%B1z%3F'',',
+    '    ''application/x-www-form-urlencoded'');',
+    '  AssertEquals(200, R.Status);',
+    '  AssertContains(''Thank you, Ayşe!'', R.Body);',
+    'end;',
+    '',
+    'procedure TWebPagesTests.StaticFilesAreServed;',
+    'begin',
+    '  AssertContains(''.hero'', HttpGet(Base + ''/static/css/site.css'').Body);',
+    'end;',
+    '',
+    'initialization',
+    '  RegisterTests(TWebPagesTests);',
+    'end.'
+  ], Name, Ident)));
+
+  WriteText(Dir + 'deploy' + PathDelim + Name + '.service', Sub(Fill([
+    '# systemd unit for {{name}}. Install: copy the package''s files to /opt/{{name}},',
+    '# this file to /etc/systemd/system/, then: sudo systemctl enable --now {{name}}',
+    '[Unit]',
+    'Description={{name}}',
+    'After=network-online.target',
+    'Wants=network-online.target',
+    '',
+    '[Service]',
+    'Type=notify',
+    'ExecStart=/opt/{{name}}/{{name}}',
+    'ExecReload=/bin/kill -HUP $MAINPID',
+    'DynamicUser=yes',
+    'StateDirectory={{name}}',
+    'WorkingDirectory=/var/lib/{{name}}',
+    'Restart=on-failure',
+    'RestartSec=2',
+    'NoNewPrivileges=yes',
+    'ProtectSystem=strict',
+    '',
+    '[Install]',
+    'WantedBy=multi-user.target'
+  ], Name, Ident)));
+
+end;
+
 { the name of a unit the template makes, when the program would have that name too }
 function ClashingUnit(const Kind, Ident: string): string;
 var
@@ -1735,6 +2219,13 @@ begin
   L := LowerCase(Ident);
   if (Kind = 'lib') or (Kind = 'api') then
     Exit;                 { a library has no program; the API's program is <name>_api }
+  if Kind = 'site' then
+  begin
+    { the site's program is <name>_site }
+    if L = 'webpages' then
+      Result := 'WebPages';
+    Exit;
+  end;
   if L = 'appinfo' then
     Result := 'AppInfo'
   else if (Kind = 'console') and (L = 'greeting') then
@@ -1757,10 +2248,11 @@ begin
     Exit;
   end;
 
-  if (Kind <> 'console') and (Kind <> 'app') and (Kind <> 'lib') and (Kind <> 'service') and (Kind <> 'api') then
+  if (Kind <> 'console') and (Kind <> 'app') and (Kind <> 'lib') and (Kind <> 'service') and (Kind <> 'api') and
+    (Kind <> 'site') then
   begin
     Fail(Format('unknown project kind "%s"', [Kind]));
-    Hint('available kinds: console, app, lib, service, api');
+    Hint('available kinds: console, app, lib, service, api, site');
     Exit;
   end;
 
@@ -1788,6 +2280,8 @@ begin
     WriteServiceProject(Dir, Name, Ident)
   else if Kind = 'api' then
     WriteApiProject(Dir, Name, Ident)
+  else if Kind = 'site' then
+    WriteSiteProject(Dir, Name, Ident)
   else
     WriteConsoleProject(Dir, Name, Ident);
   WriteVSCodeFiles(Dir, Name, Ident, Kind);
