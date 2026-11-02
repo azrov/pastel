@@ -188,7 +188,7 @@ Goal: typical small business apps (forms, lists, dialogs) on Linux and Windows.
 
 - [x] Review all public APIs and file formats; then freeze them: `docs/api/stable.txt` lists the stable API and the tests fail when a line of it disappears; helpers for Pastel's own use are marked *Internal* ([compatibility.md](docs/compatibility.md))
 - [x] `pastel.toml` records the Pastel version it was made for (`pastel = "0.7"`); `pastel upgrade` for older projects; unknown settings are reported
-- [x] Complete documentation website (`tools/site`, published with GitHub Pages; every link and anchor is checked by the tests); all examples tested in CI
+- [x] Complete documentation website (`tools/website`, published with GitHub Pages; every link and anchor is checked by the tests); all examples tested in CI
 - [ ] Tested hosts: Linux x64 is tested; the CI jobs for Linux ARM64 (Raspberry Pi class) and Windows are set up but have not run yet
 - [x] CI on Linux, Linux ARM64 and Windows; release builds made automatically for a tag (`.github/workflows/release.yml`, `tools/pack-release.sh`)
 - [x] Security review of the web server and the database layer: request size, header size, timeouts and connection limits, path checks, `X-Forwarded-For` ([security.md](docs/security.md#what-the-web-server-and-the-database-layer-protect-against))
@@ -271,6 +271,7 @@ The same Pascal code and `.pform` forms on an Android phone or tablet. The app i
 - [ ] HTTP keep-alive and streaming answers; WebSockets and server-sent events (live updates for apps and pages)
 - [ ] OpenAPI description made from the routes; `pastel new client` makes the Pascal client for an API
 - [x] HTML pages from templates on the server (`Pastel.Pages`, `pastel new site`) — done early, in 1.5.0-beta.3
+- [x] Markdown to HTML (`Pastel.Markdown`); Pastel's own website made with Pastel (`tools/website`) — 1.5.0-beta.4
 - [ ] Jobs that survive a restart: a queue in the database
 - [ ] Metrics (Prometheus) and request tracing
 

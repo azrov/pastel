@@ -2,6 +2,12 @@
 
 The `pastel` tool and the framework. The VS Code extension has its own list: [vscode/CHANGELOG.md](vscode/CHANGELOG.md). What is planned is in [ROADMAP.md](ROADMAP.md).
 
+## 1.5.0-beta.4
+
+- `Pastel.Markdown`: Markdown to HTML the way GitHub shows it — headings with GitHub's ids, lists (nested, task boxes), tables with alignment, fenced code with its language, quotes, links, pictures, bare links, `~~strikethrough~~`; `TMarkdown.OnLink` changes every address, `HeadingIds` tells the ids ([docs/markdown.md](docs/markdown.md))
+- Pastel's website is made with Pastel: `tools/website` (Pastel.Markdown, Pastel.Pages and Bootstrap 5) makes a home page, a download page and the documentation with a menu, a search, *On this page*, code colors and dark mode, and checks every link and #anchor; Node.js is no longer needed for it
+- No more "Comment level 2 found" warnings when a program uses `Pastel.Pages`
+
 ## 1.5.0-beta.3
 
 - `Pastel.Pages`: HTML pages from templates, like Laravel's Blade — `{{ }}` made safe for HTML, `{!! !!}`, `@if`/`@elseif`/`@else`, `@unless`, `@isset`, `@foreach` with `loop`, `@forelse`/`@empty`, `@extends`, `@section`, `@yield`, `@include`, `@json`, comments, filters (`upper`, `lower`, `number`, `default`, `length`, `trim`, `json`, your own); errors with the file and line; templates read again when they change; safe on the web server's threads

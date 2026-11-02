@@ -731,6 +731,17 @@ Pastel.Log: type TLogLevel = (llDebug, llInfo, llWarn, llError, llOff)
 Pastel.Log: type TLogLineEvent = procedure(Level: TLogLevel; Line: string)
 Pastel.Log: type TLogger = class
 Pastel.Log: var Log: TLogger
+Pastel.Markdown: TMarkdown.constructor Create
+Pastel.Markdown: TMarkdown.destructor Destroy
+Pastel.Markdown: TMarkdown.function Render(const Text: string): string
+Pastel.Markdown: TMarkdown.property HeadingAnchors: Boolean
+Pastel.Markdown: TMarkdown.property HeadingIds: TStringList
+Pastel.Markdown: TMarkdown.property OnLink: TMarkdownLinkEvent
+Pastel.Markdown: function MarkdownSlug(const Heading: string): string
+Pastel.Markdown: function MarkdownTitle(const Text: string): string
+Pastel.Markdown: function MarkdownToHtml(const Text: string): string
+Pastel.Markdown: type TMarkdown = class
+Pastel.Markdown: type TMarkdownLinkEvent = function(Href: string): string
 Pastel.Menus: TMenuBar.class function DesktopOnly: Boolean
 Pastel.Menus: TMenuBar.destructor Destroy
 Pastel.Menus: TMenuBar.function OpenItem: TMenuItem

@@ -1,0 +1,18 @@
+# Pastel's website (https://<owner>.github.io/pastel): the home page, the
+# download page and the documentation from the Markdown in the repository,
+# made with Pastel itself (Pastel.Markdown and Pastel.Pages, Bootstrap 5).
+#
+#   pastel run                 -> ../../site, the folder to publish
+#   pastel run -- --check      only check every link between pages and every #anchor
+#   pastel run -- --out DIR    somewhere else
+# SITE_REPO=owner/name points the download buttons and the links to source files at GitHub.
+
+[project]
+name = "website"
+version = "1.0.0"
+pastel = "1.5"
+type = "console"
+
+[build]
+main = "src/main.pas"
+mode = "objfpc"

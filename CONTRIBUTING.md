@@ -15,7 +15,6 @@ You need Free Pascal 3.2.2 (`sudo apt install fpc fpc-source`), Node.js 20 for t
 ```sh
 ./build.sh                       # bin/pastel
 (cd vscode && npm ci && npm run compile)
-(cd tools/site && npm ci)        # the documentation website and its link check
 sh build.sh test                 # everything: unit, framework, example and end-to-end tests
 ```
 
@@ -32,7 +31,7 @@ The database tests also run against PostgreSQL and MySQL/MariaDB when `PASTEL_TE
 | `examples/` | Complete programs; each has tests and is built in CI |
 | `docs/` | The guides and the API reference (`docs/api` is generated) |
 | `tests/` | Unit tests of the tool, `run.sh` (end-to-end), `perf.sh` (performance) |
-| `tools/` | The documentation website, the release scripts and `android-dex.sh` |
+| `tools/` | The website (`tools/website`, a Pastel program), the release scripts and `android-dex.sh` |
 
 ## Making a change
 
@@ -47,7 +46,7 @@ The database tests also run against PostgreSQL and MySQL/MariaDB when `PASTEL_TE
    - a new example program: a `README.md` and a line in [docs/README.md](docs/README.md#examples);
    - a line in [CHANGELOG.md](CHANGELOG.md).
 
-   `tests/docs-coverage.sh` fails when a control, a command or an example has no documentation, and the website build fails on broken links.
+   `tests/docs-coverage.sh` fails when a control, a command or an example has no documentation, and the website (`tools/website`) fails on broken links and #anchors.
 5. **Keep compatibility:** from 1.0 on, nothing in `docs/api/stable.txt` may be removed or changed in 1.x; add new things instead. See [docs/compatibility.md](docs/compatibility.md).
 6. Run `sh build.sh test` and open a pull request.
 

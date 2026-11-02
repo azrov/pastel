@@ -1,0 +1,74 @@
+@extends('layouts.main')
+
+@section('content')
+<div class="container py-5 download">
+  <h1 class="fw-bold">Download Pastel</h1>
+  <p class="lead text-body-secondary">The newest release is <strong>{{ version }}</strong>. Pastel needs <a href="https://www.freepascal.org/">Free Pascal</a> 3.2 or newer; <code>pastel doctor</code> checks the rest.</p>
+
+  <div class="row g-4 mt-2">
+    <div class="col-lg-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h4">Linux</h2>
+          <p>Free Pascal, then Pastel into <code>~/.pastel</code> with <code>pastel</code> on your <code>PATH</code>:</p>
+<pre><code class="language-sh">sudo apt install fpc fpc-source
+curl -fsSL {{ releases }}/download/install.sh | sh
+pastel doctor</code></pre>
+          <p class="small text-body-secondary mb-0">Desktop apps also use SDL2 and FreeType: <code>sudo apt install libsdl2-2.0-0 libfreetype6</code>. x86-64 and ARM64 (Raspberry Pi).</p>
+        </div>
+        <div class="card-footer bg-transparent border-0 pb-3">
+          <a class="btn btn-primary" href="{{ releases }}">The .tar.gz from Releases</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h4">Windows</h2>
+          <ol class="mb-3">
+            <li>Install Free Pascal from <a href="https://www.freepascal.org/download.html">freepascal.org</a>.</li>
+            <li>Unpack <code>pastel-{{ version }}-windows-x86_64.zip</code>, for example to <code>C:\Pastel</code>.</li>
+            <li>Add its <code>bin</code> folder to <code>PATH</code>, open a new terminal and run <code>pastel doctor</code>.</li>
+          </ol>
+          <p class="small text-body-secondary mb-0">Windows programs get <code>SDL2.dll</code> and <code>freetype.dll</code> next to them by themselves.</p>
+        </div>
+        <div class="card-footer bg-transparent border-0 pb-3">
+          <a class="btn btn-primary" href="{{ releases }}">The .zip from Releases</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h4">VS Code extension</h2>
+          <p>The Welcome page and New Project wizard, the form designer, completion, debugging, tests and the live preview.</p>
+          <p>Search for <strong>Pastel</strong> in the Extensions view, or install the <code>.vsix</code> of the release:</p>
+<pre><code class="language-sh">code --install-extension pastel-vscode-*.vsix</code></pre>
+        </div>
+        <div class="card-footer bg-transparent border-0 pb-3">
+          <a class="btn btn-outline-primary" href="vscode.html">About the extension</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4 mt-4">
+    <div class="col-lg-6">
+      <h2 class="h4">Build it from the sources</h2>
+<pre><code class="language-sh">git clone {{ github }}.git pastel
+cd pastel
+./build.sh            # Windows: build.bat
+ln -s "$PWD/bin/pastel" ~/.local/bin/pastel</code></pre>
+    </div>
+    <div class="col-lg-6">
+      <h2 class="h4">Building for other platforms</h2>
+      <ul>
+        <li><strong>Windows programs on Linux:</strong> <code>pastel doctor --install windows</code> (needs <code>fpc-source</code>).</li>
+        <li><strong>Android:</strong> <code>pastel doctor --install android</code>, then <code>pastel run --target android</code>; see <a href="android.html">Android</a>.</li>
+        <li><strong>Raspberry Pi:</strong> a cross-compiler, most easily with <a href="https://github.com/LongDirtyAnimAlf/fpcupdeluxe">fpcupdeluxe</a>.</li>
+      </ul>
+      <p>Next: <a href="getting-started.html">Getting started</a> · <a href="changelog.html">What is new</a></p>
+    </div>
+  </div>
+</div>
+@endsection

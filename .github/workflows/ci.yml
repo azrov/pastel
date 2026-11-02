@@ -38,10 +38,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Build the VS Code extension and the website tool (the tests use them)
-        run: |
-          (cd vscode && npm ci && npm run compile)
-          (cd tools/site && npm ci)
+      - name: Build the VS Code extension (the tests use it)
+        run: (cd vscode && npm ci && npm run compile)
       - name: Set up building for Windows
         run: |
           ./build.sh

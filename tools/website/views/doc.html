@@ -1,0 +1,46 @@
+@extends('layouts.main')
+
+@section('content')
+<div class="container-fluid px-lg-4">
+  <div class="row">
+    <aside class="col-lg-3 col-xl-2 docs-sidebar">
+      <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+        <div class="offcanvas-header border-bottom">
+          <h5 class="offcanvas-title" id="sidebarLabel">Documentation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+          <nav class="docs-nav w-100">
+@foreach(nav as group)
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start {{ group.open ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#{{ group.id }}" aria-expanded="{{ group.open ? 'true' : 'false' }}">{{ group.name }}</button>
+              <div class="collapse {{ group.open ? 'show' : '' }}" id="{{ group.id }}">
+@foreach(group.links as link)
+                <a href="{{ link.href }}"{!! link.current ? ' class="current" aria-current="page"' : '' !!}>{{ link.title }}</a>
+@endforeach
+              </div>
+            </div>
+@endforeach
+          </nav>
+        </div>
+      </div>
+    </aside>
+    <main class="col-12 col-lg-9 col-xl-8 docs-main">
+      <article class="markdown">
+{!! html !!}
+      </article>
+      <p class="edit mt-5"><a href="{{ edit }}">Improve this page on GitHub</a></p>
+    </main>
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+@if(contents.count > 1)
+      <div class="sticky">
+        <div class="toc-title">On this page</div>
+@foreach(contents as c)
+        <a href="#{{ c.id }}">{{ c.text }}</a>
+@endforeach
+      </div>
+@endif
+    </div>
+  </div>
+</div>
+@endsection

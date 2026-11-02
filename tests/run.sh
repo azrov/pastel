@@ -23,7 +23,7 @@ mkdir -p "$WORK/units"
 "$WORK/pform_test"
 "$FPC" -Mobjfpc -Sh -vew -FU"$WORK/units" -Fucli/src -Fuframework/src -o"$WORK/format_test" tests/format_test.pas >/dev/null
 "$WORK/format_test"
-"$PASTEL" fmt --check cli framework tests examples >/dev/null || { "$PASTEL" fmt --check cli framework tests examples; exit 1; }
+"$PASTEL" fmt --check cli framework tests examples tools/website >/dev/null || { "$PASTEL" fmt --check cli framework tests examples tools/website; exit 1; }
 echo "fmt: Pastel's own code is formatted"
 
 if [ -f vscode/out/lang/apidoc.js ] && command -v node >/dev/null; then
@@ -32,13 +32,15 @@ if [ -f vscode/out/lang/apidoc.js ] && command -v node >/dev/null; then
   if ! diff -rq -x stable.txt docs/api "$WORK/api" >/dev/null; then
     echo "docs/api is out of date: run \"npm run apidoc\" in vscode/"; diff -r -x stable.txt docs/api "$WORK/api" | head -20; exit 1
   fi
-  if [ -d tools/site/node_modules ]; then
-    echo "== the documentation's links"
-    node tools/site/build.mjs --check || exit 1
-  fi
   echo "== the stable API is still there"
   node vscode/out/lang/apidoc.js --check-stable framework/src docs/api || exit 1
 fi
+echo "== the website: every link between pages and every #anchor"
+out="$(cd tools/website && "$PASTEL" run -- --check 2>&1)" || { echo "$out"; exit 1; }
+echo "$out" | tail -1
+out="$(cd tools/website && "$PASTEL" run -- --out "$WORK/site" 2>&1)" || { echo "$out"; exit 1; }
+expect "the website has its pages"        '[ -f "$WORK/site/index.html" ] && [ -f "$WORK/site/download.html" ] && [ -f "$WORK/site/api/pastel.ui.html" ] && [ -f "$WORK/site/search.json" ]'
+expect "the docs link to each other"      'grep -q "href=\"getting-started.html\"" "$WORK/site/docs.html"'
 echo "== every feature is documented"
 PASTEL="$PASTEL" sh tests/docs-coverage.sh || exit 1
 echo "== framework tests"

@@ -1,4 +1,4 @@
-{ Pastel - HTML pages from templates, in the style of Laravel's Blade.
+(* Pastel - HTML pages from templates, in the style of Laravel's Blade.
 
   A template is an .html file in views/ (views/home.html is 'home',
   views/shop/list.html is 'shop.list'):
@@ -29,7 +29,7 @@
   Values come from the data (a JSON object), names inside it with dots
   (user.name, items.0.title). See docs/pages.md for everything.
 
-  Part of the Pastel project, MIT License. }
+  Part of the Pastel project, MIT License. *)
 unit Pastel.Pages;
 
 {$mode objfpc}{$H+}
@@ -42,8 +42,8 @@ uses
 type
   EPageError = class(Exception);
 
-  { A filter: {{ name | upper }}, {{ price | number:2 }}. Value is what is
-    left of the bar, Arg what follows the colon ('' when there is none). }
+  // A filter: {{ name | upper }}, {{ price | number:2 }}. Value is what is
+  // left of the bar, Arg what follows the colon ('' when there is none).
   TPageFilter = function(const Value, Arg: string): string;
 
   { The templates of one folder, read once and again when a file changes. }
@@ -75,7 +75,7 @@ procedure SetViewsFolder(const Folder: string);
 function FindAppFolder(const Name: string): string;
 { A template as text, with the data (freed). }
 function RenderPage(const Template: string; Data: TJSONObject = nil): string;
-{ Adds a filter for {{ value | name }} and {{ value | name:arg }}. }
+// Adds a filter for {{ value | name }} and {{ value | name:arg }}.
 procedure RegisterPageFilter(const Name: string; Filter: TPageFilter);
 { < > & " ' as HTML entities. }
 function HtmlEscape(const S: string): string;
@@ -855,7 +855,7 @@ begin
     begin
       if Starts('@{{') then
       begin
-        { @{{ x }} is written as {{ x }} (for JavaScript frameworks) }
+        // @{{ x }} is written as {{ x }} (for JavaScript frameworks)
         Skip(1);
         Buf := Buf + '{{';
         Skip(2);

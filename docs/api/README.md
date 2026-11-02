@@ -28,6 +28,7 @@ Made from the declarations and comments in `framework/src` (`npm run apidoc` in 
 | [Pastel.Jwt](pastel.jwt.md) | JSON Web Tokens (JWT) signed with HS256. |
 | [Pastel.Lang](pastel.lang.md) | Translations and the number and date formats of a language. |
 | [Pastel.Log](pastel.log.md) | Logging. |
+| [Pastel.Markdown](pastel.markdown.md) | Markdown to HTML, the way GitHub shows it. |
 | [Pastel.Menus](pastel.menus.md) | Menus: a menu bar, pop-up (right click) menus and keyboard |
 | [Pastel.NativeDialogs](pastel.nativedialogs.md) | The system's own open, save and folder dialogs. |
 | [Pastel.Pages](pastel.pages.md) | HTML pages from templates, in the style of Laravel's Blade. |
