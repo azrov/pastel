@@ -19,7 +19,7 @@ You need Free Pascal 3.2.2 (`sudo apt install fpc fpc-source`), Node.js 20 for t
 sh build.sh test                 # everything: unit, framework, example and end-to-end tests
 ```
 
-The database tests also run against PostgreSQL and MySQL/MariaDB when `PASTEL_TEST_POSTGRES_URL` and `PASTEL_TEST_MYSQL_URL` are set (see `.github/workflows/ci.yml`). The VS Code extension has its own tests: `npm test` and `npm run test:integration -- <a new app project>` in `vscode/`.
+The database tests also run against PostgreSQL and MySQL/MariaDB when `PASTEL_TEST_POSTGRES_URL` and `PASTEL_TEST_MYSQL_URL` are set (see `.github/workflows/ci.yml`). The Android end-to-end tests run when `ppcrossa64` and the ARM 64-bit binutils are there, the `.apk` ones with `aapt`, `zipalign`, `apksigner` and `android-sdk-platform-23` (see [docs/android.md](docs/android.md)). The VS Code extension has its own tests: `npm test` and `npm run test:integration -- <a new app project>` in `vscode/`.
 
 ## How the repository is organized
 
@@ -27,11 +27,12 @@ The database tests also run against PostgreSQL and MySQL/MariaDB when `PASTEL_TE
 |---|---|
 | `cli/` | The `pastel` tool: commands, builder, code generation for forms, packaging |
 | `framework/src/` | The units programs use (`Pastel.*`); `framework/tests/` tests them |
+| `framework/android/` | Pastel's small Java activity for Android and its `classes.dex` (rebuilt with `tools/android-dex.sh` when the Java changes) |
 | `vscode/` | The VS Code extension: designer, Pascal code intelligence, tasks |
 | `examples/` | Complete programs; each has tests and is built in CI |
 | `docs/` | The guides and the API reference (`docs/api` is generated) |
 | `tests/` | Unit tests of the tool, `run.sh` (end-to-end), `perf.sh` (performance) |
-| `tools/` | The documentation website and the release scripts |
+| `tools/` | The documentation website, the release scripts and `android-dex.sh` |
 
 ## Making a change
 

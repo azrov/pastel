@@ -21,6 +21,9 @@ begin
   H := ANativeWindow_getHeight(AndroidWindow);
   if (W <= 0) or (H <= 0) then
     Exit;
+  { the keyboard covers the bottom: the form is laid out in what is left, so the edit stays in sight }
+  if (AndroidVisibleBottom > H div 3) and (AndroidVisibleBottom < H) then
+    H := AndroidVisibleBottom;
   FWidth := Max(1, Round(W / FScale));
   FHeight := Max(1, Round(H / FScale));
   NeedsLayout := True;
@@ -107,6 +110,11 @@ begin
       end;
     acDestroy:
       FTerminated := True;
+    acText:
+      begin
+        { letters from the on-screen keyboard, in the keyboard's language }
+        FMainForm.HandleTextInput(AndroidTakeText);
+      end;
   end;
   AndroidCommandDone;
 end;
@@ -130,6 +138,7 @@ begin
   case Action of
     AMOTION_EVENT_ACTION_DOWN:
       begin
+        FFlingActive := False;     { a finger stops a flinging list }
         FTouchDown := True;
         FTouchScrolling := False;
         FLongPressDone := False;
@@ -159,9 +168,19 @@ begin
           FMainForm.HandleMouseUp(-10000, -10000, 1);
           FMainForm.HandleMouseMove(FTouchStartX, FTouchStartY);
           FScrollFromY := Y;
+          FFlingV := 0;
+          FSampleY := Y;
+          FSampleTime := NowMs;
         end;
         if FTouchScrolling then
         begin
+          { the finger's speed, for flinging when it leaves }
+          if NowMs > FSampleTime then
+          begin
+            FFlingV := 0.6 * FFlingV + 0.4 * ((Y - FSampleY) / (NowMs - FSampleTime));
+            FSampleY := Y;
+            FSampleTime := NowMs;
+          end;
           Steps := (Y - FScrollFromY) div WheelStep;
           if Steps <> 0 then
           begin
@@ -181,9 +200,20 @@ begin
           FLastTapX := X;
           FLastTapY := Y;
         end;
+        { a quick swipe goes on: the list keeps moving after the finger }
+        if FTouchScrolling and (NowMs - FSampleTime < 80) and (Abs(FFlingV) > 0.3) then
+        begin
+          FFlingActive := True;
+          FFlingAccum := 0;
+          FFlingLast := NowMs;
+          FFlingX := FTouchStartX;
+          FFlingY := FTouchStartY;
+          FFlingV := EnsureRange(FFlingV, -6, 6);
+        end;
         FTouchDown := False;
         { no mouse rests over anything on a touch screen }
-        FMainForm.HandleMouseLeave;
+        if not FFlingActive then
+          FMainForm.HandleMouseLeave;
       end;
     AMOTION_EVENT_ACTION_CANCEL:
       begin
@@ -192,6 +222,36 @@ begin
         FTouchDown := False;
         FMainForm.HandleMouseLeave;
       end;
+  end;
+end;
+
+{ one step of a fling: as far as the speed goes since the last step; the speed fades like Android's lists }
+procedure TApplication.AndroidFling;
+var
+  NowMs: QWord;
+  Dt: Double;
+  Steps: Integer;
+begin
+  if not FFlingActive then
+    Exit;
+  NowMs := GetTickCount64;
+  Dt := NowMs - FFlingLast;
+  if Dt <= 0 then
+    Exit;
+  FFlingLast := NowMs;
+  FFlingAccum := FFlingAccum + FFlingV * Dt;
+  Steps := Trunc(FFlingAccum / WheelStep);
+  if Steps <> 0 then
+  begin
+    FMainForm.HandleMouseMove(FFlingX, FFlingY);
+    FMainForm.HandleMouseWheel(0, Steps);
+    FFlingAccum := FFlingAccum - Steps * WheelStep;
+  end;
+  FFlingV := FFlingV * Exp(-Dt / 325);
+  if Abs(FFlingV) < 0.05 then
+  begin
+    FFlingActive := False;
+    FMainForm.HandleMouseLeave;
   end;
 end;
 
@@ -325,6 +385,8 @@ var
 begin
   if FTouchDown then
     Timeout := Min(Timeout, 50);
+  if FFlingActive then
+    Timeout := Min(Timeout, 16);
   Id := ALooper_pollOnce(Timeout, nil, nil, nil);
   while Id >= 0 do
   begin
@@ -337,6 +399,7 @@ begin
     Id := ALooper_pollOnce(0, nil, nil, nil);
   end;
   AndroidLongPress;
+  AndroidFling;
 end;
 
 { the on-screen keyboard comes up for an edit and goes when the focus leaves it }

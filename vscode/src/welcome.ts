@@ -100,12 +100,12 @@ export class WelcomePanel {
         break;
       }
       case 'create':
-        await this.create(m.kind, m.name, m.location, Array.isArray(m.platforms) ? m.platforms : []);
+        await this.create(m.kind, m.name, m.location, Array.isArray(m.platforms) ? m.platforms : [], !!m.phone);
         break;
     }
   }
 
-  private async create(kind: string, name: string, location: string, platforms: string[]): Promise<void> {
+  private async create(kind: string, name: string, location: string, platforms: string[], phone = false): Promise<void> {
     const bad = validProjectName(name);
     if (bad) {
       this.panel.webview.postMessage({ type: 'failed', message: bad });
@@ -122,7 +122,8 @@ export class WelcomePanel {
       this.panel.webview.postMessage({ type: 'failed', message: `The folder cannot be made: ${(e as Error).message}` });
       return;
     }
-    const r = await runPastel(['new', kind, name], location);
+    // --phone: forms made for small, upright screens
+    const r = await runPastel(phone ? ['new', kind, name, '--phone'] : ['new', kind, name], location);
     if (r.code !== 0) {
       this.panel.webview.postMessage({ type: 'failed', message: (r.stderr || r.stdout).replace(/\x1b\[[0-9;]*m/g, '').trim() });
       return;

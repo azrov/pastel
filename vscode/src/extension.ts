@@ -336,7 +336,11 @@ async function newForm(): Promise<void> {
   if (!name) {
     return;
   }
-  const r = await runPastel(['new', 'form', name.trim()], root);
+  // an app made only for phones gets phone forms
+  let toml = '';
+  try { toml = fs.readFileSync(path.join(root, 'pastel.toml'), 'utf8'); } catch { toml = ''; }
+  const phoneOnly = /^platforms\s*=\s*\[\s*"android(-arm64)?"\s*\]/m.test(toml);
+  const r = await runPastel(phoneOnly ? ['new', 'form', name.trim(), '--phone'] : ['new', 'form', name.trim()], root);
   if (r.code !== 0) {
     vscode.window.showErrorMessage('Pastel: ' + (r.stderr || r.stdout).replace(/\x1b\[[0-9;]*m/g, '').trim());
     return;

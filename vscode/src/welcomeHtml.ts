@@ -292,7 +292,7 @@ export function welcomeHtml(nonce: string, data: { recent: RecentProject[]; loca
     const platforms = [...document.querySelectorAll('#platforms input')].filter(c => c.checked).map(c => c.value);
     $('finish').disabled = true;
     $('msg').className = 'msg'; $('msg').textContent = 'Creating…';
-    vscode.postMessage({ type: 'create', kind: chosen.kind, name: $('name').value.trim(), location: $('location').value.trim(), platforms });
+    vscode.postMessage({ type: 'create', kind: chosen.kind, name: $('name').value.trim(), location: $('location').value.trim(), platforms, phone: !!chosen.phone });
   });
 
   window.addEventListener('message', e => {

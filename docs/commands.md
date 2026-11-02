@@ -22,6 +22,8 @@ pastel new api shop             # a web API with a database, models, migrations 
 pastel new lib text-tools       # units for other projects (no program of its own)
 
 pastel new form Settings        # in an app: src/forms/Settings.pform/.pas, added to main.pas
+pastel new app shop --phone     # an app for phones (android.md): stacked, finger-sized controls
+pastel new form Details --phone # a form for phones
 pastel new control StarRating   # in an app or lib: src/controls/starrating.pas
 pastel new model Customer name:string! email:string age:integer
                                 # a table: its migration, src/models/customers.pas and tests

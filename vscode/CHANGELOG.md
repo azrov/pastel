@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.1
+
+- The wizard's Android App and New Form… in an app made for phones make forms for phones (`--phone`)
+
 ## 1.5.0
 
 - The New Project wizard makes Android apps (*Mobile → Android App*), and a desktop app can add Android to its platforms

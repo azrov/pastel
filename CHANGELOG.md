@@ -2,6 +2,12 @@
 
 The `pastel` tool and the framework. The VS Code extension has its own list: [vscode/CHANGELOG.md](vscode/CHANGELOG.md). What is planned is in [ROADMAP.md](ROADMAP.md).
 
+## 1.5.0-beta.2
+
+- Android: every letter the on-screen keyboard types (ş, ğ, é, other alphabets, emoji) arrives, through a small Java activity in the `.apk` (`dev.pastel.PastelActivity`, built once into `framework/android/classes.dex`)
+- Android: a quick swipe lets lists glide on; the form is laid out above the on-screen keyboard
+- `pastel new app --phone`, `pastel new form --phone`: forms for phones, stacked, with finger-sized controls; the wizard's Android App and New Form… in phone apps use them
+
 ## 1.5.0-beta.1
 
 Android, as a preview.

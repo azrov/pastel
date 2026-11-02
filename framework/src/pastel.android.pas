@@ -39,7 +39,7 @@ type
   end;
 
   TAndroidCommand = (acNone, acInputChanged, acWindowCreated, acWindowDestroyed, acWindowResized,
-    acRedraw, acResume, acPause, acConfigChanged, acFocusChanged, acDestroy, acWake);
+    acRedraw, acResume, acPause, acConfigChanged, acFocusChanged, acDestroy, acWake, acText);
 
 const
   LooperIdMain = 1;
@@ -96,6 +96,12 @@ function __android_log_write(Prio: LongInt; Tag, Text: PChar): LongInt; cdecl; e
 { Android calls this when the app starts (exported by the app's libmain.so). }
 procedure ANativeActivity_onCreate(Activity: PANativeActivity; SavedState: Pointer; SavedStateSize: PtrUInt); cdecl;
 
+{ Text typed on the on-screen keyboard, from Pastel's Java activity (dev.pastel.PastelActivity);
+  exported by the app's libmain.so. }
+procedure Java_dev_pastel_PastelActivity_nativeText(Env: Pointer; Cls: Pointer; Text: Pointer); cdecl;
+{ The app thread: the text typed since the last acText. }
+function AndroidTakeText: string;
+
 { A line in the device log (adb logcat -s pastel). }
 procedure AndroidLog(const Msg: string);
 { The app thread: takes the commands waiting in the pipe. }
@@ -123,6 +129,8 @@ var
   AndroidPaused: Boolean = False;
   AndroidDestroyRequested: Boolean = False;
   AndroidAppFinished: Boolean = False;
+  { The part of the window not covered by the on-screen keyboard (bottom = -1: not known). }
+  AndroidVisibleBottom: Integer = -1;
 {$ENDIF}
 
 implementation
@@ -133,6 +141,7 @@ var
   Lock: TRTLCriticalSection;
   Ack: PRTLEvent;
   PendingWindow, PendingInput: Pointer;
+  PendingText: string = '';
   AppThread: TThreadID = TThreadID(0);
 
 procedure AndroidLog(const Msg: string);
@@ -200,6 +209,46 @@ begin
   finally
     LeaveCriticalSection(Lock);
   end;
+end;
+
+function AndroidTakeText: string;
+begin
+  EnterCriticalSection(Lock);
+  try
+    Result := PendingText;
+    PendingText := '';
+  finally
+    LeaveCriticalSection(Lock);
+  end;
+end;
+
+type
+  { the start of JNI's function table: what nativeText needs (GetStringUTFChars is the 170th entry) }
+  TJniGetChars = function(Env: Pointer; S: Pointer; IsCopy: PByte): PChar; cdecl;
+  TJniReleaseChars = procedure(Env: Pointer; S: Pointer; Chars: PChar); cdecl;
+
+procedure Java_dev_pastel_PastelActivity_nativeText(Env: Pointer; Cls: Pointer; Text: Pointer); cdecl;
+var
+  Table: PPointer;
+  Chars: PChar;
+  S: string;
+begin
+  if (Env = nil) or (Text = nil) then
+    Exit;
+  Table := PPointer(Env)^;
+  Chars := TJniGetChars(Table[169])(Env, Text, nil);
+  if Chars = nil then
+    Exit;
+  S := StrPas(Chars);
+  TJniReleaseChars(Table[170])(Env, Text, Chars);
+  EnterCriticalSection(Lock);
+  try
+    PendingText := PendingText + S;
+  finally
+    LeaveCriticalSection(Lock);
+  end;
+  if AppThread <> TThreadID(0) then
+    Send(acText);
 end;
 
 function AndroidDensity: Integer;
@@ -319,8 +368,17 @@ begin
   SendAndWait(acInputChanged);
 end;
 
+type
+  TARect = record
+    left, top, right, bottom: LongInt;
+  end;
+  PARect = ^TARect;
+
 procedure OnContentRectChanged(Activity: PANativeActivity; Rect: Pointer); cdecl;
 begin
+  { the on-screen keyboard came or went: the form uses the part above it }
+  if Rect <> nil then
+    AndroidVisibleBottom := PARect(Rect)^.bottom;
   Send(acWindowResized);
 end;
 

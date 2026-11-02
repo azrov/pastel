@@ -22,7 +22,7 @@ type
     PassThrough: TStringArray;  { everything after "--" }
     Target: string;
     Release, Verbose, All, Help, Watch, Check, NoBuild, Dark, Install: Boolean;
-    Json, Stdin, NoRun: Boolean;
+    Json, Stdin, NoRun, Phone: Boolean;
     Output, Layout, Database, Git, SubPath, Branch: string;
     Width, Height: Integer;
   end;
@@ -41,7 +41,7 @@ begin
   WriteLn;
   WriteLn(Bold('Commands:'));
   WriteLn('  new <kind> <name>      Create a new project (kinds: console, app, lib, service, api)');
-  WriteLn('  new form <Name>        Add a window to an app');
+  WriteLn('  new form <Name>        Add a window to an app (--phone: made for phones)');
   WriteLn('  new control <Name>     Add a control of your own (src/controls/)');
   WriteLn('  new model <Name> f:type  A table: migration, unit, tests (name:string! age:integer)');
   WriteLn('  build                  Compile the project');
@@ -120,6 +120,8 @@ begin
       CL.All := True
     else if A = '--no-build' then
       CL.NoBuild := True
+    else if A = '--phone' then
+      CL.Phone := True
     else if A = '--dark' then
       CL.Dark := True
     else if A = '--install' then
@@ -222,6 +224,7 @@ function CmdNew(const CL: TCommandLine): Integer;
 var
   Root, Kind: string;
 begin
+  PhoneTemplates := CL.Phone;
   if (Length(CL.Positional) = 2) and SameText(CL.Positional[0], 'form') then
   begin
     Root := TPastelProject.FindRoot(GetCurrentDir);
@@ -451,7 +454,7 @@ begin
     end;
     Adb_(['logcat', '-c'], False);
     Status('Starting', Id);
-    if not Adb_(['shell', 'am', 'start', '-n', Id + '/android.app.NativeActivity'], False) then
+    if not Adb_(['shell', 'am', 'start', '-n', Id + '/dev.pastel.PastelActivity'], False) then
       Exit;
     Status('Log', 'what the app writes (WriteLn, errors); Ctrl+C stops showing it, the app keeps running');
     Args.Clear;

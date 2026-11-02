@@ -62,7 +62,7 @@ test('an Android app is an app built for Android', () => {
   const boxes = [...doc.querySelectorAll('#platforms input')];
   assert.deepStrictEqual(boxes.map((b: any) => b.value + ':' + b.checked), ['Windows:false', 'Linux:false', 'Android:true']);
   $('finish').click();
-  assert.deepStrictEqual(last('create'), { type: 'create', kind: 'app', name: 'my-phone-app', location: '/home/a/PastelProjects', platforms: ['Android'] });
+  assert.deepStrictEqual(last('create'), { type: 'create', kind: 'app', name: 'my-phone-app', location: '/home/a/PastelProjects', platforms: ['Android'], phone: true });
   w.dispatchEvent(new w.MessageEvent('message', { data: { type: 'failed', message: 'x' } }));
   $('back').click();
 });
@@ -92,7 +92,7 @@ test('a desktop app: name, folder, platforms, Create', () => {
   assert.deepStrictEqual(pl.map((b: any) => b.value + ':' + b.checked), ['Windows:true', 'Linux:true', 'Android:false'], 'a desktop app can add Android');
   pl[1].checked = false;
   $('finish').click();
-  assert.deepStrictEqual(last('create'), { type: 'create', kind: 'app', name: 'shop', location: 'C:\\Users\\a\\Projects', platforms: ['Windows'] });
+  assert.deepStrictEqual(last('create'), { type: 'create', kind: 'app', name: 'shop', location: 'C:\\Users\\a\\Projects', platforms: ['Windows'], phone: false });
   w.dispatchEvent(new w.MessageEvent('message', { data: { type: 'failed', message: 'shop exists already.' } }));
   assert.strictEqual($('msg').textContent, 'shop exists already.');
   assert.ok(!$('finish').disabled, 'it can be tried again');

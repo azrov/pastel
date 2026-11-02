@@ -79,6 +79,12 @@ type
     FTouchDown, FTouchScrolling, FLongPressDone: Boolean;
     FTouchStartX, FTouchStartY, FTouchX, FTouchY, FScrollFromY, FLastTapX, FLastTapY: Integer;
     FTouchTime, FLastTapTime: QWord;
+    { flinging: the list goes on moving after the finger left, slower and slower }
+    FFlingActive: Boolean;
+    FFlingV, FFlingAccum: Double;          { layout units per ms; the part of a wheel step not done yet }
+    FFlingLast, FSampleTime: QWord;
+    FSampleY, FFlingX, FFlingY: Integer;
+    procedure AndroidFling;
     procedure AndroidSizeFromWindow;
     procedure AndroidCreateWindow;
     procedure AndroidPresent;

@@ -260,9 +260,9 @@ The same Pascal code and `.pform` forms on an Android phone or tablet. The app i
 - [ ] `.aab` for Google Play
 - [x] `pastel run --target android`: installs on the connected phone (`adb`) and shows its log
 - [x] Touch: tap, double tap, long press (= right click), scrolling with a finger; the on-screen keyboard for edits; the back button
-- [ ] Flinging lists; the on-screen keyboard moves the form so the edit stays visible; letters beyond A–Z from the on-screen keyboard (a small Java bridge)
+- [x] Flinging lists; the form keeps above the on-screen keyboard; every letter the on-screen keyboard types (a small Java activity)
 - [ ] Tested on real phones (being done now)
-- [ ] Phone layout: forms for small, upright screens (`pastel new form --phone`), bigger touch targets
+- [x] Phone layout: forms for small, upright screens (`pastel new app --phone`, `pastel new form --phone`), finger-sized controls
 - [x] The app's life: pausing and resuming, the folder for its data, settings that survive an update; dark mode and language from the phone
 - [ ] An example: the salon's agenda on the phone, syncing with the same server as the desktop
 

@@ -1224,7 +1224,7 @@ const
 var
   Opts: TBuildOptions;
   SoPath, Work, Res, Aapt, Zipalign, Signer, Keytool, Jar, Keystore, Alias, Pass, Icon, Orientation, Dist, Output,
-    Unaligned, Aligned, Err, Manifest: string;
+    Unaligned, Aligned, Err, Manifest, Dex: string;
   Api, I: Integer;
   Args: TStringList;
   L: TStringList;
@@ -1327,9 +1327,9 @@ begin
       '  <uses-sdk android:minSdkVersion="23" android:targetSdkVersion="' + IntToStr(Max(23, Api)) + '"/>' + LineEnding +
       '  <uses-permission android:name="android.permission.INTERNET"/>' + LineEnding +
       '  <application android:label="@string/app_name" android:icon="@mipmap/ic_launcher"' + LineEnding +
-      '      android:hasCode="false" android:extractNativeLibs="true"' + LineEnding +
+      '      android:hasCode="true" android:extractNativeLibs="true"' + LineEnding +
       '      android:theme="@android:style/Theme.NoTitleBar">' + LineEnding +
-      '    <activity android:name="android.app.NativeActivity" android:label="@string/app_name"' + LineEnding +
+      '    <activity android:name="dev.pastel.PastelActivity" android:label="@string/app_name"' + LineEnding +
       '        android:exported="true" android:launchMode="singleTask"' + LineEnding +
       '        android:screenOrientation="' + XmlText(Orientation) + '"' + LineEnding +
       '        android:windowSoftInputMode="adjustResize"' + LineEnding +
@@ -1344,6 +1344,14 @@ begin
       '</manifest>';
     Save(Work + 'AndroidManifest.xml', Manifest);
     { the program goes in as lib/arm64-v8a/libmain.so }
+    { Pastel's activity: a NativeActivity that also passes on the letters the on-screen keyboard types }
+    Dex := ExpandFileName(IncludeTrailingPathDelimiter(FrameworkDir) + '..' + PathDelim + 'android' + PathDelim + 'classes.dex');
+    if not FileExists(Dex) then
+    begin
+      Fail('Pastel''s Android activity is missing: ' + Dex);
+      Exit;
+    end;
+    CopyFile(Dex, Work + 'classes.dex', False);
     ForceDirectories(Work + 'lib' + PathDelim + 'arm64-v8a');
     CopyFile(Project.Root + SoPath, Work + 'lib' + PathDelim + 'arm64-v8a' + PathDelim + 'libmain.so', False);
     Unaligned := Work + 'unaligned.apk';
@@ -1351,7 +1359,7 @@ begin
     Status('Packing', 'the .apk (' + AndroidAppId(Project) + ', Android 6 and newer)');
     if not Run(Aapt, ['package', '-f', '-M', 'AndroidManifest.xml', '-S', 'res', '-I', Jar, '-F', 'unaligned.apk'], Work) then
       Exit;
-    if not Run(Aapt, ['add', 'unaligned.apk', 'lib/arm64-v8a/libmain.so'], Work) then
+    if not Run(Aapt, ['add', 'unaligned.apk', 'classes.dex', 'lib/arm64-v8a/libmain.so'], Work) then
       Exit;
     if not Run(Zipalign, ['-p', '-f', '4', Unaligned, Aligned], Work) then
       Exit;

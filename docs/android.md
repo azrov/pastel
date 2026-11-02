@@ -20,10 +20,10 @@ pastel doctor --install android
 
 ## Making an app for the phone
 
-In VS Code: **Pastel: New Project…** → *Mobile* → *Android App*. Or any app project:
+In VS Code: **Pastel: New Project…** → *Mobile* → *Android App*. Or in a terminal:
 
 ```sh
-pastel new app shop
+pastel new app shop --phone             # forms made for phones; any app project works too
 cd shop
 pastel build --target android           # build/android-arm64/debug/libmain.so
 pastel package apk                      # dist/shop-0.1.0.apk, signed, ready to install
@@ -35,6 +35,30 @@ To have it built with the others, add it to the platforms in `pastel.toml`:
 [targets]
 platforms = ["linux", "windows", "android"]
 ```
+
+## Forms for phones
+
+`--phone` (on `pastel new app` and `pastel new form`; the wizard's *Android App* uses it, and **New Form…** in a phone app too) makes forms for small, upright screens: the controls are stacked (`Layout = Flow`) and as wide as the screen, and edits and buttons are 48 pixels high — the size a finger hits. The designer's size box shows the form at *Phone 360 × 640*.
+
+```
+object HomeForm: THomeForm
+  Width = 360
+  Height = 640
+  Padding = 16
+  Gap = 12
+  object NameEdit: TEdit
+    Height = 48
+    Placeholder = 'Your name'
+  end
+  object SendButton: TButton
+    Height = 48
+    Text = 'Send'
+    OnClick = SendClick
+  end
+end
+```
+
+A free-placed form (`Layout = Free`) works on a phone too: give the controls `Anchors` so they follow the screen's width.
 
 ## Trying it on your phone
 
@@ -52,9 +76,9 @@ It packs a debug `.apk`, installs it, starts it and shows its log (`WriteLn`, er
 
 | | |
 |---|---|
-| **Fingers** | A tap is a click, two quick taps a double click; holding a finger still is a right click (popup menus); dragging up and down scrolls lists, grids and scroll boxes. Sliders, splitters, paint boxes and edits get the finger's movement themselves. |
+| **Fingers** | A tap is a click, two quick taps a double click; holding a finger still is a right click (popup menus); dragging up and down scrolls lists, grids and scroll boxes, and a quick swipe lets them glide on (a finger stops them). Sliders, splitters, paint boxes and edits get the finger's movement themselves. |
 | **Back button** | Closes the dialog or menu on top; on the main form it closes the app (`OnCloseQuery` can say no). |
-| **Keyboard** | The on-screen keyboard comes up for an edit and goes when the focus leaves it. Hardware keyboards work too. |
+| **Keyboard** | The on-screen keyboard comes up for an edit and goes when the focus leaves it; while it is up, the form is laid out in the part above it, so the edit stays in sight. Every letter it types arrives — ş, ğ, é, other alphabets, emoji — through Pastel's small activity (`dev.pastel.PastelActivity`, the only Java in an app). Hardware keyboards work too. |
 | **Size** | The form fills the screen; `Width` and `Height` are only its design size. Use `Anchors` (or `Layout = Flow`) so the controls follow the screen, also when the phone is turned. The screen's density is taken into account: a 40-pixel button is as big as on a desktop monitor. |
 | **Dark mode and language** | Follow the phone's settings (`Appearance = System`, the built-in translations). |
 | **Files** | `GetUserDir`, settings files and SQLite databases go into the app's own folder, which stays when the app is updated. The project's `assets/` are inside the app. |
@@ -86,8 +110,6 @@ PASTEL_KEYSTORE_PASSWORD=... pastel package apk
 ## Not there yet
 
 - `.aab` bundles for Google Play (an `.apk` with a release key can be uploaded by other routes for now)
-- Letters beyond A–Z from the on-screen keyboard (ş, ğ, é...): Android sends them in a way NativeActivity cannot read without Java; a small Java bridge is planned
-- Forms made for phones (`pastel new form --phone`), flinging lists, the keyboard moving the form up
 - 32-bit ARM phones (older than about 2017) and x86 emulators: only ARM 64-bit is built
 - An example: the salon's agenda on the phone
 

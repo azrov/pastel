@@ -15,6 +15,10 @@ function CreateFormFiles(const Root, Name: string): Boolean;
 { src/controls/<name>.pas: a control of the project, for .pform files and the designer. }
 function CreateControlFile(const Root, Name: string): Boolean;
 
+var
+  { --phone: forms for small, upright screens (Android): stacked, full-width controls with big touch targets }
+  PhoneTemplates: Boolean = False;
+
 implementation
 
 uses
@@ -43,6 +47,19 @@ begin
   for Part in Name.Split(['-', '_']) do
     if Part <> '' then
       Result := Result + UpCase(Part[1]) + Copy(Part, 2, MaxInt);
+end;
+
+function ReadText(const FileName: string): string;
+var
+  L: TStringList;
+begin
+  L := TStringList.Create;
+  try
+    L.LoadFromFile(FileName);
+    Result := L.Text;
+  finally
+    L.Free;
+  end;
 end;
 
 procedure WriteText(const FileName, Content: string);
@@ -775,6 +792,9 @@ begin
     '# Platforms built by "pastel build --all". See "pastel targets" for the list.',
     'platforms = ["linux", "windows"]'
   ], Name, Ident));
+  if PhoneTemplates then
+    WriteText(Dir + 'pastel.toml', StringReplace(ReadText(Dir + 'pastel.toml'),
+      'platforms = ["linux", "windows"]', 'platforms = ["android"]', []));
 
   WriteText(Dir + 'src' + PathDelim + 'main.pas', Fill([
     'program {{ident}};',
@@ -791,61 +811,105 @@ begin
     'end.'
   ], Name, Ident));
 
-  WriteText(Dir + 'src' + PathDelim + 'forms' + PathDelim + 'Home.pform', Fill([
-    '// The layout of the Home form. While the app runs with "pastel run",',
-    '// save this file and the window updates immediately (hot reload).',
-    'object HomeForm: THomeForm',
-    '  Title = ''{{name}}''',
-    '  Width = 460',
-    '  Height = 340',
-    '  Layout = Free',
-    '  object Heading: TLabel',
-    '    Left = 24',
-    '    Top = 24',
-    '    Text = ''Hello!''',
-    '    FontSize = 22',
-    '    Bold = True',
-    '  end',
-    '  object HintLabel: TLabel',
-    '    Left = 24',
-    '    Top = 64',
-    '    Text = ''Type your name and press Send.''',
-    '    Color = ''#6B7080''',
-    '  end',
-    '  object NameEdit: TEdit',
-    '    Left = 24',
-    '    Top = 96',
-    '    Width = 412',
-    '    Anchors = [Left, Top, Right]',
-    '    Placeholder = ''Your name''',
-    '    OnSubmit = SendClick',
-    '  end',
-    '  object ClearButton: TButton',
-    '    Left = 264',
-    '    Top = 144',
-    '    Width = 80',
-    '    Anchors = [Top, Right]',
-    '    Text = ''Clear''',
-    '    Style = Secondary',
-    '    OnClick = ClearClick',
-    '  end',
-    '  object SendButton: TButton',
-    '    Left = 356',
-    '    Top = 144',
-    '    Width = 80',
-    '    Anchors = [Top, Right]',
-    '    Text = ''Send''',
-    '    OnClick = SendClick',
-    '  end',
-    '  object Greeting: TLabel',
-    '    Left = 24',
-    '    Top = 208',
-    '    Width = 412',
-    '    Anchors = [Left, Top, Right]',
-    '    TextAlign = Center',
-    '  end',
-    'end'
-  ], Name, Ident));
+  if PhoneTemplates then
+    { a phone: the controls stacked and as wide as the screen, big enough for a finger }
+    WriteText(Dir + 'src' + PathDelim + 'forms' + PathDelim + 'Home.pform', Fill([
+      '// The layout of the Home form, made for phones: the controls are stacked',
+      '// (Layout = Flow) and follow the screen''s width; 48 pixels suit a finger.',
+      'object HomeForm: THomeForm',
+      '  Title = ''{{name}}''',
+      '  Width = 360',
+      '  Height = 640',
+      '  Padding = 16',
+      '  Gap = 12',
+      '  object Heading: TLabel',
+      '    Text = ''Hello!''',
+      '    FontSize = 26',
+      '    Bold = True',
+      '  end',
+      '  object HintLabel: TLabel',
+      '    Text = ''Type your name and tap Send.''',
+      '    Color = ''#6B7080''',
+      '    WordWrap = True',
+      '  end',
+      '  object NameEdit: TEdit',
+      '    Height = 48',
+      '    Placeholder = ''Your name''',
+      '    OnSubmit = SendClick',
+      '  end',
+      '  object SendButton: TButton',
+      '    Height = 48',
+      '    Text = ''Send''',
+      '    OnClick = SendClick',
+      '  end',
+      '  object ClearButton: TButton',
+      '    Height = 48',
+      '    Text = ''Clear''',
+      '    Style = Secondary',
+      '    OnClick = ClearClick',
+      '  end',
+      '  object Greeting: TLabel',
+      '    TextAlign = Center',
+      '    WordWrap = True',
+      '  end',
+      'end'
+    ], Name, Ident))
+  else
+    WriteText(Dir + 'src' + PathDelim + 'forms' + PathDelim + 'Home.pform', Fill([
+      '// The layout of the Home form. While the app runs with "pastel run",',
+      '// save this file and the window updates immediately (hot reload).',
+      'object HomeForm: THomeForm',
+      '  Title = ''{{name}}''',
+      '  Width = 460',
+      '  Height = 340',
+      '  Layout = Free',
+      '  object Heading: TLabel',
+      '    Left = 24',
+      '    Top = 24',
+      '    Text = ''Hello!''',
+      '    FontSize = 22',
+      '    Bold = True',
+      '  end',
+      '  object HintLabel: TLabel',
+      '    Left = 24',
+      '    Top = 64',
+      '    Text = ''Type your name and press Send.''',
+      '    Color = ''#6B7080''',
+      '  end',
+      '  object NameEdit: TEdit',
+      '    Left = 24',
+      '    Top = 96',
+      '    Width = 412',
+      '    Anchors = [Left, Top, Right]',
+      '    Placeholder = ''Your name''',
+      '    OnSubmit = SendClick',
+      '  end',
+      '  object ClearButton: TButton',
+      '    Left = 264',
+      '    Top = 144',
+      '    Width = 80',
+      '    Anchors = [Top, Right]',
+      '    Text = ''Clear''',
+      '    Style = Secondary',
+      '    OnClick = ClearClick',
+      '  end',
+      '  object SendButton: TButton',
+      '    Left = 356',
+      '    Top = 144',
+      '    Width = 80',
+      '    Anchors = [Top, Right]',
+      '    Text = ''Send''',
+      '    OnClick = SendClick',
+      '  end',
+      '  object Greeting: TLabel',
+      '    Left = 24',
+      '    Top = 208',
+      '    Width = 412',
+      '    Anchors = [Left, Top, Right]',
+      '    TextAlign = Center',
+      '  end',
+      'end'
+    ], Name, Ident));
 
   WriteText(Dir + 'src' + PathDelim + 'forms' + PathDelim + 'Home.pas', Fill([
     '{ The code of the Home form. The controls declared in Home.pform are',
@@ -1767,40 +1831,70 @@ begin
     Fail(Format('src/forms/%s.pform exists already', [Base]));
     Exit;
   end;
-  WriteText(Dir + Base + '.pform',
-    'object ' + Base + 'Form: ' + Cls + LineEnding +
-    '  Title = ''' + Base + '''' + LineEnding +
-    '  Width = 420' + LineEnding +
-    '  Height = 240' + LineEnding +
-    '  Layout = Free' + LineEnding +
-    '  object MessageLabel: TLabel' + LineEnding +
-    '    Left = 24' + LineEnding +
-    '    Top = 24' + LineEnding +
-    '    Width = 372' + LineEnding +
-    '    Anchors = [Left, Top, Right]' + LineEnding +
-    '    Text = ''' + Base + '''' + LineEnding +
-    '    WordWrap = True' + LineEnding +
-    '  end' + LineEnding +
-    '  object CancelButton: TButton' + LineEnding +
-    '    Left = 216' + LineEnding +
-    '    Top = 176' + LineEnding +
-    '    Width = 88' + LineEnding +
-    '    Anchors = [Right, Bottom]' + LineEnding +
-    '    Text = ''Cancel''' + LineEnding +
-    '    Style = Secondary' + LineEnding +
-    '    ModalResult = mrCancel' + LineEnding +
-    '    Cancel = True' + LineEnding +
-    '  end' + LineEnding +
-    '  object OkButton: TButton' + LineEnding +
-    '    Left = 312' + LineEnding +
-    '    Top = 176' + LineEnding +
-    '    Width = 84' + LineEnding +
-    '    Anchors = [Right, Bottom]' + LineEnding +
-    '    Text = ''OK''' + LineEnding +
-    '    ModalResult = mrOk' + LineEnding +
-    '    Default = True' + LineEnding +
-    '  end' + LineEnding +
-    'end' + LineEnding);
+  if PhoneTemplates then
+    WriteText(Dir + Base + '.pform',
+      'object ' + Base + 'Form: ' + Cls + LineEnding +
+      '  Title = ''' + Base + '''' + LineEnding +
+      '  Width = 360' + LineEnding +
+      '  Height = 640' + LineEnding +
+      '  Padding = 16' + LineEnding +
+      '  Gap = 12' + LineEnding +
+      '  object MessageLabel: TLabel' + LineEnding +
+      '    Text = ''' + Base + '''' + LineEnding +
+      '    FontSize = 20' + LineEnding +
+      '    WordWrap = True' + LineEnding +
+      '  end' + LineEnding +
+      '  object Space: TSpacer' + LineEnding +
+      '  end' + LineEnding +
+      '  object OkButton: TButton' + LineEnding +
+      '    Height = 48' + LineEnding +
+      '    Text = ''OK''' + LineEnding +
+      '    ModalResult = mrOk' + LineEnding +
+      '    Default = True' + LineEnding +
+      '  end' + LineEnding +
+      '  object CancelButton: TButton' + LineEnding +
+      '    Height = 48' + LineEnding +
+      '    Text = ''Cancel''' + LineEnding +
+      '    Style = Secondary' + LineEnding +
+      '    ModalResult = mrCancel' + LineEnding +
+      '    Cancel = True' + LineEnding +
+      '  end' + LineEnding +
+      'end' + LineEnding)
+  else
+    WriteText(Dir + Base + '.pform',
+      'object ' + Base + 'Form: ' + Cls + LineEnding +
+      '  Title = ''' + Base + '''' + LineEnding +
+      '  Width = 420' + LineEnding +
+      '  Height = 240' + LineEnding +
+      '  Layout = Free' + LineEnding +
+      '  object MessageLabel: TLabel' + LineEnding +
+      '    Left = 24' + LineEnding +
+      '    Top = 24' + LineEnding +
+      '    Width = 372' + LineEnding +
+      '    Anchors = [Left, Top, Right]' + LineEnding +
+      '    Text = ''' + Base + '''' + LineEnding +
+      '    WordWrap = True' + LineEnding +
+      '  end' + LineEnding +
+      '  object CancelButton: TButton' + LineEnding +
+      '    Left = 216' + LineEnding +
+      '    Top = 176' + LineEnding +
+      '    Width = 88' + LineEnding +
+      '    Anchors = [Right, Bottom]' + LineEnding +
+      '    Text = ''Cancel''' + LineEnding +
+      '    Style = Secondary' + LineEnding +
+      '    ModalResult = mrCancel' + LineEnding +
+      '    Cancel = True' + LineEnding +
+      '  end' + LineEnding +
+      '  object OkButton: TButton' + LineEnding +
+      '    Left = 312' + LineEnding +
+      '    Top = 176' + LineEnding +
+      '    Width = 84' + LineEnding +
+      '    Anchors = [Right, Bottom]' + LineEnding +
+      '    Text = ''OK''' + LineEnding +
+      '    ModalResult = mrOk' + LineEnding +
+      '    Default = True' + LineEnding +
+      '  end' + LineEnding +
+      'end' + LineEnding);
   WriteText(Dir + Base + '.pas',
     '{ The code of the ' + Base + ' form. Show it as a dialog:' + LineEnding + LineEnding +
     '    if ' + Base + 'Form.ShowModal = mrOk then ...' + LineEnding + LineEnding +

@@ -151,6 +151,10 @@ if command -v ppcrossa64 >/dev/null && command -v aarch64-linux-gnu-ld >/dev/nul
   set +e; out="$(cd "$WORK/droid" && "$PASTEL" build --target android 2>&1)"; code=$?; set -e
   expect "an app builds for Android"        '[ "$code" = 0 ] && [ -s "$WORK"/droid/build/android-arm64/debug/libmain.so ]'
   expect "as a NativeActivity library"      'LC_ALL=C grep -a -q ANativeActivity_onCreate "$WORK"/droid/build/android-arm64/debug/libmain.so'
+  rm -rf "$WORK/phone" && (cd "$WORK" && "$PASTEL" new app phone --phone >/dev/null && cd phone && "$PASTEL" new form Details --phone >/dev/null)
+  expect "new app --phone is for Android"   'grep -q "^platforms = .\"android\".$" "$WORK"/phone/pastel.toml'
+  expect "with stacked, finger-sized controls" '! grep -q "Layout = Free" "$WORK"/phone/src/forms/Home.pform && grep -q "Height = 48" "$WORK"/phone/src/forms/Home.pform && grep -q "Height = 48" "$WORK"/phone/src/forms/Details.pform'
+  expect "and they check out"               '(cd "$WORK"/phone && "$PASTEL" check >/dev/null)'
   rm -rf "$WORK/droid-cli" && (cd "$WORK" && "$PASTEL" new console droid-cli >/dev/null)
   set +e; out="$(cd "$WORK/droid-cli" && "$PASTEL" build --target android 2>&1)"; code=$?; set -e
   expect "a console program is not for Android" '[ "$code" = 1 ] && echo "$out" | grep -q "Android builds are made of app projects"'
@@ -158,8 +162,9 @@ if command -v ppcrossa64 >/dev/null && command -v aarch64-linux-gnu-ld >/dev/nul
     (cd "$WORK/droid" && "$PASTEL" package apk >/dev/null 2>&1)
     expect "pastel package apk"             '[ -s "$WORK"/droid/dist/droid-0.1.0.apk ]'
     expect "the .apk holds the app"         'unzip -l "$WORK"/droid/dist/droid-0.1.0.apk | grep -q lib/arm64-v8a/libmain.so'
-    expect "with its id and a launcher"     'aapt dump badging "$WORK"/droid/dist/droid-0.1.0.apk | grep -q "package: name=.dev.pastel.droid." && aapt dump badging "$WORK"/droid/dist/droid-0.1.0.apk | grep -q "launchable-activity: name=.android.app.NativeActivity."'
+    expect "with its id and a launcher"     'aapt dump badging "$WORK"/droid/dist/droid-0.1.0.apk | grep -q "package: name=.dev.pastel.droid." && aapt dump badging "$WORK"/droid/dist/droid-0.1.0.apk | grep -q "launchable-activity: name=.dev.pastel.PastelActivity."'
     expect "and it is signed"               'apksigner verify "$WORK"/droid/dist/droid-0.1.0.apk 2>/dev/null'
+    expect "with Pastel's activity (typed letters)" 'unzip -l "$WORK"/droid/dist/droid-0.1.0.apk | grep -q classes.dex && LC_ALL=C grep -a -q Java_dev_pastel_PastelActivity_nativeText "$WORK"/droid/build/android-arm64/release/libmain.so'
   fi
 fi
 # --- translations ---
