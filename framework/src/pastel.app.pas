@@ -44,7 +44,7 @@ type
     FWindowTitle: string;
     { hot reload }
     FSourcePath: string;
-    FSeenText: string;
+    FSeenText, FSeenViews: string;
     FLastGood: string;
     FReloadError: string;
     FLastCheck, FLastBlink: QWord;
@@ -71,12 +71,14 @@ type
     procedure UpdateCursor;
     procedure SyncWindow;
     procedure TryClose;
+    function CurrentScreenClass: TScreenClass;
     procedure DoLayout;
     procedure RunScript(const FileName: string);
   {$IFDEF ANDROID}
   private
     FLanguageFromSystem, FKeyboardShown: Boolean;
     FKeyboardEdit: TControl;
+    FIsTV: Boolean;
     FTouchDown, FTouchScrolling, FLongPressDone: Boolean;
     FTouchStartX, FTouchStartY, FTouchX, FTouchY, FScrollFromY, FLastTapX, FLastTapY: Integer;
     FTouchTime, FLastTapTime: QWord;
@@ -387,6 +389,7 @@ begin
     FSourcePath := '';      { the .pform files are on the computer, not on the phone }
     {$ENDIF}
     FSeenText := Text;
+    FSeenViews := FormViewFilesText(Form);
     FLastGood := Text;
   end;
   if Assigned(Form.OnCreate) then
@@ -554,8 +557,39 @@ begin
 end;
 {$ENDIF}
 
+{ the kind of screen: a phone, a tablet or a TV on Android; on a computer, a narrow
+  window counts as a phone (to try phone layouts); PASTEL_SCREEN=phone|tablet|desktop|tv sets it }
+function TApplication.CurrentScreenClass: TScreenClass;
+var
+  Forced: string;
+begin
+  Forced := LowerCase(GetEnv('PASTEL_SCREEN'));
+  if Forced = 'phone' then Exit(scPhone);
+  if Forced = 'tablet' then Exit(scTablet);
+  if Forced = 'desktop' then Exit(scDesktop);
+  if Forced = 'tv' then Exit(scTV);
+  {$IFDEF ANDROID}
+  if FIsTV then
+    Result := scTV
+  else if Min(FWidth, FHeight) >= 600 then
+    Result := scTablet
+  else
+    Result := scPhone;
+  {$ELSE}
+  if (FWidth > 0) and (FWidth < 600) then
+    Result := scPhone
+  else
+    Result := scDesktop;
+  {$ENDIF}
+end;
+
 procedure TApplication.DoLayout;
 begin
+  { the view for this kind of screen first (Home.tablet.pform), then the layout }
+  FMainForm.SetScreenClass(CurrentScreenClass);
+  { on a TV (also PASTEL_SCREEN=tv on a computer) the arrows move the focus, as with a remote }
+  if FMainForm.ScreenClass = scTV then
+    ArrowKeysMoveFocus := True;
   FMainForm.Layout(FWidth, FHeight);
   if ((FLaidOutW <> 0) or (FLaidOutH <> 0)) and
      ((FLaidOutW <> FWidth) or (FLaidOutH <> FHeight)) and Assigned(FMainForm.OnResize) then
@@ -921,6 +955,21 @@ begin
       S.LoadFromFile(FSourcePath);
     except
       Exit;   { the editor may be writing the file right now }
+    end;
+    { a view (Home.tablet.pform) changed: applied again }
+    if FormViewFilesText(FMainForm) <> FSeenViews then
+    begin
+      FSeenViews := FormViewFilesText(FMainForm);
+      FMainForm.View := '?';
+      try
+        ApplyFormView(FMainForm, FMainForm.ScreenClass);
+        WriteLn('hot reload: the ', FMainForm.View, ' view updated');
+      except
+        on E: Exception do
+          WriteLn(StdErr, 'hot reload: ', E.Message);
+      end;
+      NeedsLayout := True;
+      NeedsRepaint := True;
     end;
     if S.Text = FSeenText then
       Exit;

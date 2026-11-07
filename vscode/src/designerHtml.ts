@@ -100,6 +100,8 @@ export function designerHtml(nonce: string): string {
   .banner { display: none; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 6px; max-width: 640px; line-height: 1.4;
     background: var(--vscode-editorInfo-background, rgba(55,148,255,.12)); border: 1px solid var(--vscode-editorInfo-foreground, #3794ff); }
   .banner.on { display: flex; }
+  body.in-view #viewBanner { display: flex; }
+  body.in-view #toolbox { opacity: .4; pointer-events: none; }
   .banner span { flex: 1; }
   .tray { display: flex; flex-wrap: wrap; gap: 8px; min-height: 0; }
   .tray .nv { display: flex; flex-direction: column; align-items: center; gap: 2px; width: 72px; padding: 6px 2px; cursor: pointer;
@@ -158,10 +160,20 @@ export function designerHtml(nonce: string): string {
     <button class="secondary small" id="undo" title="Undo (Ctrl+Z)">↶</button>
     <button class="secondary small" id="redo" title="Redo (Ctrl+Y)">↷</button>
     <span class="sep"></span>
+    <select id="screenView" title="Design for all screens, or a view: what changes on phones, tablets, TVs or desktops (Home.tablet.pform)">
+      <option value="">All screens</option>
+      <option value="phone">Phone view</option>
+      <option value="tablet">Tablet view</option>
+      <option value="tv">TV view</option>
+      <option value="desktop">Desktop view</option>
+    </select>
     <select id="size" title="Preview size">
       <option value="0x0">Form size</option>
       <option value="360x640">Phone 360 × 640</option>
       <option value="768x1024">Tablet 768 × 1024</option>
+      <option value="1024x768">Tablet 1024 × 768</option>
+      <option value="960x540">TV 960 × 540</option>
+      <option value="1100x700">Desktop 1100 × 700</option>
       <option value="1280x800">Laptop 1280 × 800</option>
       <option value="1920x1080">Full HD 1920 × 1080</option>
     </select>
@@ -188,6 +200,8 @@ export function designerHtml(nonce: string): string {
     </aside>
     <main class="center">
       <div class="canvas">
+        <div class="banner" id="viewBanner"><span>You are designing a <b>view</b>: what you change here (sizes, places, texts,
+          Visible…) is only for this kind of screen and goes into its own file. Add, remove or rename controls in <b>All screens</b>.</span></div>
         <div class="banner" id="flowBanner"><span>This form stacks its controls (<b>Layout = Flow</b>), so they move only up and down.
           Place them freely, like in Delphi: they stay where they are now, and then go wherever you drag them.</span>
           <button id="makeFree">Place freely</button></div>
@@ -349,6 +363,8 @@ export function designerHtml(nonce: string): string {
     vscode.postMessage({ type: 'view', width: w, height: h, dark: document.getElementById('dark').checked });
   }
   document.getElementById('size').addEventListener('change', sendView);
+  document.getElementById('screenView').addEventListener('change', e =>
+    vscode.postMessage({ type: 'screenView', name: e.target.value }));
   document.getElementById('dark').addEventListener('change', sendView);
   document.getElementById('undo').addEventListener('click', () => vscode.postMessage({ type: 'undo' }));
   document.getElementById('redo').addEventListener('click', () => vscode.postMessage({ type: 'redo' }));
@@ -1138,6 +1154,22 @@ export function designerHtml(nonce: string): string {
     const m = e.data;
     if (m.type === 'schema') { controlsInfo = m.controls; icons = m.icons || []; buildToolbox(); }
     else if (m.type === 'pictures') { pictures = m.items || []; drawPicker(); }
+    else if (m.type === 'screenView') {
+      // which views the form has (•), the one being designed, and its size
+      const sv = document.getElementById('screenView');
+      for (const o of sv.options) {
+        if (o.value) {
+          o.textContent = o.textContent.replace(/ •$/, '') + ((m.existing || []).includes(o.value) ? ' •' : '');
+        }
+      }
+      sv.value = m.name || '';
+      document.body.classList.toggle('in-view', !!m.name);
+      if (m.size) {
+        const size = document.getElementById('size');
+        size.value = m.size;
+        if (size.value !== m.size) { size.value = '0x0'; }
+      }
+    }
     else if (m.type === 'render') {
       img.onload = () => drawBoxes();
       img.src = 'data:image/png;base64,' + m.data;

@@ -204,6 +204,63 @@ Containers with `Layout = Flow` place their children one after another:
 - `Width` / `Height`: fixed size in pixels; `0` (the default) means "as big as the content".
 - When a row is too narrow, its growing children (`Grow`) give up width, down to 48 pixels. If the controls still do not fit, the last ones are cut off; `pastel check` (and the editor) warns about such rows at the form's size.
 
+## Phones, tablets, TVs and windows of every size
+
+A form is drawn at the screen's real size: `Width` and `Height` in the `.pform` are only its size in the designer. Sizes are not the screen's pixels but *layout units*, like Android's dp: a 48 high button is about as big on a 6-inch phone, a tablet, a TV and a computer monitor. So most forms fit everywhere when they are built for it:
+
+- **Flow** (`Layout = Flow`): the controls stack and take the width — on a phone and on a TV alike.
+- **Free placement**: `Anchors = [akLeft, akTop, akRight]` keeps a control as wide as its container, `Dock` puts it at an edge.
+- **`MaxContentWidth`** on the form (or any container): the controls use at most that width, in the middle. On a tablet, a TV or a wide window the lines stay readable instead of running across the whole screen.
+
+```
+object HomeForm: THomeForm
+  Padding = 16
+  MaxContentWidth = 600
+  ...
+end
+```
+
+### The kind of screen
+
+`ScreenClass` says what the app is on: `scPhone`, `scTablet` (the shorter side 600 or more), `scTV` (Android TV, TV boxes) or `scDesktop`. A computer's window narrower than 600 counts as a phone, so phone layouts can be tried by making the window narrow. `OnScreenClassChange` runs when the form first shows and whenever the kind changes (a phone's split screen, a window made narrow):
+
+```pascal
+procedure THomeForm.ScreenClassChange(Sender: TObject);
+begin
+  DetailsBox.Visible := ScreenClass <> scPhone;    { the details beside the list on tablets }
+  ListBox.Grow := Ord(ScreenClass = scPhone);
+end;
+```
+
+`PASTEL_SCREEN=phone|tablet|tv|desktop pastel run` shows the app as on that kind of screen.
+
+### Views: a form for each kind of screen
+
+Like FireMonkey's views, a form can have a **view** for a kind of screen: `Home.tablet.pform` next to `Home.pform` (also `phone`, `tv`, `desktop`). A view only says what is different — sizes, places, padding, fonts, texts, `Visible`. The controls and their events stay in the form itself, so the code is the same for all screens.
+
+```
+// Home.tablet.pform: the Home form on tablets (and TVs without a view of their own)
+object HomeForm: THomeForm
+  Padding = 32
+  MaxContentWidth = 700
+  object Heading: TLabel
+    FontSize = 34
+  end
+  object DetailsBox: TCard
+    Visible = True
+  end
+end
+```
+
+When the app starts, and when the kind of screen changes, Pastel applies the view (a TV uses the tablet's view when it has none of its own); values the view changed go back to the form's when another kind of screen has no view. `pastel build` and `pastel check` make sure a view has only controls of its form, of the same types, and no events.
+
+In the designer, the box at the top left chooses **All screens** (the form) or a view (• marks those that exist). With a view chosen, the designer shows the form with the view's values, at that screen's size, and everything you change — moving, resizing, the Object Inspector — goes into the view's file (made when you change the first thing). Controls are added, removed and renamed with *All screens* chosen.
+
+### Text size and the remote
+
+- **Text size**: on Android, the text size chosen in the phone's settings makes all text larger (up to 1.3 times, so forms keep their shape).
+- **A TV's remote** (and arrow keys on a phone): the arrows move the focus to the nearest control in that direction, the focused control has a clear ring, OK presses a button, ticks a check box and brings the keyboard for an edit. Controls that use the arrows themselves (lists, edits, sliders) keep them. On a computer, `PASTEL_SCREEN=tv` turns it on.
+
 ## Controls
 
 All controls have `Width`, `Height`, `Grow`, `Visible`, `Enabled`, `Hint` (a tooltip) and `PopupMenu` (a right-click menu). Every control with a `.pform` and a code example: [controls.md](controls.md). Your own controls: [components.md](components.md).

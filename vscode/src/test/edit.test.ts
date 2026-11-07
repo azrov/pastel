@@ -4,6 +4,7 @@ import {
   deleteObject, extractObject, findBlock, formatValue, insertObject, isObjectText, moveObject, parseBlocks,
   parseValue, pasteObjects, renameIdentifier, renameObject, setProperty,
   wrapObjects, unwrapObject, moveSibling, extractObjects, deleteObjects, outline, placeObjects, insertObjectAt, makeFree,
+  mergeView, viewWithChanges,
 } from '../edit';
 
 let passed = 0;
@@ -262,6 +263,34 @@ test('sets', () => {
   assert.strictEqual(formatValue('set', '[Left,Top , Right]'), '[Left, Top, Right]');
   assert.strictEqual(formatValue('set', '[]'), '[]');
   assert.strictEqual(formatValue('set', '[Left, 3x]'), undefined);
+});
+
+test('a view: its values over the form\'s, and the designer\'s changes into it', () => {
+  const f = [
+    'object HomeForm: THomeForm',
+    '  Padding = 8',
+    '  object Card: TCard',
+    '    object NameEdit: TEdit',
+    '      Width = 200',
+    '    end',
+    '  end',
+    'end',
+  ].join('\n');
+  const view = ['object HomeForm: THomeForm', '  Padding = 32', '  object NameEdit: TEdit', '    Width = 400', '  end', 'end'].join('\n');
+  const merged = mergeView(f, view);
+  assert.ok(merged.includes('  Padding = 32') && merged.includes('      Width = 400'), merged);
+  assert.ok(merged.includes('object Card: TCard'), 'the form\'s shape stays');
+  // the designer makes the edit wider and the card taller: both go into the view, flat
+  const after = setProperty(setProperty(merged, 'NameEdit', 'Width', '480'), 'Card', 'Height', '300');
+  const v2 = viewWithChanges(merged, after, view)!;
+  assert.ok(v2.includes('    Width = 480') && !v2.includes('Width = 400'), v2);
+  assert.ok(/  object Card: TCard\n    Height = 300\n  end/.test(v2), v2);
+  // a new view starts from the form's first line
+  const v3 = viewWithChanges(f, setProperty(f, 'HomeForm', 'MaxContentWidth', '600'), '')!;
+  assert.strictEqual(v3.trim(), 'object HomeForm: THomeForm\n  MaxContentWidth = 600\nend');
+  // adding a control is for the form itself
+  const added = insertObject(merged, 'Card', 0, 'TButton')!.text;
+  assert.strictEqual(viewWithChanges(merged, added, view), undefined);
 });
 
 console.log(`edit: ${passed} passed`);

@@ -760,6 +760,27 @@ set +e; out="$(PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT=ui.txt ./build/*/debug/gui-d
 expect "UI script passes"           '[ "$code" = 0 ]'
 expect "screenshot is a PNG"        'head -c 4 shot.png | grep -q PNG'
 
+# views: Home.tablet.pform changes values on tablets (and TVs), PASTEL_SCREEN chooses the screen
+cat > src/forms/Home.tablet.pform <<'EOS'
+object HomeForm: THomeForm
+  MaxContentWidth = 500
+  object Heading: TLabel
+    FontSize = 40
+  end
+end
+EOS
+"$PASTEL" build >/dev/null
+printf 'expect Heading.FontSize 40\nexpect HomeForm.MaxContentWidth 500\n' > view.txt
+set +e; out="$(PASTEL_SCREEN=tv PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT=view.txt ./build/*/debug/gui-demo 2>&1)"; code=$?; set -e
+expect "a tablet view on a TV"            '[ "$code" = 0 ]'
+printf 'expect HomeForm.MaxContentWidth 0\n' > view.txt
+set +e; out="$(PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT=view.txt ./build/*/debug/gui-demo 2>&1)"; code=$?; set -e
+expect "not on a computer"                '[ "$code" = 0 ]'
+printf 'object HomeForm: THomeForm\n  object Extra: TButton\n  end\nend\n' > src/forms/Home.tablet.pform
+set +e; out="$("$PASTEL" check 2>&1)"; code=$?; set -e
+expect "a view has only the form's controls" '[ "$code" != 0 ] && echo "$out" | grep -q "Home.tablet.pform(2) Error: the form has no \"Extra\""'
+rm src/forms/Home.tablet.pform view.txt
+
 cp src/forms/Home.pform Home.bak
 sed -i 's/object HintLabel: TLabel/object HintLabel: TLable/' src/forms/Home.pform
 set +e; out="$("$PASTEL" build 2>&1)"; code=$?; set -e

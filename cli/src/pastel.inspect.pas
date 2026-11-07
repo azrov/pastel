@@ -43,7 +43,7 @@ implementation
 
 uses
   TypInfo, Pastel.Console, Pastel.PForm, Pastel.UI, Pastel.Forms, Pastel.Graphics, Pastel.Controls,
-  Pastel.Icons, Pastel.Project, Pastel.Builder, Pastel.Additional, Pastel.Dialogs;
+  Pastel.Icons, Pastel.Project, Pastel.Builder, Pastel.Additional, Pastel.Dialogs, Pastel.Codegen;
 
 function JsonStr(const S: string): string;
 var
@@ -325,6 +325,44 @@ begin
   end;
 end;
 
+function CheckViewText(const Root, Rel, Text: string): TIssues;
+var
+  FormFile: string;
+  F, V: TPFormNode;
+begin
+  Result := nil;
+  FormFile := ChangeFileExt(ChangeFileExt(Rel, ''), '') + '.pform';
+  F := nil;
+  V := nil;
+  try
+    try
+      if not FileExists(Root + FormFile) then
+        raise EPFormError.CreateAt(1, 'a view of a form that is not there (' + ExtractFileName(FormFile) + ')');
+      with TStringList.Create do
+      try
+        LoadFromFile(Root + FormFile);
+        F := ParsePForm(Text);
+      finally
+        Free;
+      end;
+      V := ParsePForm(Text);
+      CheckFormView(F, V);
+    except
+      on E: EPFormError do
+      begin
+        SetLength(Result, 1);
+        Result[0].FileName := Rel;
+        Result[0].Line := E.Line;
+        Result[0].Severity := 'error';
+        Result[0].Message := Copy(E.Message, Pos(': ', E.Message) + 2, MaxInt);
+      end;
+    end;
+  finally
+    F.Free;
+    V.Free;
+  end;
+end;
+
 function CheckProject(const Root: string): TIssues;
 var
   Files, Src: TStringList;
@@ -342,6 +380,9 @@ begin
     begin
       Src.LoadFromFile(Root + Rel);
       One := CheckFormText(Root + Rel, Src.Text);
+      { a view (Home.tablet.pform): only the form's controls, of the same types }
+      if (Length(One) = 0) and (ViewNameOf(Rel) <> '') then
+        One := CheckViewText(Root, Rel, Src.Text);
       for I := 0 to High(One) do
       begin
         One[I].FileName := Rel;

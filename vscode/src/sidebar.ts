@@ -155,7 +155,8 @@ export class ProjectTree implements vscode.TreeDataProvider<ProjectNode> {
 
     const files: string[] = [];
     walk(path.join(root, 'src'), files);
-    const pforms = files.filter(f => /\.pform$/i.test(f));
+    // views (Home.tablet.pform) are opened from their form's designer
+    const pforms = files.filter(f => /\.pform$/i.test(f) && !/\.(phone|tablet|tv|desktop)\.pform$/i.test(f));
     const formPas = new Set(pforms.map(f => f.replace(/\.pform$/i, '.pas').toLowerCase()));
 
     const forms = new ProjectNode('Forms', 'group', vscode.TreeItemCollapsibleState.Expanded);

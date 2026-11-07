@@ -4,6 +4,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { findProjectRoot, runPastel } from './cli';
 import { designerHtml } from './designerHtml';
+import { mergeView, SCREEN_VIEWS, viewWithChanges } from './edit';
 import {
   deleteObjects, extractObject, extractObjects, findBlock, formatValue, insertObject, isObjectText, moveObject,
   moveSibling, outline, parseBlocks, placeObjects, insertObjectAt, makeFree, parseValue, pasteObjects, renameIdentifier, renameObject, setProperty,
@@ -69,6 +70,8 @@ export class FormPreview {
   private lastApplied: string | undefined;
   // how the preview is drawn
   private view: { width: number; height: number; dark: boolean } = { width: 0, height: 0, dark: false };
+  // the view being designed: 'tablet' for Home.tablet.pform, '' for the form itself
+  private screenView = '';
 
   /** The .pform shown in the designer, if the designer is the active tab. */
   static get activeDocument(): vscode.TextDocument | undefined {
@@ -77,6 +80,15 @@ export class FormPreview {
   }
 
   static show(document: vscode.TextDocument, services: DesignerServices): void {
+    const asView = FormPreview.viewOfFile(document.uri.fsPath);
+    if (asView) {
+      // a view file opens its form, designing that view
+      void vscode.workspace.openTextDocument(asView.form).then(form => {
+        FormPreview.show(form, services);
+        void FormPreview.current?.setScreenView(asView.view);
+      });
+      return;
+    }
     if (FormPreview.current) {
       FormPreview.current.document = document;
       FormPreview.current.panel.reveal(vscode.ViewColumn.Beside, true);
@@ -102,12 +114,18 @@ export class FormPreview {
       this.queue = this.queue.then(() => this.onMessage(m)).catch(e => console.error('pastel designer', e));
     }, null, this.disposables);
     vscode.workspace.onDidChangeTextDocument(e => {
-      if (e.document === this.document) {
+      if (e.document === this.document ||
+        (this.screenView && e.document.uri.fsPath === this.viewFile(this.screenView))) {
         this.schedule(200);
       }
     }, null, this.disposables);
     vscode.window.onDidChangeActiveTextEditor(e => {
+      if (e && e.document.languageId === 'pform' && FormPreview.viewOfFile(e.document.uri.fsPath)) {
+        return;     // a view's file: the designer keeps showing its form
+      }
       if (e && e.document.languageId === 'pform' && e.document !== this.document) {
+        this.screenView = '';
+        this.sendScreenView();
         this.document = e.document;
         this.selected = undefined;
         this.schedule(0);
@@ -115,6 +133,7 @@ export class FormPreview {
     }, null, this.disposables);
     vscode.window.onDidChangeTextEditorSelection(e => this.onEditorSelection(e), null, this.disposables);
     this.sendSchema();
+    this.sendScreenView();
     this.schedule(0);
   }
 
@@ -182,12 +201,82 @@ export class FormPreview {
       file = target;
     }
     const value = path.relative(assets, file).split(path.sep).join('/');
-    let out = this.document.getText();
+    let out = this.currentText();
     for (const n of (Array.isArray(m.names) && m.names.length ? m.names : [m.name])) {
       out = setProperty(out, n, m.prop, formatValue('string', value));
     }
     await this.applyText(out);
     this.sendPictures();
+  }
+
+  /** Home.tablet.pform: its form (Home.pform) and the view's name; undefined for other files. */
+  static viewOfFile(file: string): { form: string; view: string } | undefined {
+    const m = /^(.*)\.(phone|tablet|tv|desktop)\.pform$/i.exec(file);
+    if (!m || !fs.existsSync(m[1] + '.pform')) {
+      return undefined;
+    }
+    return { form: m[1] + '.pform', view: m[2].toLowerCase() };
+  }
+
+  private viewFile(view: string): string {
+    return this.document.uri.fsPath.replace(/\.pform$/i, '') + '.' + view + '.pform';
+  }
+
+  /** A view's text: from its open editor, else its file ('' when it does not exist yet). */
+  private viewText(view: string): string {
+    const file = this.viewFile(view);
+    const open = vscode.workspace.textDocuments.find(d => d.uri.fsPath === file);
+    if (open) {
+      return open.getText();
+    }
+    return fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
+  }
+
+  /** What the designer shows and edits: the form, with the view's values when one is chosen. */
+  private currentText(): string {
+    const text = this.document.getText();
+    return this.screenView ? mergeView(text, this.viewText(this.screenView)) : text;
+  }
+
+  private sendScreenView(size?: string): void {
+    const existing = SCREEN_VIEWS.map(v => v.name).filter(v => fs.existsSync(this.viewFile(v)));
+    this.panel.webview.postMessage({ type: 'screenView', name: this.screenView, existing, size });
+  }
+
+  /** Designs a view (or the form itself, ''), at that kind of screen's size. */
+  async setScreenView(view: string): Promise<void> {
+    this.screenView = SCREEN_VIEWS.some(v => v.name === view) ? view : '';
+    const v = SCREEN_VIEWS.find(x => x.name === this.screenView);
+    if (v) {
+      this.view = { ...this.view, width: v.width, height: v.height };
+    }
+    this.sendScreenView(v ? `${v.width}x${v.height}` : undefined);
+    this.schedule(0);
+  }
+
+  /** A change made in the designer while a view is chosen: into the view's file (values only). */
+  private async applyToView(after: string): Promise<void> {
+    const view = this.screenView;
+    const changed = viewWithChanges(this.currentText(), after, this.viewText(view));
+    if (changed === undefined) {
+      vscode.window.showWarningMessage(`Pastel: the ${view} view only changes values (sizes, places, texts, Visible…). ` +
+        'Add, remove, rename or move controls with "All screens" chosen.');
+      return;
+    }
+    const file = this.viewFile(view);
+    const open = vscode.workspace.textDocuments.find(d => d.uri.fsPath === file);
+    if (open) {
+      const edit = new vscode.WorkspaceEdit();
+      edit.replace(open.uri, new vscode.Range(new vscode.Position(0, 0), open.positionAt(open.getText().length)), changed);
+      await vscode.workspace.applyEdit(edit);
+      await open.save();
+    } else {
+      const header = fs.existsSync(file) ? '' :
+        `// The ${view} view of ${path.basename(this.document.uri.fsPath)}: only what differs on ${view === 'tv' ? 'TVs' : view + 's'}.\n`;
+      fs.writeFileSync(file, header + changed);
+      this.sendScreenView();
+    }
+    this.schedule(0);
   }
 
   private schedule(delay: number): void {
@@ -215,7 +304,7 @@ export class FormPreview {
       if (this.view.dark) {
         args.push('--dark');
       }
-      const result = await runPastel(args, cwd, this.document.getText());
+      const result = await runPastel(args, cwd, this.currentText());
       if (result.code === 0 && fs.existsSync(this.imageFile)) {
         const data = fs.readFileSync(this.imageFile).toString('base64');
         let layout: unknown = undefined;
@@ -224,7 +313,7 @@ export class FormPreview {
         } catch {
           layout = undefined;
         }
-        const root = parseBlocks(this.document.getText());
+        const root = parseBlocks(this.currentText());
         const titleLine = root?.props.find(p => p.name.toLowerCase() === 'title');
         const title = titleLine ? parseValue(titleLine.value) : root?.name ?? '';
         this.panel.webview.postMessage({ type: 'render', data, layout, file: path.basename(file), title });
@@ -247,7 +336,7 @@ export class FormPreview {
   /** The objects of the form, for the structure list (non-visual ones are only there). */
   private async sendTree(): Promise<void> {
     const schema = await this.services.loadSchema();
-    const items = outline(this.document.getText()).map(o => ({
+    const items = outline(this.currentText()).map(o => ({
       ...o,
       nonvisual: !!schema?.controls.find(c => c.name.toLowerCase() === o.className.toLowerCase())?.nonvisual,
     }));
@@ -256,7 +345,7 @@ export class FormPreview {
 
   /** What "pastel check" says about the form, drawn on the controls it is about. */
   private async sendIssues(cwd: string, rel: string): Promise<void> {
-    const text = this.document.getText();
+    const text = this.currentText();
     const r = await runPastel(['check', rel, '--stdin', '--json'], cwd, text);
     let found: { line: number; severity: string; message: string }[] = [];
     try {
@@ -269,14 +358,14 @@ export class FormPreview {
       const chain = enclosingObjects(lines, i.line);
       return { name: chain.length ? chain[chain.length - 1].name : undefined, severity: i.severity, message: i.message, line: i.line };
     });
-    if (text === this.document.getText()) {
+    if (text === this.currentText()) {
       this.panel.webview.postMessage({ type: 'issues', items });
     }
   }
 
   private async sendSelection(): Promise<void> {
     const schema = await this.services.loadSchema();
-    const root = parseBlocks(this.document.getText());
+    const root = parseBlocks(this.currentText());
     const block = root && this.selected ? findBlock(root, this.selected) : undefined;
     if (!schema || !root || !block) {
       this.selected = undefined;
@@ -337,6 +426,10 @@ export class FormPreview {
   }
 
   private async applyText(text: string, history = true): Promise<void> {
+    if (this.screenView) {
+      await this.applyToView(text);
+      return;
+    }
     const old = this.document.getText();
     if (text === old) {
       return;
@@ -392,7 +485,7 @@ export class FormPreview {
   }
 
   private async onMessage(m: any): Promise<void> {
-    const text = this.document.getText();
+    const text = this.currentText();
     switch (m.type) {
       case 'select':
         this.selected = m.name ?? undefined;
@@ -467,8 +560,15 @@ export class FormPreview {
         await this.applyText(moveObject(text, m.name, m.parent, m.index));
         this.selected = m.name;
         break;
+      case 'screenView':
+        await this.setScreenView(String(m.name ?? ''));
+        break;
       case 'undo':
       case 'redo': {
+        if (this.screenView) {
+          vscode.window.showInformationMessage('Pastel: undo a view\'s changes in its file (Ctrl+Z there), or choose "All screens".');
+          break;
+        }
         const from = m.type === 'undo' ? this.undoStack : this.redoStack;
         const to = m.type === 'undo' ? this.redoStack : this.undoStack;
         if (this.lastApplied !== undefined && this.lastApplied !== text) {

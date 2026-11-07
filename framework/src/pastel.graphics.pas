@@ -148,6 +148,12 @@ function PrevCharStart(const S: string; I: Integer): Integer;
 
 { Fonts are shared and cached by size and weight. }
 function GetFont(Size: Integer; Bold: Boolean = False): TPastelFont;
+
+var
+  { Every text is drawn this much larger: the size of text chosen in a phone's
+    settings (Pastel.App sets it, at most 1.3 so forms keep their shape). }
+  TextScale: Single = 1;
+
 { Use these .ttf files instead of the system font (after InitFonts). }
 procedure SetFontFiles(const Regular, Bold: string);
 { Internal: initializes FreeType and finds a system font (Pastel.App does it). Returns '' or an error. }
@@ -592,6 +598,8 @@ var
 begin
   if FontCache = nil then
     raise EPastelGraphics.Create('fonts are not initialized');
+  if TextScale <> 1 then
+    Size := Round(Size * TextScale);
   Key := BoolToStr(Bold, 'b', 'r') + IntToStr(Size);
   I := FontCache.IndexOf(Key);
   if I >= 0 then

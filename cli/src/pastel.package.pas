@@ -1407,6 +1407,16 @@ begin
         Exit;
       end;
     end;
+    { Android TV's home screen shows a banner: the icon on a dark band }
+    if FileExists(Icon) then
+      Err := WriteTvBanner(Icon, Res + 'drawable-xhdpi' + PathDelim + 'banner.png')
+    else
+      Err := WriteTvBanner(Work + 'icon.png', Res + 'drawable-xhdpi' + PathDelim + 'banner.png');
+    if Err <> '' then
+    begin
+      Fail('assets/icon.png: ' + Err);
+      Exit;
+    end;
     Orientation := Project.AndroidOrientation;
     if Orientation = '' then
       Orientation := 'unspecified';
@@ -1419,7 +1429,11 @@ begin
       '    android:versionName="' + XmlText(Project.Version) + '">' + LineEnding +
       '  <uses-sdk android:minSdkVersion="19" android:targetSdkVersion="' + IntToStr(Max(23, Api)) + '"/>' + LineEnding +
       '  <uses-permission android:name="android.permission.INTERNET"/>' + LineEnding +
+      { TVs and TV boxes: no touch screen needed, a place on Android TV's home screen }
+      '  <uses-feature android:name="android.hardware.touchscreen" android:required="false"/>' + LineEnding +
+      '  <uses-feature android:name="android.software.leanback" android:required="false"/>' + LineEnding +
       '  <application android:label="@string/app_name" android:icon="@mipmap/ic_launcher"' + LineEnding +
+      '      android:banner="@drawable/banner"' + LineEnding +
       '      android:hasCode="true" android:extractNativeLibs="true"' + LineEnding +
       '      android:theme="@android:style/Theme.NoTitleBar">' + LineEnding +
       '    <activity android:name="dev.pastel.PastelActivity" android:label="@string/app_name"' + LineEnding +
@@ -1431,6 +1445,7 @@ begin
       '      <intent-filter>' + LineEnding +
       '        <action android:name="android.intent.action.MAIN"/>' + LineEnding +
       '        <category android:name="android.intent.category.LAUNCHER"/>' + LineEnding +
+      '        <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>' + LineEnding +
       '      </intent-filter>' + LineEnding +
       '    </activity>' + LineEnding +
       '  </application>' + LineEnding +

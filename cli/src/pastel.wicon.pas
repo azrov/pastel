@@ -19,6 +19,8 @@ function WriteIconRes(const PngFile, ResFile: string): string;
 function WriteSizedPng(const PngFile, OutFile: string; Size: Integer): string;
 { Pastel's icon for apps without assets/icon.png: a rounded square in pastel colors, 512 x 512. }
 procedure WriteDefaultIcon(const OutFile: string);
+{ Android TV's banner (320 x 180): the icon in the middle of a dark band. }
+function WriteTvBanner(const PngFile, OutFile: string): string;
 { The same icon as an .ico file (for installers). }
 function WriteIco(const PngFile, IcoFile: string): string;
 
@@ -202,6 +204,65 @@ begin
       Img.Free;
     end;
   finally
+    Writer.Free;
+    Reader.Free;
+    Src.Free;
+  end;
+end;
+
+function WriteTvBanner(const PngFile, OutFile: string): string;
+const
+  W = 320;
+  H = 180;
+  IconSize = 132;
+var
+  Src, Icon: TFPCustomImage;
+  Banner: TFPMemoryImage;
+  Reader: TFPReaderPNG;
+  Writer: TFPWriterPNG;
+  X, Y, OX, OY: Integer;
+  Back, C: TFPColor;
+  A: Double;
+begin
+  Result := '';
+  Src := TFPMemoryImage.Create(0, 0);
+  Reader := TFPReaderPNG.Create;
+  Writer := TFPWriterPNG.Create;
+  Writer.UseAlpha := True;
+  Writer.WordSized := False;
+  Banner := TFPMemoryImage.Create(W, H);
+  Banner.UsePalette := False;
+  Icon := nil;
+  try
+    try
+      Src.LoadFromFile(PngFile, Reader);
+    except
+      on E: Exception do
+        Exit(Format('%s is not a PNG picture (%s)', [PngFile, E.Message]));
+    end;
+    Icon := Scaled(Src, IconSize);
+    Back.Red := $1E00; Back.Green := $1B00; Back.Blue := $2E00; Back.Alpha := $FFFF;
+    OX := (W - IconSize) div 2;
+    OY := (H - IconSize) div 2;
+    for Y := 0 to H - 1 do
+      for X := 0 to W - 1 do
+      begin
+        C := Back;
+        if (X >= OX) and (X < OX + IconSize) and (Y >= OY) and (Y < OY + IconSize) then
+        begin
+          { the icon over the band, by its transparency }
+          A := Icon.Colors[X - OX, Y - OY].Alpha / 65535;
+          C.Red := Round(Back.Red + (Icon.Colors[X - OX, Y - OY].Red - Back.Red) * A);
+          C.Green := Round(Back.Green + (Icon.Colors[X - OX, Y - OY].Green - Back.Green) * A);
+          C.Blue := Round(Back.Blue + (Icon.Colors[X - OX, Y - OY].Blue - Back.Blue) * A);
+        end;
+        Banner.Colors[X, Y] := C;
+      end;
+    ForceDirectories(ExtractFileDir(OutFile));
+    Banner.SaveToFile(OutFile, Writer);
+  finally
+    Icon.Free;
+    Banner.Free;
     Writer.Free;
     Reader.Free;
     Src.Free;

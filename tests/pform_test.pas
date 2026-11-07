@@ -4,7 +4,7 @@ program pform_test;
 {$mode objfpc}{$H+}
 
 uses
-  SysUtils, Pastel.PForm, Pastel.Codegen;
+  Classes, SysUtils, Pastel.PForm, Pastel.Codegen;
 
 var
   Passed, Failed: Integer;
@@ -129,6 +129,65 @@ begin
   Check(Raised, 'unknown component reported with line');
 end;
 
+procedure TestViews;
+const
+  Form = 'object HomeForm: THomeForm' + LineEnding +
+    '  object NameEdit: TEdit' + LineEnding +
+    '    OnChange = NameChange' + LineEnding +
+    '  end' + LineEnding +
+    'end';
+
+  function ViewError(const View: string): string;
+  var
+    F, V: TPFormNode;
+  begin
+    Result := '';
+    F := ParsePForm(Form);
+    V := nil;
+    try
+      try
+        V := ParsePForm(View);
+        CheckFormView(F, V);
+      except
+        on E: EPFormError do
+          Result := E.Message;
+      end;
+    finally
+      F.Free;
+      V.Free;
+    end;
+  end;
+
+var
+  Code: string;
+  Views: TStringList;
+begin
+  Check(ViewNameOf('src/forms/Home.tablet.pform') = 'tablet', 'a tablet view');
+  Check(ViewNameOf('src/forms/Home.tv.pform') = 'tv', 'a TV view');
+  Check(ViewNameOf('src/forms/Home.pform') = '', 'a form, not a view');
+  Check(ViewNameOf('src/forms/Order.Lines.pform') = '', 'a dotted name that is not a view');
+  Check(ViewError('object HomeForm: THomeForm' + LineEnding + '  Padding = 32' + LineEnding +
+    '  object NameEdit: TEdit' + LineEnding + '    Width = 300' + LineEnding + '  end' + LineEnding + 'end') = '',
+    'a view that changes values');
+  Check(Pos('the form has no "Extra"', ViewError('object HomeForm: THomeForm' + LineEnding +
+    '  object Extra: TButton' + LineEnding + '  end' + LineEnding + 'end')) > 0, 'no new controls in a view');
+  Check(Pos('is a TEdit in the form', ViewError('object HomeForm: THomeForm' + LineEnding +
+    '  object NameEdit: TMemo' + LineEnding + '  end' + LineEnding + 'end')) > 0, 'the same type');
+  Check(Pos('events belong in the form', ViewError('object HomeForm: THomeForm' + LineEnding +
+    '  object NameEdit: TEdit' + LineEnding + '    OnChange = Other' + LineEnding + '  end' + LineEnding + 'end')) > 0,
+    'no events in a view');
+  Check(Pos('a view starts like its form', ViewError('object HomeForm: TOtherForm' + LineEnding + 'end')) > 0,
+    'the same form');
+  Views := TStringList.Create;
+  try
+    Views.Add('tablet=object HomeForm: THomeForm' + LineEnding + 'end');
+    Code := FormUnitSource('Home', Form, '', Views);
+    Check(Pos('RegisterFormView(''THomeForm'', ''tablet'',', Code) > 0, 'the view is registered with the form');
+  finally
+    Views.Free;
+  end;
+end;
+
 begin
   Passed := 0;
   Failed := 0;
@@ -136,6 +195,7 @@ begin
   TestSets;
   TestErrors;
   TestCodegen;
+  TestViews;
   WriteLn(Format('pform: %d passed, %d failed', [Passed, Failed]));
   if Failed > 0 then
     Halt(1);

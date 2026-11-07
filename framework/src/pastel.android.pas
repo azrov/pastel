@@ -92,6 +92,7 @@ procedure AConfiguration_delete(Config: Pointer); cdecl; external 'android';
 procedure AConfiguration_fromAssetManager(Config, AssetManager: Pointer); cdecl; external 'android';
 function AConfiguration_getDensity(Config: Pointer): LongInt; cdecl; external 'android';
 function AConfiguration_getUiModeNight(Config: Pointer): LongInt; cdecl; external 'android';
+function AConfiguration_getUiModeType(Config: Pointer): LongInt; cdecl; external 'android';
 procedure AConfiguration_getLanguage(Config: Pointer; OutLanguage: PChar); cdecl; external 'android';
 function __android_log_write(Prio: LongInt; Tag, Text: PChar): LongInt; cdecl; external 'log';
 
@@ -127,6 +128,10 @@ function AndroidDensity: Integer;
 function AndroidNightMode: Boolean;
 { The phone's language: 'tr', 'en'... }
 function AndroidLanguage: string;
+{ The device is a TV (Android TV, most TV boxes): used with a remote, seen from afar. }
+function AndroidIsTV: Boolean;
+{ The size of text the user chose in the phone's settings (1: normal, 1.3: large). }
+function AndroidFontScale: Single;
 
 var
   { Set by Pastel.App: the app's event loop, run on the app thread. }
@@ -386,6 +391,48 @@ begin
   AConfiguration_delete(C);
   if (Result <= 0) or (Result = $FFFF) then
     Result := 160;
+end;
+
+function AndroidIsTV: Boolean;
+var
+  C: Pointer;
+begin
+  Result := False;
+  if AndroidActivity = nil then
+    Exit;
+  C := AConfiguration_new;
+  AConfiguration_fromAssetManager(C, AndroidActivity^.assetManager);
+  Result := AConfiguration_getUiModeType(C) = 4;     { ACONFIGURATION_UI_MODE_TYPE_TELEVISION }
+  AConfiguration_delete(C);
+end;
+
+type
+  TJniCallFloatMethodA = function(Env, Obj, Method: Pointer; Args: Pointer): Single; cdecl;
+
+function AndroidFontScale: Single;
+var
+  Env, Cls, Method: Pointer;
+  T: PPointer;
+begin
+  Result := 1;
+  Env := AppJniEnv;
+  if (Env = nil) or (AndroidActivity = nil) then
+    Exit;
+  T := PPointer(Env)^;
+  Cls := TJniGetObjectClass(T[31])(Env, AndroidActivity^.clazz);
+  if Cls = nil then
+    Exit;
+  Method := TJniGetMethodID(T[33])(Env, Cls, 'fontScale', '()F');
+  if Method <> nil then
+    Result := TJniCallFloatMethodA(T[57])(Env, AndroidActivity^.clazz, Method, nil);
+  if TJniExceptionCheck(T[228])(Env) <> 0 then
+  begin
+    TJniVoid(T[17])(Env);
+    Result := 1;
+  end;
+  TJniDeleteLocalRef(T[23])(Env, Cls);
+  if (Result < 0.5) or (Result > 3) then
+    Result := 1;
 end;
 
 function AndroidNightMode: Boolean;

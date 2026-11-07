@@ -9,7 +9,7 @@ Controls, layout and input handling.
 
 `uses Pastel.UI;` · source: [framework/src/pastel.ui.pas](../../framework/src/pastel.ui.pas)
 
-**Contents:** [TAlignItems](#talignitems) · [TJustify](#tjustify) · [TImageFit](#timagefit) · [TLayoutKind](#tlayoutkind) · [TAnchorKind](#tanchorkind) · [TDock](#tdock) · [TTextAlign](#ttextalign) · [TButtonStyle](#tbuttonstyle) · [TKeyboardType](#tkeyboardtype) · [TReturnKeyType](#treturnkeytype) · [TCursorKind](#tcursorkind) · [TWindowState](#twindowstate) · [TThemeMode](#tthememode) · [TControl](#tcontrol) · [TAction](#taction) · [TBox](#tbox) · [TColumn](#tcolumn) · [TPanel](#tpanel) · [TRow](#trow) · [TFlow](#tflow) · [TCard](#tcard) · [TSpacer](#tspacer) · [TLabel](#tlabel) · [TButton](#tbutton) · [TEditState](#teditstate) · [TVisualLine](#tvisualline) · [TCustomEdit](#tcustomedit) · [TEdit](#tedit) · [TMemo](#tmemo) · [TPopup](#tpopup) · [TTimer](#ttimer) · [TForm](#tform) · [TTheme](#ttheme) · [UseDarkTheme](#usedarktheme) · [SetThemeValue](#setthemevalue) · [InvalidateArea](#invalidatearea) · [RequestAnimation](#requestanimation) · [AnimationTime](#animationtime) · [RequestAnimation](#requestanimation) · [ProcessTimers](#processtimers) · [WrapText](#wraptext) · [RegisterControl](#registercontrol) · [FindControlClass](#findcontrolclass) · [ControlClassCount](#controlclasscount) · [ControlClassAt](#controlclassat) · [RegisterNonVisual](#registernonvisual) · [FindNonVisualClass](#findnonvisualclass) · [NonVisualClassCount](#nonvisualclasscount) · [NonVisualClassAt](#nonvisualclassat)
+**Contents:** [TAlignItems](#talignitems) · [TJustify](#tjustify) · [TImageFit](#timagefit) · [TLayoutKind](#tlayoutkind) · [TAnchorKind](#tanchorkind) · [TDock](#tdock) · [TTextAlign](#ttextalign) · [TButtonStyle](#tbuttonstyle) · [TKeyboardType](#tkeyboardtype) · [TReturnKeyType](#treturnkeytype) · [TScreenClass](#tscreenclass) · [TCursorKind](#tcursorkind) · [TWindowState](#twindowstate) · [TThemeMode](#tthememode) · [TControl](#tcontrol) · [TAction](#taction) · [TBox](#tbox) · [TColumn](#tcolumn) · [TPanel](#tpanel) · [TRow](#trow) · [TFlow](#tflow) · [TCard](#tcard) · [TSpacer](#tspacer) · [TLabel](#tlabel) · [TButton](#tbutton) · [TEditState](#teditstate) · [TVisualLine](#tvisualline) · [TCustomEdit](#tcustomedit) · [TEdit](#tedit) · [TMemo](#tmemo) · [TPopup](#tpopup) · [TTimer](#ttimer) · [TForm](#tform) · [TTheme](#ttheme) · [UseDarkTheme](#usedarktheme) · [SetThemeValue](#setthemevalue) · [InvalidateArea](#invalidatearea) · [RequestAnimation](#requestanimation) · [AnimationTime](#animationtime) · [RequestAnimation](#requestanimation) · [ProcessTimers](#processtimers) · [WrapText](#wraptext) · [RegisterControl](#registercontrol) · [FindControlClass](#findcontrolclass) · [ControlClassCount](#controlclasscount) · [ControlClassAt](#controlclassat) · [RegisterNonVisual](#registernonvisual) · [FindNonVisualClass](#findnonvisualclass) · [NonVisualClassCount](#nonvisualclasscount) · [NonVisualClassAt](#nonvisualclassat)
 
 ## Types
 
@@ -136,6 +136,19 @@ rkNext goes to the next control, the others are Enter (OnSubmit).
 - `rkNext` What the Enter key of a phone's on-screen keyboard says and does: rkNext goes to the next control, the others are Enter (OnSubmit).
 - `rkSearch` What the Enter key of a phone's on-screen keyboard says and does: rkNext goes to the next control, the others are Enter (OnSubmit).
 - `rkSend` What the Enter key of a phone's on-screen keyboard says and does: rkNext goes to the next control, the others are Enter (OnSubmit).
+### TScreenClass
+
+```pascal
+type TScreenClass = (scPhone, scTablet, scDesktop, scTV)
+```
+
+What kind of screen the app is on: a phone, a tablet, a computer's window, a TV.
+Forms can change with it (OnScreenClassChange, views: Home.tablet.pform).
+
+- `scPhone` What kind of screen the app is on: a phone, a tablet, a computer's window, a TV. Forms can change with it (OnScreenClassChange, views: Home.tablet.pform).
+- `scTablet` What kind of screen the app is on: a phone, a tablet, a computer's window, a TV. Forms can change with it (OnScreenClassChange, views: Home.tablet.pform).
+- `scDesktop` What kind of screen the app is on: a phone, a tablet, a computer's window, a TV. Forms can change with it (OnScreenClassChange, views: Home.tablet.pform).
+- `scTV` What kind of screen the app is on: a phone, a tablet, a computer's window, a TV. Forms can change with it (OnScreenClassChange, views: Home.tablet.pform).
 ### TCursorKind
 
 ```pascal
@@ -249,6 +262,7 @@ A container that stacks its children vertically or horizontally.
 | `property Radius: Integer` |  |
 | `property BackgroundImage: string` | A picture behind the children: a file in assets/, next to the program, or a full path. |
 | `property BackgroundFit: TImageFit` |  |
+| `property MaxContentWidth: Integer` | The children use at most this width, in the middle: a form stays readable on a tablet, a TV or a wide window (0: all the width). |
 
 ### TColumn
 
@@ -551,6 +565,11 @@ The root of a window. Owns all controls created from its .pform file.
 | `function ShowModal: Integer` | Shows this form as a dialog above the main window and waits until it is closed: by a button with a ModalResult, ModalResult := ..., Close (mrCancel) or Escape. Returns the ModalResult. |
 | `property ModalResult: Integer` | Setting it in a dialog form closes the dialog with that result. |
 | `procedure WindowStateChanged(AState: TWindowState)` | Called by the platform layer when the user changed the window state. |
+| `procedure SetScreenClass(AValue: TScreenClass)` | Called by the platform layer before laying the form out: the view for that kind of screen is applied (Home.tablet.pform) and OnScreenClassChange runs. |
+| `function FocusInDirection(DX: Integer; DY: Integer): Boolean` | Moves the focus to the nearest control left, right, up or down (a TV's remote, arrow keys on a phone); False when there is none in that direction. |
+| `procedure ActivateFocused` | The remote's OK button: presses the focused button, ticks a check box, opens a list (Space, else Enter). |
+| `property ScreenClass: TScreenClass` | The kind of screen: scPhone, scTablet, scDesktop or scTV. |
+| `property View: string` | The view applied: 'tablet' for Home.tablet.pform, '' for the form itself. |
 | `property Title: string` |  |
 | `property Resizable: Boolean` | Can the user resize (and maximize) the window? |
 | `property MinWidth: Integer` |  |
@@ -562,6 +581,7 @@ The root of a window. Owns all controls created from its .pform file.
 | `property OnCloseQuery: TCloseQueryEvent` | Set CanClose to False to keep the window open, e.g. to ask about unsaved work. |
 | `property OnClose: TNotifyEvent` |  |
 | `property OnResize: TNotifyEvent` |  |
+| `property OnScreenClassChange: TNotifyEvent` | The kind of screen became known or changed (a phone turned into a tablet's split screen, a window made narrow): show, hide or arrange controls for it. |
 
 ### TTheme
 
@@ -735,6 +755,7 @@ function NonVisualClassAt(Index: Integer): TComponentClass
 | `var Theme: TTheme` |  |
 | `var ThemeCustomizer: procedure` | Runs after UseDarkTheme set up the light or dark colors: changes to Theme go here. Pastel.App applies assets/theme.toml with it. |
 | `var KeyAlt: Boolean` | Alt is held (with KeyDown). |
+| `var ArrowKeysMoveFocus: Boolean` | Arrow keys a control does not use move the focus to the nearest control in that direction (a TV's remote). Pastel.App turns it on for Android. |
 | `var MainForm: TForm` | The main window's form; dialogs are shown on it. Set by Pastel.App. |
 | `var PartialRepaint: Boolean` | False: always paint the whole window (PASTEL_FULL_REPAINT=1). |
 | `const MinShrink = 48` | A growing control in a row that is too narrow gets no narrower than this. |

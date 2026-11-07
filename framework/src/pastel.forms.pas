@@ -21,12 +21,25 @@ type
     FormClassName: string;
     Source: string;       { .pform text compiled into the program }
     FilePath: string;     { .pform file on disk, for hot reload ('' in release) }
+    { the views: Home.tablet.pform is 'tablet'; Objects: TFormSource with its text and file }
+    Views: TStringList;
+    destructor Destroy; override;
   end;
 
 { Called by generated code. }
 procedure RegisterFormSource(const AFormClassName, ASource, AFilePath: string);
 { The registered source for a form, searching its class hierarchy. }
 function FindFormSource(Form: TForm): TFormSource;
+{ Called by generated code: a view of a form (Home.tablet.pform): property
+  values for one kind of screen. View: phone, tablet, desktop or tv. }
+procedure RegisterFormView(const AFormClassName, AView, ASource, AFilePath: string);
+{ The view a form uses on a kind of screen ('' for none): its own, or tablet for a TV without one. }
+function ViewForScreen(Form: TForm; AClass: TScreenClass): string;
+{ Applies the form's view for the kind of screen: the values the view sets
+  replace the form's (and come back when another kind of screen has no view). }
+procedure ApplyFormView(Form: TForm; AClass: TScreenClass);
+{ The texts of the form's view files on disk (hot reload watches them). }
+function FormViewFilesText(Form: TForm): string;
 
 { What the user changed in the controls (typed text, checked boxes, chosen
   items, the page of tabs), by control name; hot reload puts it back. }
@@ -68,6 +81,12 @@ end;
 
 var
   Sources: TStringList = nil;
+
+destructor TFormSource.Destroy;
+begin
+  Views.Free;
+  inherited Destroy;
+end;
 
 procedure RegisterFormSource(const AFormClassName, ASource, AFilePath: string);
 var
@@ -523,10 +542,222 @@ begin
   end;
 end;
 
+{ ---- views: Home.tablet.pform, Home.phone.pform, Home.tv.pform ---- }
+
+procedure RegisterFormView(const AFormClassName, AView, ASource, AFilePath: string);
+var
+  S, V: TFormSource;
+  I: Integer;
+begin
+  I := Sources.IndexOf(AFormClassName);
+  if I < 0 then
+  begin
+    S := TFormSource.Create;
+    S.FormClassName := AFormClassName;
+    Sources.AddObject(AFormClassName, S);
+  end
+  else
+    S := TFormSource(Sources.Objects[I]);
+  if S.Views = nil then
+  begin
+    S.Views := TStringList.Create;
+    S.Views.OwnsObjects := True;
+  end;
+  I := S.Views.IndexOf(LowerCase(AView));
+  if I >= 0 then
+    V := TFormSource(S.Views.Objects[I])
+  else
+  begin
+    V := TFormSource.Create;
+    S.Views.AddObject(LowerCase(AView), V);
+  end;
+  V.FormClassName := AFormClassName;
+  V.Source := ASource;
+  V.FilePath := AFilePath;
+end;
+
+const
+  ScreenViewNames: array[TScreenClass] of string = ('phone', 'tablet', 'desktop', 'tv');
+  ViewStateName = 'PastelViewState';
+
+function ViewForScreen(Form: TForm; AClass: TScreenClass): string;
+var
+  Src: TFormSource;
+begin
+  Result := '';
+  Src := FindFormSource(Form);
+  if (Src = nil) or (Src.Views = nil) then
+    Exit;
+  Result := ScreenViewNames[AClass];
+  if Src.Views.IndexOf(Result) >= 0 then
+    Exit;
+  { a TV is a big landscape screen: a tablet's view suits it }
+  if (AClass = scTV) and (Src.Views.IndexOf('tablet') >= 0) then
+    Exit('tablet');
+  Result := '';
+end;
+
+type
+  { the values a view replaced, to put them back: "Component.Property=value" }
+  TViewState = class(TComponent)
+  public
+    Saved: TStringList;
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+  end;
+
+constructor TViewState.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  Saved := TStringList.Create;
+end;
+
+destructor TViewState.Destroy;
+begin
+  Saved.Free;
+  inherited Destroy;
+end;
+
+function ViewText(V: TFormSource): string;
+var
+  L: TStringList;
+begin
+  Result := V.Source;
+  if (V.FilePath <> '') and FileExists(V.FilePath) then
+  begin
+    L := TStringList.Create;
+    try
+      L.LoadFromFile(V.FilePath);
+      Result := L.Text;
+    finally
+      L.Free;
+    end;
+  end;
+end;
+
+function FormViewFilesText(Form: TForm): string;
+var
+  Src: TFormSource;
+  I: Integer;
+begin
+  Result := '';
+  Src := FindFormSource(Form);
+  if (Src = nil) or (Src.Views = nil) then
+    Exit;
+  for I := 0 to Src.Views.Count - 1 do
+    if TFormSource(Src.Views.Objects[I]).FilePath <> '' then
+      Result := Result + Src.Views[I] + ':' + ViewText(TFormSource(Src.Views.Objects[I]));
+end;
+
+procedure ApplyFormView(Form: TForm; AClass: TScreenClass);
+var
+  Src, V: TFormSource;
+  Name, Key, PropName: string;
+  State: TViewState;
+  Root: TPFormNode;
+  I, Dot: Integer;
+  C: TComponent;
+
+  function Target(const CompName: string): TComponent;
+  begin
+    if CompName = '' then
+      Result := Form
+    else
+      Result := Form.FindComponent(CompName);
+  end;
+
+  { the value before the view changes it, once }
+  procedure Remember(Comp: TComponent; const CompName: string; P: TPFormProp);
+  var
+    Info: PPropInfo;
+  begin
+    PropName := P.Name;
+    Dot := Pos('.', PropName);
+    if Dot > 0 then
+      Exit;      { a property of a property (Font.Size): set, not put back }
+    Info := GetPropInfo(Comp, PropName);
+    if (Info = nil) or (Info^.PropType^.Kind in [tkClass, tkMethod]) then
+      Exit;
+    Key := CompName + '.' + PropName;
+    if State.Saved.IndexOfName(Key) < 0 then
+      State.Saved.Add(Key + '=' + string(GetPropValue(Comp, PropName, True)));
+  end;
+
+  procedure Apply(Node: TPFormNode; const CompName: string);
+  var
+    K: Integer;
+    Comp: TComponent;
+  begin
+    Comp := Target(CompName);
+    if Comp = nil then
+      raise EPFormError.CreateAt(Node.Line, Format('the view %s has "%s", which the form does not have',
+        [Name, CompName]));
+    for K := 0 to Node.Props.Count - 1 do
+    begin
+      Remember(Comp, CompName, Node.Prop(K));
+      SetProp(Comp, Form, Node.Prop(K));
+    end;
+    for K := 0 to Node.Children.Count - 1 do
+      Apply(Node.Child(K), Node.Child(K).Name);
+  end;
+
+begin
+  Name := ViewForScreen(Form, AClass);
+  { nothing to do: the same view, already applied (or no view, none applied) }
+  if (Name = Form.View) and ((Form.FindComponent(ViewStateName) <> nil) = (Name <> '')) then
+    Exit;
+  C := Form.FindComponent(ViewStateName);
+  if C = nil then
+  begin
+    State := TViewState.Create(Form);
+    State.Name := ViewStateName;
+  end
+  else
+    State := TViewState(C);
+  { the form's own values back }
+  for I := 0 to State.Saved.Count - 1 do
+  begin
+    Key := State.Saved.Names[I];
+    Dot := Pos('.', Key);
+    C := Target(Copy(Key, 1, Dot - 1));
+    if C <> nil then
+    try
+      SetPropValue(C, Copy(Key, Dot + 1, MaxInt), State.Saved.ValueFromIndex[I]);
+    except
+      { a value that does not fit any more }
+    end;
+  end;
+  State.Saved.Clear;
+  Form.View := Name;
+  if Name = '' then
+    Exit;
+  Src := FindFormSource(Form);
+  V := TFormSource(Src.Views.Objects[Src.Views.IndexOf(Name)]);
+  Root := ParsePForm(ViewText(V));
+  try
+    PendingRefs := nil;
+    Apply(Root, '');
+    ResolvePendingRefs(Form);
+  finally
+    Root.Free;
+  end;
+end;
+
+procedure ViewHook(Form: TForm; AClass: TScreenClass);
+begin
+  try
+    ApplyFormView(Form, AClass);
+  except
+    on E: Exception do
+      WriteLn(StdErr, Form.ClassName, ', view: ', E.Message);
+  end;
+end;
+
 initialization
   Sources := TStringList.Create;
   Sources.Sorted := True;
   Sources.OwnsObjects := True;
+  FormViewHook := @ViewHook;
 
 finalization
   Sources.Free;

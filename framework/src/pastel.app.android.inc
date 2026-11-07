@@ -40,6 +40,10 @@ begin
   else
     FScale := Max(0.75, AndroidDensity / 160);
   FMouseScale := FScale;
+  { a TV is used with a remote: its arrows move from control to control; the text size of the settings }
+  FIsTV := AndroidIsTV;
+  ArrowKeysMoveFocus := True;
+  TextScale := Min(1.3, AndroidFontScale);
   if FLanguageFromSystem and (AndroidLanguage <> '') then
     UseLanguage(AndroidLanguage);
   if FMainForm.Appearance = tmSystem then
@@ -106,6 +110,8 @@ begin
       begin
         FScale := Max(0.75, AndroidDensity / 160);
         FMouseScale := FScale;
+        TextScale := Min(1.3, AndroidFontScale);
+        NeedsLayout := True;
         if FMainForm.Appearance = tmSystem then
           UseDarkTheme(AndroidNightMode);
         AndroidSizeFromWindow;
@@ -314,6 +320,15 @@ begin
   end;
   if Action <> AKEY_EVENT_ACTION_DOWN then
     Exit;
+  { the remote's OK button (and a game pad's A): presses, ticks, opens; on an edit, the keyboard }
+  if (Code = 23) or (Code = 96) then
+  begin
+    if FMainForm.Focused is TCustomEdit then
+      FKeyboardShown := False
+    else
+      FMainForm.ActivateFocused;
+    Exit;
+  end;
   K := 0;
   case Code of
     67: K := KEY_BACKSPACE;

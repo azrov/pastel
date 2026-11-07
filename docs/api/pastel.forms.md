@@ -10,6 +10,8 @@ Building forms from .pform data.
 
 `uses Pastel.Forms;` · source: [framework/src/pastel.forms.pas](../../framework/src/pastel.forms.pas)
 
+**Contents:** [TFormSource](#tformsource) · [RegisterFormSource](#registerformsource) · [FindFormSource](#findformsource) · [RegisterFormView](#registerformview) · [ViewForScreen](#viewforscreen) · [ApplyFormView](#applyformview) · [FormViewFilesText](#formviewfilestext) · [CaptureState](#capturestate) · [RestoreState](#restorestate) · [BuildForm](#buildform)
+
 ## Types
 
 ### TFormSource
@@ -17,6 +19,10 @@ Building forms from .pform data.
 ```pascal
 type TFormSource = class
 ```
+
+| | |
+|---|---|
+| `destructor Destroy` |  |
 
 ## Routines
 
@@ -35,6 +41,40 @@ function FindFormSource(Form: TForm): TFormSource
 ```
 
 The registered source for a form, searching its class hierarchy.
+
+### RegisterFormView
+
+```pascal
+procedure RegisterFormView(const AFormClassName: string; const AView: string; const ASource: string; const AFilePath: string)
+```
+
+Called by generated code: a view of a form (Home.tablet.pform): property
+values for one kind of screen. View: phone, tablet, desktop or tv.
+
+### ViewForScreen
+
+```pascal
+function ViewForScreen(Form: TForm; AClass: TScreenClass): string
+```
+
+The view a form uses on a kind of screen ('' for none): its own, or tablet for a TV without one.
+
+### ApplyFormView
+
+```pascal
+procedure ApplyFormView(Form: TForm; AClass: TScreenClass)
+```
+
+Applies the form's view for the kind of screen: the values the view sets
+replace the form's (and come back when another kind of screen has no view).
+
+### FormViewFilesText
+
+```pascal
+function FormViewFilesText(Form: TForm): string
+```
+
+The texts of the form's view files on disk (hot reload watches them).
 
 ### CaptureState
 

@@ -519,3 +519,81 @@ export function makeFree(text: string, containerName: string, items: Placement[]
   }
   return placeObjects(out, undefined, items);
 }
+
+// ---------- views: Home.tablet.pform changes Home.pform's values for one kind of screen ----------
+
+/** The form with a view's values in it (Home.pform + Home.tablet.pform): what the designer draws and shows. */
+export function mergeView(form: string, view: string): string {
+  const v = parseBlocks(view);
+  let out = form;
+  const f = parseBlocks(out);
+  if (!v || !f) {
+    return form;
+  }
+  for (const b of allBlocks(v)) {
+    const name = b === v ? f.name : b.name;
+    for (const p of b.props) {
+      out = setProperty(out, name, p.name, p.value);
+    }
+  }
+  return out;
+}
+
+/** The view with an object of the form in it (flat, under the root), so a value can be set there. */
+function ensureViewObject(view: string, name: string, className: string): string {
+  const root = parseBlocks(view);
+  if (!root || findBlock(root, name)) {
+    return view;
+  }
+  const lines = splitLines(view);
+  const pad = ' '.repeat(root.indent + indentUnit(root));
+  lines.splice(root.end, 0, `${pad}object ${name}: ${className}`, `${pad}end`);
+  return lines.join(eol(view));
+}
+
+/**
+ * The view (Home.tablet.pform) with what changed from `before` to `after`
+ * (both the form with the view merged in). Undefined when controls were
+ * added, removed, renamed or moved: those changes belong in the form itself.
+ */
+export function viewWithChanges(before: string, after: string, view: string): string | undefined {
+  const b = parseBlocks(before);
+  const a = parseBlocks(after);
+  if (!b || !a) {
+    return undefined;
+  }
+  const shape = (r: Block) => allBlocks(r).map(x => `${x.parent?.name ?? ''}/${x.name}:${x.className}`).join('|');
+  if (shape(a) !== shape(b)) {
+    return undefined;
+  }
+  let out = parseBlocks(view) ? view : `object ${a.name}: ${a.className}\nend\n`;
+  const same = (x: PropLine, y: PropLine) => x.name.toLowerCase() === y.name.toLowerCase();
+  for (const ab of allBlocks(a)) {
+    const bb = findBlock(b, ab.name)!;
+    const changed = ab.props.filter(p => { const q = bb.props.find(x => same(x, p)); return !q || q.value !== p.value; });
+    const removed = bb.props.filter(p => !ab.props.some(x => same(x, p)));
+    if (changed.length === 0 && removed.length === 0) {
+      continue;
+    }
+    if (ab !== a) {
+      out = ensureViewObject(out, ab.name, ab.className);
+    }
+    const target = ab === a ? parseBlocks(out)!.name : ab.name;
+    for (const p of changed) {
+      out = setProperty(out, target, p.name, p.value);
+    }
+    // a value taken away: the view stops changing it (the form's own value shows)
+    for (const p of removed) {
+      out = setProperty(out, target, p.name, undefined);
+    }
+  }
+  return out;
+}
+
+/** The kinds of screen a form can have a view for, and a size to design it at. */
+export const SCREEN_VIEWS: { name: string; label: string; width: number; height: number }[] = [
+  { name: 'phone', label: 'Phone', width: 360, height: 640 },
+  { name: 'tablet', label: 'Tablet', width: 1024, height: 768 },
+  { name: 'tv', label: 'TV', width: 960, height: 540 },
+  { name: 'desktop', label: 'Desktop', width: 1100, height: 700 },
+];

@@ -186,3 +186,8 @@ function PascalFonts: Boolean
 True when text is drawn by Pastel.TrueType instead of FreeType (always on
 Android; on a desktop without the FreeType library, or with PASTEL_FONT_ENGINE=pascal).
 
+## Constants and variables
+
+| | |
+|---|---|
+| `var TextScale: Single` | Every text is drawn this much larger: the size of text chosen in a phone's settings (Pastel.App sets it, at most 1.3 so forms keep their shape). |

@@ -435,6 +435,7 @@ Pastel.Graphics: type TCanvas32 = class
 Pastel.Graphics: type TColor32 = Cardinal
 Pastel.Graphics: type TPastelFont = class
 Pastel.Graphics: type TRectI = record
+Pastel.Graphics: var TextScale: Single
 Pastel.Grids: TGrid.constructor Create(AOwner: TComponent)
 Pastel.Grids: TGrid.function AddColumn(const ATitle: string; AWidth: Integer = 0; AAlignment: TTextAlign = taLeft): TGridColumn
 Pastel.Grids: TGrid.function AddRow(const Values: array of string): Integer
@@ -1139,6 +1140,7 @@ Pastel.UI: TBox.property Gap: Integer
 Pastel.UI: TBox.property Horizontal: Boolean
 Pastel.UI: TBox.property Justify: TJustify
 Pastel.UI: TBox.property Layout: TLayoutKind
+Pastel.UI: TBox.property MaxContentWidth: Integer
 Pastel.UI: TBox.property Padding: Integer
 Pastel.UI: TBox.property Radius: Integer
 Pastel.UI: TButton.procedure Click
@@ -1240,12 +1242,14 @@ Pastel.UI: TForm.function BindControl(const AName: string; AClass: TControlClass
 Pastel.UI: TForm.function CloseQuery: Boolean
 Pastel.UI: TForm.function CurrentCursor: TCursorKind
 Pastel.UI: TForm.function FindControl(const AName: string): TControl
+Pastel.UI: TForm.function FocusInDirection(DX: Integer; DY: Integer): Boolean
 Pastel.UI: TForm.function HitTest(X: Integer; Y: Integer): TControl
 Pastel.UI: TForm.function PopupAt(Index: Integer): TPopup
 Pastel.UI: TForm.function PopupCount: Integer
 Pastel.UI: TForm.function ShowModal: Integer
 Pastel.UI: TForm.function TopPopup: TPopup
 Pastel.UI: TForm.function UpdateTooltip(NowMs: QWord): Boolean
+Pastel.UI: TForm.procedure ActivateFocused
 Pastel.UI: TForm.procedure BindControls
 Pastel.UI: TForm.procedure ClearControls
 Pastel.UI: TForm.procedure Close
@@ -1268,6 +1272,7 @@ Pastel.UI: TForm.procedure Notification(AComponent: TComponent; Operation: TOper
 Pastel.UI: TForm.procedure Render(C: TCanvas32)
 Pastel.UI: TForm.procedure RenderArea(C: TCanvas32; const Area: TRectI)
 Pastel.UI: TForm.procedure Restore
+Pastel.UI: TForm.procedure SetScreenClass(AValue: TScreenClass)
 Pastel.UI: TForm.procedure ShowPopup(P: TPopup)
 Pastel.UI: TForm.procedure WindowStateChanged(AState: TWindowState)
 Pastel.UI: TForm.property AlwaysOnTop: Boolean
@@ -1287,9 +1292,12 @@ Pastel.UI: TForm.property OnClose: TNotifyEvent
 Pastel.UI: TForm.property OnCloseQuery: TCloseQueryEvent
 Pastel.UI: TForm.property OnCreate: TNotifyEvent
 Pastel.UI: TForm.property OnResize: TNotifyEvent
+Pastel.UI: TForm.property OnScreenClassChange: TNotifyEvent
 Pastel.UI: TForm.property Resizable: Boolean
+Pastel.UI: TForm.property ScreenClass: TScreenClass
 Pastel.UI: TForm.property ShiftDown: Boolean
 Pastel.UI: TForm.property Title: string
+Pastel.UI: TForm.property View: string
 Pastel.UI: TForm.property WindowState: TWindowState
 Pastel.UI: TImageFit.ifCenter
 Pastel.UI: TImageFit.ifContain
@@ -1347,6 +1355,10 @@ Pastel.UI: TReturnKeyType.rkNext
 Pastel.UI: TReturnKeyType.rkSearch
 Pastel.UI: TReturnKeyType.rkSend
 Pastel.UI: TRow.constructor Create(AOwner: TComponent)
+Pastel.UI: TScreenClass.scDesktop
+Pastel.UI: TScreenClass.scPhone
+Pastel.UI: TScreenClass.scTV
+Pastel.UI: TScreenClass.scTablet
 Pastel.UI: TSpacer.constructor Create(AOwner: TComponent)
 Pastel.UI: TTextAlign.taCenter
 Pastel.UI: TTextAlign.taLeft
@@ -1469,6 +1481,7 @@ Pastel.UI: type TPopup = class(TBox)
 Pastel.UI: type TRectArray = array of TRectI
 Pastel.UI: type TReturnKeyType = (rkDefault, rkDone, rkGo, rkNext, rkSearch, rkSend)
 Pastel.UI: type TRow = class(TBox)
+Pastel.UI: type TScreenClass = (scPhone, scTablet, scDesktop, scTV)
 Pastel.UI: type TSpacer = class(TControl)
 Pastel.UI: type TTextAlign = (taLeft, taCenter, taRight)
 Pastel.UI: type TTheme = record
@@ -1476,6 +1489,7 @@ Pastel.UI: type TThemeMode = (tmLight, tmDark, tmSystem)
 Pastel.UI: type TTimer = class(TComponent)
 Pastel.UI: type TVisualLine = record
 Pastel.UI: type TWindowState = (wsNormal, wsMaximized, wsMinimized, wsFullScreen)
+Pastel.UI: var ArrowKeysMoveFocus: Boolean
 Pastel.UI: var KeyAlt: Boolean
 Pastel.UI: var MainForm: TForm
 Pastel.UI: var PartialRepaint: Boolean

@@ -60,6 +60,13 @@ type
     procedure BindingNames;
     procedure BackgroundImageAndButtonColor;
     procedure BindingLoadsAndSaves;
+    procedure MaxContentWidthCenters;
+    procedure ArrowsMoveFocusLikeARemote;
+    procedure ViewsForScreenClasses;
+  end;
+
+  { a form class of its own: its .pform and views are registered by name }
+  TViewTestForm = class(TForm)
   end;
 
 implementation
@@ -1139,6 +1146,129 @@ begin
   B.Validate;
   AssertEquals('Bunu doldurun', NameEdit.Error, 'in the language');
   UseLanguage('en');
+end;
+
+procedure TUITests.MaxContentWidthCenters;
+var
+  E: TEdit;
+begin
+  Form.Padding := 10;
+  Form.MaxContentWidth := 200;
+  E := NewEdit(Form);
+  Render;
+  AssertEquals(200, E.Bounds.W, 'the content is at most 200 wide');
+  AssertEquals(100, E.Bounds.X, 'in the middle of the 400 wide form');
+  Form.MaxContentWidth := 0;
+  Render;
+  AssertEquals(380, E.Bounds.W, 'all the width without it');
+end;
+
+procedure TUITests.ArrowsMoveFocusLikeARemote;
+var
+  Row: TRow;
+  A, B, C: TButton;
+  E: TEdit;
+
+  function Btn(Parent: TControl; const Name: string): TButton;
+  begin
+    Result := TButton.Create(Form);
+    Result.Name := Name;
+    Result.Text := Name;
+    Result.Parent := Parent;
+  end;
+
+begin
+  { A  B / the edit / C }
+  Row := TRow.Create(Form);
+  Row.Parent := Form;
+  A := Btn(Row, 'A');
+  B := Btn(Row, 'B');
+  E := NewEdit(Form);
+  C := Btn(Form, 'C');
+  Render;
+  ArrowKeysMoveFocus := True;
+  try
+    Key(KEY_DOWN);
+    AssertTrue(Form.Focused = A, 'the first press chooses the first control');
+    Key(KEY_RIGHT);
+    AssertTrue(Form.Focused = B, 'right: the button beside it');
+    Key(KEY_DOWN);
+    AssertTrue(Form.Focused = E, 'down: the edit below');
+    Key(KEY_DOWN);
+    AssertTrue(Form.Focused = C, 'down again: the button below the edit');
+    Key(KEY_DOWN);
+    AssertTrue(Form.Focused = C, 'nothing further down: it stays');
+    Key(KEY_UP);
+    Key(KEY_UP);
+    AssertTrue(Form.Focused = B, 'up twice: the button above nearest to the middle of the edit');
+    Key(KEY_LEFT);
+    AssertTrue(Form.Focused = A);
+    AssertTrue(Form.FocusVisible, 'the focus is shown');
+  finally
+    ArrowKeysMoveFocus := False;
+  end;
+  Key(KEY_RIGHT);
+  AssertTrue(Form.Focused = A, 'without a remote the arrows do not move the focus');
+  if (E = nil) or (C = nil) then ;
+end;
+
+procedure TUITests.ViewsForScreenClasses;
+const
+  Src = 'object ViewTest: TViewTestForm' + LineEnding +
+    '  Padding = 8' + LineEnding +
+    '  object Heading: TLabel' + LineEnding +
+    '    Text = ''Hi''' + LineEnding +
+    '    FontSize = 20' + LineEnding +
+    '  end' + LineEnding +
+    '  object Side: TLabel' + LineEnding +
+    '    Visible = False' + LineEnding +
+    '  end' + LineEnding +
+    'end';
+  Tablet = 'object ViewTest: TViewTestForm' + LineEnding +
+    '  Padding = 32' + LineEnding +
+    '  MaxContentWidth = 500' + LineEnding +
+    '  object Heading: TLabel' + LineEnding +
+    '    FontSize = 30' + LineEnding +
+    '  end' + LineEnding +
+    '  object Side: TLabel' + LineEnding +
+    '    Visible = True' + LineEnding +
+    '  end' + LineEnding +
+    'end';
+var
+  F: TViewTestForm;
+  Root: TPFormNode;
+  T, S: TLabel;
+begin
+  RegisterFormSource('TViewTestForm', Src, '');
+  RegisterFormView('TViewTestForm', 'tablet', Tablet, '');
+  F := TViewTestForm.Create(nil);
+  Root := ParsePForm(Src);
+  try
+    BuildForm(F, Root);
+    T := TLabel(F.FindControl('Heading'));
+    S := TLabel(F.FindControl('Side'));
+    F.SetScreenClass(scPhone);
+    AssertEquals('', F.View, 'no phone view: the form as it is');
+    AssertEquals(20, T.FontSize);
+    F.SetScreenClass(scTablet);
+    AssertEquals('tablet', F.View);
+    AssertEquals(30, T.FontSize, 'the tablet view''s values');
+    AssertEquals(32, F.Padding);
+    AssertEquals(500, F.MaxContentWidth);
+    AssertTrue(S.Visible, 'shown on tablets');
+    AssertEquals('Hi', T.Text, 'what the view does not say stays');
+    F.SetScreenClass(scTV);
+    AssertEquals('tablet', F.View, 'a TV without a view of its own uses the tablet''s');
+    F.SetScreenClass(scDesktop);
+    AssertEquals('', F.View);
+    AssertEquals(20, T.FontSize, 'back to the form''s values');
+    AssertEquals(8, F.Padding);
+    AssertEquals(0, F.MaxContentWidth, 'also those the form did not set');
+    AssertFalse(S.Visible);
+  finally
+    Root.Free;
+    F.Free;
+  end;
 end;
 
 initialization

@@ -2,6 +2,16 @@
 
 The `pastel` tool and the framework. The VS Code extension has its own list: [vscode/CHANGELOG.md](vscode/CHANGELOG.md). What is planned is in [ROADMAP.md](ROADMAP.md).
 
+## 1.5.0-beta.9
+
+Phones, tablets, TVs and windows of every size ([forms.md](docs/forms.md#phones-tablets-tvs-and-windows-of-every-size)).
+
+- `ScreenClass` (`scPhone`, `scTablet`, `scDesktop`, `scTV`) and `OnScreenClassChange` on forms; a narrow window on a computer counts as a phone; `PASTEL_SCREEN=phone|tablet|tv|desktop` tries one
+- Views, like FireMonkey's: `Home.tablet.pform` (also `phone`, `tv`, `desktop`) next to `Home.pform` changes values for that kind of screen — sizes, places, fonts, texts, `Visible`; applied when the app starts and when the screen changes, undone when another screen has none; a TV uses the tablet's view; `pastel build` and `pastel check` make sure a view has only the form's controls; hot reload watches view files too
+- `MaxContentWidth` on forms and containers: the controls in the middle, at most that wide
+- A TV's remote: the arrows move the focus to the nearest control in that direction, with a clear ring; OK presses, ticks, brings the keyboard; on Android always, on a computer with `PASTEL_SCREEN=tv`
+- Android: the text size of the phone's settings (up to 1.3 times); apps are on Android TV's home screen, with a banner made from the icon, and need no touch screen
+
 ## 1.5.0-beta.8
 
 - Android: the on-screen keyboard comes up for an edit on every phone and TV box — Pastel's activity has an editor view the keyboard types into (NativeActivity's own view is not one, so many devices showed no keyboard); a tap on an edit brings it back after the back button closed it

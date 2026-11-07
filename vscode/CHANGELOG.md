@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.5
+
+- The designer designs views: the box at the top left chooses *All screens* (the form) or a *Phone*, *Tablet*, *TV* or *Desktop* view (• marks those that exist); with a view chosen the form shows with the view's values at that screen's size, and moving, resizing and the Object Inspector change the view's file (`Home.tablet.pform`)
+- New sizes in the size box: Tablet 1024 × 768, TV 960 × 540, Desktop 1100 × 700; view files open their form's designer
+
 ## 1.5.4
 
 - *Pastel: Android Log*: the log of the app on the connected phone (`pastel logcat`), also in the side bar

@@ -69,6 +69,11 @@ public class PastelActivity extends NativeActivity {
         });
     }
 
+    /** The size of text chosen in the phone's settings (1 is normal). */
+    public float fontScale() {
+        return getResources().getConfiguration().fontScale;
+    }
+
     /** Called by Pastel when no edit has the focus any more. */
     public void hideKeyboard() {
         runOnUiThread(new Runnable() {

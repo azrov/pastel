@@ -295,7 +295,7 @@ The same Pascal code and `.pform` forms on an Android phone or tablet. The app i
 
 A major version: what had to wait for compatibility can change here (with `pastel upgrade` doing as much of the work as possible).
 
-- [ ] Forms that adapt by themselves between desktop, tablet and phone
+- [ ] Forms that adapt by themselves between desktop, tablet and phone (`ScreenClass`, views like `Home.tablet.pform` and `MaxContentWidth` are there since 1.5.0-beta.9)
 - [ ] GPU drawing (Skia) for animations and heavy graphics
 - [ ] Forms in the browser (WebAssembly)
 - [ ] Accessibility: screen readers, high contrast, keyboard everywhere

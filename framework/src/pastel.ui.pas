@@ -37,6 +37,9 @@ type
   { What the Enter key of a phone's on-screen keyboard says and does:
     rkNext goes to the next control, the others are Enter (OnSubmit). }
   TReturnKeyType = (rkDefault, rkDone, rkGo, rkNext, rkSearch, rkSend);
+  { What kind of screen the app is on: a phone, a tablet, a computer's window, a TV.
+    Forms can change with it (OnScreenClassChange, views: Home.tablet.pform). }
+  TScreenClass = (scPhone, scTablet, scDesktop, scTV);
   TCursorKind = (ckArrow, ckIBeam, ckHand, ckSizeWE, ckSizeNS);
   TWindowState = (wsNormal, wsMaximized, wsMinimized, wsFullScreen);
   { Light, dark, or what the computer is set to. }
@@ -182,7 +185,10 @@ type
     FBackgroundFit: TImageFit;
     FBackground: TBitmap32;
     FLayout: TLayoutKind;
+    FMaxContentWidth: Integer;
     procedure SetLayout(AValue: TLayoutKind);
+    procedure SetMaxContentWidth(AValue: Integer);
+    function ContentRect(const R: TRectI): TRectI;
     procedure MeasureFree(out W, H: Integer);
     procedure ArrangeFree(const R: TRectI);
     procedure SetGap(AValue: Integer);
@@ -223,6 +229,9 @@ type
     { A picture behind the children: a file in assets/, next to the program, or a full path. }
     property BackgroundImage: string read FBackgroundImage write SetBackgroundImage;
     property BackgroundFit: TImageFit read FBackgroundFit write SetBackgroundFit default ifCover;
+    { The children use at most this width, in the middle: a form stays readable on a tablet, a TV or a
+      wide window (0: all the width). }
+    property MaxContentWidth: Integer read FMaxContentWidth write SetMaxContentWidth default 0;
   end;
 
   TColumn = class(TBox);
@@ -562,6 +571,10 @@ type
     FMinWidth, FMinHeight: Integer;
     FWindowState: TWindowState;
     FThemeMode: TThemeMode;
+    FScreenClass: TScreenClass;
+    FScreenClassKnown: Boolean;
+    FOnScreenClassChange: TNotifyEvent;
+    FView: string;
     procedure SetAppearance(AValue: TThemeMode);
     procedure SetTitle(const AValue: string);
     procedure SetResizable(AValue: Boolean);
@@ -642,6 +655,18 @@ type
     property ModalResult: Integer read GetModalResult write SetModalResult;
     { Called by the platform layer when the user changed the window state. }
     procedure WindowStateChanged(AState: TWindowState);
+    { Called by the platform layer before laying the form out: the view for that kind
+      of screen is applied (Home.tablet.pform) and OnScreenClassChange runs. }
+    procedure SetScreenClass(AValue: TScreenClass);
+    { Moves the focus to the nearest control left, right, up or down (a TV's remote, arrow keys
+      on a phone); False when there is none in that direction. }
+    function FocusInDirection(DX, DY: Integer): Boolean;
+    { The remote's OK button: presses the focused button, ticks a check box, opens a list (Space, else Enter). }
+    procedure ActivateFocused;
+    { The kind of screen: scPhone, scTablet, scDesktop or scTV. }
+    property ScreenClass: TScreenClass read FScreenClass;
+    { The view applied: 'tablet' for Home.tablet.pform, '' for the form itself. }
+    property View: string read FView write FView;
   published
     property Title: string read FTitle write SetTitle;
     { Can the user resize (and maximize) the window? }
@@ -657,6 +682,9 @@ type
     property OnCloseQuery: TCloseQueryEvent read FOnCloseQuery write FOnCloseQuery;
     property OnClose: TNotifyEvent read FOnClose write FOnClose;
     property OnResize: TNotifyEvent read FOnResize write FOnResize;
+    { The kind of screen became known or changed (a phone turned into a tablet's
+      split screen, a window made narrow): show, hide or arrange controls for it. }
+    property OnScreenClassChange: TNotifyEvent read FOnScreenClassChange write FOnScreenClassChange;
   end;
 
   TFormClass = class of TForm;
@@ -690,6 +718,11 @@ var
   PopupMenuHook: procedure(Menu: TControl; Form: TForm; X, Y: Integer) = nil;
   { Alt is held (with KeyDown). }
   KeyAlt: Boolean = False;
+  { Arrow keys a control does not use move the focus to the nearest control in that
+    direction (a TV's remote). Pastel.App turns it on for Android. }
+  ArrowKeysMoveFocus: Boolean = False;
+  { Internal: applies a form's view for a kind of screen (Pastel.Forms sets it). }
+  FormViewHook: procedure(Form: TForm; AClass: TScreenClass) = nil;
   { The main window's form; dialogs are shown on it. Set by Pastel.App. }
   MainForm: TForm = nil;
   { Internal: set by controls when the layout changed; the application loop reads it. }
@@ -1483,6 +1516,24 @@ end;
 
 { ---- TBox ---- }
 
+procedure TBox.SetMaxContentWidth(AValue: Integer);
+begin
+  if FMaxContentWidth = AValue then Exit;
+  FMaxContentWidth := Max(0, AValue);
+  Changed;
+end;
+
+{ the room inside the padding, at most MaxContentWidth wide, in the middle }
+function TBox.ContentRect(const R: TRectI): TRectI;
+begin
+  Result := RectI(R.X + FPadding, R.Y + FPadding, Max(0, R.W - 2 * FPadding), Max(0, R.H - 2 * FPadding));
+  if (FMaxContentWidth > 0) and (Result.W > FMaxContentWidth) then
+  begin
+    Inc(Result.X, (Result.W - FMaxContentWidth) div 2);
+    Result.W := FMaxContentWidth;
+  end;
+end;
+
 procedure TBox.SetGap(AValue: Integer);
 begin
   if FGap = AValue then Exit;
@@ -1580,7 +1631,7 @@ var
   I, CW, CH, DX, DY, X, Y: Integer;
   Child: TControl;
 begin
-  Client := RectI(R.X + FPadding, R.Y + FPadding, Max(0, R.W - 2 * FPadding), Max(0, R.H - 2 * FPadding));
+  Client := ContentRect(R);
   for I := 0 to ChildCount - 1 do
   begin
     Child := Children[I];
@@ -1665,6 +1716,8 @@ begin
   H := 0;
   N := 0;
   Inner := Max(0, AvailWidth - 2 * FPadding);
+  if FMaxContentWidth > 0 then
+    Inner := Min(Inner, FMaxContentWidth);
   for I := 0 to ChildCount - 1 do
   begin
     Child := Children[I];
@@ -1704,8 +1757,7 @@ begin
     ArrangeFree(R);
     Exit;
   end;
-  Inner := RectI(R.X + FPadding, R.Y + FPadding,
-    Max(0, R.W - 2 * FPadding), Max(0, R.H - 2 * FPadding));
+  Inner := ContentRect(R);
   Items := TFPList.Create;
   try
     for I := 0 to ChildCount - 1 do
@@ -2897,6 +2949,8 @@ end;
 
 procedure TForm.ClearControls;
 begin
+  { the view is applied again to the new controls }
+  FScreenClassKnown := False;
   FFocused := nil;
   FHover := nil;
   FCaptured := nil;
@@ -2936,6 +2990,11 @@ begin
       C.FillRect(0, 0, FWidthPx, FHeightPx, Theme.Backdrop);
     P.Paint(C);
   end;
+  { a TV's remote moves the focus: it must be seen on every control, from across the room }
+  if ArrowKeysMoveFocus and FFocusVisible and (FFocused <> nil) and FFocused.Visible and
+    not (FFocused is TButton) then
+    C.StrokeRoundRect(FFocused.Bounds.X - 3, FFocused.Bounds.Y - 3, FFocused.Bounds.W + 6, FFocused.Bounds.H + 6,
+      Theme.Radius + 3, 3, Theme.Accent);
   if (FTooltipFor <> nil) and (FTooltip <> nil) then
     FTooltip.Paint(C);
 end;
@@ -3182,7 +3241,116 @@ begin
   if Assigned(ShortcutHook) and ShortcutHook(Self, Key, Shift, Ctrl) then
     Exit;
   if Key = KEY_TAB then
-    FocusNext(Shift);
+    FocusNext(Shift)
+  else if ArrowKeysMoveFocus and not Ctrl then
+    case Key of
+      KEY_LEFT: FocusInDirection(-1, 0);
+      KEY_RIGHT: FocusInDirection(1, 0);
+      KEY_UP: FocusInDirection(0, -1);
+      KEY_DOWN: FocusInDirection(0, 1);
+    end;
+end;
+
+procedure TForm.ActivateFocused;
+begin
+  if FFocused = nil then
+  begin
+    FocusNext(False);
+    Exit;
+  end;
+  FFocusVisible := True;
+  if not FFocused.KeyDown(KEY_SPACE, False, False) then
+    HandleKeyDown(KEY_ENTER, False, False);
+end;
+
+function TForm.FocusInDirection(DX, DY: Integer): Boolean;
+var
+  List: TFPList;
+  I: Integer;
+  C, Best: TControl;
+  X0, Y0, CX, CY, Main, Side, Score, BestScore: Integer;
+begin
+  Result := False;
+  List := TFPList.Create;
+  try
+    if (TopPopup <> nil) and TopPopup.FModal then
+      CollectFocusable(TopPopup, List)
+    else
+      CollectFocusable(Self, List);
+    if List.Count = 0 then
+      Exit;
+    if (FFocused = nil) or (List.IndexOf(FFocused) < 0) then
+    begin
+      { nothing chosen yet: the first control }
+      FocusControl(TControl(List[0]));
+      FFocusVisible := True;
+      NeedsRepaint := True;
+      Exit(True);
+    end;
+    X0 := FFocused.Bounds.X + FFocused.Bounds.W div 2;
+    Y0 := FFocused.Bounds.Y + FFocused.Bounds.H div 2;
+    Best := nil;
+    BestScore := MaxInt;
+    for I := 0 to List.Count - 1 do
+    begin
+      C := TControl(List[I]);
+      if C = FFocused then
+        Continue;
+      CX := C.Bounds.X + C.Bounds.W div 2;
+      CY := C.Bounds.Y + C.Bounds.H div 2;
+      { how far it is in that direction, and how far to the side }
+      if DX <> 0 then
+      begin
+        Main := (CX - X0) * DX;
+        Side := Abs(CY - Y0);
+        { it must start beyond the focused control's edge (not just overlap it) }
+        if (DX > 0) and (C.Bounds.X < FFocused.Bounds.X + FFocused.Bounds.W - 4) then
+          Continue;
+        if (DX < 0) and (C.Bounds.X + C.Bounds.W > FFocused.Bounds.X + 4) then
+          Continue;
+      end
+      else
+      begin
+        Main := (CY - Y0) * DY;
+        Side := Abs(CX - X0);
+        if (DY > 0) and (C.Bounds.Y < FFocused.Bounds.Y + FFocused.Bounds.H - 4) then
+          Continue;
+        if (DY < 0) and (C.Bounds.Y + C.Bounds.H > FFocused.Bounds.Y + 4) then
+          Continue;
+      end;
+      if Main <= 0 then
+        Continue;
+      Score := Main + 2 * Side;
+      if Score < BestScore then
+      begin
+        BestScore := Score;
+        Best := C;
+      end;
+    end;
+    if Best <> nil then
+    begin
+      FocusControl(Best);
+      FFocusVisible := True;
+      NeedsRepaint := True;     { the ring is drawn outside the controls }
+      Result := True;
+    end;
+  finally
+    List.Free;
+  end;
+end;
+
+procedure TForm.SetScreenClass(AValue: TScreenClass);
+begin
+  if FScreenClassKnown and (FScreenClass = AValue) then
+    Exit;
+  FScreenClass := AValue;
+  FScreenClassKnown := True;
+  if Assigned(FormViewHook) then
+    FormViewHook(Self, AValue);
+  NeedsLayout := True;
+  NeedsRepaint := True;
+  if Assigned(FOnScreenClassChange) then
+    FOnScreenClassChange(Self);
 end;
 
 procedure TForm.HandleTextInput(const S: string);

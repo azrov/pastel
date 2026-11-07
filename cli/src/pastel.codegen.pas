@@ -12,7 +12,7 @@ unit Pastel.Codegen;
 interface
 
 uses
-  Classes, SysUtils;
+  Classes, SysUtils, Pastel.PForm;
 
 type
   TCodegenResult = record
@@ -24,8 +24,16 @@ type
   Errors are printed in compiler style: path(line) Error: message. }
 function GenerateForms(const Root, GenDir: string; FileRefs: Boolean): TCodegenResult;
 
-{ Builds the unit text for one parsed .pform. Exposed for tests. }
-function FormUnitSource(const UnitName, FormSource, FilePath: string): string;
+{ Builds the unit text for one parsed .pform. Exposed for tests. Views:
+  'tablet=<text of Home.tablet.pform>' lines' sources go in as RegisterFormView
+  (ViewPaths: the same names with their files, for hot reload). }
+function FormUnitSource(const UnitName, FormSource, FilePath: string; Views: TStrings = nil;
+  ViewPaths: TStrings = nil): string;
+{ Checks a view (Home.tablet.pform) against its form: the same root, only
+  objects the form has (of the same type), no events. Raises EPFormError. }
+procedure CheckFormView(Form, View: TPFormNode);
+{ 'tablet' for Home.tablet.pform, '' for a form's own file. }
+function ViewNameOf(const FileName: string): string;
 
 var
   { ClassName=UnitName of the project's own controls (src/controls/), set by GenerateForms. }
@@ -34,7 +42,7 @@ var
 implementation
 
 uses
-  Pastel.PForm, Pastel.Console, Pastel.UI, Pastel.Controls, Pastel.Menus, Pastel.Grids, Pastel.Binding, Pastel.Inputs,
+  Pastel.Console, Pastel.UI, Pastel.Controls, Pastel.Menus, Pastel.Grids, Pastel.Binding, Pastel.Inputs,
   Pastel.CustomCtl;
 
 function PascalString(const S: string): string;
@@ -139,11 +147,70 @@ begin
       Result := Result + ', ' + U;
 end;
 
-function FormUnitSource(const UnitName, FormSource, FilePath: string): string;
+function ViewNameOf(const FileName: string): string;
+var
+  Base: string;
+begin
+  Base := ChangeFileExt(ExtractFileName(FileName), '');      { Home.tablet }
+  Result := LowerCase(ExtractFileExt(Base));
+  Delete(Result, 1, 1);
+  if (Result <> 'phone') and (Result <> 'tablet') and (Result <> 'desktop') and (Result <> 'tv') then
+    Result := '';
+end;
+
+function FindNode(Node: TPFormNode; const AName: string): TPFormNode;
+var
+  I: Integer;
+begin
+  if SameText(Node.Name, AName) then
+    Exit(Node);
+  for I := 0 to Node.Children.Count - 1 do
+  begin
+    Result := FindNode(Node.Child(I), AName);
+    if Result <> nil then
+      Exit;
+  end;
+  Result := nil;
+end;
+
+procedure CheckFormView(Form, View: TPFormNode);
+
+  procedure Check(V: TPFormNode; IsRoot: Boolean);
+  var
+    I: Integer;
+    F: TPFormNode;
+  begin
+    if IsRoot then
+    begin
+      if not SameText(V.ClassName_, Form.ClassName_) then
+        raise EPFormError.CreateAt(V.Line, Format('a view starts like its form: object %s: %s', [Form.Name, Form.ClassName_]));
+    end
+    else
+    begin
+      F := FindNode(Form, V.Name);
+      if (F = nil) or (F = Form) then
+        raise EPFormError.CreateAt(V.Line, Format('the form has no "%s": a view only changes the form''s controls ' +
+          '(add new ones to the form, Visible = False where they are not wanted)', [V.Name]));
+      if not SameText(F.ClassName_, V.ClassName_) then
+        raise EPFormError.CreateAt(V.Line, Format('%s is a %s in the form, not a %s', [V.Name, F.ClassName_, V.ClassName_]));
+    end;
+    for I := 0 to V.Props.Count - 1 do
+      if SameText(Copy(V.Prop(I).Name, 1, 2), 'On') and (V.Prop(I).Kind = pvIdent) then
+        raise EPFormError.CreateAt(V.Prop(I).Line, Format('%s: events belong in the form itself, not in a view', [V.Prop(I).Name]));
+    for I := 0 to V.Children.Count - 1 do
+      Check(V.Child(I), False);
+  end;
+
+begin
+  Check(View, True);
+end;
+
+function FormUnitSource(const UnitName, FormSource, FilePath: string; Views: TStrings; ViewPaths: TStrings): string;
 var
   Root: TPFormNode;
   Fields: TFieldList;
-  BaseName, Code: string;
+  BaseName, Code, ViewCode, ViewPath: string;
+  I: Integer;
 begin
   Root := ParsePForm(FormSource);
   Fields.Lines := TStringList.Create;
@@ -190,9 +257,20 @@ begin
       'initialization' + LineEnding +
       '  RegisterFormSource(''' + Root.ClassName_ + ''',' + LineEnding +
       '    ' + PascalString(FormSource) + ',' + LineEnding +
-      '    ''' + StringReplace(FilePath, '''', '''''', [rfReplaceAll]) + ''');' + LineEnding +
-      LineEnding +
-      'end.' + LineEnding;
+      '    ''' + StringReplace(FilePath, '''', '''''', [rfReplaceAll]) + ''');' + LineEnding;
+    ViewCode := '';
+    if Views <> nil then
+      for I := 0 to Views.Count - 1 do
+      begin
+        ViewPath := '';
+        if ViewPaths <> nil then
+          ViewPath := ViewPaths.Values[Views.Names[I]];
+        ViewCode := ViewCode +
+          '  RegisterFormView(''' + Root.ClassName_ + ''', ''' + Views.Names[I] + ''',' + LineEnding +
+          '    ' + PascalString(Views.ValueFromIndex[I]) + ',' + LineEnding +
+          '    ''' + StringReplace(ViewPath, '''', '''''', [rfReplaceAll]) + ''');' + LineEnding;
+      end;
+    Code := Code + ViewCode + LineEnding + 'end.' + LineEnding;
     Result := Code;
   finally
     Fields.Lines.Free;
@@ -249,8 +327,10 @@ end;
 
 function GenerateForms(const Root, GenDir: string; FileRefs: Boolean): TCodegenResult;
 var
-  Files, Src: TStringList;
-  Rel, UnitName, Path: string;
+  Files, Src, Views, ViewPaths: TStringList;
+  Rel, VRel, UnitName, Path, ViewName, Prefix: string;
+  FormRoot, ViewRoot: TPFormNode;
+  ErrRel: string;
 begin
   Result.Generated := 0;
   Result.Errors := 0;
@@ -258,6 +338,8 @@ begin
   ProjectClasses := ProjectControls(Root);
   Files := TStringList.Create;
   Src := TStringList.Create;
+  Views := TStringList.Create;
+  ViewPaths := TStringList.Create;
   try
     FindPForms(Root, 'src', Files);
     Files.Sort;
@@ -265,21 +347,61 @@ begin
       ForceDirectories(Root + GenDir);
     for Rel in Files do
     begin
+      { a view (Home.tablet.pform) goes into its form's unit }
+      if ViewNameOf(Rel) <> '' then
+      begin
+        Prefix := ChangeFileExt(ChangeFileExt(Rel, ''), '') + '.pform';
+        if Files.IndexOf(Prefix) < 0 then
+        begin
+          Inc(Result.Errors);
+          WriteLn(Red(Format('%s(1) Error: a view of a form that is not there (%s)', [Rel, ExtractFileName(Prefix)])));
+        end;
+        Continue;
+      end;
       UnitName := ChangeFileExt(ExtractFileName(Rel), '');
       Src.LoadFromFile(Root + Rel);
       if FileRefs then
         Path := Root + Rel
       else
         Path := '';
+      Views.Clear;
+      ViewPaths.Clear;
+      ErrRel := Rel;
       try
+        for VRel in Files do
+        begin
+          ViewName := ViewNameOf(VRel);
+          if (ViewName = '') or (ChangeFileExt(ChangeFileExt(VRel, ''), '') <> ChangeFileExt(Rel, '')) then
+            Continue;
+          ErrRel := VRel;
+          with TStringList.Create do
+          try
+            LoadFromFile(Root + VRel);
+            FormRoot := ParsePForm(Src.Text);
+            ViewRoot := nil;
+            try
+              ViewRoot := ParsePForm(Text);
+              CheckFormView(FormRoot, ViewRoot);
+            finally
+              FormRoot.Free;
+              ViewRoot.Free;
+            end;
+            Views.Add(ViewName + '=' + Text);
+          finally
+            Free;
+          end;
+          if FileRefs then
+            ViewPaths.Add(ViewName + '=' + Root + VRel);
+        end;
+        ErrRel := Rel;
         WriteIfChanged(Root + GenDir + PathDelim + UnitName + '.g.pas',
-          FormUnitSource(UnitName, Src.Text, Path));
+          FormUnitSource(UnitName, Src.Text, Path, Views, ViewPaths));
         Inc(Result.Generated);
       except
         on E: EPFormError do
         begin
           Inc(Result.Errors);
-          WriteLn(Red(Format('%s(%d) Error: %s', [Rel, E.Line,
+          WriteLn(Red(Format('%s(%d) Error: %s', [ErrRel, E.Line,
             Copy(E.Message, Pos(': ', E.Message) + 2, MaxInt)])));
         end;
       end;
@@ -287,6 +409,8 @@ begin
   finally
     Files.Free;
     Src.Free;
+    Views.Free;
+    ViewPaths.Free;
   end;
 end;
 
