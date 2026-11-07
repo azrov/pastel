@@ -2,6 +2,11 @@
 
 The `pastel` tool and the framework. The VS Code extension has its own list: [vscode/CHANGELOG.md](vscode/CHANGELOG.md). What is planned is in [ROADMAP.md](ROADMAP.md).
 
+## 1.5.0-beta.7
+
+- Android: apps no longer stop as soon as their window shows ("EThread: CheckSynchronize called from non-main thread"): the app's own thread is its main thread for `TThread.Synchronize`, `Queue` and timers. Found with `pastel logcat` on a 32-bit ARM phone — the first run on a real device
+- Android: when an app stops after an error, the phone no longer waits ten seconds for it to close
+
 ## 1.5.0-beta.6
 
 - `pastel logcat`: the log of the app on the connected Android device, by its package name — its processes (learned from the system's start lines and the process list), its start and end, crash reports; a crash shows the Pascal function and line (`<- ClearClick (Home.pas:33)`, from the debug build); `--all`, `--clear`; the whole log is saved in `build/android/logcat.txt`

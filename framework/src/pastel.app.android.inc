@@ -427,6 +427,11 @@ end;
 { the app's event loop, on the app thread }
 procedure TApplication.AndroidRun;
 begin
+  { the app's thread is its main thread: Java's main thread only hands on the
+    system's events. TThread.Synchronize, Queue and CheckSynchronize (timers,
+    workers) need to know that, or they stop the app ("CheckSynchronize called
+    from non-main thread"). }
+  MainThreadID := GetCurrentThreadID;
   CreateWindow;
   ModalStep := @AppModalStep;
   WakeMainThread := @WakeUp;

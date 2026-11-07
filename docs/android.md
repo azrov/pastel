@@ -179,7 +179,7 @@ PASTEL_KEYSTORE_PASSWORD=... pastel package apk
 ## Not there yet
 
 - `.aab` bundles for Google Play (an `.apk` with a release key can be uploaded by other routes for now)
-- Tried on real devices: the ARM 32-bit, x86 and Android 4.4–5 builds are checked (the right instructions, Android's library format) but not yet run on those devices — reports are welcome
+- Tried on real devices: an ARM 32-bit phone (Android 10) runs it; ARM 64-bit, x86 and Android 4.4–5 are checked (the right instructions, Android's library format) but not yet run on such devices — reports are welcome
 - An example: the salon's agenda on the phone
 
 See the [roadmap](../ROADMAP.md#15--android-in-preview).

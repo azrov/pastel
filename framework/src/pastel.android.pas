@@ -160,7 +160,8 @@ end;
 { commands that change what the app thread draws on wait until it has them }
 procedure SendAndWait(Cmd: TAndroidCommand);
 begin
-  if AppThread = TThreadID(0) then
+  { no app thread, or it has ended (after an error): nobody would answer }
+  if (AppThread = TThreadID(0)) or AndroidAppFinished then
     Exit;
   RTLEventResetEvent(Ack);
   Send(Cmd);
