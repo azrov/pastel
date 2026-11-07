@@ -125,6 +125,7 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('pastel.buildTarget', buildForPlatform),
     vscode.commands.registerCommand('pastel.choosePlatform', choosePlatform),
     vscode.commands.registerCommand('pastel.setAppIcon', setAppIcon),
+    vscode.commands.registerCommand('pastel.androidLog', () => runTask('logcat', { args: ['logcat'] })),
     vscode.commands.registerCommand('pastel.packageApk', () => runTask('build', { target: 'android' })),
     vscode.commands.registerCommand('pastel.clean', () => runTask('clean')),
     vscode.commands.registerCommand('pastel.doctor', doctor),

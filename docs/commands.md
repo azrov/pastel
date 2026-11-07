@@ -5,7 +5,7 @@ Everything Pastel does from the terminal, with examples. `pastel help` shows the
 **Projects:** [new](#pastel-new) · [upgrade](#pastel-upgrade) · [clean](#pastel-clean)
 **Packages:** [add](#pastel-add) · [remove](#pastel-remove) · [update](#pastel-update) · [search](#pastel-search) · [deps](#pastel-deps)
 **Building and running:** [build](#pastel-build) · [run](#pastel-run) · [test](#pastel-test) · [fmt](#pastel-fmt) · [check](#pastel-check)
-**Shipping:** [package](#pastel-package) · [targets](#pastel-targets) · [doctor](#pastel-doctor)
+**Shipping:** [package](#pastel-package) · [logcat](#pastel-logcat) · [targets](#pastel-targets) · [doctor](#pastel-doctor)
 **Apps:** [lang](#pastel-lang) · [preview](#pastel-preview) · [schema](#pastel-schema)
 **Services:** [migrate](#pastel-migrate)
 **Other:** [version](#pastel-version) · [help](#pastel-help)
@@ -120,6 +120,18 @@ pastel package --no-build               # pack what was built already
 ```
 
 Next to every archive is a `.sha256` file. What goes in: the program, `README`, `LICENSE` and `[package] include` from `pastel.toml`.
+
+## pastel logcat
+
+The log of the app on the connected Android phone, TV box or emulator, by the app's package name (`[package.android] id`): the lines of its processes, when it starts and dies, and crash reports — with the Pascal function and line of a crash, from the debug build. `pastel run --target android` shows the same after starting the app.
+
+```sh
+pastel logcat              # until Ctrl+C; start the app on the phone, its lines show here
+pastel logcat --clear      # forget the older lines first
+pastel logcat --all        # every line of the phone, not only the app's
+```
+
+The whole log goes to `build/android/logcat.txt` too, to send with a question ([android.md](android.md#when-the-app-closes)).
 
 ## pastel targets
 

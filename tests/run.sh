@@ -23,6 +23,8 @@ mkdir -p "$WORK/units"
 "$WORK/pform_test"
 "$FPC" -Mobjfpc -Sh -vew -FU"$WORK/units" -Fucli/src -Fuframework/src -o"$WORK/format_test" tests/format_test.pas >/dev/null
 "$WORK/format_test"
+"$FPC" -Mobjfpc -Sh -vew -FU"$WORK/units" -Fucli/src -Fuframework/src -o"$WORK/logcat_test" tests/logcat_test.pas >/dev/null
+"$WORK/logcat_test"
 "$PASTEL" fmt --check cli framework tests examples tools/website >/dev/null || { "$PASTEL" fmt --check cli framework tests examples tools/website; exit 1; }
 echo "fmt: Pastel's own code is formatted"
 

@@ -2,6 +2,11 @@
 
 The `pastel` tool and the framework. The VS Code extension has its own list: [vscode/CHANGELOG.md](vscode/CHANGELOG.md). What is planned is in [ROADMAP.md](ROADMAP.md).
 
+## 1.5.0-beta.6
+
+- `pastel logcat`: the log of the app on the connected Android device, by its package name — its processes (learned from the system's start lines and the process list), its start and end, crash reports; a crash shows the Pascal function and line (`<- ClearClick (Home.pas:33)`, from the debug build); `--all`, `--clear`; the whole log is saved in `build/android/logcat.txt`
+- `pastel run --target android` shows the app's log the same way (before: only some tags, without native crashes' `libc` lines)
+
 ## 1.5.0-beta.5
 
 Android on every kind of device.

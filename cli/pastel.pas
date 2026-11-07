@@ -8,7 +8,7 @@ uses
   Classes, SysUtils,
   Pastel.Console, Pastel.Toml, Pastel.Project, Pastel.Targets,
   Pastel.Builder, Pastel.Templates, Pastel.Doctor, Pastel.Inspect, Pastel.TestCmd,
-  Pastel.Watch, Pastel.FmtCmd, Pastel.Package, Pastel.MigrateCmd, Pastel.LangCmd, Pastel.Runtime, Pastel.CustomCtl, Pastel.Upgrade, Pastel.Packages, Pastel.ModelGen, Pastel.UI, RegExpr, Process;
+  Pastel.Watch, Pastel.FmtCmd, Pastel.Package, Pastel.MigrateCmd, Pastel.LangCmd, Pastel.Runtime, Pastel.CustomCtl, Pastel.Upgrade, Pastel.Packages, Pastel.ModelGen, Pastel.UI, Pastel.Logcat, RegExpr, Process;
 
 const
   ExitOk = 0;
@@ -21,7 +21,7 @@ type
     Positional: TStringArray;   { arguments that are not options }
     PassThrough: TStringArray;  { everything after "--" }
     Target: string;
-    Release, Verbose, All, Help, Watch, Check, NoBuild, Dark, Install: Boolean;
+    Release, Verbose, All, Help, Watch, Check, NoBuild, Dark, Install, Clear: Boolean;
     Json, Stdin, NoRun, Phone: Boolean;
     Output, Layout, Database, Git, SubPath, Branch: string;
     Width, Height: Integer;
@@ -57,6 +57,7 @@ begin
   WriteLn('  search [words]         Look for packages in the registry');
   WriteLn('  deps                   The dependencies, and theirs (--json)');
   WriteLn('  upgrade [--check]      Bring a project from an older Pastel up to date');
+  WriteLn('  logcat                 The log of the app on the connected Android phone (--all, --clear)');
   WriteLn('  clean                  Remove the build folder');
   WriteLn('  targets                List the platforms Pastel can build for');
   WriteLn('  doctor                 Check your setup (--install windows: set up building for Windows)');
@@ -118,6 +119,8 @@ begin
       CL.Verbose := True
     else if A = '--all' then
       CL.All := True
+    else if A = '--clear' then
+      CL.Clear := True
     else if A = '--no-build' then
       CL.NoBuild := True
     else if A = '--phone' then
@@ -406,6 +409,7 @@ var
   Targets: TTargetArray;
   Device: TTarget;
   Supported: TStringArray;
+  Symbols: TCrashSymbols;
 
   function Adb_(const A: array of string; Show: Boolean): Boolean;
   var
@@ -486,25 +490,88 @@ begin
     Status('Starting', Id);
     if not Adb_(['shell', 'am', 'start', '-n', Id + '/dev.pastel.PastelActivity'], False) then
       Exit;
-    Status('Log', 'what the app writes (WriteLn, errors); Ctrl+C stops showing it, the app keeps running');
-    Args.Clear;
-    Args.Add('logcat');
-    Args.Add('-v');
-    Args.Add('brief');
-    Args.Add('pastel:V');
-    Args.Add('AndroidRuntime:E');
-    Args.Add('DEBUG:V');
-    Args.Add('*:S');
-    with TProcess.Create(nil) do
+    Status('Log', Format('of %s (its processes, crashes); Ctrl+C stops showing it, the app keeps running', [Id]));
+    Status('Saved', 'the whole log to build/android/logcat.txt (to send with a question)');
+    Symbols := TCrashSymbols.Create(Project.Root);
     try
-      Executable := Adb;
-      Parameters.Assign(Args);
-      CurrentDirectory := Project.Root;
-      Options := [poWaitOnExit];
-      Execute;
-      Result := ExitCode;
+      Result := FollowAppLog(Adb, Id, Project.Root + 'build' + PathDelim + 'android' + PathDelim + 'logcat.txt', CL.All, [],
+        @Symbols.Explain);
     finally
-      Free;
+      Symbols.Free;
+    end;
+  finally
+    Args.Free;
+    Project.Free;
+  end;
+end;
+
+{ pastel logcat: the log of the app on the connected phone, by its package name }
+function CmdLogcat(const CL: TCommandLine): Integer;
+var
+  Project: TPastelProject;
+  Adb, Output, Id: string;
+  Args: TStringList;
+  Pids: TStringArray;
+  Symbols: TCrashSymbols;
+
+  function Adb_(const A: array of string): Boolean;
+  var
+    S: string;
+  begin
+    Args.Clear;
+    for S in A do
+      Args.Add(S);
+    Result := RunCapture(Adb, Args, Project.Root, Output) = 0;
+  end;
+
+begin
+  Result := ExitError;
+  Adb := ExeSearch({$IFDEF WINDOWS}'adb.exe'{$ELSE}'adb'{$ENDIF}, GetEnvironmentVariable('PATH'));
+  if Adb = '' then
+  begin
+    Fail('the log of a phone needs adb (Android''s device bridge)');
+    {$IFDEF LINUX}
+    Hint('sudo apt install adb; then turn on USB debugging on the phone (Settings > Developer options)');
+    {$ELSE}
+    Hint('it comes with Android Studio''s platform-tools; then turn on USB debugging on the phone');
+    {$ENDIF}
+    Exit;
+  end;
+  Project := OpenProject;
+  if Project = nil then
+    Exit;
+  Args := TStringList.Create;
+  try
+    Adb_(['devices']);
+    if Pos(#9'device', Output) = 0 then
+    begin
+      Fail('no phone is connected');
+      Hint('connect it with USB (or: adb connect <its address>:5555), allow USB debugging, then check with: adb devices');
+      Exit;
+    end;
+    Id := AndroidAppId(Project);
+    if CL.Clear then
+      Adb_(['logcat', '-c']);
+    { the app's processes now: pidof (Android 7 and newer), else the process list }
+    Pids := nil;
+    if Adb_(['shell', 'pidof', Id]) then
+      Pids := PidsOf(Output, Id);
+    if Length(Pids) = 0 then
+    begin
+      Adb_(['shell', 'ps']);
+      Pids := PidsOf(Output, Id);
+    end;
+    if Length(Pids) > 0 then
+      Status('Log', Format('of %s (process %s); Ctrl+C stops', [Id, string.Join(', ', Pids)]))
+    else
+      Status('Log', Format('of %s: it is not running; start it on the phone, its lines show here; Ctrl+C stops', [Id]));
+    Status('Saved', 'the whole log to build/android/logcat.txt (to send with a question)');
+    Symbols := TCrashSymbols.Create(Project.Root);
+    try
+      Result := FollowAppLog(Adb, Id, Project.Root + 'build' + PathDelim + 'android' + PathDelim + 'logcat.txt', CL.All, Pids,
+        @Symbols.Explain);
+    finally
+      Symbols.Free;
     end;
   finally
     Args.Free;
@@ -993,6 +1060,7 @@ begin
       'clean':   ExitCode := CmdClean;
       'test':    ExitCode := CmdTest(CL);
       'targets': ExitCode := CmdTargets;
+      'logcat':  ExitCode := CmdLogcat(CL);
       'doctor':  ExitCode := CmdDoctor(CL);
       'check':   ExitCode := CmdCheck(CL);
       'migrate': ExitCode := RunMigrate(CL.Positional, CL.Database);

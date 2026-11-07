@@ -2,7 +2,7 @@
   "name": "pastel-vscode",
   "displayName": "Pastel",
   "description": "Build cross-platform apps in Object Pascal with Pastel: run, build, live form preview, .pform completion and checks.",
-  "version": "1.5.3",
+  "version": "1.5.4",
   "publisher": "pastel",
   "repository": {
     "type": "git",
@@ -233,6 +233,11 @@
       {
         "command": "pastel.packageApk",
         "title": "Make the Android .apk",
+        "category": "Pastel"
+      },
+      {
+        "command": "pastel.androidLog",
+        "title": "Android Log (the app on the connected phone)",
         "category": "Pastel"
       }
     ],

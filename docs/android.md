@@ -112,6 +112,31 @@ pastel run --target android
 
 It asks the phone which kind of CPU it has, packs a debug `.apk` for it, installs it, starts it and shows its log (`WriteLn`, errors) until `Ctrl+C`. Without a cable: copy `dist/shop-0.1.0.apk` (made by `pastel package apk`, with every kind) to the phone or TV box and open it (allow installing from this source once).
 
+## When the app closes
+
+The phone's log says why. `pastel run --target android` (F9) shows it after starting the app; for an app started on the phone itself (or a TV box over the network: `adb connect 192.168.1.50:5555`):
+
+```sh
+pastel logcat              # the app's lines, by its package name; Ctrl+C stops
+```
+
+In VS Code: **Pastel: Android Log**. Only the app's lines are shown — those of its processes, its start and its end, and crash reports. A crash in the Pascal code shows where it was, from the debug build:
+
+```
+15:43:01 F libc: Fatal signal 11 (SIGSEGV), code 1, fault addr 0x0 in tid 4330
+15:43:01 F DEBUG:     #00 pc 0006d4d8  /data/app/dev.pastel.shop-1/lib/arm/libmain.so   <- ClearClick (Home.pas:33)
+```
+
+What to look for:
+
+| In the log | What it means |
+|---|---|
+| `dlopen failed`, `UnsatisfiedLinkError` | Android could not load `libmain.so`: the line says which name is missing |
+| `Fatal signal 11 (SIGSEGV)` and a `backtrace` | the Pascal code crashed: the `<-` lines say where |
+| `pastel` lines | what the app writes (`WriteLn`, errors it caught) |
+
+`pastel logcat --all` shows every line of the phone. The whole log is in `build/android/logcat.txt`: send it with the phone's model and Android version when you ask for help.
+
 ## Trying it in the emulator
 
 No phone at hand? Android Studio's emulator runs Android on the PC (*Device Manager → Create device*, an *x86_64* system image). Start it; `adb devices` lists it like a phone, and `pastel run --target android` (F9) installs the `x86_64` build there. The emulator needs the PC's virtualization (KVM on Linux, enabled in the BIOS).

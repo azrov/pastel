@@ -148,6 +148,7 @@ export class ProjectTree implements vscode.TreeDataProvider<ProjectNode> {
       action('Platform…', 'pastel.choosePlatform', 'device-mobile', 'for F9 and Ctrl+F9'),
       action('Build for Platform…', 'pastel.buildTarget', 'device-desktop'),
       action('App Icon…', 'pastel.setAppIcon', 'file-media', 'assets/icon.png'),
+      action('Android Log', 'pastel.androidLog', 'output', 'the phone'),
       action('Clean', 'pastel.clean', 'trash'),
       action('Check Setup', 'pastel.doctor', 'pulse'),
     ];
