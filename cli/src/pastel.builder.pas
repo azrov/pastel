@@ -765,7 +765,7 @@ begin
     end;
     if not Named or (MainBegin < 0) then
       raise EProjectError.Create(Project.MainFile + ': the program (program ...; begin ... end.) was not found');
-    L.Insert(MainBegin, 'exports ANativeActivity_onCreate, Java_dev_pastel_PastelActivity_nativeText;');
+    L.Insert(MainBegin, 'exports ANativeActivity_onCreate, Java_dev_pastel_PastelActivity_nativeText, Java_dev_pastel_PastelActivity_nativeKey;');
     L.Insert(MainBegin + 1, '');
     { messages point at the real main file }
     L.Insert(0, '{ made by pastel build from ' + Project.MainFile + ' for Android }');

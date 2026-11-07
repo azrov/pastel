@@ -9,7 +9,7 @@ Controls, layout and input handling.
 
 `uses Pastel.UI;` · source: [framework/src/pastel.ui.pas](../../framework/src/pastel.ui.pas)
 
-**Contents:** [TAlignItems](#talignitems) · [TJustify](#tjustify) · [TImageFit](#timagefit) · [TLayoutKind](#tlayoutkind) · [TAnchorKind](#tanchorkind) · [TDock](#tdock) · [TTextAlign](#ttextalign) · [TButtonStyle](#tbuttonstyle) · [TCursorKind](#tcursorkind) · [TWindowState](#twindowstate) · [TThemeMode](#tthememode) · [TControl](#tcontrol) · [TAction](#taction) · [TBox](#tbox) · [TColumn](#tcolumn) · [TPanel](#tpanel) · [TRow](#trow) · [TFlow](#tflow) · [TCard](#tcard) · [TSpacer](#tspacer) · [TLabel](#tlabel) · [TButton](#tbutton) · [TEditState](#teditstate) · [TVisualLine](#tvisualline) · [TCustomEdit](#tcustomedit) · [TEdit](#tedit) · [TMemo](#tmemo) · [TPopup](#tpopup) · [TTimer](#ttimer) · [TForm](#tform) · [TTheme](#ttheme) · [UseDarkTheme](#usedarktheme) · [SetThemeValue](#setthemevalue) · [InvalidateArea](#invalidatearea) · [RequestAnimation](#requestanimation) · [AnimationTime](#animationtime) · [RequestAnimation](#requestanimation) · [ProcessTimers](#processtimers) · [WrapText](#wraptext) · [RegisterControl](#registercontrol) · [FindControlClass](#findcontrolclass) · [ControlClassCount](#controlclasscount) · [ControlClassAt](#controlclassat) · [RegisterNonVisual](#registernonvisual) · [FindNonVisualClass](#findnonvisualclass) · [NonVisualClassCount](#nonvisualclasscount) · [NonVisualClassAt](#nonvisualclassat)
+**Contents:** [TAlignItems](#talignitems) · [TJustify](#tjustify) · [TImageFit](#timagefit) · [TLayoutKind](#tlayoutkind) · [TAnchorKind](#tanchorkind) · [TDock](#tdock) · [TTextAlign](#ttextalign) · [TButtonStyle](#tbuttonstyle) · [TKeyboardType](#tkeyboardtype) · [TReturnKeyType](#treturnkeytype) · [TCursorKind](#tcursorkind) · [TWindowState](#twindowstate) · [TThemeMode](#tthememode) · [TControl](#tcontrol) · [TAction](#taction) · [TBox](#tbox) · [TColumn](#tcolumn) · [TPanel](#tpanel) · [TRow](#trow) · [TFlow](#tflow) · [TCard](#tcard) · [TSpacer](#tspacer) · [TLabel](#tlabel) · [TButton](#tbutton) · [TEditState](#teditstate) · [TVisualLine](#tvisualline) · [TCustomEdit](#tcustomedit) · [TEdit](#tedit) · [TMemo](#tmemo) · [TPopup](#tpopup) · [TTimer](#ttimer) · [TForm](#tform) · [TTheme](#ttheme) · [UseDarkTheme](#usedarktheme) · [SetThemeValue](#setthemevalue) · [InvalidateArea](#invalidatearea) · [RequestAnimation](#requestanimation) · [AnimationTime](#animationtime) · [RequestAnimation](#requestanimation) · [ProcessTimers](#processtimers) · [WrapText](#wraptext) · [RegisterControl](#registercontrol) · [FindControlClass](#findcontrolclass) · [ControlClassCount](#controlclasscount) · [ControlClassAt](#controlclassat) · [RegisterNonVisual](#registernonvisual) · [FindNonVisualClass](#findnonvisualclass) · [NonVisualClassCount](#nonvisualclasscount) · [NonVisualClassAt](#nonvisualclassat)
 
 ## Types
 
@@ -104,6 +104,38 @@ bsFlat: no background until the mouse is on it (tool bars).
 - `bsSecondary` bsFlat: no background until the mouse is on it (tool bars).
 - `bsDanger` bsFlat: no background until the mouse is on it (tool bars).
 - `bsFlat` bsFlat: no background until the mouse is on it (tool bars).
+### TKeyboardType
+
+```pascal
+type TKeyboardType = (ktDefault, ktText, ktNumber, ktDecimal, ktPhone, ktEmail, ktUrl, ktTime)
+```
+
+The on-screen keyboard of a phone for an edit (FireMonkey's KeyboardType):
+ktDefault lets the edit choose (TNumberEdit: numbers).
+
+- `ktDefault` The on-screen keyboard of a phone for an edit (FireMonkey's KeyboardType): ktDefault lets the edit choose (TNumberEdit: numbers).
+- `ktText` The on-screen keyboard of a phone for an edit (FireMonkey's KeyboardType): ktDefault lets the edit choose (TNumberEdit: numbers).
+- `ktNumber` The on-screen keyboard of a phone for an edit (FireMonkey's KeyboardType): ktDefault lets the edit choose (TNumberEdit: numbers).
+- `ktDecimal` The on-screen keyboard of a phone for an edit (FireMonkey's KeyboardType): ktDefault lets the edit choose (TNumberEdit: numbers).
+- `ktPhone` The on-screen keyboard of a phone for an edit (FireMonkey's KeyboardType): ktDefault lets the edit choose (TNumberEdit: numbers).
+- `ktEmail` The on-screen keyboard of a phone for an edit (FireMonkey's KeyboardType): ktDefault lets the edit choose (TNumberEdit: numbers).
+- `ktUrl` The on-screen keyboard of a phone for an edit (FireMonkey's KeyboardType): ktDefault lets the edit choose (TNumberEdit: numbers).
+- `ktTime` The on-screen keyboard of a phone for an edit (FireMonkey's KeyboardType): ktDefault lets the edit choose (TNumberEdit: numbers).
+### TReturnKeyType
+
+```pascal
+type TReturnKeyType = (rkDefault, rkDone, rkGo, rkNext, rkSearch, rkSend)
+```
+
+What the Enter key of a phone's on-screen keyboard says and does:
+rkNext goes to the next control, the others are Enter (OnSubmit).
+
+- `rkDefault` What the Enter key of a phone's on-screen keyboard says and does: rkNext goes to the next control, the others are Enter (OnSubmit).
+- `rkDone` What the Enter key of a phone's on-screen keyboard says and does: rkNext goes to the next control, the others are Enter (OnSubmit).
+- `rkGo` What the Enter key of a phone's on-screen keyboard says and does: rkNext goes to the next control, the others are Enter (OnSubmit).
+- `rkNext` What the Enter key of a phone's on-screen keyboard says and does: rkNext goes to the next control, the others are Enter (OnSubmit).
+- `rkSearch` What the Enter key of a phone's on-screen keyboard says and does: rkNext goes to the next control, the others are Enter (OnSubmit).
+- `rkSend` What the Enter key of a phone's on-screen keyboard says and does: rkNext goes to the next control, the others are Enter (OnSubmit).
 ### TCursorKind
 
 ```pascal
@@ -370,6 +402,10 @@ keyboard, clipboard, undo/redo, scrolling; TMemo adds lines and wrapping.
 | `procedure Redo` |  |
 | `function CanUndo: Boolean` |  |
 | `property CaretPos: Integer` |  |
+| `function KeyboardKind: TKeyboardType` | The keyboard a phone shows: KeyboardType, or the edit's own choice for ktDefault (ktText for most). |
+| `property MultiLine: Boolean` |  |
+| `property IsPassword: Boolean` |  |
+| `property ReturnKeyType: TReturnKeyType` |  |
 | `property SelStart: Integer` | The selection: SelStart counts from 0 (bytes), like Delphi. |
 | `property SelLength: Integer` |  |
 | `property SelText: string` |  |
@@ -395,6 +431,8 @@ One line of text.
 | `property ReadOnly` |  |
 | `property MaxLength` |  |
 | `property Password: Boolean` | Shows dots instead of the text. |
+| `property KeyboardType: TKeyboardType` | The phone's on-screen keyboard for it: numbers, a phone pad, e-mail... |
+| `property ReturnKeyType` | What the on-screen keyboard's Enter key says: Done, Next, Search... |
 | `property OnChange` |  |
 | `property OnSubmit: TNotifyEvent` | Enter was pressed. |
 
@@ -415,6 +453,7 @@ Text with several lines; scrolls, wraps long lines.
 | `property ReadOnly` |  |
 | `property MaxLength` |  |
 | `property WordWrap: Boolean` |  |
+| `property KeyboardType: TKeyboardType` | The phone's on-screen keyboard for it. |
 | `property OnChange` |  |
 
 ### TPopup

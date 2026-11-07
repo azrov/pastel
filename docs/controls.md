@@ -357,8 +357,23 @@ EmailEdit.SelectAll;
 | `Text`, `Placeholder` | The text; the grey text shown when it is empty |
 | `Password` | Shows dots |
 | `ReadOnly`, `MaxLength` | |
+| `KeyboardType` | The phone's on-screen keyboard: `ktText`, `ktNumber`, `ktDecimal`, `ktPhone`, `ktEmail`, `ktUrl`, `ktTime`; `ktDefault` lets the edit choose (`TNumberEdit`: numbers, `TCurrencyEdit`: with a decimal point, `TTimeEdit`: a time) |
+| `ReturnKeyType` | What the on-screen keyboard's Enter key says: `rkDone` (the default), `rkGo`, `rkNext` (to the next control), `rkSearch`, `rkSend`; the others call `OnSubmit` |
 | `OnChange` | The text changed (typing or code) |
 | `OnSubmit` | Enter was pressed |
+
+On a phone ([android.md](android.md)):
+
+```
+object PhoneEdit: TEdit
+  Placeholder = 'Phone'
+  KeyboardType = ktPhone
+  ReturnKeyType = rkNext
+end
+object AgeEdit: TNumberEdit        // numbers by itself
+  ReturnKeyType = rkDone
+end
+```
 
 From code: `SelectAll`, `SelStart`, `SelLength`, `SelText`, `CopyToClipboard`, `CutToClipboard`, `PasteFromClipboard`, `Undo`, `Redo`. Keys: the usual ones of text fields, with `Ctrl+Z`/`Ctrl+Y` and words with `Ctrl+Left/Right`.
 

@@ -76,6 +76,7 @@ type
   {$IFDEF ANDROID}
   private
     FLanguageFromSystem, FKeyboardShown: Boolean;
+    FKeyboardEdit: TControl;
     FTouchDown, FTouchScrolling, FLongPressDone: Boolean;
     FTouchStartX, FTouchStartY, FTouchX, FTouchY, FScrollFromY, FLastTapX, FLastTapY: Integer;
     FTouchTime, FLastTapTime: QWord;

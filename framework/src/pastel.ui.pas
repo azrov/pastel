@@ -31,6 +31,12 @@ type
   TTextAlign = (taLeft, taCenter, taRight);
   { bsFlat: no background until the mouse is on it (tool bars). }
   TButtonStyle = (bsPrimary, bsSecondary, bsDanger, bsFlat);
+  { The on-screen keyboard of a phone for an edit (FireMonkey's KeyboardType):
+    ktDefault lets the edit choose (TNumberEdit: numbers). }
+  TKeyboardType = (ktDefault, ktText, ktNumber, ktDecimal, ktPhone, ktEmail, ktUrl, ktTime);
+  { What the Enter key of a phone's on-screen keyboard says and does:
+    rkNext goes to the next control, the others are Enter (OnSubmit). }
+  TReturnKeyType = (rkDefault, rkDone, rkGo, rkNext, rkSearch, rkSend);
   TCursorKind = (ckArrow, ckIBeam, ckHand, ckSizeWE, ckSizeNS);
   TWindowState = (wsNormal, wsMaximized, wsMinimized, wsFullScreen);
   { Light, dark, or what the computer is set to. }
@@ -409,6 +415,8 @@ type
   protected
     FMultiLine, FWordWrap, FReadOnly, FPassword: Boolean;
     FMaxLength: Integer;
+    FKeyboardType: TKeyboardType;
+    FReturnKeyType: TReturnKeyType;
     procedure Measure(AvailWidth: Integer; out W, H: Integer); override;
     procedure Paint(C: TCanvas32); override;
     function Focusable: Boolean; override;
@@ -431,6 +439,11 @@ type
     procedure Redo;
     function CanUndo: Boolean;
     property CaretPos: Integer read FCaret;
+    { The keyboard a phone shows: KeyboardType, or the edit's own choice for ktDefault (ktText for most). }
+    function KeyboardKind: TKeyboardType; virtual;
+    property MultiLine: Boolean read FMultiLine;
+    property IsPassword: Boolean read FPassword;
+    property ReturnKeyType: TReturnKeyType read FReturnKeyType write FReturnKeyType default rkDefault;
     { The selection: SelStart counts from 0 (bytes), like Delphi. }
     property SelStart: Integer read GetSelStart write SetSelStart;
     property SelLength: Integer read GetSelLength write SetSelLength;
@@ -455,6 +468,10 @@ type
     property MaxLength;
     { Shows dots instead of the text. }
     property Password: Boolean read FPassword write SetPassword default False;
+    { The phone's on-screen keyboard for it: numbers, a phone pad, e-mail... }
+    property KeyboardType: TKeyboardType read FKeyboardType write FKeyboardType default ktDefault;
+    { What the on-screen keyboard's Enter key says: Done, Next, Search... }
+    property ReturnKeyType;
     property OnChange;
     { Enter was pressed. }
     property OnSubmit: TNotifyEvent read FOnSubmit write FOnSubmit;
@@ -472,6 +489,8 @@ type
     property ReadOnly;
     property MaxLength;
     property WordWrap: Boolean read FWordWrap write SetWordWrap default True;
+    { The phone's on-screen keyboard for it. }
+    property KeyboardType: TKeyboardType read FKeyboardType write FKeyboardType default ktDefault;
     property OnChange;
   end;
 

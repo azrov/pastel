@@ -41,6 +41,7 @@ the amount the way their language writes it ('1.234,50 ₺').
 | | |
 |---|---|
 | `constructor Create(AOwner: TComponent)` |  |
+| `function KeyboardKind: TKeyboardType` |  |
 | `property Value: Currency` | The amount; 0 when the text is empty or not an amount (see Valid). |
 | `property Valid: Boolean` | The text is empty or an amount. |
 | `procedure Reformat` | Writes the text again in the language's way (done when the focus leaves). |
@@ -103,6 +104,7 @@ it between Min and Max.
 | | |
 |---|---|
 | `constructor Create(AOwner: TComponent)` |  |
+| `function KeyboardKind: TKeyboardType` |  |
 | `procedure StepBy(Count: Integer)` | Adds Count * Step, staying between Min and Max. |
 | `property Value: Integer` | The number; Min when the text is empty or not a number. |
 | `property Min: Integer` |  |
@@ -121,6 +123,7 @@ A time of day as HH:MM. Up and Down change it by Step minutes; '930' or
 | | |
 |---|---|
 | `constructor Create(AOwner: TComponent)` |  |
+| `function KeyboardKind: TKeyboardType` |  |
 | `function HasTime: Boolean` | A time is given (the text is a valid HH:MM). |
 | `function Time: TDateTime` | The time as a TDateTime fraction (0.5 = 12:00); 0 without a time. |
 | `property Minutes: Integer` | Minutes since midnight (570 = 09:30); -1 without a time. |

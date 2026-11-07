@@ -6,7 +6,7 @@ unit Inputs_Test;
 interface
 
 uses
-  SysUtils, DateUtils, Pastel.Testing, Pastel.Lang, Pastel.Inputs;
+  SysUtils, DateUtils, Pastel.Testing, Pastel.Lang, Pastel.UI, Pastel.Inputs;
 
 type
   TInputsTests = class(TTestSuite)
@@ -21,6 +21,7 @@ type
     procedure TimesOfDay;
     procedure NumberEditStaysInRange;
     procedure TimeEditSteps;
+    procedure PhoneKeyboards;
   end;
 
 implementation
@@ -128,6 +129,35 @@ begin
     AssertFalse(E.HasTime);
   finally
     E.Free;
+  end;
+end;
+
+procedure TInputsTests.PhoneKeyboards;
+var
+  E: TEdit;
+  N: TNumberEdit;
+  C: TCurrencyEdit;
+  T: TTimeEdit;
+begin
+  E := TEdit.Create(nil);
+  N := TNumberEdit.Create(nil);
+  C := TCurrencyEdit.Create(nil);
+  T := TTimeEdit.Create(nil);
+  try
+    AssertTrue(E.KeyboardKind = ktText, 'an edit: letters');
+    E.KeyboardType := ktPhone;
+    AssertTrue(E.KeyboardKind = ktPhone, 'a phone number');
+    AssertTrue(N.KeyboardKind = ktNumber, 'TNumberEdit: numbers by itself');
+    AssertTrue(C.KeyboardKind = ktDecimal, 'TCurrencyEdit: with a decimal point');
+    AssertTrue(T.KeyboardKind = ktTime, 'TTimeEdit: a time');
+    N.KeyboardType := ktText;
+    AssertTrue(N.KeyboardKind = ktText, 'KeyboardType wins');
+    AssertTrue(E.ReturnKeyType = rkDefault);
+  finally
+    E.Free;
+    N.Free;
+    C.Free;
+    T.Free;
   end;
 end;
 

@@ -67,6 +67,7 @@ type
     procedure FocusLost; override;
   public
     constructor Create(AOwner: TComponent); override;
+    function KeyboardKind: TKeyboardType; override;
     { The amount; 0 when the text is empty or not an amount (see Valid). }
     property Value: Currency read GetValue write SetValue;
     { The text is empty or an amount. }
@@ -178,6 +179,7 @@ type
     procedure FocusLost; override;
   public
     constructor Create(AOwner: TComponent); override;
+    function KeyboardKind: TKeyboardType; override;
     { Adds Count * Step, staying between Min and Max. }
     procedure StepBy(Count: Integer);
   published
@@ -202,6 +204,7 @@ type
     procedure FocusLost; override;
   public
     constructor Create(AOwner: TComponent); override;
+    function KeyboardKind: TKeyboardType; override;
     { A time is given (the text is a valid HH:MM). }
     function HasTime: Boolean;
     { The time as a TDateTime fraction (0.5 = 12:00); 0 without a time. }
@@ -311,6 +314,13 @@ begin
 end;
 
 { ---- TCurrencyEdit ---- }
+
+function TCurrencyEdit.KeyboardKind: TKeyboardType;
+begin
+  Result := FKeyboardType;
+  if Result = ktDefault then
+    Result := ktDecimal;
+end;
 
 constructor TCurrencyEdit.Create(AOwner: TComponent);
 begin
@@ -748,6 +758,13 @@ end;
 
 { ---- TNumberEdit ---- }
 
+function TNumberEdit.KeyboardKind: TKeyboardType;
+begin
+  Result := FKeyboardType;
+  if Result = ktDefault then
+    Result := ktNumber;
+end;
+
 constructor TNumberEdit.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
@@ -886,6 +903,13 @@ begin
   end;
   if TryStrToInt(H, HH) and TryStrToInt(M, MM) and (HH >= 0) and (HH <= 23) and (MM >= 0) and (MM <= 59) then
     Result := HH * 60 + MM;
+end;
+
+function TTimeEdit.KeyboardKind: TKeyboardType;
+begin
+  Result := FKeyboardType;
+  if Result = ktDefault then
+    Result := ktTime;
 end;
 
 constructor TTimeEdit.Create(AOwner: TComponent);

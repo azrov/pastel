@@ -2,6 +2,13 @@
 
 The `pastel` tool and the framework. The VS Code extension has its own list: [vscode/CHANGELOG.md](vscode/CHANGELOG.md). What is planned is in [ROADMAP.md](ROADMAP.md).
 
+## 1.5.0-beta.8
+
+- Android: the on-screen keyboard comes up for an edit on every phone and TV box — Pastel's activity has an editor view the keyboard types into (NativeActivity's own view is not one, so many devices showed no keyboard); a tap on an edit brings it back after the back button closed it
+- The keyboard an edit needs: `KeyboardType` on `TEdit` and `TMemo` (`ktNumber`, `ktDecimal`, `ktPhone`, `ktEmail`, `ktUrl`, `ktTime`; FireMonkey's name); `TNumberEdit`, `TCurrencyEdit` and `TTimeEdit` choose by themselves; `Password` gets a password keyboard
+- `ReturnKeyType`: what the keyboard's Enter key says and does — Done, Next (to the next control), Go, Search, Send; in a `TMemo` Enter makes a new line
+- Word suggestions of the keyboard (composing text) and its Backspace work
+
 ## 1.5.0-beta.7
 
 - Android: apps no longer stop as soon as their window shows ("EThread: CheckSynchronize called from non-main thread"): the app's own thread is its main thread for `TThread.Synchronize`, `Queue` and timers. Found with `pastel logcat` on a 32-bit ARM phone — the first run on a real device

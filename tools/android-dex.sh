@@ -10,6 +10,6 @@ JAR="${ANDROID_JAR:-$(ls /usr/lib/android-sdk/platforms/android-*/android.jar 2>
 DX="$(command -v dx || command -v dalvik-exchange)"
 WORK="$(mktemp -d)"
 javac -source 8 -target 8 -nowarn -Xlint:-options -bootclasspath "$JAR" -d "$WORK" framework/android/java/dev/pastel/*.java
-"$DX" --dex --min-sdk-version=23 --output=framework/android/classes.dex "$WORK"
+"$DX" --dex --min-sdk-version=19 --output=framework/android/classes.dex "$WORK"
 rm -rf "$WORK"
 echo "built framework/android/classes.dex"

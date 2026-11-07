@@ -83,6 +83,8 @@ begin
 end;
 
 procedure TApplication.AndroidCommand(Cmd: TAndroidCommand);
+var
+  Code: Integer;
 begin
   case Cmd of
     acWindowCreated, acWindowResized:
@@ -115,6 +117,17 @@ begin
         { letters from the on-screen keyboard, in the keyboard's language }
         FMainForm.HandleTextInput(AndroidTakeText);
       end;
+    acKey:
+      { the keys that edit: Backspace, Delete, Enter (Done, Search...), Tab (Next) }
+      for Code in AndroidTakeKeys do
+        case Code of
+          67: FMainForm.HandleKeyDown(KEY_BACKSPACE, False, False);
+          112: FMainForm.HandleKeyDown(KEY_DELETE, False, False);
+          66, 160: FMainForm.HandleKeyDown(KEY_ENTER, False, False);
+          61: FMainForm.HandleKeyDown(KEY_TAB, False, False);
+          21: FMainForm.HandleKeyDown(KEY_LEFT, False, False);
+          22: FMainForm.HandleKeyDown(KEY_RIGHT, False, False);
+        end;
   end;
   AndroidCommandDone;
 end;
@@ -196,6 +209,9 @@ begin
         if FTouchDown and not FTouchScrolling and not FLongPressDone then
         begin
           FMainForm.HandleMouseUp(X, Y, 1);
+          { a tap on an edit brings the keyboard back (the back button may have closed it) }
+          if FMainForm.Focused is TCustomEdit then
+            FKeyboardShown := False;
           FLastTapTime := NowMs;
           FLastTapX := X;
           FLastTapY := Y;
@@ -402,21 +418,85 @@ begin
   AndroidFling;
 end;
 
-{ the on-screen keyboard comes up for an edit and goes when the focus leaves it }
+{ Android's EditorInfo for an edit: which keyboard (inputType) and what its Enter key does (imeOptions) }
+procedure KeyboardFor(E: TCustomEdit; out InputType, ImeOptions: Integer);
+const
+  TYPE_CLASS_TEXT = 1;
+  TYPE_CLASS_NUMBER = 2;
+  TYPE_CLASS_PHONE = 3;
+  TYPE_CLASS_DATETIME = 4;
+  TYPE_NUMBER_FLAG_SIGNED = $1000;
+  TYPE_NUMBER_FLAG_DECIMAL = $2000;
+  TYPE_NUMBER_VARIATION_PASSWORD = $10;
+  TYPE_TEXT_FLAG_CAP_SENTENCES = $4000;
+  TYPE_TEXT_FLAG_MULTI_LINE = $20000;
+  TYPE_TEXT_VARIATION_URI = $10;
+  TYPE_TEXT_VARIATION_EMAIL_ADDRESS = $20;
+  TYPE_TEXT_VARIATION_PASSWORD = $80;
+  TYPE_DATETIME_VARIATION_TIME = $20;
+  IME_ACTION_GO = 2;
+  IME_ACTION_SEARCH = 3;
+  IME_ACTION_SEND = 4;
+  IME_ACTION_NEXT = 5;
+  IME_ACTION_DONE = 6;
+  IME_FLAG_NO_ENTER_ACTION = $40000000;
+begin
+  case E.KeyboardKind of
+    ktNumber: InputType := TYPE_CLASS_NUMBER or TYPE_NUMBER_FLAG_SIGNED;
+    ktDecimal: InputType := TYPE_CLASS_NUMBER or TYPE_NUMBER_FLAG_SIGNED or TYPE_NUMBER_FLAG_DECIMAL;
+    ktPhone: InputType := TYPE_CLASS_PHONE;
+    ktEmail: InputType := TYPE_CLASS_TEXT or TYPE_TEXT_VARIATION_EMAIL_ADDRESS;
+    ktUrl: InputType := TYPE_CLASS_TEXT or TYPE_TEXT_VARIATION_URI;
+    ktTime: InputType := TYPE_CLASS_DATETIME or TYPE_DATETIME_VARIATION_TIME;
+  else
+    InputType := TYPE_CLASS_TEXT or TYPE_TEXT_FLAG_CAP_SENTENCES;
+  end;
+  if E.IsPassword then
+  begin
+    if (InputType and $F) = TYPE_CLASS_NUMBER then
+      InputType := TYPE_CLASS_NUMBER or TYPE_NUMBER_VARIATION_PASSWORD
+    else
+      InputType := TYPE_CLASS_TEXT or TYPE_TEXT_VARIATION_PASSWORD;
+  end;
+  if E.MultiLine then
+  begin
+    { Enter makes a new line }
+    InputType := InputType or TYPE_TEXT_FLAG_MULTI_LINE;
+    ImeOptions := IME_FLAG_NO_ENTER_ACTION;
+    Exit;
+  end;
+  case E.ReturnKeyType of
+    rkGo: ImeOptions := IME_ACTION_GO;
+    rkNext: ImeOptions := IME_ACTION_NEXT;
+    rkSearch: ImeOptions := IME_ACTION_SEARCH;
+    rkSend: ImeOptions := IME_ACTION_SEND;
+  else
+    ImeOptions := IME_ACTION_DONE;
+  end;
+end;
+
+{ the on-screen keyboard comes up for an edit (the kind it needs) and goes when the focus leaves it }
 procedure TApplication.AndroidKeyboard;
 var
-  Wanted: Boolean;
+  Edit: TControl;
+  InputType, ImeOptions: Integer;
 begin
   if AndroidActivity = nil then
     Exit;
-  Wanted := FMainForm.Focused is TCustomEdit;
-  if Wanted = FKeyboardShown then
+  Edit := nil;
+  if (FMainForm.Focused is TCustomEdit) and not TCustomEdit(FMainForm.Focused).ReadOnly then
+    Edit := FMainForm.Focused;
+  if (Edit = FKeyboardEdit) and (FKeyboardShown = (Edit <> nil)) then
     Exit;
-  FKeyboardShown := Wanted;
-  if Wanted then
-    ANativeActivity_showSoftInput(AndroidActivity, 2)
+  FKeyboardEdit := Edit;
+  FKeyboardShown := Edit <> nil;
+  if Edit <> nil then
+  begin
+    KeyboardFor(TCustomEdit(Edit), InputType, ImeOptions);
+    AndroidShowKeyboard(InputType, ImeOptions);
+  end
   else
-    ANativeActivity_hideSoftInput(AndroidActivity, 0);
+    AndroidHideKeyboard;
 end;
 
 procedure AndroidRunApp;

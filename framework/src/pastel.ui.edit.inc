@@ -111,6 +111,13 @@ end;
 
 { ---- TCustomEdit ---- }
 
+function TCustomEdit.KeyboardKind: TKeyboardType;
+begin
+  Result := FKeyboardType;
+  if Result = ktDefault then
+    Result := ktText;
+end;
+
 constructor TCustomEdit.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);

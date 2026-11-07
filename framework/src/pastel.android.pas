@@ -38,8 +38,10 @@ type
     reserved: array[0..5] of LongWord;
   end;
 
+  TIntegerArray = array of Integer;
+
   TAndroidCommand = (acNone, acInputChanged, acWindowCreated, acWindowDestroyed, acWindowResized,
-    acRedraw, acResume, acPause, acConfigChanged, acFocusChanged, acDestroy, acWake, acText);
+    acRedraw, acResume, acPause, acConfigChanged, acFocusChanged, acDestroy, acWake, acText, acKey);
 
 const
   LooperIdMain = 1;
@@ -101,6 +103,14 @@ procedure ANativeActivity_onCreate(Activity: PANativeActivity; SavedState: Point
 procedure Java_dev_pastel_PastelActivity_nativeText(Env: Pointer; Cls: Pointer; Text: Pointer); cdecl;
 { The app thread: the text typed since the last acText. }
 function AndroidTakeText: string;
+{ Keys from the on-screen keyboard (Backspace, Enter, Tab: Android's key codes); exported by libmain.so. }
+procedure Java_dev_pastel_PastelActivity_nativeKey(Env: Pointer; Cls: Pointer; KeyCode: LongInt); cdecl;
+{ The app thread: the key codes since the last acKey. }
+function AndroidTakeKeys: TIntegerArray;
+{ The app thread: the on-screen keyboard for an edit; InputType and ImeOptions
+  are Android's (EditorInfo): which keyboard, and what its Enter key does. }
+procedure AndroidShowKeyboard(InputType, ImeOptions: Integer);
+procedure AndroidHideKeyboard;
 
 { A line in the device log (adb logcat -s pastel). }
 procedure AndroidLog(const Msg: string);
@@ -210,6 +220,117 @@ begin
   finally
     LeaveCriticalSection(Lock);
   end;
+end;
+
+var
+  PendingKeys: TIntegerArray;
+
+function AndroidTakeKeys: TIntegerArray;
+begin
+  EnterCriticalSection(Lock);
+  try
+    Result := PendingKeys;
+    PendingKeys := nil;
+  finally
+    LeaveCriticalSection(Lock);
+  end;
+end;
+
+procedure Java_dev_pastel_PastelActivity_nativeKey(Env: Pointer; Cls: Pointer; KeyCode: LongInt); cdecl;
+begin
+  EnterCriticalSection(Lock);
+  try
+    SetLength(PendingKeys, Length(PendingKeys) + 1);
+    PendingKeys[High(PendingKeys)] := KeyCode;
+  finally
+    LeaveCriticalSection(Lock);
+  end;
+  if AppThread <> TThreadID(0) then
+    Send(acKey);
+end;
+
+{ ---- calling the activity's Java methods from the app thread ---- }
+
+type
+  TJniAttach = function(VM: Pointer; out Env: Pointer; Args: Pointer): LongInt; cdecl;
+  TJniDetach = function(VM: Pointer): LongInt; cdecl;
+  TJniGetObjectClass = function(Env, Obj: Pointer): Pointer; cdecl;
+  TJniGetMethodID = function(Env, Cls: Pointer; Name, Sig: PChar): Pointer; cdecl;
+  TJniCallVoidMethodA = procedure(Env, Obj, Method: Pointer; Args: Pointer); cdecl;
+  TJniExceptionCheck = function(Env: Pointer): Byte; cdecl;
+  TJniVoid = procedure(Env: Pointer); cdecl;
+  TJniDeleteLocalRef = procedure(Env, Ref: Pointer); cdecl;
+
+var
+  AppEnv: Pointer = nil;
+
+{ the app thread's JNI environment: the thread is made known to Java once }
+function AppJniEnv: Pointer;
+var
+  VM: Pointer;
+begin
+  if (AppEnv = nil) and (AndroidActivity <> nil) and (AndroidActivity^.vm <> nil) then
+  begin
+    VM := AndroidActivity^.vm;
+    if TJniAttach(PPointer(PPointer(VM)^)[4])(VM, AppEnv, nil) <> 0 then
+      AppEnv := nil;
+  end;
+  Result := AppEnv;
+end;
+
+procedure AppJniDetach;
+var
+  VM: Pointer;
+begin
+  if (AppEnv <> nil) and (AndroidActivity <> nil) and (AndroidActivity^.vm <> nil) then
+  begin
+    VM := AndroidActivity^.vm;
+    TJniDetach(PPointer(PPointer(VM)^)[5])(VM);
+  end;
+  AppEnv := nil;
+end;
+
+{ activity.Name(Args...) with int arguments (jvalue: 8 bytes each) }
+procedure CallActivity(const Name, Sig: string; const Args: array of Integer);
+var
+  Env, Cls, Method: Pointer;
+  T: PPointer;
+  Values: array[0..3] of Int64;
+  I: Integer;
+begin
+  Env := AppJniEnv;
+  if (Env = nil) or (AndroidActivity = nil) then
+    Exit;
+  T := PPointer(Env)^;
+  Cls := TJniGetObjectClass(T[31])(Env, AndroidActivity^.clazz);
+  if Cls = nil then
+    Exit;
+  Method := TJniGetMethodID(T[33])(Env, Cls, PChar(Name), PChar(Sig));
+  if Method <> nil then
+  begin
+    FillChar(Values, SizeOf(Values), 0);
+    for I := 0 to High(Args) do
+      if I <= High(Values) then
+        Values[I] := Args[I];
+    TJniCallVoidMethodA(T[63])(Env, AndroidActivity^.clazz, Method, @Values[0]);
+  end;
+  { a missing method (an older classes.dex) or an error in Java: not the app's end }
+  if TJniExceptionCheck(T[228])(Env) <> 0 then
+  begin
+    TJniVoid(T[16])(Env);    { ExceptionDescribe: into the log }
+    TJniVoid(T[17])(Env);    { ExceptionClear }
+  end;
+  TJniDeleteLocalRef(T[23])(Env, Cls);
+end;
+
+procedure AndroidShowKeyboard(InputType, ImeOptions: Integer);
+begin
+  CallActivity('showKeyboard', '(II)V', [InputType, ImeOptions]);
+end;
+
+procedure AndroidHideKeyboard;
+begin
+  CallActivity('hideKeyboard', '()V', []);
 end;
 
 function AndroidTakeText: string;
@@ -418,6 +539,8 @@ begin
   AndroidAppFinished := True;
   if not AndroidDestroyRequested and (AndroidActivity <> nil) then
     ANativeActivity_finish(AndroidActivity);
+  { a thread made known to Java must say goodbye before it ends }
+  AppJniDetach;
   { the main thread may wait for an answer that will not come any more }
   RTLEventSetEvent(Ack);
 end;

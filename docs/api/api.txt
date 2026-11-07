@@ -601,6 +601,7 @@ Pastel.Inputs: TCalendarView.property OnPick: TNotifyEvent
 Pastel.Inputs: TCalendarView.property Selected: TDateTime
 Pastel.Inputs: TCalendarView.property Year: Word
 Pastel.Inputs: TCurrencyEdit.constructor Create(AOwner: TComponent)
+Pastel.Inputs: TCurrencyEdit.function KeyboardKind: TKeyboardType
 Pastel.Inputs: TCurrencyEdit.procedure Reformat
 Pastel.Inputs: TCurrencyEdit.property Decimals: Integer
 Pastel.Inputs: TCurrencyEdit.property Symbol: string
@@ -617,6 +618,7 @@ Pastel.Inputs: TDatePicker.property DateText: string
 Pastel.Inputs: TDatePicker.property OnChange: TNotifyEvent
 Pastel.Inputs: TDatePicker.property Placeholder: string
 Pastel.Inputs: TNumberEdit.constructor Create(AOwner: TComponent)
+Pastel.Inputs: TNumberEdit.function KeyboardKind: TKeyboardType
 Pastel.Inputs: TNumberEdit.procedure StepBy(Count: Integer)
 Pastel.Inputs: TNumberEdit.property Max: Integer
 Pastel.Inputs: TNumberEdit.property Min: Integer
@@ -624,6 +626,7 @@ Pastel.Inputs: TNumberEdit.property Step: Integer
 Pastel.Inputs: TNumberEdit.property Value: Integer
 Pastel.Inputs: TTimeEdit.constructor Create(AOwner: TComponent)
 Pastel.Inputs: TTimeEdit.function HasTime: Boolean
+Pastel.Inputs: TTimeEdit.function KeyboardKind: TKeyboardType
 Pastel.Inputs: TTimeEdit.function Time: TDateTime
 Pastel.Inputs: TTimeEdit.property Minutes: Integer
 Pastel.Inputs: TTimeEdit.property Step: Integer
@@ -1191,6 +1194,7 @@ Pastel.UI: TCustomEdit.constructor Create(AOwner: TComponent)
 Pastel.UI: TCustomEdit.destructor Destroy
 Pastel.UI: TCustomEdit.function CanUndo: Boolean
 Pastel.UI: TCustomEdit.function Font: TPastelFont
+Pastel.UI: TCustomEdit.function KeyboardKind: TKeyboardType
 Pastel.UI: TCustomEdit.procedure CopyToClipboard
 Pastel.UI: TCustomEdit.procedure CutToClipboard
 Pastel.UI: TCustomEdit.procedure PasteFromClipboard
@@ -1199,10 +1203,13 @@ Pastel.UI: TCustomEdit.procedure SelectAll
 Pastel.UI: TCustomEdit.procedure Undo
 Pastel.UI: TCustomEdit.property CaretPos: Integer
 Pastel.UI: TCustomEdit.property Error: string
+Pastel.UI: TCustomEdit.property IsPassword: Boolean
 Pastel.UI: TCustomEdit.property MaxLength: Integer
+Pastel.UI: TCustomEdit.property MultiLine: Boolean
 Pastel.UI: TCustomEdit.property OnChange: TNotifyEvent
 Pastel.UI: TCustomEdit.property Placeholder: string
 Pastel.UI: TCustomEdit.property ReadOnly: Boolean
+Pastel.UI: TCustomEdit.property ReturnKeyType: TReturnKeyType
 Pastel.UI: TCustomEdit.property SelLength: Integer
 Pastel.UI: TCustomEdit.property SelStart: Integer
 Pastel.UI: TCustomEdit.property SelText: string
@@ -1213,12 +1220,14 @@ Pastel.UI: TDock.dkLeft
 Pastel.UI: TDock.dkNone
 Pastel.UI: TDock.dkRight
 Pastel.UI: TDock.dkTop
+Pastel.UI: TEdit.property KeyboardType: TKeyboardType
 Pastel.UI: TEdit.property MaxLength
 Pastel.UI: TEdit.property OnChange
 Pastel.UI: TEdit.property OnSubmit: TNotifyEvent
 Pastel.UI: TEdit.property Password: Boolean
 Pastel.UI: TEdit.property Placeholder
 Pastel.UI: TEdit.property ReadOnly
+Pastel.UI: TEdit.property ReturnKeyType
 Pastel.UI: TEdit.property Text
 Pastel.UI: TEditState.Anchor: Integer
 Pastel.UI: TEditState.Caret: Integer
@@ -1290,6 +1299,14 @@ Pastel.UI: TJustify.jsCenter
 Pastel.UI: TJustify.jsEnd
 Pastel.UI: TJustify.jsSpaceBetween
 Pastel.UI: TJustify.jsStart
+Pastel.UI: TKeyboardType.ktDecimal
+Pastel.UI: TKeyboardType.ktDefault
+Pastel.UI: TKeyboardType.ktEmail
+Pastel.UI: TKeyboardType.ktNumber
+Pastel.UI: TKeyboardType.ktPhone
+Pastel.UI: TKeyboardType.ktText
+Pastel.UI: TKeyboardType.ktTime
+Pastel.UI: TKeyboardType.ktUrl
 Pastel.UI: TLabel.constructor Create(AOwner: TComponent)
 Pastel.UI: TLabel.function Font: TPastelFont
 Pastel.UI: TLabel.function TextLines(AWidth: Integer): TStringArray
@@ -1302,6 +1319,7 @@ Pastel.UI: TLabel.property WordWrap: Boolean
 Pastel.UI: TLayoutKind.lkFlow
 Pastel.UI: TLayoutKind.lkFree
 Pastel.UI: TMemo.constructor Create(AOwner: TComponent)
+Pastel.UI: TMemo.property KeyboardType: TKeyboardType
 Pastel.UI: TMemo.property Lines: TStrings
 Pastel.UI: TMemo.property MaxLength
 Pastel.UI: TMemo.property OnChange
@@ -1322,6 +1340,12 @@ Pastel.UI: TPopup.property Modal: Boolean
 Pastel.UI: TPopup.property ModalResult: Integer
 Pastel.UI: TPopup.property OnClose: TNotifyEvent
 Pastel.UI: TPopup.property Shown: Boolean
+Pastel.UI: TReturnKeyType.rkDefault
+Pastel.UI: TReturnKeyType.rkDone
+Pastel.UI: TReturnKeyType.rkGo
+Pastel.UI: TReturnKeyType.rkNext
+Pastel.UI: TReturnKeyType.rkSearch
+Pastel.UI: TReturnKeyType.rkSend
 Pastel.UI: TRow.constructor Create(AOwner: TComponent)
 Pastel.UI: TSpacer.constructor Create(AOwner: TComponent)
 Pastel.UI: TTextAlign.taCenter
@@ -1436,12 +1460,14 @@ Pastel.UI: type TForm = class(TBox)
 Pastel.UI: type TFormClass = class of TForm
 Pastel.UI: type TImageFit = (ifContain, ifCover, ifStretch, ifCenter)
 Pastel.UI: type TJustify = (jsStart, jsCenter, jsEnd, jsSpaceBetween)
+Pastel.UI: type TKeyboardType = (ktDefault, ktText, ktNumber, ktDecimal, ktPhone, ktEmail, ktUrl, ktTime)
 Pastel.UI: type TLabel = class(TControl)
 Pastel.UI: type TLayoutKind = (lkFlow, lkFree)
 Pastel.UI: type TMemo = class(TCustomEdit)
 Pastel.UI: type TPanel = class(TBox)
 Pastel.UI: type TPopup = class(TBox)
 Pastel.UI: type TRectArray = array of TRectI
+Pastel.UI: type TReturnKeyType = (rkDefault, rkDone, rkGo, rkNext, rkSearch, rkSend)
 Pastel.UI: type TRow = class(TBox)
 Pastel.UI: type TSpacer = class(TControl)
 Pastel.UI: type TTextAlign = (taLeft, taCenter, taRight)
