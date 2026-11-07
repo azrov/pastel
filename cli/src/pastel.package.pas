@@ -40,9 +40,19 @@ function PackageInstaller(Project: TPastelProject; const Target: TTarget; Verbos
 function PackageAppImage(Project: TPastelProject; const Target: TTarget; Verbose: Boolean): string;
 
 { Lower-case hex SHA-256 of a file. }
+type
+  TTargetArray = array of TTarget;
+
 { Android: an installable .apk in dist/, signed (with a debug key unless
-  [package.android] keystore names the release key). Debug: a debug build. }
-function PackageApk(Project: TPastelProject; const Target: TTarget; Verbose: Boolean; Debug: Boolean = False): string;
+  [package.android] keystore names the release key), with the app built for
+  every target given (lib/arm64-v8a, lib/armeabi-v7a...). Debug: a debug build. }
+function PackageApk(Project: TPastelProject; const Targets: TTargetArray; Verbose: Boolean; Debug: Boolean = False): string;
+{ The Android targets of an .apk: the one named (android-arm), or, for
+  "android" and none, the project's Android platforms ([targets] platforms),
+  where "android" means every Android CPU this computer can build for. }
+function ApkTargets(Project: TPastelProject; const Name: string): TTargetArray;
+{ This computer can build for the Android target ("pastel doctor --install android" was run). }
+function AndroidTargetReady(const T: TTarget): Boolean;
 { The app's id on Android ([package.android] id, or dev.pastel.<name>). }
 function AndroidAppId(Project: TPastelProject): string;
 function FileSha256(const FileName: string): string;
@@ -435,6 +445,7 @@ begin
     'Exec=' + Exec + #10 +
     'Icon=' + Icon + #10 +
     'Terminal=false' + #10 +
+    'StartupWMClass=' + ExtractFileName(Exec) + #10 +
     'Categories=Utility;' + #10;
 end;
 
@@ -1216,13 +1227,80 @@ begin
   Result := Max(1, Result);
 end;
 
-function PackageApk(Project: TPastelProject; const Target: TTarget; Verbose: Boolean; Debug: Boolean): string;
+function AndroidTargetReady(const T: TTarget): Boolean;
+var
+  Fpc: string;
+begin
+  Fpc := FindFpc;
+  Result := (T.OS = 'android') and (Fpc <> '') and AndroidLibsReady(T) and CrossCompilerReady(Fpc, T) and
+    FileExists(UserRtlDir(Fpc, T) + 'system.ppu');
+end;
+
+function ApkTargets(Project: TPastelProject; const Name: string): TTargetArray;
+
+  procedure AddTarget(const T: TTarget);
+  var
+    X: TTarget;
+  begin
+    for X in Result do
+      if X.Name = T.Name then
+        Exit;
+    SetLength(Result, Length(Result) + 1);
+    Result[High(Result)] := T;
+  end;
+
+  procedure AddReady;
+  var
+    I, Before: Integer;
+  begin
+    Before := Length(Result);
+    for I := Low(KnownTargets) to High(KnownTargets) do
+      if (KnownTargets[I].OS = 'android') and AndroidTargetReady(KnownTargets[I]) then
+        AddTarget(KnownTargets[I]);
+    if Length(Result) = Before then
+      for I := Low(KnownTargets) to High(KnownTargets) do
+        if KnownTargets[I].Name = 'android-arm64' then
+          AddTarget(KnownTargets[I]);     { building says what is missing }
+  end;
+
+var
+  T: TTarget;
+  P: string;
+  Any: Boolean;
+begin
+  Result := nil;
+  if (Name <> '') and not SameText(Name, 'android') then
+  begin
+    if FindTarget(Name, T) then
+      AddTarget(T);
+    Exit;
+  end;
+  Any := False;
+  for P in Project.Platforms do
+    if SameText(P, 'android') then
+    begin
+      AddReady;
+      Any := True;
+    end
+    else if FindTarget(P, T) and (T.OS = 'android') then
+    begin
+      AddTarget(T);
+      Any := True;
+    end;
+  if not Any then
+    AddReady;
+end;
+
+function PackageApk(Project: TPastelProject; const Targets: TTargetArray; Verbose: Boolean; Debug: Boolean): string;
 const
   Densities: array[0..4] of record Name: string; Size: Integer; end = (
     (Name: 'mdpi'; Size: 48), (Name: 'hdpi'; Size: 72), (Name: 'xhdpi'; Size: 96),
     (Name: 'xxhdpi'; Size: 144), (Name: 'xxxhdpi'; Size: 192));
 var
   Opts: TBuildOptions;
+  Target: TTarget;
+  Abis: TStringArray;
+  HasArm32: Boolean;
   SoPath, Work, Res, Aapt, Zipalign, Signer, Keytool, Jar, Keystore, Alias, Pass, Icon, Orientation, Dist, Output,
     Unaligned, Aligned, Err, Manifest, Dex: string;
   Api, I: Integer;
@@ -1252,12 +1330,18 @@ var
 
 begin
   Result := '';
-  if Target.OS <> 'android' then
+  if Length(Targets) = 0 then
   begin
-    Fail(Format('an .apk is for Android; "%s" is not an Android target', [Target.Name]));
-    Hint('pastel package apk (it builds for android-arm64)');
+    Fail('no Android target to build the .apk for');
     Exit;
   end;
+  for Target in Targets do
+    if Target.OS <> 'android' then
+    begin
+      Fail(Format('an .apk is for Android; "%s" is not an Android target', [Target.Name]));
+      Hint('pastel package apk (for every Android CPU set up), or --target android-arm64, android-arm, android-x86_64, android-x86');
+      Exit;
+    end;
   if Project.Kind <> 'app' then
   begin
     Fail('an .apk is made of an app project');
@@ -1279,15 +1363,24 @@ begin
     {$ENDIF}
     Exit;
   end;
-  { the program, as libmain.so }
-  Opts := Default(TBuildOptions);
-  Opts.Target := Target;
-  Opts.Release := not Debug;
-  Opts.Verbose := Verbose;
-  if not BuildProject(Project, Opts, SoPath) then
-    Exit;
-  Work := Project.Root + 'build' + PathDelim + Target.Name + PathDelim + 'apk' + PathDelim;
+  Work := Project.Root + 'build' + PathDelim + 'android' + PathDelim + 'apk' + PathDelim;
   DeleteTree(ExcludeTrailingPathDelimiter(Work));
+  { the program, as lib/<abi>/libmain.so for every CPU }
+  Abis := nil;
+  HasArm32 := False;
+  for Target in Targets do
+  begin
+    Opts := Default(TBuildOptions);
+    Opts.Target := Target;
+    Opts.Release := not Debug;
+    Opts.Verbose := Verbose;
+    if not BuildProject(Project, Opts, SoPath) then
+      Exit;
+    ForceDirectories(Work + 'lib' + PathDelim + AndroidAbi(Target));
+    CopyFile(Project.Root + SoPath, Work + 'lib' + PathDelim + AndroidAbi(Target) + PathDelim + 'libmain.so', False);
+    Abis := Concat(Abis, [AndroidAbi(Target)]);
+    HasArm32 := HasArm32 or (Target.CPU = 'arm');
+  end;
   Res := Work + 'res' + PathDelim;
   L := TStringList.Create;
   Args := TStringList.Create;
@@ -1324,7 +1417,7 @@ begin
       '    package="' + AndroidAppId(Project) + '"' + LineEnding +
       '    android:versionCode="' + IntToStr(VersionCode(Project.Version)) + '"' + LineEnding +
       '    android:versionName="' + XmlText(Project.Version) + '">' + LineEnding +
-      '  <uses-sdk android:minSdkVersion="23" android:targetSdkVersion="' + IntToStr(Max(23, Api)) + '"/>' + LineEnding +
+      '  <uses-sdk android:minSdkVersion="19" android:targetSdkVersion="' + IntToStr(Max(23, Api)) + '"/>' + LineEnding +
       '  <uses-permission android:name="android.permission.INTERNET"/>' + LineEnding +
       '  <application android:label="@string/app_name" android:icon="@mipmap/ic_launcher"' + LineEnding +
       '      android:hasCode="true" android:extractNativeLibs="true"' + LineEnding +
@@ -1343,7 +1436,6 @@ begin
       '  </application>' + LineEnding +
       '</manifest>';
     Save(Work + 'AndroidManifest.xml', Manifest);
-    { the program goes in as lib/arm64-v8a/libmain.so }
     { Pastel's activity: a NativeActivity that also passes on the letters the on-screen keyboard types }
     Dex := ExpandFileName(IncludeTrailingPathDelimiter(FrameworkDir) + '..' + PathDelim + 'android' + PathDelim + 'classes.dex');
     if not FileExists(Dex) then
@@ -1352,15 +1444,16 @@ begin
       Exit;
     end;
     CopyFile(Dex, Work + 'classes.dex', False);
-    ForceDirectories(Work + 'lib' + PathDelim + 'arm64-v8a');
-    CopyFile(Project.Root + SoPath, Work + 'lib' + PathDelim + 'arm64-v8a' + PathDelim + 'libmain.so', False);
     Unaligned := Work + 'unaligned.apk';
     Aligned := Work + 'aligned.apk';
-    Status('Packing', 'the .apk (' + AndroidAppId(Project) + ', Android 6 and newer)');
+    Status('Packing', Format('the .apk (%s, Android 4.4 and newer; %s)', [AndroidAppId(Project), string.Join(', ', Abis)]));
     if not Run(Aapt, ['package', '-f', '-M', 'AndroidManifest.xml', '-S', 'res', '-I', Jar, '-F', 'unaligned.apk'], Work) then
       Exit;
-    if not Run(Aapt, ['add', 'unaligned.apk', 'classes.dex', 'lib/arm64-v8a/libmain.so'], Work) then
+    if not Run(Aapt, ['add', 'unaligned.apk', 'classes.dex'], Work) then
       Exit;
+    for I := 0 to High(Abis) do
+      if not Run(Aapt, ['add', 'unaligned.apk', 'lib/' + Abis[I] + '/libmain.so'], Work) then
+        Exit;
     if not Run(Zipalign, ['-p', '-f', '4', Unaligned, Aligned], Work) then
       Exit;
     { the key: the project's release key, or a debug key made once }
@@ -1404,6 +1497,8 @@ begin
     Status('Packed', Format('%s (%s)', [ExtractRelativePath(Project.Root, Result), SizeText(Result)]));
     if Project.AndroidKeystore = '' then
       Hint('signed with a debug key: fine for phones you install it on; Google Play needs [package.android] keystore');
+    if not HasArm32 then
+      Hint('older phones and TV boxes (ARM 32-bit) cannot run it: "pastel doctor --install android" sets up android-arm too');
     Hint('install it: adb install -r ' + ExtractRelativePath(Project.Root, Result) + '  (or copy it to the phone and open it)');
   finally
     Args.Free;

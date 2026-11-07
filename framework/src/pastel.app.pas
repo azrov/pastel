@@ -457,7 +457,7 @@ begin
 end;
 {$ELSE}
 var
-  Err: string;
+  Err, WmClass: string;
   W, H, WW, WH, PW, PH: Integer;
   Flags: LongWord;
   Dpi, ForcedScale: Single;
@@ -479,6 +479,11 @@ begin
   if Err <> '' then
     Fatal(Err);
   SDL_SetHint('SDL_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR', '0');
+  { Linux desktops find the app's menu entry (its icon in the dock) by this name:
+    the .desktop file of "pastel package deb" and AppImages says StartupWMClass=<program> }
+  WmClass := ChangeFileExt(ExtractFileName(ParamStr(0)), '');
+  SDL_SetHint('SDL_VIDEO_X11_WMCLASS', PChar(WmClass));
+  SDL_SetHint('SDL_VIDEO_WAYLAND_WMCLASS', PChar(WmClass));
   SDL_SetHint('SDL_WINDOWS_DPI_AWARENESS', 'permonitorv2');
   if SDL_Init(SDL_INIT_VIDEO) <> 0 then
     Fatal('could not open a window: ' + StrPas(SDL_GetError()));

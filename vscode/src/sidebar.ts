@@ -145,7 +145,9 @@ export class ProjectTree implements vscode.TreeDataProvider<ProjectNode> {
       action('Build', 'pastel.build', 'tools', 'Ctrl+F9'),
       action('Run Tests', 'pastel.test', 'beaker'),
       action('Build Release', 'pastel.buildRelease', 'rocket'),
+      action('Platform…', 'pastel.choosePlatform', 'device-mobile', 'for F9 and Ctrl+F9'),
       action('Build for Platform…', 'pastel.buildTarget', 'device-desktop'),
+      action('App Icon…', 'pastel.setAppIcon', 'file-media', 'assets/icon.png'),
       action('Clean', 'pastel.clean', 'trash'),
       action('Check Setup', 'pastel.doctor', 'pulse'),
     ];

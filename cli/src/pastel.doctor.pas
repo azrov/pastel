@@ -132,11 +132,11 @@ begin
     if T.OS = 'android' then
     begin
       { an Android app is a library, linked with Pastel's stand-ins for the system libraries }
-      if not AndroidLibsReady then
+      if not AndroidLibsReady(T) or not CrossCompilerReady(Fpc, T) then
         Exit(False);
       Code.Text := 'library probe; uses SysUtils; procedure P; cdecl; begin end; exports P; begin end.';
-      Args.Add('-Fl' + AndroidLibDir);
-      Args.Add('-Fo' + AndroidLibDir);
+      Args.Add('-Fl' + AndroidLibDir(T));
+      Args.Add('-Fo' + AndroidLibDir(T));
     end
     else
       Code.Text := 'program probe; uses SysUtils; begin end.';
@@ -151,6 +151,8 @@ begin
     Prefix := FindBinutilsPrefix(T, HaveBinutils);
     if Prefix <> '' then
       Args.Add('-XP' + Prefix);
+    for Opt in CompilerOptions(Fpc, T) do
+      Args.Add(Opt);
     Args.Add('-FU' + Tmp);
     if T.OS = 'android' then
       Args.Add('-o' + Tmp + 'libprobe.so')
@@ -220,17 +222,17 @@ begin
     if CanBuildTarget(Fpc, I) then
     begin
       Inc(Ready);
-      WriteLn('  ', MarkOk, ' ', Format('%-12s', [KnownTargets[I].Name]), ' ',
+      WriteLn('  ', MarkOk, ' ', Format('%-15s', [KnownTargets[I].Name]), ' ',
         KnownTargets[I].Description, Note);
     end
     else
     begin
       Missing := True;
-      WriteLn('  ', MarkFail, ' ', Format('%-12s', [KnownTargets[I].Name]), ' ',
+      WriteLn('  ', MarkFail, ' ', Format('%-15s', [KnownTargets[I].Name]), ' ',
         Dim(KnownTargets[I].Description + ' - not installed'), Note);
       FindBinutilsPrefix(KnownTargets[I], HaveBinutils);
       if not HaveBinutils then
-        WriteLn('                  ', Dim(BinutilsHint(KnownTargets[I])));
+        WriteLn('                     ', Dim(BinutilsHint(KnownTargets[I])));
     end;
   end;
   WriteLn;
@@ -242,7 +244,8 @@ begin
     Tip('building for other platforms needs Free Pascal cross-compilers.');
     WriteLn('  Today the easiest way is fpcupdeluxe (Cross tab):');
     WriteLn('    https://github.com/LongDirtyAnimAlf/fpcupdeluxe');
-    WriteLn('  Windows (from Linux) and Android: pastel doctor --install windows (or android).');
+    WriteLn('  Windows (from Linux): pastel doctor --install windows');
+    WriteLn('  Android (every phone and the emulator): pastel doctor --install android');
     WriteLn('  macOS targets also need Apple''s SDK.');
   end;
 end;

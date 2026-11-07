@@ -1107,10 +1107,11 @@ begin
       Fail(Format('Android builds are made of app projects (this is a %s project)', [Project.Kind]));
       Exit;
     end;
-    if not AndroidLibsReady then
+    if not AndroidLibsReady(Opts.Target) then
     begin
-      Fail('this computer cannot build for Android yet');
-      Hint('pastel doctor --install android sets it up (it needs the ARM 64-bit binutils: sudo apt install binutils-aarch64-linux-gnu)');
+      Fail(Format('this computer cannot build for %s yet', [Opts.Target.Name]));
+      Hint(Format('pastel doctor --install %s sets it up (it needs the binutils: sudo apt install %s)',
+        [Opts.Target.Name, Opts.Target.BinutilsPackage]));
       Exit;
     end;
     try
@@ -1160,11 +1161,16 @@ begin
     BinPrefix := FindBinutilsPrefix(Opts.Target, HaveBinutils);
     if BinPrefix <> '' then
       Args.Add('-XP' + BinPrefix);
+    { a compiler for the target's CPU that "pastel doctor --install" built }
+    for Opt in CompilerOptions(Fpc, Opts.Target) do
+      Args.Add(Opt);
     if AndroidMain <> '' then
     begin
       { the start of a library and the names of the system libraries }
-      Args.Add('-Fl' + AndroidLibDir);
-      Args.Add('-Fo' + AndroidLibDir);
+      Args.Add('-Fl' + AndroidLibDir(Opts.Target));
+      Args.Add('-Fo' + AndroidLibDir(Opts.Target));
+      { both kinds of symbol tables: Android before 6 only reads the old one }
+      Args.Add('-k--hash-style=both');
     end;
 
     if Project.Mode = 'delphi' then

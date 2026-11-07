@@ -1,6 +1,6 @@
 // Tests for projectinfo.ts: which program F9 runs. Run: npm test
 import * as assert from 'assert';
-import { parseProjectInfo, runCandidates } from '../projectinfo';
+import { defaultPlatform, parseProjectInfo, platformCommand, pngSize, runCandidates } from '../projectinfo';
 
 let passed = 0;
 function test(name: string, fn: () => void): void {
@@ -47,6 +47,36 @@ test('only libraries: nothing to run', () => {
 
 test('no active file: every program', () => {
   assert.strictEqual(runCandidates(all, undefined).length, 3);
+});
+
+test('the platform F9 uses: this computer, or Android for a phone app', () => {
+  const phone = parseProjectInfo('/w/phone', '[project]\nname = "phone"\ntype = "app"\n\n[targets]\nplatforms = ["android"]\n');
+  assert.deepStrictEqual(phone.platforms, ['android']);
+  assert.strictEqual(defaultPlatform(phone, 'linux'), 'android');
+  const both = parseProjectInfo('/w/b', '[project]\ntype = "app"\n[targets]\nplatforms = ["linux", "windows", "android"]\n');
+  assert.strictEqual(defaultPlatform(both, 'linux'), 'linux');
+  assert.strictEqual(defaultPlatform(both, 'windows'), 'windows');
+  assert.strictEqual(defaultPlatform(tool, 'linux'), 'linux', 'no platforms listed');
+});
+
+test('F9 and Ctrl+F9 for each platform', () => {
+  assert.deepStrictEqual(platformCommand('run', 'android', 'linux').args, ['run', '--target', 'android']);
+  assert.deepStrictEqual(platformCommand('build', 'android', 'linux').args, ['package', 'apk'], 'one .apk for every CPU');
+  assert.deepStrictEqual(platformCommand('build', 'android-arm', 'linux').args, ['package', 'apk', '--target', 'android-arm']);
+  assert.deepStrictEqual(platformCommand('run', 'linux', 'linux', true).args, ['run', '--release']);
+  const win = platformCommand('run', 'windows', 'linux');
+  assert.deepStrictEqual(win.args, ['build', '--target', 'windows']);
+  assert.ok(win.note && win.note.includes('cannot run'), 'a Windows program is built, not run, on Linux');
+});
+
+test('the size of a PNG', () => {
+  const png = Buffer.alloc(24);
+  Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).copy(png);
+  png.write('IHDR', 12, 'ascii');
+  png.writeUInt32BE(512, 16);
+  png.writeUInt32BE(256, 20);
+  assert.deepStrictEqual(pngSize(png), { width: 512, height: 256 });
+  assert.strictEqual(pngSize(Buffer.from('not a picture at all, not at all')), undefined);
 });
 
 console.log(`projectinfo: ${passed} passed`);

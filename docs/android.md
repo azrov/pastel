@@ -4,19 +4,45 @@ The same Pascal code and `.pform` forms run on Android phones and tablets. An ap
 
 > **A preview.** Building and packing are tested on every change; running is being tried on real phones now. Tell us what you see: an issue with the phone's model and Android version, and the log (`pastel run --target android` shows it).
 
+## Phones, TV boxes and the emulator
+
+An Android device has one of four kinds of processor (CPU). Pastel builds for all of them, and one `.apk` can carry all four:
+
+| Target | Android's name | Devices | Android |
+|---|---|---|---|
+| `android-arm64` | `arm64-v8a` | most phones and tablets since about 2016 | 5 and newer |
+| `android-arm` | `armeabi-v7a` | older phones, most TV boxes, cheap tablets; 64-bit phones run it too | 4.4 and newer |
+| `android-x86_64` | `x86_64` | the Android emulator on a PC (Android Studio's, or others) | 5 and newer |
+| `android-x86` | `x86` | older emulators, a few Intel tablets | 4.4 and newer |
+
+`adb shell getprop ro.product.cpu.abilist` tells a device's kind; *Settings → About* does too on most phones.
+
 ## Setting it up (once)
 
 On Linux (Ubuntu, Mint, Debian):
 
 ```sh
-sudo apt install fpc fpc-source binutils-aarch64-linux-gnu      # the ARM 64-bit compiler comes with fpc
+sudo apt install fpc fpc-source                                     # the compiler and its sources
+sudo apt install binutils-aarch64-linux-gnu binutils-arm-linux-gnueabi binutils-x86-64-linux-gnu binutils-i686-linux-gnu
 sudo apt install aapt zipalign apksigner android-sdk-platform-23 default-jdk-headless adb
 pastel doctor --install android
 ```
 
-`pastel doctor --install android` compiles Free Pascal's units for Android once (into `~/.pastel/`) and makes small stand-ins for the phone's system libraries, so **the Android NDK is not needed**. The second line brings Android's packing tools, a platform (`android.jar`), Java (to sign) and `adb` (to install on a connected phone). With Android Studio installed, its SDK is used too (`ANDROID_HOME`, or `~/Android/Sdk`).
+`pastel doctor --install android` sets up every kind of device whose binutils (assembler and linker) are installed, once, into `~/.pastel/` (about half a minute):
 
-`pastel doctor` then shows `✓ android-arm64`.
+- **the compilers**: the ARM 64-bit one comes with the `fpc` package; the ARM 32-bit (`ppcrossarm`) and x86 (`ppcross386`) ones are built from Free Pascal's sources (`fpc-source`) — a few seconds each. The 64-bit PC compiler makes x86_64 code itself.
+- **Free Pascal's units** for Android, for each kind.
+- **small stand-ins for the phone's system libraries**, so **the Android NDK is not needed**.
+
+The third line brings Android's packing tools, a platform (`android.jar`), Java (to sign) and `adb` (to install on a connected phone or emulator). With Android Studio installed, its SDK is used too (`ANDROID_HOME`, or `~/Android/Sdk`).
+
+`pastel doctor` then shows `✓ android-arm64`, `✓ android-arm`, `✓ android-x86_64`, `✓ android-x86`. One kind alone: `pastel doctor --install android-arm`.
+
+**Free Pascal's sources from freepascal.org** (an archive you unpacked, instead of `fpc-source`) work too: point `FPCDIR` at the folder that has `compiler/` and `rtl/` in it.
+
+```sh
+FPCDIR=~/fpc-3.2.2-src pastel doctor --install android
+```
 
 ## Making an app for the phone
 
@@ -25,9 +51,12 @@ In VS Code: **Pastel: New Project…** → *Mobile* → *Android App*. Or in a t
 ```sh
 pastel new app shop --phone             # forms made for phones; any app project works too
 cd shop
-pastel build --target android           # build/android-arm64/debug/libmain.so
-pastel package apk                      # dist/shop-0.1.0.apk, signed, ready to install
+pastel build --target android-arm       # build/android-arm/debug/libmain.so (any target above)
+pastel package apk                      # dist/shop-0.1.0.apk for every kind set up, signed, ready to install
+pastel package apk --target android-arm # only one kind: a smaller .apk
 ```
+
+`pastel build --target android` is `android-arm64`. `pastel package apk` puts in every kind this computer is set up for; with `platforms = ["android-arm64", "android-arm"]` in `pastel.toml`, exactly those.
 
 To have it built with the others, add it to the platforms in `pastel.toml`:
 
@@ -60,6 +89,17 @@ end
 
 A free-placed form (`Layout = Free`) works on a phone too: give the controls `Anchors` so they follow the screen's width.
 
+## In VS Code
+
+The status bar shows the **platform** F9 and Ctrl+F9 use (like Delphi's *Target Platforms*); a phone app (`platforms = ["android"]`) starts on *android*. Click it to choose another one.
+
+| Platform | F9 | Ctrl+F9 |
+|---|---|---|
+| this computer (`linux`, `windows`) | build and run | build |
+| `android` | build for the connected phone's or emulator's CPU, install, start, show the log | `pastel package apk`: one `.apk` for every kind set up |
+| `android-arm`, `android-x86_64`… | the same, for that kind only | an `.apk` for that kind |
+| another desktop (`windows` on Linux) | build (it cannot run here) | build |
+
 ## Trying it on your phone
 
 1. On the phone: *Settings → About phone*, tap *Build number* seven times; then *Settings → Developer options → USB debugging* on.
@@ -70,7 +110,11 @@ A free-placed form (`Layout = Free`) works on a phone too: give the controls `An
 pastel run --target android
 ```
 
-It packs a debug `.apk`, installs it, starts it and shows its log (`WriteLn`, errors) until `Ctrl+C`. Without a cable: copy `dist/shop-0.1.0.apk` to the phone and open it (allow installing from this source once).
+It asks the phone which kind of CPU it has, packs a debug `.apk` for it, installs it, starts it and shows its log (`WriteLn`, errors) until `Ctrl+C`. Without a cable: copy `dist/shop-0.1.0.apk` (made by `pastel package apk`, with every kind) to the phone or TV box and open it (allow installing from this source once).
+
+## Trying it in the emulator
+
+No phone at hand? Android Studio's emulator runs Android on the PC (*Device Manager → Create device*, an *x86_64* system image). Start it; `adb devices` lists it like a phone, and `pastel run --target android` (F9) installs the `x86_64` build there. The emulator needs the PC's virtualization (KVM on Linux, enabled in the BIOS).
 
 ## What is different on a phone
 
@@ -98,7 +142,7 @@ keystore = "keys/shop.keystore"    # the release key (default: a debug key made 
 alias = "shop"
 ```
 
-The icon is `assets/icon.png` (a square PNG, 512 × 512 is best); the version is `[project] version` (`1.2.3` becomes the version code 10203).
+The icon is `assets/icon.png` (a square PNG, 512 × 512 is best; `pastel new app` puts Pastel's there to replace, and **Pastel: Set App Icon…** in VS Code copies yours there) — the same picture as on the desktop, in Android's five sizes. The version is `[project] version` (`1.2.3` becomes the version code 10203).
 
 A release key is made once with Java's `keytool` and kept safe — Google Play and updates need the same key every time:
 
@@ -110,7 +154,7 @@ PASTEL_KEYSTORE_PASSWORD=... pastel package apk
 ## Not there yet
 
 - `.aab` bundles for Google Play (an `.apk` with a release key can be uploaded by other routes for now)
-- 32-bit ARM phones (older than about 2017) and x86 emulators: only ARM 64-bit is built
+- Tried on real devices: the ARM 32-bit, x86 and Android 4.4–5 builds are checked (the right instructions, Android's library format) but not yet run on those devices — reports are welcome
 - An example: the salon's agenda on the phone
 
 See the [roadmap](../ROADMAP.md#15--android-in-preview).

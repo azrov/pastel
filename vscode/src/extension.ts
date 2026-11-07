@@ -2,7 +2,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { registerFormatter } from './format';
-import { registerDebugging } from './debug';
+import { hostTarget, registerDebugging } from './debug';
+import { defaultPlatform, isAndroid, platformCommand, PLATFORMS, pngSize } from './projectinfo';
 import { registerTesting } from './testing';
 import { currentProjectRoot, findProjectRoot, pastelPath, readProjectInfo, runnableProjectRoot, runPastel, workspaceProjects } from './cli';
 import {
@@ -23,15 +24,6 @@ let diagnostics: vscode.DiagnosticCollection;
 const pascalIndex = new PascalIndex();
 const checkTimers = new Map<string, NodeJS.Timeout>();
 
-const PLATFORMS: { label: string; description: string }[] = [
-  { label: 'linux', description: 'Linux, 64-bit PC' },
-  { label: 'windows', description: 'Windows, 64-bit' },
-  { label: 'windows32', description: 'Windows, 32-bit' },
-  { label: 'rpi', description: 'Raspberry Pi, 64-bit OS' },
-  { label: 'rpi32', description: 'Raspberry Pi, 32-bit OS' },
-  { label: 'macos', description: 'macOS, Intel' },
-  { label: 'macos-arm64', description: 'macOS, Apple Silicon' },
-];
 
 let extensionContext: vscode.ExtensionContext | undefined;
 
@@ -101,11 +93,17 @@ export function activate(context: vscode.ExtensionContext): void {
   runItem.tooltip = 'Build and run the Pastel project';
   runItem.command = 'pastel.run';
   context.subscriptions.push(runItem);
+  // status bar: the platform F9 and Ctrl+F9 use (Delphi's target platform)
+  platformItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 49);
+  platformItem.command = 'pastel.choosePlatform';
+  context.subscriptions.push(platformItem);
   vscode.workspace.findFiles('**/pastel.toml', '**/build/**', 1).then(found => {
     if (found.length > 0) {
       runItem.show();
+      void updatePlatformItem();
     }
   });
+  context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(() => void updatePlatformItem()));
 
   // commands
   registerFormatter(context);
@@ -125,6 +123,9 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('pastel.test', () => runTask('test')),
     vscode.commands.registerCommand('pastel.buildRelease', () => runTask('build', { release: true })),
     vscode.commands.registerCommand('pastel.buildTarget', buildForPlatform),
+    vscode.commands.registerCommand('pastel.choosePlatform', choosePlatform),
+    vscode.commands.registerCommand('pastel.setAppIcon', setAppIcon),
+    vscode.commands.registerCommand('pastel.packageApk', () => runTask('build', { target: 'android' })),
     vscode.commands.registerCommand('pastel.clean', () => runTask('clean')),
     vscode.commands.registerCommand('pastel.doctor', doctor),
     vscode.commands.registerCommand('pastel.newProject', newProject),
@@ -240,15 +241,16 @@ interface PastelTaskDefinition extends vscode.TaskDefinition {
 }
 
 function makeTask(command: string, root: string,
-  opts: { target?: string; release?: boolean; watch?: boolean } = {},
+  opts: { target?: string; release?: boolean; watch?: boolean; args?: string[] } = {},
   definition?: vscode.TaskDefinition): vscode.Task {
+  const { args: given, ...rest } = opts;
   const def: PastelTaskDefinition = definition as PastelTaskDefinition ??
-    { type: 'pastel', command, ...opts };
-  const args = [command];
-  if (opts.target) {
+    { type: 'pastel', command, ...rest };
+  const args = given ? [...given] : [command];
+  if (opts.target && !given) {
     args.push('--target', opts.target);
   }
-  if (opts.release) {
+  if (opts.release && !given) {
     args.push('--release');
   }
   if (opts.watch) {
@@ -268,7 +270,7 @@ function makeTask(command: string, root: string,
   const task = new vscode.Task(def, folder ?? vscode.TaskScope.Workspace, name, 'pastel',
     new vscode.ProcessExecution(pastelPath(), args, { cwd: root, env: { NO_COLOR: '1' } }),
     '$pastel');
-  if (command === 'build') {
+  if (command === 'build' || command === 'package') {
     task.group = vscode.TaskGroup.Build;
   }
   if (opts.watch) {
@@ -278,7 +280,7 @@ function makeTask(command: string, root: string,
   return task;
 }
 
-async function runTask(command: string, opts: { target?: string; release?: boolean; watch?: boolean } = {}): Promise<void> {
+async function runTask(command: string, opts: { target?: string; release?: boolean; watch?: boolean; args?: string[] } = {}): Promise<void> {
   let root = await currentProjectRoot();
   if (!root) {
     vscode.window.showWarningMessage('Pastel: no pastel.toml found in this workspace. Create a project with "Pastel: New Project".');
@@ -300,6 +302,23 @@ async function runTask(command: string, opts: { target?: string; release?: boole
       }
     } else {
       root = runnable;
+    }
+  }
+  // F9 and Ctrl+F9 follow the chosen platform: a phone app runs on the phone
+  if ((command === 'run' || command === 'build') && !opts.watch && !opts.args) {
+    const platform = opts.target ?? currentPlatform(root);
+    const host = hostTarget();
+    if (opts.target || platform !== host) {
+      if (isAndroid(platform) && readProjectInfo(root)?.kind !== 'app') {
+        vscode.window.showWarningMessage('Pastel: only app projects run on Android; choose another platform in the status bar.');
+        return;
+      }
+      const cmd = platformCommand(command as 'run' | 'build', platform, host, opts.release);
+      if (cmd.note) {
+        vscode.window.showInformationMessage('Pastel: ' + cmd.note);
+      }
+      opts = { ...opts, args: cmd.args, target: platform };
+      command = cmd.args[0];
     }
   }
   await vscode.workspace.saveAll(false);
@@ -351,6 +370,104 @@ async function newForm(): Promise<void> {
   await vscode.window.showTextDocument(doc, vscode.ViewColumn.One);
   vscode.commands.executeCommand('pastel.openPreview', doc.uri);
   vscode.commands.executeCommand('pastel.refreshTree');
+}
+
+/** Pastel: Set App Icon… — a PNG becomes assets/icon.png: the window, the .exe, installers, the phone's home screen. */
+async function setAppIcon(uri?: vscode.Uri): Promise<void> {
+  const root = await currentProjectRoot();
+  if (!root) {
+    vscode.window.showWarningMessage('Pastel: open a Pastel project first.');
+    return;
+  }
+  let file = uri?.fsPath;
+  if (!file || !/\.png$/i.test(file)) {
+    const picked = await vscode.window.showOpenDialog({
+      canSelectMany: false, filters: { 'PNG pictures': ['png'] },
+      openLabel: 'Use as the app\'s icon', title: 'The app\'s icon: a square PNG, 512 x 512 is best',
+    });
+    if (!picked || picked.length === 0) {
+      return;
+    }
+    file = picked[0].fsPath;
+  }
+  const data = fs.readFileSync(file);
+  const size = pngSize(data);
+  if (!size) {
+    vscode.window.showErrorMessage('Pastel: the icon must be a PNG file.');
+    return;
+  }
+  const dest = path.join(root, 'assets', 'icon.png');
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  if (path.resolve(file) !== path.resolve(dest)) {
+    fs.writeFileSync(dest, data);
+  }
+  let note = '';
+  if (size.width !== size.height) {
+    note = ` It is ${size.width} x ${size.height}: a square picture looks best.`;
+  } else if (size.width < 256) {
+    note = ` It is ${size.width} x ${size.height}: 512 x 512 looks sharper on phones and in installers.`;
+  }
+  vscode.window.showInformationMessage(`Pastel: assets/icon.png is the app's icon now (window, taskbar, .exe, installers, Android).${note}`);
+}
+
+let platformItem: vscode.StatusBarItem | undefined;
+
+function platformKey(root: string): string {
+  return 'pastel.platform:' + root;
+}
+
+/** The platform F9 and Ctrl+F9 use for a project: chosen in the status bar, or what the project is made for. */
+function currentPlatform(root: string): string {
+  const chosen = extensionContext?.workspaceState?.get<string>(platformKey(root));
+  return chosen ?? defaultPlatform(readProjectInfo(root), hostTarget());
+}
+
+async function updatePlatformItem(): Promise<void> {
+  if (!platformItem) {
+    return;
+  }
+  const root = await currentProjectRoot();
+  if (!root) {
+    platformItem.hide();
+    return;
+  }
+  const platform = currentPlatform(root);
+  const host = platform === hostTarget();
+  platformItem.text = `${isAndroid(platform) ? '$(device-mobile)' : '$(device-desktop)'} ${platform}`;
+  platformItem.tooltip = (host ? 'F9 runs on this computer' :
+    isAndroid(platform) ? 'F9 runs on the connected phone or emulator; Ctrl+F9 makes the .apk' :
+      'F9 and Ctrl+F9 build for ' + platform) + ' — click to choose the platform';
+  platformItem.show();
+}
+
+/** The status bar's platform picker, like Delphi's target platforms: the project's platforms first. */
+async function choosePlatform(): Promise<void> {
+  const root = await currentProjectRoot();
+  if (!root) {
+    vscode.window.showWarningMessage('Pastel: open a Pastel project first.');
+    return;
+  }
+  const info = readProjectInfo(root);
+  const host = hostTarget();
+  const current = currentPlatform(root);
+  const own = new Set((info?.platforms ?? []).map(p => p.toLowerCase()));
+  const items: (vscode.QuickPickItem & { platform: string })[] = [
+    { label: host, description: 'this computer', platform: host },
+    ...PLATFORMS.filter(p => p.label !== host).map(p => ({ label: p.label, description: p.description, platform: p.label })),
+  ].map(i => ({
+    ...i,
+    label: (i.platform === current ? '$(check) ' : '') + i.label,
+    detail: own.has(i.platform) ? 'in this project\'s platforms ([targets] in pastel.toml)' : undefined,
+  }));
+  items.sort((a, b) => Number(own.has(b.platform) || b.platform === host) - Number(own.has(a.platform) || a.platform === host));
+  const pick = await vscode.window.showQuickPick(items, {
+    placeHolder: 'Platform for F9 (run) and Ctrl+F9 (build) — "Pastel: Check Setup" shows what this computer can build',
+  });
+  if (!pick) {
+    return;
+  }
+  await extensionContext?.workspaceState?.update(platformKey(root), pick.platform === defaultPlatform(info, host) ? undefined : pick.platform);
+  await updatePlatformItem();
 }
 
 async function buildForPlatform(): Promise<void> {

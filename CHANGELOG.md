@@ -2,6 +2,16 @@
 
 The `pastel` tool and the framework. The VS Code extension has its own list: [vscode/CHANGELOG.md](vscode/CHANGELOG.md). What is planned is in [ROADMAP.md](ROADMAP.md).
 
+## 1.5.0-beta.5
+
+Android on every kind of device.
+
+- New targets: `android-arm` (ARM 32-bit: older phones, TV boxes; Android 4.4 and newer), `android-x86_64` (the Android emulator on a PC) and `android-x86`, besides `android-arm64`
+- `pastel doctor --install android` sets up all of them whose binutils are installed; the ARM 32-bit and x86 compilers are built from Free Pascal's sources (`fpc-source`, or the source archive with `FPCDIR`) in seconds — no NDK, no fpcupdeluxe
+- `pastel package apk` makes one `.apk` with every kind set up (`lib/arm64-v8a`, `lib/armeabi-v7a`, `lib/x86_64`, `lib/x86`), or one kind with `--target`; apps install on Android 4.4 and newer; libraries carry both kinds of symbol tables for older Android
+- `pastel run --target android` asks the phone or emulator for its CPU and builds for that
+- The app's icon: `pastel new app` puts Pastel's icon in `assets/icon.png`, ready to be replaced; Linux docks match the window to the app's menu entry (`StartupWMClass`, the window's class); [forms.md](docs/forms.md#the-apps-icon) says where the icon shows up
+
 ## 1.5.0-beta.4
 
 - `Pastel.Markdown`: Markdown to HTML the way GitHub shows it — headings with GitHub's ids, lists (nested, task boxes), tables with alignment, fenced code with its language, quotes, links, pictures, bare links, `~~strikethrough~~`; `TMarkdown.OnLink` changes every address, `HeadingIds` tells the ids ([docs/markdown.md](docs/markdown.md))

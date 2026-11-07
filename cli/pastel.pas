@@ -401,8 +401,11 @@ end;
 function RunOnAndroid(const CL: TCommandLine; const T: TTarget): Integer;
 var
   Project: TPastelProject;
-  Apk, Adb, Output, Id: string;
+  Apk, Adb, Output, Id, Abi: string;
   Args: TStringList;
+  Targets: TTargetArray;
+  Device: TTarget;
+  Supported: TStringArray;
 
   function Adb_(const A: array of string; Show: Boolean): Boolean;
   var
@@ -435,16 +438,43 @@ begin
     Exit;
   Args := TStringList.Create;
   try
-    Apk := PackageApk(Project, T, CL.Verbose, not CL.Release);
-    if Apk = '' then
-      Exit;
     Adb_(['devices'], False);
     if Pos(#9'device', Output) = 0 then
     begin
       Fail('no phone is connected');
-      Hint('connect it with USB, allow USB debugging on it, then check with: adb devices');
+      Hint('connect it with USB, allow USB debugging on it, then check with: adb devices (an emulator shows there too)');
       Exit;
     end;
+    { the phone's CPU decides the build: arm64-v8a, armeabi-v7a, x86_64, x86 }
+    Targets := nil;
+    if (CL.Target <> '') and not SameText(CL.Target, 'android') then
+      Targets := [T]
+    else
+    begin
+      Adb_(['shell', 'getprop', 'ro.product.cpu.abilist'], False);
+      Supported := Trim(Output).Split([',']);
+      if (Length(Supported) = 0) or (Trim(Output) = '') then
+      begin
+        Adb_(['shell', 'getprop', 'ro.product.cpu.abi'], False);   { Android 4 }
+        Supported := [Trim(Output)];
+      end;
+      for Abi in Supported do
+        if (Length(Targets) = 0) and FindAndroidTarget(Trim(Abi), Device) and AndroidTargetReady(Device) then
+          Targets := [Device];
+      if Length(Targets) = 0 then
+      begin
+        Fail(Format('this computer cannot build for the phone''s CPU yet (%s)', [string.Join(', ', Supported)]));
+        if (Length(Supported) > 0) and FindAndroidTarget(Trim(Supported[0]), Device) then
+          Hint(Format('pastel doctor --install %s sets it up', [Device.Name]))
+        else
+          Hint('pastel doctor --install android sets up every Android CPU');
+        Exit;
+      end;
+      Status('Device', Format('%s (%s)', [AndroidAbi(Targets[0]), Targets[0].Name]));
+    end;
+    Apk := PackageApk(Project, Targets, CL.Verbose, not CL.Release);
+    if Apk = '' then
+      Exit;
     Id := AndroidAppId(Project);
     Status('Installing', ExtractFileName(Apk) + ' on the phone');
     if not Adb_(['install', '-r', Apk], False) then
@@ -552,7 +582,7 @@ var
     else if Kind = 'appimage' then
       Result := PackageAppImage(Project, Target, CL.Verbose) <> ''
     else if Kind = 'apk' then
-      Result := PackageApk(Project, Target, CL.Verbose) <> ''
+      Result := PackageApk(Project, ApkTargets(Project, CL.Target), CL.Verbose) <> ''
     else
       Result := PackageProject(Project, Target, CL.Verbose) <> '';
   end;
@@ -572,6 +602,13 @@ begin
   if Project = nil then
     Exit(ExitError);
   try
+    { one .apk for every Android CPU }
+    if Kind = 'apk' then
+    begin
+      if PackageApk(Project, ApkTargets(Project, CL.Target), CL.Verbose) <> '' then
+        Exit(ExitOk);
+      Exit(ExitError);
+    end;
     if CL.All then
     begin
       if Length(Project.Platforms) = 0 then
@@ -586,9 +623,7 @@ begin
         { a .deb, an image or an AppImage only for the Linux platforms, an installer for Windows }
         if (Kind = 'installer') and (Copy(Name, 1, 7) <> 'windows') then
           Continue;
-        if (Kind = 'apk') and (Copy(Name, 1, 7) <> 'android') then
-          Continue;
-        if (Kind <> '') and (Kind <> 'installer') and (Kind <> 'apk') and (Copy(Name, 1, 5) <> 'linux') then
+        if (Kind <> '') and (Kind <> 'installer') and (Copy(Name, 1, 5) <> 'linux') then
           Continue;
         if not ResolveTarget(Name, T) or not PackageOne(T) then
           Inc(Failed);
@@ -603,9 +638,7 @@ begin
     end;
     if not ResolveTarget(CL.Target, T) then
       Exit(ExitUsage);
-    if (Kind = 'apk') and (CL.Target = '') then
-      ResolveTarget('android-arm64', T)       { an .apk is for Android, made anywhere }
-    else if (Kind <> '') and (CL.Target = '') and (T.OS <> 'linux') then
+    if (Kind <> '') and (CL.Target = '') and (T.OS <> 'linux') then
       ResolveTarget('linux', T);       { a .deb or an image is for Linux, also when made elsewhere }
     if PackageOne(T) then
       Result := ExitOk
@@ -811,7 +844,8 @@ var
   T: TTarget;
   Name, Err, Fpc, Prefix: string;
   I, Index: Integer;
-  HaveBinutils: Boolean;
+  HaveBinutils, AllAndroid: Boolean;
+  Names: TStringArray;
 begin
   if not CL.Install then
   begin
@@ -823,7 +857,18 @@ begin
     Exit(ExitUsage);
   end;
   Result := ExitOk;
+  { "android": every Android CPU this computer can set up (phones old and new, the emulator) }
+  Names := nil;
+  AllAndroid := False;
   for Name in CL.Positional do
+    if SameText(Name, 'android') then
+    begin
+      AllAndroid := True;
+      Names := Concat(Names, ['android-arm64', 'android-arm', 'android-x86_64', 'android-x86']);
+    end
+    else
+      Names := Concat(Names, [Name]);
+  for Name in Names do
   begin
     if not FindTarget(Name, T) then
     begin
@@ -836,24 +881,32 @@ begin
     for I := Low(KnownTargets) to High(KnownTargets) do
       if KnownTargets[I].Name = T.Name then
         Index := I;
-    { Android: the start of a library and the system libraries' names, made with the binutils }
-    if (T.OS = 'android') and not AndroidLibsReady then
+    if T.OS = 'android' then
     begin
       Prefix := FindBinutilsPrefix(T, HaveBinutils);
       if not HaveBinutils then
       begin
-        Fail('the ARM 64-bit binutils are needed for Android: ' + BinutilsHint(T));
+        if AllAndroid and (T.Name <> 'android-arm64') then
+        begin
+          Status('Skipped', Format('%s (%s): needs %s', [T.Name, T.Description, BinutilsHint(T)]));
+          Continue;
+        end;
+        Fail(Format('the binutils for %s are needed: %s', [T.Name, BinutilsHint(T)]));
         Result := ExitError;
         Continue;
       end;
-      Err := MakeAndroidLibs(Prefix);
-      if Err <> '' then
+      { the start of a library and the system libraries' names, made with the binutils }
+      if not AndroidLibsReady(T) then
       begin
-        Fail(Err);
-        Result := ExitError;
-        Continue;
+        Err := MakeAndroidLibs(T, Prefix);
+        if Err <> '' then
+        begin
+          Fail(Err);
+          Result := ExitError;
+          Continue;
+        end;
+        Status('Made', 'the Android system library stand-ins in ' + AndroidLibDir(T));
       end;
-      Status('Made', 'the Android system library stand-ins in ' + AndroidLibDir);
     end;
     if (Fpc <> '') and (Index >= 0) and not CanBuildTarget(Fpc, Index) then
     begin
@@ -867,8 +920,9 @@ begin
         Result := ExitError;
         Continue;
       end;
-      Status('Ready', 'the compiler can build for ' + T.Name);
     end;
+    if (Fpc <> '') and (Index >= 0) then
+      Status('Ready', Format('the compiler can build for %s (%s)', [T.Name, T.Description]));
     if Length(RuntimeFiles(T)) = 0 then
       Continue;
     if RuntimeInstalled(T) then

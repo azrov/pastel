@@ -17,7 +17,7 @@ uses
 function WriteIconRes(const PngFile, ResFile: string): string;
 { The picture as a Size x Size PNG (Linux menus). }
 function WriteSizedPng(const PngFile, OutFile: string; Size: Integer): string;
-{ A plain icon for apps without assets/icon.png: a rounded square. }
+{ Pastel's icon for apps without assets/icon.png: a rounded square in pastel colors, 512 x 512. }
 procedure WriteDefaultIcon(const OutFile: string);
 { The same icon as an .ico file (for installers). }
 function WriteIco(const PngFile, IcoFile: string): string;
@@ -209,28 +209,84 @@ begin
 end;
 
 procedure WriteDefaultIcon(const OutFile: string);
+const
+  Size = 512;
+  Radius = 112;
+  Sub = 4;              { 4 x 4 samples a pixel: smooth edges }
 var
   Img: TFPMemoryImage;
   Writer: TFPWriterPNG;
-  X, Y, DX, DY, R: Integer;
+  X, Y, SX, SY, Inside, Ring: Integer;
+  PX, PY, DX, DY, T, D: Double;
   C: TFPColor;
+
+  { the rounded square }
+  function InSquare(AX, AY: Double): Boolean;
+  var
+    QX, QY: Double;
+  begin
+    QX := Math.Max(0, Math.Max(Radius - AX, AX - (Size - Radius)));
+    QY := Math.Max(0, Math.Max(Radius - AY, AY - (Size - Radius)));
+    Result := QX * QX + QY * QY <= Radius * Radius;
+  end;
+
+  function Mix(A, B: Word; F: Double): Word;
+  begin
+    Result := Round(A + (B - A) * F);
+  end;
+
 begin
-  Img := TFPMemoryImage.Create(256, 256);
+  Img := TFPMemoryImage.Create(Size, Size);
   Writer := TFPWriterPNG.Create;
   Writer.UseAlpha := True;
   try
     Img.UsePalette := False;
-    C.Red := $4F00; C.Green := $4600; C.Blue := $E500; C.Alpha := $FFFF;
-    R := 48;
-    for Y := 0 to 255 do
-      for X := 0 to 255 do
+    for Y := 0 to Size - 1 do
+      for X := 0 to Size - 1 do
       begin
-        DX := Math.Max(0, Math.Max(R - X, X - (255 - R)));
-        DY := Math.Max(0, Math.Max(R - Y, Y - (255 - R)));
-        if DX * DX + DY * DY <= R * R then
-          Img.Colors[X, Y] := C
-        else
+        Inside := 0;
+        Ring := 0;
+        for SY := 0 to Sub - 1 do
+          for SX := 0 to Sub - 1 do
+          begin
+            PX := X + (SX + 0.5) / Sub;
+            PY := Y + (SY + 0.5) / Sub;
+            if InSquare(PX, PY) then
+            begin
+              Inc(Inside);
+              { a white ring in the middle }
+              DX := PX - Size / 2;
+              DY := PY - Size / 2;
+              D := Sqrt(DX * DX + DY * DY);
+              if (D <= 150) and (D >= 92) then
+                Inc(Ring);
+            end;
+          end;
+        if Inside = 0 then
+        begin
           Img.Colors[X, Y] := colTransparent;
+          Continue;
+        end;
+        { Pastel's colors: lilac at the top left to sky blue to mint at the bottom right }
+        T := (X + Y) / (2 * Size);
+        if T < 0.5 then
+        begin
+          C.Red := Mix($8C00, $5F00, T * 2);
+          C.Green := Mix($6A00, $A800, T * 2);
+          C.Blue := Mix($F000, $EE00, T * 2);
+        end
+        else
+        begin
+          C.Red := Mix($5F00, $3F00, (T - 0.5) * 2);
+          C.Green := Mix($A800, $C900, (T - 0.5) * 2);
+          C.Blue := Mix($EE00, $A600, (T - 0.5) * 2);
+        end;
+        { the ring, blended by how much of the pixel it covers }
+        C.Red := Mix(C.Red, $FFFF, Ring / Inside);
+        C.Green := Mix(C.Green, $FFFF, Ring / Inside);
+        C.Blue := Mix(C.Blue, $FFFF, Ring / Inside);
+        C.Alpha := Round($FFFF * Inside / (Sub * Sub));
+        Img.Colors[X, Y] := C;
       end;
     ForceDirectories(ExtractFileDir(OutFile));
     Img.SaveToFile(OutFile, Writer);

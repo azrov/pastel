@@ -22,7 +22,7 @@ var
 implementation
 
 uses
-  Classes, SysUtils, Pastel.Console, Pastel.Project;
+  Classes, SysUtils, Pastel.Console, Pastel.Project, Pastel.WIcon;
 
 function Fill(const Lines: array of string; const Name, Ident: string): string;
 var
@@ -974,8 +974,12 @@ begin
     '',
     '- `src/main.pas` starts the application',
     '- `src/forms/Home.pform` is the layout of the main window',
-    '- `src/forms/Home.pas` is its code (event handlers)'
+    '- `src/forms/Home.pas` is its code (event handlers)',
+    '- `assets/icon.png` is the app''s icon: the window, the taskbar, the .exe, installers, the phone''s home screen.',
+    '  Put your own square PNG there (512 x 512 is best).'
   ], Name, Ident));
+  { the app's icon, ready to be replaced }
+  WriteDefaultIcon(Dir + 'assets' + PathDelim + 'icon.png');
 end;
 
 { A web API with a database: models, controllers, migrations, tests.

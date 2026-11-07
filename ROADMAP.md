@@ -253,10 +253,11 @@ The things every business app needs, built in instead of written again in every 
 
 ### 1.5 — Android (in preview)
 
-The same Pascal code and `.pform` forms on an Android phone or tablet. The app is a NativeActivity (no Java); the framework draws its own controls in software and reads TrueType fonts in plain Pascal, and Free Pascal 3.2.2 compiles for ARM 64-bit Android without the NDK. See [docs/android.md](docs/android.md).
+The same Pascal code and `.pform` forms on an Android phone or tablet. The app is a NativeActivity (no Java); the framework draws its own controls in software and reads TrueType fonts in plain Pascal, and Free Pascal 3.2.2 compiles for ARM 64-bit, ARM 32-bit and x86 Android without the NDK. See [docs/android.md](docs/android.md).
 
 - [x] `pastel doctor --install android`: Free Pascal's units for Android and stand-ins for the system libraries (no NDK needed)
 - [x] `pastel build --target android-arm64`; `pastel package apk`, signed with the project's key or a debug key
+- [x] Every kind of device: ARM 32-bit (older phones, TV boxes, Android 4.4+), x86_64 and x86 (emulators); one `.apk` for all — 1.5.0-beta.5
 - [ ] `.aab` for Google Play
 - [x] `pastel run --target android`: installs on the connected phone (`adb`) and shows its log
 - [x] Touch: tap, double tap, long press (= right click), scrolling with a finger; the on-screen keyboard for edits; the back button

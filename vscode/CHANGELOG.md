@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.3
+
+- The platform in the status bar (like Delphi's target platforms): F9 and Ctrl+F9 follow it. A phone app starts on *android*: F9 runs it on the connected phone or emulator, Ctrl+F9 makes the `.apk`; *Pastel: Choose Platform…* switches (also android-arm for older phones and TV boxes, android-x86_64 for the emulator)
+- *Pastel: Set App Icon…*: a PNG becomes the app's icon (`assets/icon.png`), from the side bar or a `.png` in the Explorer
+
 ## 1.5.2
 
 - The New Project wizard makes web sites (*Server → Web Site*)

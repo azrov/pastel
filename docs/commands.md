@@ -114,7 +114,8 @@ pastel package deb                      # a Debian/Ubuntu package (service: with
 pastel package docker                   # a container image (services)
 pastel package appimage                 # one file that runs on most Linux systems (apps)
 pastel package installer --target windows   # a Windows installer (needs makensis)
-pastel package apk                      # an Android app, signed: dist/<name>-<version>.apk (android.md)
+pastel package apk                      # an Android app, signed: dist/<name>-<version>.apk, for every
+                                        # Android CPU set up (android.md); --target android-arm: one
 pastel package --no-build               # pack what was built already
 ```
 
@@ -122,7 +123,7 @@ Next to every archive is a `.sha256` file. What goes in: the program, `README`, 
 
 ## pastel targets
 
-Lists the platforms Pastel can build for and their short names (`windows`, `rpi`, `linux-arm64`...).
+Lists the platforms Pastel can build for and their short names (`windows`, `rpi`, `linux-arm64`, `android-arm`...).
 
 ```sh
 pastel targets
@@ -136,8 +137,10 @@ Checks the setup: the compiler, the libraries apps and HTTPS need, and which pla
 pastel doctor
 pastel doctor --install windows    # set up building for Windows on Linux: Free Pascal's units
                                    # for Windows (from fpc-source) and SDL2.dll / freetype.dll
-pastel doctor --install android    # set up building for Android: Free Pascal's units for
-                                   # ARM 64-bit Android, without the NDK (android.md)
+pastel doctor --install android    # set up building for Android, without the NDK: every CPU whose
+                                   # binutils are installed (ARM 64/32-bit, x86_64, x86); the
+                                   # ARM 32-bit and x86 compilers are built from fpc-source (android.md)
+pastel doctor --install android-arm   # one of them
 ```
 
 ## pastel lang

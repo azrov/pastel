@@ -45,17 +45,32 @@ function PastelHome: string;
 { Android: what an app's libmain.so is linked with — the start of a library
   (dllprt0.o, crtbegin_so.o, crtend_so.o) and stand-ins for the system
   libraries (libc.so, libandroid.so, liblog.so...: only their names, the
-  phone has the real ones). Made with the ARM 64-bit binutils, so the NDK is
-  not needed: ~/.pastel/android/arm64/lib/. }
-function AndroidLibDir: string;
-function AndroidLibsReady: Boolean;
+  phone has the real ones). Made with the binutils of the target's CPU, so
+  the NDK is not needed: ~/.pastel/android/<arm64|arm|x86_64|x86>/lib/. }
+function AndroidLibDir(const T: TTarget): string;
+function AndroidLibsReady(const T: TTarget): Boolean;
 { Makes them; '' when it worked, else what went wrong. }
-function MakeAndroidLibs(const BinPrefix: string): string;
+function MakeAndroidLibs(const T: TTarget; const BinPrefix: string): string;
+
+{ The compiler for another CPU (ppcrossarm, ppcross386, ppcrossa64); '' when
+  this computer's compiler makes code for the target's CPU itself. }
+function CrossCompilerName(const T: TTarget): string;
+{ Where "pastel doctor --install" puts cross-compilers it builds:
+  ~/.pastel/fpc/<version>/bin/. }
+function PastelCompilerDir(const Fpc: string): string;
+{ The target's compiler is there (or none is needed). }
+function CrossCompilerReady(const Fpc: string; const T: TTarget): Boolean;
+{ Options for fpc so it finds a compiler Pastel built ('-Xp<dir>'), or none. }
+function CompilerOptions(const Fpc: string; const T: TTarget): TStringArray;
+{ Builds the target's cross-compiler from Free Pascal's sources (the compiler
+  folder of fpc-source, or of the sources FPCDIR points to) into
+  PastelCompilerDir; '' when it worked, else what went wrong. }
+function BuildCrossCompiler(const Fpc: string; const T: TTarget): string;
 
 implementation
 
 uses
-  Classes, zipper, Pastel.Http, Pastel.Console, Pastel.Builder;
+  Classes, Math, zipper, Pastel.Http, Pastel.Console, Pastel.Builder;
 
 function IsWindows(const Target: TTarget): Boolean;
 begin
@@ -199,12 +214,25 @@ begin
     Target.CPU + '-' + Target.OS + PathDelim + 'rtl' + PathDelim;
 end;
 
-function CanBuildRtl(const Target: TTarget): Boolean;
+function CompilerSourcesDir: string;
 begin
-  { Android: with the ARM 64-bit compiler of the fpc package (ppcrossa64) }
-  if (Target.OS = 'android') and (Target.CPU = 'aarch64') then
-    Exit((ExeSearch('ppcrossa64', GetEnvironmentVariable('PATH')) <> '') or
-      (ExeSearch('ppca64', GetEnvironmentVariable('PATH')) <> ''));
+  Result := FpcSourceDir;
+  if (Result <> '') and FileExists(IncludeTrailingPathDelimiter(Result) + 'compiler' + PathDelim + 'pp.pas') then
+    Result := IncludeTrailingPathDelimiter(Result) + 'compiler' + PathDelim
+  else
+    Result := '';
+end;
+
+function CanBuildRtl(const Target: TTarget): Boolean;
+var
+  Fpc: string;
+begin
+  { Android: with the compiler for its CPU, which Pastel can build from the sources }
+  if Target.OS = 'android' then
+  begin
+    Fpc := FindFpc;
+    Exit((Fpc <> '') and (CrossCompilerReady(Fpc, Target) or (CompilerSourcesDir <> '')));
+  end;
   {$IFDEF CPUX86_64}
   Result := (Target.CPU = 'x86_64') and (Target.OS = 'win64');
   {$ELSE}
@@ -212,47 +240,215 @@ begin
   {$ENDIF}
 end;
 
-function AndroidLibDir: string;
+function CrossCompilerName(const T: TTarget): string;
+const
+  HostCPU = {$I %FPCTARGETCPU%};
+begin
+  if SameText(T.CPU, HostCPU) then
+    Exit('');
+  if T.CPU = 'aarch64' then
+    Result := 'ppcrossa64'
+  else if T.CPU = 'arm' then
+    Result := 'ppcrossarm'
+  else if T.CPU = 'i386' then
+    Result := 'ppcross386'
+  else if T.CPU = 'x86_64' then
+    Result := 'ppcrossx64'
+  else
+    Result := 'ppcross' + T.CPU;
+  {$IFDEF WINDOWS}
+  Result := Result + '.exe';
+  {$ENDIF}
+end;
+
+function PastelCompilerDir(const Fpc: string): string;
 begin
   if PastelHome = '' then
     Exit('');
-  Result := PastelHome + 'android' + PathDelim + 'arm64' + PathDelim + 'lib' + PathDelim;
+  Result := PastelHome + 'fpc' + PathDelim + FpcVersion(Fpc) + PathDelim + 'bin' + PathDelim;
 end;
 
-function AndroidLibsReady: Boolean;
+function CrossCompilerReady(const Fpc: string; const T: TTarget): Boolean;
+var
+  Name: string;
+begin
+  Name := CrossCompilerName(T);
+  if Name = '' then
+    Exit(True);
+  Result := (ExeSearch(Name, GetEnvironmentVariable('PATH')) <> '') or
+    FileExists(IncludeTrailingPathDelimiter(ExtractFileDir(Fpc)) + Name) or
+    ((PastelCompilerDir(Fpc) <> '') and FileExists(PastelCompilerDir(Fpc) + Name));
+  { the fpc package's own name for the ARM 64-bit compiler on ARM 64-bit computers }
+  if not Result and (T.CPU = 'aarch64') then
+    Result := ExeSearch('ppca64', GetEnvironmentVariable('PATH')) <> '';
+end;
+
+function CompilerOptions(const Fpc: string; const T: TTarget): TStringArray;
+var
+  Name: string;
+begin
+  Result := nil;
+  Name := CrossCompilerName(T);
+  if (Name = '') or (PastelCompilerDir(Fpc) = '') then
+    Exit;
+  if (ExeSearch(Name, GetEnvironmentVariable('PATH')) = '') and
+    not FileExists(IncludeTrailingPathDelimiter(ExtractFileDir(Fpc)) + Name) and
+    FileExists(PastelCompilerDir(Fpc) + Name) then
+    Result := ['-Xp' + PastelCompilerDir(Fpc)];
+end;
+
+function BuildCrossCompiler(const Fpc: string; const T: TTarget): string;
+var
+  Src, Out_, Units, Gen, Msg, Output, Name, Ver, Define: string;
+  Args: TStringList;
+  Candidates: TStringArray;
+  C: string;
+
+  function Compile(const Dir: string; const A: array of string): Boolean;
+  var
+    S: string;
+  begin
+    Args.Clear;
+    for S in A do
+      Args.Add(S);
+    Result := RunCapture(Fpc, Args, Dir, Output) = 0;
+    if not Result then
+      BuildCrossCompiler := 'the compiler for ' + T.CPU + ' did not compile:' + LineEnding +
+        Trim(Copy(Output, Max(1, Length(Output) - 1500), MaxInt));
+  end;
+
+begin
+  Result := '';
+  Name := CrossCompilerName(T);
+  if Name = '' then
+    Exit;
+  Src := CompilerSourcesDir;
+  if Src = '' then
+    Exit('the compiler''s sources are needed: sudo apt install fpc-source (or the source archive from ' +
+      'freepascal.org, with FPCDIR set to its folder)');
+  Ver := FpcVersion(Fpc);
+  Out_ := PastelCompilerDir(Fpc);
+  if Out_ = '' then
+    Exit('the home folder is not known (set PASTEL_CACHE)');
+  Units := PastelHome + 'fpc' + PathDelim + Ver + PathDelim + 'compiler-units' + PathDelim + T.CPU + PathDelim;
+  Gen := PastelHome + 'fpc' + PathDelim + Ver + PathDelim + 'compiler-units' + PathDelim + 'msg' + PathDelim;
+  ForceDirectories(Out_);
+  ForceDirectories(Units);
+  ForceDirectories(Gen);
+  Args := TStringList.Create;
+  try
+    { the compiler's messages: msgtxt.inc is in the full sources; Debian's fpc-source has only errore.msg }
+    if not FileExists(Src + 'msgtxt.inc') and not FileExists(Gen + 'msgtxt.inc') then
+    begin
+      Candidates := [Src + 'msg' + PathDelim + 'errore.msg',
+        ExtractFileDir(ExtractFileDir(Fpc)) + PathDelim + 'lib' + PathDelim + 'fpc' + PathDelim + Ver + PathDelim + 'msg' + PathDelim + 'errore.msg',
+        '/usr/lib/x86_64-linux-gnu/fpc/' + Ver + '/msg/errore.msg', '/usr/lib/aarch64-linux-gnu/fpc/' + Ver + '/msg/errore.msg',
+        '/usr/lib/fpc/' + Ver + '/msg/errore.msg', '/usr/local/lib/fpc/' + Ver + '/msg/errore.msg'];
+      Msg := '';
+      for C in Candidates do
+        if (Msg = '') and FileExists(C) then
+          Msg := C;
+      if Msg = '' then
+        Exit('the compiler''s messages (errore.msg) were not found in the Free Pascal sources');
+      if not Compile(Gen, ['-FU' + Gen, '-FE' + Gen, '-Fu' + Src, '-Fi' + Src, Src + 'utils' + PathDelim + 'msg2inc.pp']) then
+        Exit;
+      Args.Clear;
+      Args.Add(Msg);
+      Args.Add('msg');
+      Args.Add('msg');
+      if RunCapture(Gen + 'msg2inc' {$IFDEF WINDOWS} + '.exe'{$ENDIF}, Args, Gen, Output) <> 0 then
+        Exit('the compiler''s messages could not be made: ' + Trim(Output));
+    end;
+    Status('Compiling', Format('Free Pascal''s compiler for %s (%s) from %s', [T.CPU, Name, Src]));
+    if T.CPU = 'aarch64' then
+      Define := '-dAARCH64'
+    else if T.CPU = 'x86_64' then
+      Define := '-dX86_64'
+    else
+      Define := '-d' + UpperCase(T.CPU);
+    Args.Clear;
+    Args.Add('-Fi' + Gen);
+    Args.Add('-Fu' + T.CPU);
+    Args.Add('-Fi' + T.CPU);
+    if (T.CPU = 'i386') or (T.CPU = 'x86_64') then
+    begin
+      Args.Add('-Fux86');
+      Args.Add('-Fix86');
+    end;
+    for C in TStringArray.Create('-Fusystems', '-Fi.', '-Fu.', Define, '-dGDB', '-dBROWSERLOG', '-O2', '-Xs', '-XX', '-CX',
+      '-FU' + Units, '-FE' + Out_, '-o' + Name, 'pp.pas') do
+      Args.Add(C);
+    if RunCapture(Fpc, Args, Src, Output) <> 0 then
+      Exit('the compiler for ' + T.CPU + ' did not compile:' + LineEnding + Trim(Copy(Output, Max(1, Length(Output) - 1500), MaxInt)));
+    if not FileExists(Out_ + Name) then
+      Exit('the compiler for ' + T.CPU + ' was not made: ' + Out_ + Name);
+    Status('Built', Out_ + Name);
+  finally
+    Args.Free;
+  end;
+end;
+
+function AndroidLibDir(const T: TTarget): string;
+var
+  Arch: string;
+begin
+  if PastelHome = '' then
+    Exit('');
+  if T.CPU = 'aarch64' then
+    Arch := 'arm64'
+  else if T.CPU = 'i386' then
+    Arch := 'x86'
+  else
+    Arch := T.CPU;
+  Result := PastelHome + 'android' + PathDelim + Arch + PathDelim + 'lib' + PathDelim;
+end;
+
+function AndroidLibsReady(const T: TTarget): Boolean;
 var
   F: string;
 begin
-  Result := AndroidLibDir <> '';
+  Result := AndroidLibDir(T) <> '';
   if Result then
     for F in TStringArray.Create('dllprt0.o', 'crtbegin_so.o', 'crtend_so.o', 'libc.so', 'libm.so', 'libdl.so', 'liblog.so',
       'libandroid.so') do
-      if not FileExists(AndroidLibDir + F) then
+      if not FileExists(AndroidLibDir(T) + F) then
         Exit(False);
 end;
 
-function MakeAndroidLibs(const BinPrefix: string): string;
+function MakeAndroidLibs(const T: TTarget; const BinPrefix: string): string;
 const
-  NoExecStack = #9'.section .note.GNU-stack,"",%progbits' + LineEnding;
-  { the libc start of a library: __dso_handle, and atexit for this library }
-  CrtBegin =
-    #9'.data' + LineEnding + #9'.align 3' + LineEnding +
-    #9'.globl __dso_handle' + LineEnding + #9'.hidden __dso_handle' + LineEnding +
-    #9'.type __dso_handle,%object' + LineEnding +
-    '__dso_handle:' + LineEnding + #9'.quad __dso_handle' + LineEnding +
-    #9'.text' + LineEnding + #9'.align 2' + LineEnding +
-    #9'.globl atexit' + LineEnding + #9'.hidden atexit' + LineEnding + #9'.type atexit,%function' + LineEnding +
-    'atexit:' + LineEnding +
-    #9'mov x1, xzr' + LineEnding +
-    #9'adrp x2, __dso_handle' + LineEnding +
-    #9'add x2, x2, :lo12:__dso_handle' + LineEnding +
-    #9'b __cxa_atexit' + LineEnding + NoExecStack;
-  { Free Pascal's start of an Android library: run by the system's loader }
-  DllPrt0 =
-    #9'.section .init_array,"aw"' + LineEnding + #9'.align 3' + LineEnding +
-    #9'.quad FPC_LIB_START_ANDROID' + LineEnding + NoExecStack;
+  NL = LineEnding;
+  NoExecStack = #9'.section .note.GNU-stack,"",%progbits' + NL;
+  { __dso_handle (this library's handle) }
+  DsoHandle64 =
+    #9'.data' + NL + #9'.p2align 3' + NL +
+    #9'.globl __dso_handle' + NL + #9'.hidden __dso_handle' + NL + #9'.type __dso_handle,%object' + NL +
+    '__dso_handle:' + NL + #9'.quad __dso_handle' + NL;
+  DsoHandle32 =
+    #9'.data' + NL + #9'.p2align 2' + NL +
+    #9'.globl __dso_handle' + NL + #9'.hidden __dso_handle' + NL + #9'.type __dso_handle,%object' + NL +
+    '__dso_handle:' + NL + #9'.long __dso_handle' + NL;
+  AtExitHead =
+    #9'.text' + NL + #9'.p2align 2' + NL +
+    #9'.globl atexit' + NL + #9'.hidden atexit' + NL + #9'.type atexit,%function' + NL;
+  { atexit(f) = __cxa_atexit(f, nil, &__dso_handle), for each CPU }
+  AtExitA64 =
+    'atexit:' + NL + #9'mov x1, xzr' + NL + #9'adrp x2, __dso_handle' + NL +
+    #9'add x2, x2, :lo12:__dso_handle' + NL + #9'b __cxa_atexit' + NL;
+  AtExitArm =
+    #9'.arm' + NL +
+    'atexit:' + NL + #9'mov r1, #0' + NL + #9'ldr r2, .Ldso' + NL + '.Lpc:' + NL + #9'add r2, pc, r2' + NL +
+    #9'b __cxa_atexit(PLT)' + NL + '.Ldso:' + NL + #9'.word __dso_handle-(.Lpc+8)' + NL;
+  AtExitX64 =
+    'atexit:' + NL + #9'xorl %esi, %esi' + NL + #9'leaq __dso_handle(%rip), %rdx' + NL +
+    #9'jmp __cxa_atexit@PLT' + NL;
+  AtExitX86 =
+    'atexit:' + NL + #9'pushl %ebx' + NL + #9'call .Lpc' + NL + '.Lpc:' + NL + #9'popl %ebx' + NL +
+    #9'addl $_GLOBAL_OFFSET_TABLE_+(.-.Lpc), %ebx' + NL + #9'leal __dso_handle@GOTOFF(%ebx), %eax' + NL +
+    #9'pushl %eax' + NL + #9'pushl $0' + NL + #9'pushl 16(%esp)' + NL + #9'call __cxa_atexit@PLT' + NL +
+    #9'addl $12, %esp' + NL + #9'popl %ebx' + NL + #9'ret' + NL;
 var
-  Dir, Output, Lib: string;
+  Dir, Output, Lib, CrtBegin, DllPrt0: string;
   Args: TStringList;
 
   function Run(const Tool: string; const A: array of string): Boolean;
@@ -282,13 +478,37 @@ var
 
 begin
   Result := '';
-  Dir := AndroidLibDir;
+  Dir := AndroidLibDir(T);
   if Dir = '' then
     Exit('the home folder is not known (set PASTEL_CACHE)');
+  { the libc start of a library: __dso_handle, and atexit for this library;
+    Free Pascal's start of an Android library, run by the system's loader }
+  if T.CPU = 'aarch64' then
+  begin
+    CrtBegin := DsoHandle64 + AtExitHead + AtExitA64;
+    DllPrt0 := #9'.section .init_array,"aw"' + NL + #9'.p2align 3' + NL + #9'.quad FPC_LIB_START_ANDROID' + NL;
+  end
+  else if T.CPU = 'x86_64' then
+  begin
+    CrtBegin := DsoHandle64 + AtExitHead + AtExitX64;
+    DllPrt0 := #9'.section .init_array,"aw"' + NL + #9'.p2align 3' + NL + #9'.quad FPC_LIB_START_ANDROID' + NL;
+  end
+  else if T.CPU = 'arm' then
+  begin
+    CrtBegin := DsoHandle32 + AtExitHead + AtExitArm;
+    DllPrt0 := #9'.section .init_array,"aw"' + NL + #9'.p2align 2' + NL + #9'.long FPC_LIB_START_ANDROID' + NL;
+  end
+  else if T.CPU = 'i386' then
+  begin
+    CrtBegin := DsoHandle32 + AtExitHead + AtExitX86;
+    DllPrt0 := #9'.section .init_array,"aw"' + NL + #9'.p2align 2' + NL + #9'.long FPC_LIB_START_ANDROID' + NL;
+  end
+  else
+    Exit('Android on ' + T.CPU + ' is not supported');
   ForceDirectories(Dir);
-  Save('crtbegin_so.s', CrtBegin);
+  Save('crtbegin_so.s', CrtBegin + NoExecStack);
   Save('crtend_so.s', NoExecStack);
-  Save('dllprt0.s', DllPrt0);
+  Save('dllprt0.s', DllPrt0 + NoExecStack);
   Save('empty.s', NoExecStack);
   Args := TStringList.Create;
   try
@@ -347,17 +567,26 @@ begin
   if Out_ = '' then
     Exit('the home folder is not known (set PASTEL_CACHE)');
   ForceDirectories(Out_);
-  Status('Compiling', Format('Free Pascal''s RTL for %s into %s', [Target.Name, Out_]));
   if Target.OS = 'android' then
   begin
     BinPrefix := FindBinutilsPrefix(Target, HaveBinutils);
     if not HaveBinutils then
-      Exit('the ARM 64-bit binutils are needed: sudo apt install ' + Target.BinutilsPackage);
-    { O_LARGEFILE and a few others are only defined for "aarch64" in Free Pascal 3.2.2 }
-    Base := ['-T' + Target.OS, '-P' + Target.CPU, '-XP' + BinPrefix, '-dAARCH64', '-n', '-O2', '-Ur', '-Xs', '-vew',
-      '-FU' + Out_, '-Fu' + Out_, '-Fi../inc', '-Fi../aarch64', '-Fi../unix', '-Fiaarch64', '-Fi../linux',
-      '-Fi../linux/aarch64', '-Fu../inc', '-Fu../aarch64', '-Fu../unix', '-Fu../linux', '-Fu../common',
+      Exit('the binutils for ' + Target.Name + ' are needed: sudo apt install ' + Target.BinutilsPackage);
+    if not CrossCompilerReady(Fpc, Target) then
+    begin
+      Result := BuildCrossCompiler(Fpc, Target);
+      if Result <> '' then
+        Exit;
+    end;
+    Status('Compiling', Format('Free Pascal''s RTL for %s into %s', [Target.Name, Out_]));
+    Base := ['-T' + Target.OS, '-P' + Target.CPU, '-XP' + BinPrefix, '-n', '-O2', '-Ur', '-Xs', '-vew',
+      '-FU' + Out_, '-Fu' + Out_, '-Fi../inc', '-Fi../' + Target.CPU, '-Fi../unix', '-Fi' + Target.CPU, '-Fi../linux',
+      '-Fi../linux/' + Target.CPU, '-Fu../inc', '-Fu../' + Target.CPU, '-Fu../unix', '-Fu../linux', '-Fu../common',
       '-Fu../objpas', '-Fi../objpas', '-Fi../objpas/sysutils', '-Fi../objpas/classes'];
+    { O_LARGEFILE and a few others are only defined for "aarch64" in Free Pascal 3.2.2 }
+    if Target.CPU = 'aarch64' then
+      Base := Concat(Base, ['-dAARCH64']);
+    Base := Concat(Base, SplitOptions(Target.Options), CompilerOptions(Fpc, Target));
     if not Compile(['-Us', '-Sg', '../linux/system.pp']) then Exit;
     for U in TStringArray.Create('../inc/uuchar.pp', '../objpas/objpas.pp', '../unix/unixtype.pp', '../inc/ctypes.pp',
       '../unix/baseunix.pp', '../inc/strings.pp', '../unix/syscall.pp', '../unix/unixutil.pp',
@@ -373,6 +602,7 @@ begin
     if not Compile(['-Fi../charmaps', '../charmaps/cpall.pas']) then Exit;
     Exit;
   end;
+  Status('Compiling', Format('Free Pascal''s RTL for %s into %s', [Target.Name, Out_]));
   Base := ['-T' + Target.OS, '-P' + Target.CPU, '-n', '-O2', '-Ur', '-Xs', '-vew', '-FU' + Out_, '-Fu' + Out_,
     '-Fi../inc', '-Fi../' + Target.CPU, '-Fu../inc', '-Fu../' + Target.CPU, '-Fu../common'];
   { the steps of the RTL's Makefile.fpc for Windows }

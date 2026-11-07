@@ -161,7 +161,7 @@ export function welcomeHtml(nonce: string, data: { recent: RecentProject[]; loca
         <div class="hint" id="where"></div>
         <label>Platforms</label>
         <span class="checks" id="platforms"></span>
-        <div class="hint">What "pastel build --all" builds; any platform can still be built with --target. Android: "pastel package apk", or "pastel run --target android" with the phone connected.</div>
+        <div class="hint">What "pastel build --all" builds; any platform can still be built with --target. The platform in the status bar decides what F9 and Ctrl+F9 do: with Android, F9 runs the app on the connected phone or emulator and Ctrl+F9 makes the .apk.</div>
       </div>
       <div class="foot">
         <span class="msg" id="msg"></span>

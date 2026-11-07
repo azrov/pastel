@@ -86,6 +86,18 @@ end;
 
 `OnClose` runs when the window really closes, `OnResize` after the size changed. The minimize, maximize and close buttons in the title bar are drawn by the operating system, so they always match the platform.
 
+### The app's icon
+
+`assets/icon.png` is the app's icon everywhere: `pastel new app` puts Pastel's there, to be replaced by a square PNG of your own (512 × 512 is best). In VS Code: **Pastel: Set App Icon…** (also in the Pastel side bar, and on a `.png` in the Explorer's right-click menu).
+
+| Where | How the icon gets there |
+|---|---|
+| The window and the taskbar (Linux, Windows) | the program sets it when it opens its window |
+| The `.exe` in Explorer (Windows) | built into the `.exe` by `pastel build --target windows` |
+| The menu and the dock (Linux) | the `.desktop` file of `pastel package deb` and of the AppImage; installed, the dock shows it (a program run straight from `build/` has no menu entry, so GNOME's dock may show a plain icon for it) |
+| The Windows installer | `pastel package installer` |
+| The phone's home screen | `pastel package apk`, in Android's five sizes ([android.md](android.md)) |
+
 ## Designing in VS Code
 
 ![The form designer: Structure, Object Inspector, the form with a selected edit and its grips, the Tool Palette](images/designer.png)

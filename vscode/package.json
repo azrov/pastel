@@ -2,7 +2,7 @@
   "name": "pastel-vscode",
   "displayName": "Pastel",
   "description": "Build cross-platform apps in Object Pascal with Pastel: run, build, live form preview, .pform completion and checks.",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "publisher": "pastel",
   "repository": {
     "type": "git",
@@ -219,6 +219,21 @@
         "command": "pastel.welcome",
         "title": "Welcome",
         "category": "Pastel"
+      },
+      {
+        "command": "pastel.choosePlatform",
+        "title": "Choose Platform (for F9 and Ctrl+F9)…",
+        "category": "Pastel"
+      },
+      {
+        "command": "pastel.setAppIcon",
+        "title": "Set App Icon…",
+        "category": "Pastel"
+      },
+      {
+        "command": "pastel.packageApk",
+        "title": "Make the Android .apk",
+        "category": "Pastel"
       }
     ],
     "menus": {
@@ -250,6 +265,11 @@
           "command": "pastel.openPreview",
           "when": "resourceExtname == .pform",
           "group": "navigation@1"
+        },
+        {
+          "command": "pastel.setAppIcon",
+          "when": "resourceExtname == .png",
+          "group": "pastel"
         }
       ],
       "editor/title/context": [

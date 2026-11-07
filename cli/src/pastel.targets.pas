@@ -21,7 +21,7 @@ type
   end;
 
 const
-  KnownTargets: array[0..7] of TTarget = (
+  KnownTargets: array[0..10] of TTarget = (
     (Name: 'linux';       CPU: 'x86_64';  OS: 'linux';  Options: '';
      ExeExt: '';     Description: 'Linux, 64-bit PC';
      Binutils: 'x86_64-linux-gnu- x86_64-linux-'; BinutilsPackage: 'binutils-x86-64-linux-gnu'),
@@ -46,18 +46,33 @@ const
     { an app's libmain.so; "pastel package apk" makes the installable app }
     (Name: 'android-arm64'; CPU: 'aarch64'; OS: 'android'; Options: '';
      ExeExt: '.so';  Description: 'Android phones and tablets (ARM 64-bit)';
-     Binutils: 'aarch64-linux-android- aarch64-linux-gnu- aarch64-linux-'; BinutilsPackage: 'binutils-aarch64-linux-gnu')
+     Binutils: 'aarch64-linux-android- aarch64-linux-gnu- aarch64-linux-'; BinutilsPackage: 'binutils-aarch64-linux-gnu'),
+    { ARMv7 with VFPv3, Android's "armeabi-v7a": older phones, TV boxes }
+    (Name: 'android-arm'; CPU: 'arm'; OS: 'android'; Options: '-CpARMV7A -CfVFPV3';
+     ExeExt: '.so';  Description: 'Android, ARM 32-bit (older phones, TV boxes)';
+     Binutils: 'arm-linux-androideabi- arm-linux-gnueabi-'; BinutilsPackage: 'binutils-arm-linux-gnueabi'),
+    (Name: 'android-x86_64'; CPU: 'x86_64'; OS: 'android'; Options: '';
+     ExeExt: '.so';  Description: 'Android x86 64-bit (the Android emulator on a PC)';
+     Binutils: 'x86_64-linux-android- x86_64-linux-gnu-'; BinutilsPackage: 'binutils-x86-64-linux-gnu'),
+    (Name: 'android-x86'; CPU: 'i386'; OS: 'android'; Options: '';
+     ExeExt: '.so';  Description: 'Android x86 32-bit (older emulators and tablets)';
+     Binutils: 'i686-linux-android- i686-linux-gnu-'; BinutilsPackage: 'binutils-i686-linux-gnu')
   );
 
   { Friendly names people are likely to type. }
-  TargetAliases: array[0..6, 0..1] of string = (
+  TargetAliases: array[0..11, 0..1] of string = (
     ('rpi',   'linux-arm64'),
     ('rpi64', 'linux-arm64'),
     ('rpi32', 'linux-arm'),
     ('win',   'windows'),
     ('win64', 'windows'),
     ('win32', 'windows32'),
-    ('android', 'android-arm64')
+    ('android', 'android-arm64'),
+    ('android-arm32', 'android-arm'),
+    ('android-armv7', 'android-arm'),
+    ('android-x64', 'android-x86_64'),
+    ('android-i386', 'android-x86'),
+    ('android-aarch64', 'android-arm64')
   );
 
 function FindTarget(const AName: string; out T: TTarget): Boolean;
@@ -66,6 +81,10 @@ function IsHost(const T: TTarget): Boolean;
 { Binutils prefix to pass as -XP when cross-compiling, '' if none is needed
   or none is installed. Found tells whether a needed toolset exists. }
 function FindBinutilsPrefix(const T: TTarget; out Found: Boolean): string;
+{ Android's name of the target's CPU: arm64-v8a, armeabi-v7a, x86_64, x86 ('' for other systems). }
+function AndroidAbi(const T: TTarget): string;
+{ The Android target of an ABI name (arm64-v8a) or a target name; False when unknown. }
+function FindAndroidTarget(const Name: string; out T: TTarget): Boolean;
 
 implementation
 
@@ -143,6 +162,34 @@ begin
     if ExeSearch(Prefix + 'as' + Ext, GetEnvironmentVariable('PATH')) <> '' then
       Exit(Prefix);
   Found := False;
+end;
+
+function AndroidAbi(const T: TTarget): string;
+begin
+  Result := '';
+  if T.OS <> 'android' then
+    Exit;
+  if T.CPU = 'aarch64' then
+    Result := 'arm64-v8a'
+  else if T.CPU = 'arm' then
+    Result := 'armeabi-v7a'
+  else if T.CPU = 'x86_64' then
+    Result := 'x86_64'
+  else if T.CPU = 'i386' then
+    Result := 'x86';
+end;
+
+function FindAndroidTarget(const Name: string; out T: TTarget): Boolean;
+var
+  I: Integer;
+begin
+  for I := Low(KnownTargets) to High(KnownTargets) do
+    if (KnownTargets[I].OS = 'android') and SameText(AndroidAbi(KnownTargets[I]), Trim(Name)) then
+    begin
+      T := KnownTargets[I];
+      Exit(True);
+    end;
+  Result := FindTarget(Name, T) and (T.OS = 'android');
 end;
 
 end.

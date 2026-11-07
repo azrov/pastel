@@ -139,6 +139,7 @@ echo "== end-to-end tests"
 # --- desktop packages ---
 (cd "$WORK/ex-notepad" && "$PASTEL" package deb >/dev/null)
 expect "a desktop .deb has a menu entry"  'dpkg-deb --fsys-tarfile "$WORK"/ex-notepad/dist/notepad_1.0.0_amd64.deb | tar -xO ./usr/share/applications/notepad.desktop | grep -q "^Name=Notepad"'
+expect "which the dock finds the window by" 'dpkg-deb --fsys-tarfile "$WORK"/ex-notepad/dist/notepad_1.0.0_amd64.deb | tar -xO ./usr/share/applications/notepad.desktop | grep -q "^StartupWMClass=notepad"'
 expect "and an icon"                      'dpkg-deb -c "$WORK"/ex-notepad/dist/notepad_1.0.0_amd64.deb | grep -q "hicolor/256x256/apps/notepad.png"'
 expect "and needs SDL2"                   'dpkg-deb -f "$WORK"/ex-notepad/dist/notepad_1.0.0_amd64.deb Depends | grep -q libsdl2'
 if command -v makensis >/dev/null && "$PASTEL" doctor 2>/dev/null | grep -q "✓ windows "; then
@@ -160,10 +161,24 @@ if command -v ppcrossa64 >/dev/null && command -v aarch64-linux-gnu-ld >/dev/nul
   rm -rf "$WORK/droid-cli" && (cd "$WORK" && "$PASTEL" new console droid-cli >/dev/null)
   set +e; out="$(cd "$WORK/droid-cli" && "$PASTEL" build --target android 2>&1)"; code=$?; set -e
   expect "a console program is not for Android" '[ "$code" = 1 ] && echo "$out" | grep -q "Android builds are made of app projects"'
+  # older phones and TV boxes (ARM 32-bit), the emulator (x86_64, x86): compilers built from the FPC sources
+  if command -v arm-linux-gnueabi-ld >/dev/null && [ -f /usr/share/fpcsrc/3.2.2/compiler/pp.pas ]; then
+    set +e; out="$(cd "$WORK/droid" && "$PASTEL" build --target android-arm 2>&1)"; code=$?; set -e
+    expect "an app builds for ARM 32-bit phones" '[ "$code" = 0 ] && [ -s "$WORK"/droid/build/android-arm/debug/libmain.so ]'
+    expect "as armeabi-v7a (soft-float calls)"   'readelf -h "$WORK"/droid/build/android-arm/debug/libmain.so | grep -q "soft-float ABI" && readelf -A "$WORK"/droid/build/android-arm/debug/libmain.so | grep -q "Tag_CPU_arch: v7"'
+    expect "readable by Android before 6"        'readelf -d "$WORK"/droid/build/android-arm/debug/libmain.so | grep -q "(HASH)" && ! readelf -d "$WORK"/droid/build/android-arm/debug/libmain.so | grep -q TEXTREL'
+  fi
+  set +e; out="$(cd "$WORK/droid" && "$PASTEL" build --target android-x86_64 2>&1)"; code=$?; set -e
+  expect "an app builds for the emulator"      '[ "$code" = 0 ] && readelf -h "$WORK"/droid/build/android-x86_64/debug/libmain.so | grep -q "X86-64"'
   if command -v aapt >/dev/null && command -v apksigner >/dev/null && command -v zipalign >/dev/null && [ -d /usr/lib/android-sdk/platforms ]; then
     (cd "$WORK/droid" && "$PASTEL" package apk >/dev/null 2>&1)
     expect "pastel package apk"             '[ -s "$WORK"/droid/dist/droid-0.1.0.apk ]'
     expect "the .apk holds the app"         'unzip -l "$WORK"/droid/dist/droid-0.1.0.apk | grep -q lib/arm64-v8a/libmain.so'
+    expect "for every CPU set up"           'unzip -l "$WORK"/droid/dist/droid-0.1.0.apk | grep -q lib/x86_64/libmain.so'
+    expect "from Android 4.4 on"            'aapt dump badging "$WORK"/droid/dist/droid-0.1.0.apk | grep -q "sdkVersion:.19."'
+    expect "with the app's icon"            'unzip -l "$WORK"/droid/dist/droid-0.1.0.apk | grep -q "res/mipmap-xxxhdpi.*/ic_launcher.png"'
+    (cd "$WORK/droid" && "$PASTEL" package apk --target android-x86_64 >/dev/null 2>&1)
+    expect "or for one CPU"                 '! unzip -l "$WORK"/droid/dist/droid-0.1.0.apk | grep -q lib/arm64-v8a && unzip -l "$WORK"/droid/dist/droid-0.1.0.apk | grep -q lib/x86_64'
     expect "with its id and a launcher"     'aapt dump badging "$WORK"/droid/dist/droid-0.1.0.apk | grep -q "package: name=.dev.pastel.droid." && aapt dump badging "$WORK"/droid/dist/droid-0.1.0.apk | grep -q "launchable-activity: name=.dev.pastel.PastelActivity."'
     expect "and it is signed"               'apksigner verify "$WORK"/droid/dist/droid-0.1.0.apk 2>/dev/null'
     expect "with Pastel's activity (typed letters)" 'unzip -l "$WORK"/droid/dist/droid-0.1.0.apk | grep -q classes.dex && LC_ALL=C grep -a -q Java_dev_pastel_PastelActivity_nativeText "$WORK"/droid/build/android-arm64/release/libmain.so'
@@ -724,6 +739,7 @@ expect "build outside a project fails" '! "$PASTEL" build 2>/dev/null'
 # --- GUI apps (run headless: no window, drawing in memory) ---
 "$PASTEL" new app gui-demo >/dev/null
 expect "new app creates Home.pform" '[ -f gui-demo/src/forms/Home.pform ]'
+expect "new app has an icon to replace"   '[ -s gui-demo/assets/icon.png ] && grep -q "assets/icon.png" gui-demo/README.md'
 expect "new app creates Home.pas"   '[ -f gui-demo/src/forms/Home.pas ]'
 cd gui-demo
 "$PASTEL" build >/dev/null
@@ -771,7 +787,7 @@ expect "the dialogs answered"           'echo "$out" | grep -q "ok: Status = \"n
 printf 'expect Logo.LoadError \nexpect Logo.Fit ifContain\n' > "$WORK/asset.txt"
 set +e; out="$(cd "$WORK" && PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT="$WORK/asset.txt" "$WORK/controls-demo/build/linux/release/controls-demo" 2>&1)"; code=$?; set -e
 expect "a release build carries its assets"  '[ "$code" = 0 ] && echo "$out" | grep -q "ok: Logo.LoadError"'
-expect "assets are compiled in"         'grep -q "RegisterAsset(.logo.png., @Asset0" build/linux/release/gen/appassets.pas'
+expect "assets are compiled in"         'grep -q "RegisterAsset(.logo.png., @Asset" build/linux/release/gen/appassets.pas'
 cd "$WORK/gui-demo"
 
 # --- running a library; rows that do not fit ---
