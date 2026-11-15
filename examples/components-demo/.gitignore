@@ -1,5 +1,0 @@
-build/
-dist/
-*.o
-*.ppu
-*.g.pas
