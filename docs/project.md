@@ -1,0 +1,113 @@
+# The project file: `pastel.toml`
+
+Every Pastel project has a `pastel.toml` in its main folder. `pastel` finds it from any sub-folder, so commands work anywhere in the project.
+
+```toml
+[project]
+name = "inventory"          # letters, digits, - and _; also the program's file name
+version = "1.2.0"           # AppVersion in the program, part of package names
+pastel = "0.7"              # the Pastel version the project is made for (see below)
+title = "Inventory"         # apps: the name in menus and installers
+description = "Stock of the shop"
+type = "console"            # console, app (desktop window), service, lib (units for other projects)
+
+[build]
+main = "src/main.pas"       # the program (not used by lib projects)
+mode = "objfpc"             # objfpc or delphi
+defines = ["USE_CACHE"]     # {$IFDEF USE_CACHE} in every build
+unit_paths = ["../shared"]  # more folders with units (src/ and its sub-folders are always searched)
+
+[profile.debug]             # only debug builds (pastel build, pastel run)
+defines = ["VERBOSE_SQL"]
+
+[profile.release]           # only release builds (--release, pastel package)
+defines = ["SHIPPED"]
+options = ["-O3"]           # extra Free Pascal options, for special cases
+
+[profile.test]              # pastel test (which also gets the debug settings)
+defines = ["FAKE_CLOCK"]
+
+[targets]
+platforms = ["linux", "windows", "rpi"]   # pastel build --all, pastel package --all
+
+[dependencies]
+text-tools = { path = "../text-tools" }   # another Pastel project (a relative or a full path), see workflow.md
+serial = "^1.2"                           # a package from the registry, see packages.md
+chart = { git = "https://github.com/someone/pastel-chart", version = "^0.3" }   # or from a git repository
+
+[package]
+include = ["config.example.toml", "assets"]   # put into every package
+links = ["shop://", "https://shop.example.com/app"]   # addresses that open the app (device.md)
+[package.windows]
+include = ["libs/windows/*.dll"]              # only into the Windows package
+[package.android]
+id = "com.example.shop"                       # the app's id on phones (see android.md)
+orientation = "portrait"                      # or "landscape"; default: turns with the phone
+keystore = "keys/shop.keystore"               # the release key; alias = "shop"; password in PASTEL_KEYSTORE_PASSWORD
+libraries = ["androidx.browser:browser:1.8.0", "libs/scanner.aar"]   # Android libraries (android.md)
+background = ["jobs", "data_sync"]            # work when the app is not on the screen (device.md)
+picture_in_picture = true                     # video in a small window over other apps (device.md)
+
+[format]
+indent = 2                  # pastel fmt: spaces per level
+keywords = "lower"          # or "keep"
+```
+
+Only `[project] name` is required. Mistakes are reported with the line: `pastel.toml: line 7: invalid value "yes" (strings need quotes)`.
+
+## Defines everywhere
+
+Every build also has:
+
+| Define | When |
+|---|---|
+| `PASTEL` | always |
+| `PASTEL_DEBUG` | debug and test builds |
+| `PASTEL_RELEASE` | release builds |
+| `PASTEL_TEST` | `pastel test` |
+
+and the unit `AppInfo` with `AppName`, `AppVersion`, `AppProfile` (`debug`, `release` or `test`) and `AppTarget`.
+
+## Debug and release builds
+
+| | Debug (default) | Release (`--release`) |
+|---|---|---|
+| Speed | not optimized | optimized (`-O2`) |
+| Checks | range, overflow and I/O checks, assertions | off |
+| Debug information | DWARF 3, readable in gdb | none, smaller program |
+| `.pform` files | read at run time (hot reload) | built into the program |
+| Windows apps | without a console window: `WriteLn` goes to the console that started them (`pastel run`, cmd) | the same |
+| Output | `build/<platform>/debug/` | `build/<platform>/release/` |
+
+## Packages: `pastel package`
+
+```sh
+pastel package                    # dist/inventory-1.2.0-linux.tar.gz
+pastel package --target windows   # dist/inventory-1.2.0-windows.zip
+pastel package --all              # every platform in [targets] platforms
+```
+
+A package is a release build in an archive: `.zip` for Windows, `.tar.gz` for the others. It contains one folder, `inventory-1.2.0-linux/`, with
+
+- the program (executable on Linux and macOS),
+- `README`, `LICENSE` and `CHANGELOG` files from the project folder,
+- what `[package] include` and `[package.<platform>] include` list: files, folders (with their contents) and patterns like `docs/*.md`, relative to the project.
+
+Next to every archive is a `.sha256` file, so receivers can check it: `sha256sum -c inventory-1.2.0-linux.tar.gz.sha256`.
+
+For servers there are also `pastel package deb` (a Debian/Ubuntu package with the systemd unit) and `pastel package docker` (a container image): [deploy.md](deploy.md).
+
+Desktop apps need SDL2 and FreeType on the computer that runs them. On Linux they come with the system (`sudo apt install libsdl2-2.0-0 libfreetype6`); for Windows, put `SDL2.dll` and `freetype.dll` in the project (for example `libs/windows/`) and list them in `[package.windows] include`.
+
+## Upgrading a project
+
+`pastel = "0.7"` records the Pastel version a project is made for; `pastel new` writes it. When a newer Pastel builds an older project, the build says so, and
+
+```sh
+pastel upgrade --check   # what would change
+pastel upgrade           # make the changes
+```
+
+brings the project up to date: it sets `pastel`, renames things that newer versions treat differently (for example a control named `Hint`, which hides the `Hint` property since 0.5), adds a `title` to apps and keeps `build/` and `dist/` out of git. Projects made for a *newer* Pastel than the one installed get a warning: update `pastel`.
+
+From 1.0 on, `pastel.toml`, `.pform` files and the public framework API stay compatible within 1.x: what builds with 1.0 builds with every 1.x.
