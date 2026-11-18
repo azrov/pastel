@@ -1,0 +1,329 @@
+# Pastel roadmap to 1.0
+
+Pastel grows in this order: **console programs → Linux services → desktop apps**. Each step builds on the one before: a service is a console program that runs for a long time, and a desktop app uses the same libraries as a service.
+
+Every milestone ends with something you can really use, and with tests and documentation for it. Items are checked off as they are done.
+
+**Version 1.0 means:** you can build and ship a real console tool, a real Linux service (REST API with a database, packaged and running under systemd) and a real desktop business app (Linux and Windows) with Pastel, using VS Code, without hitting a wall. File formats (`pastel.toml`, `.pform`) and public APIs are stable from 1.0 on.
+
+---
+
+## 0.1 — Foundation (done)
+
+What exists today.
+
+**Tool (`pastel`)**
+- [x] `new console`, `new app`, `build`, `run`, `clean`, `targets`, `doctor`
+- [x] Debug and release builds, compiler errors with file and line
+- [x] Cross-compiling to Windows and Raspberry Pi (when the cross-compilers are installed)
+- [x] `check`, `preview`, `schema` for editors
+
+**GUI framework**
+- [x] Window, event loop, software rendering with FreeType text (SDL2)
+- [x] `.pform` forms, generated base classes, RTTI properties and events
+- [x] Controls: label, button, edit, card, row, column, spacer
+- [x] Flexbox-style layout, keyboard focus, clipboard
+- [x] Window settings and events (resizable, maximize, close query, ...)
+- [x] Hot reload of `.pform` files, headless mode and UI test scripts
+
+**VS Code extension**
+- [x] Run/Build commands and Delphi keys, problems panel
+- [x] Form designer (select, properties, drag and drop, toolbox)
+- [x] `.pform` completion, checks, quick fixes
+- [x] Pascal colors, outline, go to definition, symbol search
+- [x] Pastel panel in the activity bar
+
+---
+
+## 0.2 — Console programs, complete (done)
+
+Goal: writing a command-line tool in Pastel is pleasant from the first line to the release.
+
+**Tool**
+- [x] `pastel test`: finds and runs tests in `tests/`, clear report, exit code for CI
+- [x] `pastel run --watch`: rebuild and restart when a file changes (also `pastel test --watch`)
+- [x] `pastel fmt`: format Pascal code with one standard style (`--check` for CI, `--stdin` for editors)
+- [x] `pastel package`: a `.tar.gz` (Linux) or `.zip` (Windows) with the program, ready to hand out
+- [x] `pastel new lib`: a library project that other projects can use
+- [x] Use another local Pastel project as a dependency (`[dependencies]` in `pastel.toml`)
+- [x] `pastel.toml`: version shown by the program (`--version`, generated `AppInfo` unit)
+- [x] `pastel.toml`: build-time defines per profile
+
+**Library (`Pastel.Core`, usable without the GUI)**
+- [x] `Pastel.Testing`: test cases, asserts with readable messages
+- [x] `Pastel.Args`: command-line arguments and sub-commands, automatic `--help`
+- [x] `Pastel.Term`: colors, tables, progress bars, prompts (yes/no, input, choice)
+- [x] `Pastel.Text`: upper/lower case and lengths for every language (Turkish/Azerbaijani i)
+- [x] UTF-8 everywhere, also in the Windows console; thread support without `cthreads` in `uses`
+- [x] `Pastel.Log`: log levels, to the console or a file, with timestamps (also JSON, journald, rotation, threads)
+- [x] `Pastel.Config`: settings from `.toml`, `.json` and environment variables
+- [x] `Pastel.Json`: easy reading and writing of JSON (on top of FPC's fpjson)
+- [x] `Pastel.Files` and `Pastel.Process`: paths, reading/writing files, running other programs
+- [x] `Pastel.Http` client: GET/POST with JSON, timeouts, HTTPS with certificate checks, proxies
+- [x] `Pastel.Env`: environment variables in UTF-8 (also on Windows)
+
+**VS Code**
+- [x] Test explorer: run and debug single tests from the editor
+- [x] Pascal snippets (class, procedure, try/finally, for, case, ...)
+- [x] F5 debugging without manual setup; readable strings and arrays in the debugger
+- [x] Format on save (uses `pastel fmt`)
+
+**Docs**
+- [x] Getting started guide (install, first project, debug, release): `docs/getting-started.md`
+- [x] Console programs: `docs/console.md`; testing: `docs/testing.md`; JSON, settings, logging: `docs/data.md`; files, programs, HTTP: `docs/system.md`; watch, format, libraries: `docs/workflow.md`; `pastel.toml` and packages: `docs/project.md`
+- [x] Guide: writing a command-line tool: `docs/guide-cli.md`
+- [x] Examples: a file tool, a tool that calls a web API: `examples/dupfinder`, `examples/weather`
+
+---
+
+## 0.3 — Linux services (done)
+
+Goal: a REST API with a database, deployed on a Linux server as a systemd service, built only with Pastel.
+
+**Tool**
+- [x] `pastel new service`: a long-running program with configuration, logging and clean shutdown (with a systemd unit)
+- [x] `pastel new api`: a web API project with models, controllers, migrations and tests
+- [x] `pastel package deb`: a `.deb` with the program, its config file and a systemd unit
+- [x] `pastel package docker`: a container image (Debian slim, non-root, health check); a static image without a base OS later
+- [x] `pastel migrate`: run database migrations (`database/migrations/`); `status`, `new`
+- [x] `pastel run` restarts the service on code changes (with `--watch`)
+
+**Library (`Pastel.Service`, `Pastel.Web`, `Pastel.Db`)**
+- [x] Service life cycle: start, stop on SIGTERM/SIGINT, reload config on SIGHUP; systemd notify and watchdog
+- [x] Logging in a form journald understands; optional JSON logs
+- [x] Timers and scheduled jobs (every N seconds, daily at a time)
+- [x] Background worker threads and safe message passing between them: `Pastel.Workers`
+- [x] HTTP server: routing (`GET /users/:id`), JSON requests and responses, static files
+- [x] Middleware: logging, CORS, authentication (API keys, JWT), rate limits
+- [x] Validation of request data with clear error responses
+- [x] `Pastel.Crypto`: password hashing, random tokens, SHA-256/HMAC; `Pastel.Jwt`
+- [x] Health check endpoint for monitoring
+- [x] Database access for SQLite, PostgreSQL and MySQL/MariaDB (on top of FPC's SQLDB): `docs/database.md`
+- [x] Simple query API with parameters; transactions; connection pool
+- [x] Migrations with version tracking
+- [x] HTTPS (OpenSSL) or a guide for running behind nginx/caddy: `docs/deploy.md`
+
+**VS Code**
+- [x] Project explorer shows routes, jobs and migrations for service and API projects
+- [x] "Send request" for routes (try an endpoint from the editor): CodeLens above routes, button in the panel
+
+**Docs**
+- [x] Guide: build a REST API (with a database): `docs/guide-api.md`
+- [x] Guide: deploy to a Linux server (systemd, .deb, Docker, nginx): `docs/deploy.md`
+- [x] Example: a to-do REST API with SQLite and PostgreSQL (what `pastel new api` makes; tested on MariaDB too)
+
+---
+
+## 0.4 — Code intelligence (done)
+
+Goal: VS Code understands Pascal like Lazarus/Delphi do.
+
+- [x] Pascal code intelligence: completion of members (`NameEdit.` → `Text`, `SetFocus`, ...), parameter hints, hover with types; it reads the project, the Pastel framework and the Free Pascal sources (in the VS Code extension; a language server for other editors later)
+- [x] Find all references, rename a symbol across the project
+- [x] Errors underlined while typing (not only after building): the compiler checks the unsaved text, `pastel check file.pas --stdin`
+- [x] Unit names in `uses` completed from the project, the framework and Free Pascal
+- [x] Quick fixes: add a missing unit to `uses`, create a method body from its declaration (Delphi's Ctrl+Shift+C)
+- [x] Documentation comments shown in hover and completion; API reference generated from them: `docs/api/`
+
+---
+
+## 0.5 — Desktop apps, essentials (done)
+
+Goal: typical small business apps (forms, lists, dialogs) on Linux and Windows.
+
+**Controls**
+- [x] CheckBox, RadioButton (grouped by parent), Switch
+- [x] ComboBox (drop-down list)
+- [x] Memo (multi-line text, scrolling, word wrap)
+- [x] ListBox with many items (only visible rows are drawn); a multi-column ListView moves to 0.6
+- [x] Image (PNG, JPEG), icons
+- [x] ScrollBox (scrolling area), TabControl (pages)
+- [x] ProgressBar, Slider, Spinner
+- [x] Menu bar, context menus, keyboard shortcuts (actions)
+- [x] Tooltips
+
+**Framework**
+- [x] Text editing: selection with mouse and Shift, cut/copy/paste of selection, undo
+- [x] Label word wrap and multi-line text
+- [x] More than one form; modal dialogs (`ShowModal`)
+- [x] Dialogs: `ShowMessage`, confirm, input; open/save file dialogs (drawn by Pastel inside the window; native dialogs move to 0.6)
+- [x] `TTimer`; running work in a thread and updating the UI safely
+- [x] `.pform`: nested properties (`Font.Size`) and lists (`Items = ('A', 'B')`)
+- [x] High-DPI screens (scaling)
+- [x] Dark theme and theme switching (`Appearance`: light, dark, system)
+- [x] Fonts and images from `assets/`, bundled into the program
+- [x] App icon: window icon from `assets/icon.png` (the icon of the Windows .exe file moves to 0.6)
+- [x] Hot reload keeps typed text and state where possible
+
+**VS Code designer**
+- [x] Undo/redo inside the designer, copy/paste of controls
+- [x] Rename a control (updates the `.pas` code too)
+- [x] "New Form" command
+- [x] Preview at different window sizes and in dark theme
+
+**Docs**
+- [x] Guide: building a desktop app (`docs/guide-desktop.md`); reference of all controls
+- [x] Examples: `notepad` (text editor), `contacts` (address book with SQLite), both with UI test scripts
+
+---
+
+## 0.6 — Desktop apps, complete and shippable (done)
+
+- [x] Grid/table control (`TGrid`: sorting, editing, many rows)
+- [x] `TTreeView`, multi-column `TListView`
+- [x] The system's open/save dialogs (Windows; zenity or kdialog on Linux), Pastel's drawn ones as fallback
+- [x] Icon of the Windows `.exe` file from `assets/icon.png`; app-wide styles (`assets/theme.toml`)
+- [x] Data binding: `TDataBinding` connects controls to JSON rows (database), objects or grid rows
+- [x] Translations (`assets/lang/*.json`, `_('...')`, `pastel lang`), number and date formats of the language
+- [x] Windows: SDL2/FreeType DLLs copied next to the program automatically; installer (`pastel package installer`)
+- [x] Linux desktop: AppImage and `.deb` with menu entry and icon
+- [x] `pastel doctor --install windows`: compiles the Windows units from the Free Pascal sources and gets the DLLs (Raspberry Pi still needs a cross-compiler from fpcupdeluxe)
+- [ ] Move from SDL2 to SDL3 (when Linux distributions ship it) — moved to after 1.0
+- [x] Faster drawing: only what changed is repainted (and uploaded to the screen)
+- [x] Custom controls in your project show up in the designer's toolbox (`src/controls/`, `pastel new control`)
+
+---
+
+## 0.7 — Road to 1.0 (done, except testing on other machines)
+
+- [x] Review all public APIs and file formats; then freeze them: `docs/api/stable.txt` lists the stable API and the tests fail when a line of it disappears; helpers for Pastel's own use are marked *Internal* ([compatibility.md](docs/compatibility.md))
+- [x] `pastel.toml` records the Pastel version it was made for (`pastel = "0.7"`); `pastel upgrade` for older projects; unknown settings are reported
+- [x] Complete documentation website (`tools/website`, published with GitHub Pages; every link and anchor is checked by the tests); all examples tested in CI
+- [ ] Tested hosts: Linux x64 is tested; Windows programs and `pastel.exe` itself are tested under Wine (1.5.0-beta.11); the CI jobs for Linux ARM64 (Raspberry Pi class) and Windows are set up but have not run yet
+- [x] CI on Linux, Linux ARM64 and Windows; release builds made automatically for a tag (`.github/workflows/release.yml`, `tools/pack-release.sh`)
+- [x] Security review of the web server and the database layer: request size, header size, timeouts and connection limits, path checks, `X-Forwarded-For` ([security.md](docs/security.md#what-the-web-server-and-the-database-layer-protect-against))
+- [x] Performance checks: start-up time, memory, requests per second, drawing speed (`tests/perf.sh`, [performance.md](docs/performance.md))
+
+---
+
+## 1.0.0
+
+Released on November 1, 2026: [github.com/azrov/pastel](https://github.com/azrov/pastel).
+
+- [x] Release workflow with ready-made downloads (Linux x64 and ARM64, Windows), release notes from [CHANGELOG.md](CHANGELOG.md) and an install script
+- [x] Workflow that publishes the VS Code extension to the Marketplace and Open VSX
+- [x] Announcement draft ([docs/announcing-1.0.md](docs/announcing-1.0.md)), contributing guide, security policy, code of conduct, issue and pull request forms
+- [x] Tested on Linux and on Windows (Wine); the tag `v1.0.0`
+- [ ] Extension in the Marketplace and Open VSX (needs the `pastel` publisher and its tokens: `VSCE_PAT`, `OVSX_PAT`); until then the `.vsix` of the release
+
+---
+
+## From 1.0 to 2.0
+
+**Platforms.** Pastel is made and tested on **Linux, Windows and Android** — the platforms its developers use every day. Raspberry Pi builds stay (they are Linux on ARM) but are tested by the community; macOS and iOS are open for contributions from people who use them (see [Open for contributions](#open-for-contributions)).
+
+Everything in 1.x stays compatible with 1.0 (see [compatibility.md](docs/compatibility.md)): new things are added, nothing is taken away. What would break existing programs waits for 2.0. The order may change with what people need most; each version ends with docs, examples and tests like the ones before.
+
+### 1.1 — Reports and documents (done)
+
+- [x] `Pastel.Report`: invoices, lists and letters as PDF or HTML, from code (headings, text, tables that repeat their heads, totals, images, page breaks, headers and footers with page numbers)
+- [x] `Pastel.Pdf`: pages drawn at exact places; TrueType fonts put in with only the used letters (every Turkish letter right)
+- [x] Printing on Linux (CUPS) and Windows, the system's PDF viewer as the preview (`Pastel.Print`)
+- [x] Spreadsheets: `.xlsx` written and read, CSV with the separator Excel expects (`Pastel.Sheets`); XML (`Pastel.Xml`)
+- [x] The salon prints its invoices as PDF and exports them to Excel, on the desktop and from its server
+- [ ] A preview inside the app (the report drawn into a control), labels on label printers
+
+### 1.2 — Everyday desktop comfort (done)
+
+The things every business app needs, built in instead of written again in every project.
+
+- [x] Controls in the framework (`Pastel.Inputs`): `TDatePicker` and `TCurrencyEdit` (from the components example), `TNumberEdit` (a number with up/down), `TTimeEdit` — done in 1.0.0-rc.4
+- [x] `TSplitter` (two panes the user resizes), `TStatusBar`, `TToolBar` with flat buttons and icons — done in 1.0.0-rc.5
+- [x] A set of built-in icons (save, open, delete, search, add...) for buttons and toolbars; your own with `RegisterIcon` — done in 1.0.0-rc.5
+- [x] Icons in menu items, actions and grid columns (`Kind = Icon`) — done in 1.2.0
+- [x] Layout: a growing control gives up width when a row is too narrow; `pastel check` warns when controls are still cut off (done in 1.0.0-rc.4); `TFlow` (a row that wraps) — done in 1.2.0
+- [x] Grid: number, money and date columns that format and sort right, a check box column, filtering, export to CSV — done in 1.2.0
+- [x] Designer: the warnings of `pastel check` drawn on the form; several selected controls (common properties, put into a row, column or card); a structure list — done in 1.0.0-rc.7
+- [x] F9 runs the right program when the open file belongs to a library — done in 1.0.0-rc.4
+
+### 1.3 — Data made easier (done)
+
+- [x] `pastel new model Customer name:string! age:integer`: a model unit, its migration and tests
+- [x] `Pastel.Sync`: the offline-first synchronization of the salon example as a library (ids, `updated_at`, the newer change wins, deletions), with the server's route (`Pastel.SyncWeb`) and the client (`SyncWithServer`); the salon runs on it
+- [x] Login: users, passwords and roles on the server, tokens that renew (`Pastel.Auth`); `LoginDialog` for apps
+- [x] Backups of SQLite, PostgreSQL and MySQL from the app or the server, keeping the newest ones, and restoring them (`TDatabase.Backup`, `BackupTo`, `Restore`)
+- [x] `TDataBinding` checks values (`Rules`: required, email, number, range, min, max, pattern) and marks the wrong controls
+
+### 1.4 — Forms like Delphi (done)
+
+- [x] Free placement: `Layout = Free`, `TPanel`, `Left`/`Top`, `Anchors`, `Dock` (Delphi's `Align`); new forms are free-placed
+- [x] The designer laid out like Delphi's IDE: Structure, Object Inspector (Properties/Events), Tool Palette in groups, non-visual components in a tray; drop where it goes, drag, eight grips, grid, align tools
+- [x] Welcome page and New Project wizard; Place freely for older forms; platforms of each control; icon picker with pictures — 1.4.1, 1.4.2
+- [x] Delphi's standard components: TGroupBox, TRadioGroup, TShape, TBevel, TPaintBox, dialog components, TabOrder; snap lines in the designer — 1.4.3
+
+### 1.5 — Android (in preview)
+
+The same Pascal code and `.pform` forms on an Android phone or tablet. The app is a NativeActivity (no Java); the framework draws its own controls in software and reads TrueType fonts in plain Pascal, and Free Pascal 3.2.2 compiles for ARM 64-bit, ARM 32-bit and x86 Android without the NDK. See [docs/android.md](docs/android.md).
+
+- [x] `pastel doctor --install android`: Free Pascal's units for Android and stand-ins for the system libraries (no NDK needed)
+- [x] `pastel build --target android-arm64`; `pastel package apk`, signed with the project's key or a debug key
+- [x] Every kind of device: ARM 32-bit (older phones, TV boxes, Android 4.4+), x86_64 and x86 (emulators); one `.apk` for all — 1.5.0-beta.5
+- [x] `.aab` for Google Play (`pastel package aab`) — 1.5.0-beta.10
+- [x] On the phone: SQLite, HTTPS through Android, `Pastel.Device` (share, call, notify, files, camera, place) — 1.5.0-beta.10
+- [x] `pastel run --target android`: installs on the connected phone (`adb`) and shows its log
+- [x] Touch: tap, double tap, long press (= right click), scrolling with a finger; the on-screen keyboard for edits; the back button
+- [x] Flinging lists; the form keeps above the on-screen keyboard; every letter the on-screen keyboard types (a small Java activity)
+- [ ] Tested on real phones (being done now)
+- [x] Phone layout: forms for small, upright screens (`pastel new app --phone`, `pastel new form --phone`), finger-sized controls
+- [x] The app's life: pausing and resuming, the folder for its data, settings that survive an update; dark mode and language from the phone
+- [x] An example: the salon's agenda on the phone, syncing with the same server as the desktop ([salon-phone](https://github.com/azrov/pastel-demos/tree/main/salon-phone))
+
+### 1.6 — The web, further
+
+- [ ] HTTP keep-alive and streaming answers; WebSockets and server-sent events (live updates for apps and pages)
+- [ ] OpenAPI description made from the routes; `pastel new client` makes the Pascal client for an API
+- [x] HTML pages from templates on the server (`Pastel.Pages`, `pastel new site`) — done early, in 1.5.0-beta.3
+- [x] Markdown to HTML (`Pastel.Markdown`); Pastel's own website made with Pastel (`tools/website`) — 1.5.0-beta.4
+- [ ] Jobs that survive a restart: a queue in the database
+- [ ] Metrics (Prometheus) and request tracing
+
+### 1.7 — Distribution
+
+- [ ] Windows: signing the `.exe` and the installer; updates of desktop apps from a server
+- [x] Android: updates outside Google Play (from your own server: `Pastel.Updater`)
+- [ ] SDL3 (when the Linux distributions ship it)
+- [x] Packages: `pastel add`, `remove`, `update`, `search`, `deps`; versions from git tags, `pastel.lock`, a registry ([pastel-packages](https://github.com/azrov/pastel-packages)) — done in 1.0.0-rc.6
+- [ ] [pastel-extras](https://github.com/azrov/pastel-extras): serial ports (done), barcodes and labels, charts, GPIO, cameras
+
+### 1.8 — Tooling
+
+- [ ] `pastel test --coverage`, and a profiler view in VS Code
+- [x] The debugger shows objects as their real class, lists with their items and JSON as JSON — done in 1.0.0-rc.7
+- [ ] Refactorings: extract method, rename a unit, move a class
+- [ ] Hot reload of code changes for desktop apps (reload the window's code without restarting)
+
+### 2.0 — Beyond
+
+A major version: what had to wait for compatibility can change here (with `pastel upgrade` doing as much of the work as possible).
+
+- [ ] Forms that adapt by themselves between desktop, tablet and phone (`ScreenClass`, views like `Home.tablet.pform` and `MaxContentWidth` are there since 1.5.0-beta.9)
+- [ ] GPU drawing (Skia) for animations and heavy graphics
+- [ ] Forms in the browser (WebAssembly)
+- [ ] Accessibility: screen readers, high contrast, keyboard everywhere
+- [ ] Clean-up: what 1.x marked deprecated is removed; a new stable API list
+
+### 2.1 — Styles
+
+- [x] Each platform's look: Fluent (Windows), Material (Android); `style = "auto"` — 2.1.0-beta.1
+- [x] Style files (`.pstyle`) with looks for `StyleLookup`; the designer's style box — 2.1.0-beta.1
+- [ ] Adwaita (GNOME) and Cupertino (macOS, iOS) styles
+- [ ] Animations of the styles (Material's ripple, Fluent's knob that moves)
+
+### Open for contributions
+
+These are wanted, but not tested by the people who make Pastel now. A pull request (and someone who keeps it working) brings them into a version:
+
+- macOS: apps as `.app` bundles and `.dmg`, signing and notarization (Free Pascal and SDL2 work there)
+- iOS: needs a Mac and an Apple developer account; after Android, most of the work carries over
+- Raspberry Pi: `pastel doctor --install rpi` that sets up the cross-compiler; 32-bit boards
+
+---
+
+## Known gaps today
+
+Things that work differently than one would expect, so they are not surprises:
+
+- Building for Raspberry Pi needs a cross-compiler installed by hand (fpcupdeluxe); Windows: `pastel doctor --install windows`
+- Windows programs that use HTTPS need the OpenSSL DLLs next to them; `[package.windows] include` puts them into the package
+- In desktop apps, code changes restart the app (`pastel run --watch`); only `.pform` changes are hot-reloaded
+- macOS and 32-bit Raspberry Pi are not tested yet
