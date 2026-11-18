@@ -46,13 +46,3 @@ bin/
 *~
 .DS_Store
 Thumbs.db
-
-# VS Code extension build output
-vscode/node_modules/
-vscode/out/
-*.vsix
-
-# Website and releases
-/site/
-dist/
-tools/website/build/
