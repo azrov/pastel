@@ -2,6 +2,68 @@
 
 The `pastel` tool and the framework. The VS Code extension has its own list: [vscode/CHANGELOG.md](vscode/CHANGELOG.md). What is planned is in [ROADMAP.md](ROADMAP.md).
 
+## 2.1.0-beta.6
+
+- The `ai` package in the registry (`pastel add ai`, in [pastel-extras](https://github.com/azrov/pastel-extras)):
+  Claude, OpenAI, Gemini, Ollama and other OpenAI-compatible servers behind one `TAIClient` — conversations, answers
+  word by word, tools that the model calls in the program, pictures, embeddings — and `TAIChat`, a chat control for
+  forms
+- `THttpClient.RequestTo(Method, Path, Body, ContentType, Output)`: the answer goes into a stream as it arrives
+  (server-sent events, long answers)
+- Fixed: a text that wraps, in a row beside other controls (a `TCard` that grows next to a fixed one), was measured as
+  if it had the row's whole width — the card was one line too short and its last line overflowed. A row now measures
+  its growing children at the width they will get, and their height again at the width they got
+
+## 2.1.0-beta.5
+
+Everything a learner needs, at hand and without the internet:
+
+- **Help in VS Code** (extension 1.7.0): F1 on a word opens its help beside the code — a control or property in a
+  `.pform`, a name of Pastel's units, a Pascal word (`for`, `try`, `class`: the handbook's chapter). The help panel
+  has the documentation, the API reference, the handbook and the cookbook, with a search. `tools/website --help DIR`
+  makes it from the repository's Markdown
+- **The Pastel Cookbook** ([docs/cookbook](docs/cookbook/README.md)): about 70 short recipes — text, numbers and dates;
+  files, JSON and settings; databases; windows and dialogs; PDF, Excel and codes; the network and other programs;
+  phones. Every program is compiled and run with the tests; the window recipes are one working app,
+  `examples/cookbook-app`, driven by a UI script
+- **Compiler errors explained**: under a compiler message, `pastel build` says what it usually means and what to do
+  ("There is a ; before else..."), once per kind; `pastel check --json` gives it as `explain`, and VS Code shows it
+  under the error. About 30 common errors and warnings; `tests/explain_test.pas` compiles each mistake to keep the
+  explanations matched to Free Pascal's words
+- **The handbook's part 3**: 23. Finding bugs (the debugger, run-time errors, `Assert`, leaks), 24. Pointers and
+  memory, 25. More about classes (events of your own, class methods and references, array properties, records with
+  operators, helpers), 26. Streams and binary files; and Appendix C, solutions to the exercises
+- `ClipboardText` and `CopyToClipboard(Text)` (`Pastel.UI`): the clipboard from code, on computers and phones
+- `pastel doctor` says for each Android target that `pastel doctor --install <target>` sets it up
+- Fixed: Markdown headings get GitHub's ids also when they end with a sign after a space (`Values go in as ?` is
+  `#values-go-in-as-`), so links between the docs work on GitHub and on the site alike
+- The checks of the handbook and the cookbook build their programs as `pastel build` does (UTF-8 strings, threads)
+
+## 2.1.0-beta.4
+
+The Pastel Handbook: [docs/handbook](docs/handbook/README.md) teaches Object Pascal from the first line to an
+intermediate level, and Pastel's apps with it — 22 chapters and two appendices (the language at a glance; coming
+from Delphi or Lazarus), with exercises. One program grows through the whole book: Pocket, a money tracker, on the
+command line and as an app with a database, a chart, PDF and Excel exports, a bank import in the background, two
+languages and an Android package.
+
+- The finished Pocket is in `examples/pocket-core`, `examples/pocket-cli` and `examples/pocket-app`, built and tested
+  with the rest
+- `tests/handbook.py` (run by `tests/run.sh`): every complete program of the book compiles without warnings and
+  prints what the book says; the code shown from Pocket is its real files, word for word; every link leads to a file
+  and heading that are there. The handbook is on the website
+- Fixed: `Pastel.Db` on SQLite cut a computed column (`sum(amount)`, `a + b`) to a whole number when its first row was
+  one — `650` then `20.7` gave `20`. Such columns are now read as numbers of either kind
+- Fixed: `FormatDateShort` and `FormatNumber` before `UseLanguage` (console programs) used Free Pascal's defaults
+  (`3-11-26`); now English's. English dates are `11/3/2026`, no longer `11/03/2026`
+- Fixed: Markdown (`Pastel.Markdown`, the website) took a fenced block right after an HTML comment line as HTML
+
+## 2.1.0-beta.3
+
+- Fixed: on Windows (and other screens over 100%) a window showed an empty frame first, grew to the screen's size, then got its picture: windows are now shown with their first picture, at their size, in the middle of the screen (they were off the middle after growing)
+- Forms in windows of their own (`Show`) too
+- The README's project folders as they are
+
 ## 2.1.0-beta.2
 
 The phone's features that were missing (see [docs/device.md](docs/device.md)):

@@ -1,0 +1,535 @@
+{ Pastel - generates Pascal code from .pform files.
+
+  For src/forms/Home.pform (root "object HomeForm: THomeForm") this writes
+  Home.g.pas with a THomeFormBase class: one published field per control,
+  a BindControls method, and the .pform text compiled in. The developer's
+  unit declares THomeForm = class(THomeFormBase) and never touches this file.
+  Part of the Pastel project, MIT License. }
+unit Pastel.Codegen;
+
+{$mode objfpc}{$H+}
+
+interface
+
+uses
+  Classes, SysUtils, Pastel.PForm;
+
+type
+  TCodegenResult = record
+    Generated, Errors: Integer;
+  end;
+
+{ Generates code for every .pform under Root/src into GenDir.
+  FileRefs: True writes the .pform path into the code (hot reload in debug).
+  Errors are printed in compiler style: path(line) Error: message. }
+{ A .pform's type ending in Frame (TAddressFrame) is a frame. }
+function IsFrameType(const AClassName: string): Boolean;
+{ Makes the project's frames known to forms loaded by tools (preview, check). }
+procedure RegisterProjectFrames(const Root: string);
+{ The types of the project's frames (TAddressFrame). }
+function ProjectFrameNames(const Root: string): TStringArray;
+
+function GenerateForms(const Root, GenDir: string; FileRefs: Boolean): TCodegenResult;
+
+{ Builds the unit text for one parsed .pform. Exposed for tests. Views:
+  'tablet=<text of Home.tablet.pform>' lines' sources go in as RegisterFormView
+  (ViewPaths: the same names with their files, for hot reload). }
+function FormUnitSource(const UnitName, FormSource, FilePath: string; Views: TStrings = nil;
+  ViewPaths: TStrings = nil): string;
+{ Checks a view (Home.tablet.pform) against its form: the same root, only
+  objects the form has (of the same type), no events. Raises EPFormError. }
+procedure CheckFormView(Form, View: TPFormNode);
+{ 'tablet' for Home.tablet.pform, '' for a form's own file. }
+function ViewNameOf(const FileName: string): string;
+
+var
+  { ClassName=UnitName of the project's own controls (src/controls/), set by GenerateForms. }
+  ProjectClasses: TStringList = nil;
+
+implementation
+
+uses
+  Pastel.Console, Pastel.UI, Pastel.Controls, Pastel.Menus, Pastel.Grids, Pastel.Binding, Pastel.Inputs,
+  StrUtils, Pastel.CustomCtl, Pastel.Notifications, Pastel.Device, Pastel.Charts, Pastel.Forms, Pastel.NativeViews, Pastel.Maps, Pastel.Push, Pastel.Sensors, Pastel.Barcode, Pastel.Tray, Pastel.VideoPlayer, Pastel.Tiles;
+
+function ReadFileText(const FileName: string): string;
+var
+  L: TStringList;
+begin
+  L := TStringList.Create;
+  try
+    L.LoadFromFile(FileName);
+    Result := L.Text;
+  finally
+    L.Free;
+  end;
+end;
+
+function PascalString(const S: string): string;
+var
+  Lines: TStringList;
+  I: Integer;
+  Line, Chunk: string;
+begin
+  if S = '' then
+    Exit('''''');
+  Lines := TStringList.Create;
+  try
+    Lines.Text := S;
+    Result := '';
+    for I := 0 to Lines.Count - 1 do
+    begin
+      Line := Lines[I];
+      repeat
+        Chunk := Copy(Line, 1, 200);
+        Delete(Line, 1, 200);
+        if Result <> '' then
+          Result := Result + ' +' + LineEnding + '    ';
+        Result := Result + '''' + StringReplace(Chunk, '''', '''''', [rfReplaceAll]) + '''';
+      until Line = '';
+      Result := Result + ' + #10';
+    end;
+  finally
+    Lines.Free;
+  end;
+end;
+
+type
+  TFieldList = record
+    Lines: TStringList;
+    Binds: TStringList;
+    Errors: TStringList;
+    Units: TStringList;
+    Frames: TStringList;     { the project's frames on the form: registered by its unit }
+  end;
+  PFieldList = ^TFieldList;
+
+function AvailableTypes: string;
+var
+  L: TStringList;
+  I: Integer;
+begin
+  L := TStringList.Create;
+  try
+    L.Sorted := True;
+    for I := 0 to ControlClassCount - 1 do
+      L.Add(ControlClassAt(I).ClassName);
+    for I := 0 to NonVisualClassCount - 1 do
+      L.Add(NonVisualClassAt(I).ClassName);
+    Result := StringReplace(Trim(L.Text), LineEnding, ', ', [rfReplaceAll]);
+  finally
+    L.Free;
+  end;
+end;
+
+procedure CollectField(Node: TPFormNode; Data: Pointer);
+var
+  L: PFieldList;
+  C: TClass;
+  U: string;
+begin
+  L := PFieldList(Data);
+  C := FindControlClass(Node.ClassName_);
+  if C = nil then
+    C := FindNonVisualClass(Node.ClassName_);
+  if (C = nil) and (ProjectClasses <> nil) and (ProjectClasses.IndexOfName(Node.ClassName_) >= 0) then
+  begin
+    { a control of the project (src/controls/): known by name only here }
+    U := ProjectClasses.Values[Node.ClassName_];
+    if L^.Units.IndexOf(U) < 0 then
+      L^.Units.Add(U);
+    if IsFrameType(Node.ClassName_) and (L^.Frames.IndexOf(Node.ClassName_) < 0) then
+      L^.Frames.Add(Node.ClassName_);
+    L^.Lines.Add(Format('    %s: %s;', [Node.Name, Node.ClassName_]));
+    L^.Binds.Add(Format('  %s := %s(BindComponent(''%s'', %s));', [Node.Name, Node.ClassName_, Node.Name, Node.ClassName_]));
+    Exit;
+  end;
+  if C = nil then
+  begin
+    L^.Errors.Add(Format('%d'#9'unknown component type "%s" (available: %s)',
+      [Node.Line, Node.ClassName_, AvailableTypes]));
+    Exit;
+  end;
+  { the generated unit uses the unit of every class in the form }
+  if L^.Units.IndexOf(C.UnitName) < 0 then
+    L^.Units.Add(C.UnitName);
+  L^.Lines.Add(Format('    %s: %s;', [Node.Name, C.ClassName]));
+  if C.InheritsFrom(TControl) then
+    L^.Binds.Add(Format('  %s := %s(BindControl(''%s'', %s));', [Node.Name, C.ClassName, Node.Name, C.ClassName]))
+  else
+    L^.Binds.Add(Format('  %s := %s(BindComponent(''%s'', %s));', [Node.Name, C.ClassName, Node.Name, C.ClassName]));
+end;
+
+function UsesList(Units: TStringList): string;
+var
+  U: string;
+begin
+  Result := '';
+  for U in Units do
+    if not SameText(U, 'Pastel.UI') and not SameText(U, 'Classes') then
+      Result := Result + ', ' + U;
+end;
+
+function ViewNameOf(const FileName: string): string;
+var
+  Base: string;
+begin
+  Base := ChangeFileExt(ExtractFileName(FileName), '');      { Home.tablet }
+  Result := LowerCase(ExtractFileExt(Base));
+  Delete(Result, 1, 1);
+  if (Result <> 'phone') and (Result <> 'tablet') and (Result <> 'desktop') and (Result <> 'tv') then
+    Result := '';
+end;
+
+function FindNode(Node: TPFormNode; const AName: string): TPFormNode;
+var
+  I: Integer;
+begin
+  if SameText(Node.Name, AName) then
+    Exit(Node);
+  for I := 0 to Node.Children.Count - 1 do
+  begin
+    Result := FindNode(Node.Child(I), AName);
+    if Result <> nil then
+      Exit;
+  end;
+  Result := nil;
+end;
+
+procedure CheckFormView(Form, View: TPFormNode);
+
+  procedure Check(V: TPFormNode; IsRoot: Boolean);
+  var
+    I: Integer;
+    F: TPFormNode;
+  begin
+    if IsRoot then
+    begin
+      if not SameText(V.ClassName_, Form.ClassName_) then
+        raise EPFormError.CreateAt(V.Line, Format('a view starts like its form: object %s: %s', [Form.Name, Form.ClassName_]));
+    end
+    else
+    begin
+      F := FindNode(Form, V.Name);
+      if (F = nil) or (F = Form) then
+        raise EPFormError.CreateAt(V.Line, Format('the form has no "%s": a view only changes the form''s controls ' +
+          '(add new ones to the form, Visible = False where they are not wanted)', [V.Name]));
+      if not SameText(F.ClassName_, V.ClassName_) then
+        raise EPFormError.CreateAt(V.Line, Format('%s is a %s in the form, not a %s', [V.Name, F.ClassName_, V.ClassName_]));
+    end;
+    for I := 0 to V.Props.Count - 1 do
+      if SameText(Copy(V.Prop(I).Name, 1, 2), 'On') and (V.Prop(I).Kind = pvIdent) then
+        raise EPFormError.CreateAt(V.Prop(I).Line, Format('%s: events belong in the form itself, not in a view', [V.Prop(I).Name]));
+    for I := 0 to V.Children.Count - 1 do
+      Check(V.Child(I), False);
+  end;
+
+begin
+  Check(View, True);
+end;
+
+function FormUnitSource(const UnitName, FormSource, FilePath: string; Views: TStrings; ViewPaths: TStrings): string;
+var
+  Root: TPFormNode;
+  Fields: TFieldList;
+  BaseName, Code, ViewCode, ViewPath: string;
+  I: Integer;
+begin
+  Root := ParsePForm(FormSource);
+  Fields.Lines := TStringList.Create;
+  Fields.Binds := TStringList.Create;
+  Fields.Errors := TStringList.Create;
+  Fields.Units := TStringList.Create;
+  Fields.Frames := TStringList.Create;
+  try
+    if (Length(Root.ClassName_) < 2) or (UpCase(Root.ClassName_[1]) <> 'T') then
+      raise EPFormError.CreateAt(Root.Line,
+        Format('the form type should start with T, like T%s', [Root.ClassName_]));
+    VisitPForm(Root, @CollectField, @Fields);
+    if Fields.Errors.Count > 0 then
+      raise EPFormError.CreateAt(StrToInt(Copy(Fields.Errors[0], 1, Pos(#9, Fields.Errors[0]) - 1)),
+        Copy(Fields.Errors[0], Pos(#9, Fields.Errors[0]) + 1, MaxInt));
+    BaseName := Root.ClassName_ + 'Base';
+
+    Code :=
+      '{ Generated by Pastel from ' + UnitName + '.pform - do not edit. }' + LineEnding +
+      'unit ' + UnitName + '.g;' + LineEnding +
+      LineEnding +
+      '{$mode objfpc}{$H+}' + LineEnding +
+      LineEnding +
+      'interface' + LineEnding +
+      LineEnding +
+      'uses' + LineEnding +
+      '  Classes, Pastel.UI, Pastel.Forms' + UsesList(Fields.Units) + ';' + LineEnding +
+      LineEnding +
+      'type' + LineEnding +
+      '  ' + BaseName + ' = class(' + IfThen(IsFrameType(Root.ClassName_), 'TFrame', 'TForm') + ')' + LineEnding +
+      '  published' + LineEnding;
+    Code := Code + Fields.Lines.Text;
+    Code := Code +
+      '  public' + LineEnding +
+      '    procedure BindControls; override;' + LineEnding +
+      '  end;' + LineEnding +
+      LineEnding +
+      'implementation' + LineEnding +
+      LineEnding +
+      'procedure ' + BaseName + '.BindControls;' + LineEnding +
+      'begin' + LineEnding +
+      Fields.Binds.Text +
+      'end;' + LineEnding +
+      LineEnding +
+      'initialization' + LineEnding +
+      '  RegisterFormSource(''' + Root.ClassName_ + ''',' + LineEnding +
+      '    ' + PascalString(FormSource) + ',' + LineEnding +
+      '    ''' + StringReplace(FilePath, '''', '''''', [rfReplaceAll]) + ''');' + LineEnding;
+    { the frames on it: the program knows their types }
+    for I := 0 to Fields.Frames.Count - 1 do
+      Code := Code + '  RegisterControl(' + Fields.Frames[I] + ');' + LineEnding;
+    ViewCode := '';
+    if Views <> nil then
+      for I := 0 to Views.Count - 1 do
+      begin
+        ViewPath := '';
+        if ViewPaths <> nil then
+          ViewPath := ViewPaths.Values[Views.Names[I]];
+        ViewCode := ViewCode +
+          '  RegisterFormView(''' + Root.ClassName_ + ''', ''' + Views.Names[I] + ''',' + LineEnding +
+          '    ' + PascalString(Views.ValueFromIndex[I]) + ',' + LineEnding +
+          '    ''' + StringReplace(ViewPath, '''', '''''', [rfReplaceAll]) + ''');' + LineEnding;
+      end;
+    Code := Code + ViewCode + LineEnding + 'end.' + LineEnding;
+    Result := Code;
+  finally
+    Fields.Lines.Free;
+    Fields.Binds.Free;
+    Fields.Errors.Free;
+    Fields.Units.Free;
+    Fields.Frames.Free;
+    Root.Free;
+  end;
+end;
+
+procedure FindPForms(const Root, Rel: string; List: TStrings);
+var
+  SR: TSearchRec;
+begin
+  if FindFirst(Root + Rel + PathDelim + AllFilesMask, faAnyFile, SR) = 0 then
+  try
+    repeat
+      if (SR.Name = '.') or (SR.Name = '..') or (SR.Name[1] = '.') then
+        Continue;
+      if (SR.Attr and faDirectory) <> 0 then
+        FindPForms(Root, Rel + PathDelim + SR.Name, List)
+      else if LowerCase(ExtractFileExt(SR.Name)) = '.pform' then
+        List.Add(Rel + PathDelim + SR.Name);
+    until FindNext(SR) <> 0;
+  finally
+    FindClose(SR);
+  end;
+end;
+
+procedure WriteIfChanged(const FileName, Content: string);
+var
+  Old: TStringList;
+  F: TFileStream;
+begin
+  if FileExists(FileName) then
+  begin
+    Old := TStringList.Create;
+    try
+      Old.LoadFromFile(FileName);
+      if Old.Text = Content then
+        Exit;   { keep the timestamp so the compiler can skip the unit }
+    finally
+      Old.Free;
+    end;
+  end;
+  F := TFileStream.Create(FileName, fmCreate);
+  try
+    if Content <> '' then
+      F.WriteBuffer(Content[1], Length(Content));
+  finally
+    F.Free;
+  end;
+end;
+
+function IsFrameType(const AClassName: string): Boolean;
+begin
+  Result := (Length(AClassName) > 6) and SameText(Copy(AClassName, Length(AClassName) - 4, 5), 'Frame');
+end;
+
+procedure ProjectFrames(const Root: string; Into: TStrings);
+var
+  Files: TStringList;
+  Rel: string;
+  Node: TPFormNode;
+begin
+  Files := TStringList.Create;
+  try
+    FindPForms(IncludeTrailingPathDelimiter(Root), 'src', Files);
+    for Rel in Files do
+    begin
+      if ViewNameOf(Rel) <> '' then
+        Continue;
+      try
+        Node := ParsePForm(ReadFileText(IncludeTrailingPathDelimiter(Root) + Rel));
+      except
+        Continue;            { reported when its own unit is made }
+      end;
+      try
+        if IsFrameType(Node.ClassName_) then
+          Into.Values[Node.ClassName_] := ChangeFileExt(ExtractFileName(Rel), '');
+      finally
+        Node.Free;
+      end;
+    end;
+  finally
+    Files.Free;
+  end;
+end;
+
+function ProjectFrameNames(const Root: string): TStringArray;
+var
+  L: TStringList;
+  I: Integer;
+begin
+  Result := nil;
+  if Root = '' then
+    Exit;
+  L := TStringList.Create;
+  try
+    ProjectFrames(Root, L);
+    for I := 0 to L.Count - 1 do
+      Result := Concat(Result, [L.Names[I]]);
+  finally
+    L.Free;
+  end;
+end;
+
+procedure RegisterProjectFrames(const Root: string);
+var
+  Files: TStringList;
+  Rel, Text: string;
+  Node: TPFormNode;
+begin
+  if Root = '' then
+    Exit;
+  Files := TStringList.Create;
+  try
+    FindPForms(IncludeTrailingPathDelimiter(Root), 'src', Files);
+    for Rel in Files do
+    begin
+      if ViewNameOf(Rel) <> '' then
+        Continue;
+      Text := ReadFileText(IncludeTrailingPathDelimiter(Root) + Rel);
+      try
+        Node := ParsePForm(Text);
+      except
+        Continue;
+      end;
+      try
+        if IsFrameType(Node.ClassName_) then
+          RegisterFormSource(Node.ClassName_, Text, '');
+      finally
+        Node.Free;
+      end;
+    end;
+  finally
+    Files.Free;
+  end;
+end;
+
+function GenerateForms(const Root, GenDir: string; FileRefs: Boolean): TCodegenResult;
+var
+  Files, Src, Views, ViewPaths: TStringList;
+  Rel, VRel, UnitName, Path, ViewName, Prefix: string;
+  FormRoot, ViewRoot: TPFormNode;
+  ErrRel: string;
+begin
+  Result.Generated := 0;
+  Result.Errors := 0;
+  FreeAndNil(ProjectClasses);
+  ProjectClasses := ProjectControls(Root);
+  { the frames of the project (src/**/*.pform with a type ...Frame): their unit is the file's name }
+  if ProjectClasses = nil then
+    ProjectClasses := TStringList.Create;
+  ProjectFrames(Root, ProjectClasses);
+  Files := TStringList.Create;
+  Src := TStringList.Create;
+  Views := TStringList.Create;
+  ViewPaths := TStringList.Create;
+  try
+    FindPForms(Root, 'src', Files);
+    Files.Sort;
+    if Files.Count > 0 then
+      ForceDirectories(Root + GenDir);
+    for Rel in Files do
+    begin
+      { a view (Home.tablet.pform) goes into its form's unit }
+      if ViewNameOf(Rel) <> '' then
+      begin
+        Prefix := ChangeFileExt(ChangeFileExt(Rel, ''), '') + '.pform';
+        if Files.IndexOf(Prefix) < 0 then
+        begin
+          Inc(Result.Errors);
+          WriteLn(Red(Format('%s(1) Error: a view of a form that is not there (%s)', [Rel, ExtractFileName(Prefix)])));
+        end;
+        Continue;
+      end;
+      UnitName := ChangeFileExt(ExtractFileName(Rel), '');
+      Src.LoadFromFile(Root + Rel);
+      if FileRefs then
+        Path := Root + Rel
+      else
+        Path := '';
+      Views.Clear;
+      ViewPaths.Clear;
+      ErrRel := Rel;
+      try
+        for VRel in Files do
+        begin
+          ViewName := ViewNameOf(VRel);
+          if (ViewName = '') or (ChangeFileExt(ChangeFileExt(VRel, ''), '') <> ChangeFileExt(Rel, '')) then
+            Continue;
+          ErrRel := VRel;
+          with TStringList.Create do
+          try
+            LoadFromFile(Root + VRel);
+            FormRoot := ParsePForm(Src.Text);
+            ViewRoot := nil;
+            try
+              ViewRoot := ParsePForm(Text);
+              CheckFormView(FormRoot, ViewRoot);
+            finally
+              FormRoot.Free;
+              ViewRoot.Free;
+            end;
+            Views.Add(ViewName + '=' + Text);
+          finally
+            Free;
+          end;
+          if FileRefs then
+            ViewPaths.Add(ViewName + '=' + Root + VRel);
+        end;
+        ErrRel := Rel;
+        WriteIfChanged(Root + GenDir + PathDelim + UnitName + '.g.pas',
+          FormUnitSource(UnitName, Src.Text, Path, Views, ViewPaths));
+        Inc(Result.Generated);
+      except
+        on E: EPFormError do
+        begin
+          Inc(Result.Errors);
+          WriteLn(Red(Format('%s(%d) Error: %s', [ErrRel, E.Line,
+            Copy(E.Message, Pos(': ', E.Message) + 2, MaxInt)])));
+        end;
+      end;
+    end;
+  finally
+    Files.Free;
+    Src.Free;
+    Views.Free;
+    ViewPaths.Free;
+  end;
+end;
+
+end.

@@ -1,0 +1,8 @@
+# Tests of the Pastel framework units. Run with: pastel test
+[project]
+name = "framework-tests"
+version = "0.1.0"
+type = "console"
+
+[build]
+main = "src/main.pas"

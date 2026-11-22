@@ -1,0 +1,1168 @@
+{ Pastel - dialogs: messages, questions, input, choosing files and folders.
+
+    ShowMessage('Saved.');
+    if Ask('Delete this note?') then ...
+    Name := InputBox('New file', 'Name:', 'notes.txt');
+    if OpenFileDialog(FileName, 'Text files|*.txt;*.md|All files|*') then ...
+    if SaveFileDialog(FileName, 'Notes|*.txt') then ...
+
+  Messages and questions are drawn by Pastel inside the window. The file
+  and folder dialogs are the system's own when it has them (Windows; Linux
+  with zenity or kdialog), else Pastel's; UseNativeDialogs := False always
+  takes Pastel's. Test scripts and headless runs get Pastel's, which
+  scripts can click. They wait until the user answered, like Delphi's.
+  Each has a second form that does not wait: it returns at once and calls a
+  method of yours with the answer — the way for phones (nothing should wait
+  inside an event there):
+    Ask('Delete this note?', @DeleteAnswered);
+    ...
+    procedure TMainForm.DeleteAnswered(Sender: TObject; AResult: Integer);
+    begin
+      if AResult = mrYes then DeleteNote;
+    end;
+  Their controls have names a test script can use:
+  OkButton, CancelButton, YesButton, NoButton, InputEdit, FileList,
+  FileNameEdit, PathEdit.
+  Part of the Pastel project, MIT License. }
+unit Pastel.Dialogs;
+
+{$mode objfpc}{$H+}
+
+interface
+
+uses
+  Classes, SysUtils, Pastel.UI;
+
+type
+  { The answer of InputQuery without waiting: Ok for OK, Value the text typed. }
+  TInputDoneEvent = procedure(Sender: TObject; Ok: Boolean; const Value: string) of object;
+  { The answer of a file dialog without waiting: Ok when a file (folder) was chosen. }
+  TFileDoneEvent = procedure(Sender: TObject; Ok: Boolean; const FileName: string) of object;
+
+{ A message with an OK button. }
+procedure ShowMessage(const Msg: string; const Title: string = ''); overload;
+{ The same without waiting; OnDone (may be nil) when it is closed. }
+procedure ShowMessage(const Msg: string; OnDone: TModalDoneEvent; const Title: string = ''); overload;
+{ A short message for a moment, without a button (Android's Toast; drawn by
+  Pastel near the bottom of the window elsewhere): 'Saved', 'Copied'. }
+procedure ShowToast(const Msg: string; Long: Boolean = False);
+{ A question with Yes and No; True for Yes. }
+function Ask(const Msg: string; const Title: string = ''): Boolean; overload;
+{ The same without waiting: OnDone gets mrYes or mrNo. }
+procedure Ask(const Msg: string; OnDone: TModalDoneEvent; const Title: string = ''); overload;
+{ A message with the buttons given (mrOk, mrCancel, mrYes, mrNo, mrAbort,
+  mrRetry, mrIgnore, mrClose); the result is the button chosen, or mrCancel
+  for Escape. The first button is the default (Enter). Danger: the first
+  button is red (for deleting and the like). }
+function MessageDlg(const Msg, Title: string; const Buttons: array of Integer;
+  Danger: Boolean = False): Integer; overload;
+{ The same without waiting: OnDone gets the button chosen (mrCancel for Escape). }
+procedure MessageDlg(const Msg, Title: string; const Buttons: array of Integer; OnDone: TModalDoneEvent;
+  Danger: Boolean = False); overload;
+{ Asks for a line of text; Default when cancelled. }
+function InputBox(const Title, Prompt, Default: string): string;
+{ The same; False when cancelled (Value is not changed then). }
+function InputQuery(const Title, Prompt: string; var Value: string): Boolean; overload;
+{ The same without waiting: OnDone gets Ok and the text. }
+procedure InputQuery(const Title, Prompt, Value: string; OnDone: TInputDoneEvent); overload;
+{ Asks for an e-mail (or user name) and a password; Error is shown above
+  them (after a failed try). With Pastel.Auth:
+    while LoginDialog('Salon', Email, Password, Client.Error) do
+      if Client.Login(Email, Password) then Break; }
+function LoginDialog(const Title: string; var User, Password: string; const Error: string = ''): Boolean;
+
+{ Filter: 'Pictures|*.png;*.jpg|All files|*'. FileName: where to start
+  (a file or a folder); on True the chosen file. }
+function OpenFileDialog(var FileName: string; const Filter: string = '';
+  const Title: string = 'Open'): Boolean; overload;
+{ The file dialogs without waiting: OnDone gets Ok and the file (folder). }
+procedure OpenFileDialog(const FileName, Filter, Title: string; OnDone: TFileDoneEvent); overload;
+procedure SaveFileDialog(const FileName, Filter, Title, DefaultExt: string; OnDone: TFileDoneEvent); overload;
+procedure SelectFolderDialog(const Folder, Title: string; OnDone: TFileDoneEvent); overload;
+{ Asks before replacing a file that exists. DefaultExt ('.txt') is added
+  when the name has none. }
+function SaveFileDialog(var FileName: string; const Filter: string = '';
+  const Title: string = 'Save'; const DefaultExt: string = ''): Boolean; overload;
+function SelectFolderDialog(var Folder: string; const Title: string = 'Choose a folder'): Boolean; overload;
+
+var
+  { File and folder dialogs of the system when there are some. }
+  UseNativeDialogs: Boolean = True;
+  { Internal: the window handle for system dialogs (set by the application; HWND on Windows). }
+  NativeWindowHook: function: Pointer = nil;
+
+{ The caption of a modal result: 'OK', 'Cancel', 'Yes'... }
+function ModalResultCaption(R: Integer): string;
+
+type
+  { The file dialogs as components, like Delphi's: put one on the form (it is not
+    drawn), set its properties in the designer and call Execute:
+
+      if OpenDialog1.Execute then
+        Memo.Lines.LoadFromFile(OpenDialog1.FileName); }
+  TOpenDialog = class(TComponent)
+  private
+    FFileName, FFilter, FTitle: string;
+  protected
+    FDone: TFileDoneEvent;
+    procedure Answered(Sender: TObject; Ok: Boolean; const FileName: string);
+  public
+    constructor Create(AOwner: TComponent); override;
+    { Shows the dialog; True when the user chose a file (then in FileName). }
+    function Execute: Boolean; overload; virtual;
+    { The same without waiting: FileName is set, then OnDone(Self, Ok, FileName). }
+    procedure Execute(OnDone: TFileDoneEvent); overload; virtual;
+  published
+    { Where it starts (a file or a folder); the chosen file after Execute. }
+    property FileName: string read FFileName write FFileName;
+    { 'Pictures|*.png;*.jpg|All files|*' }
+    property Filter: string read FFilter write FFilter;
+    property Title: string read FTitle write FTitle;
+  end;
+
+  { Asks before replacing a file that exists; DefaultExt ('.txt') is added when the name has none. }
+  TSaveDialog = class(TOpenDialog)
+  private
+    FDefaultExt: string;
+  public
+    constructor Create(AOwner: TComponent); override;
+    function Execute: Boolean; override;
+    procedure Execute(OnDone: TFileDoneEvent); override;
+  published
+    property DefaultExt: string read FDefaultExt write FDefaultExt;
+  end;
+
+  TSelectFolderDialog = class(TComponent)
+  private
+    FFolder, FTitle: string;
+    FDone: TFileDoneEvent;
+    procedure Answered(Sender: TObject; Ok: Boolean; const FileName: string);
+  public
+    constructor Create(AOwner: TComponent); override;
+    function Execute: Boolean; overload;
+    procedure Execute(OnDone: TFileDoneEvent); overload;
+  published
+    { Where it starts; the chosen folder after Execute. }
+    property Folder: string read FFolder write FFolder;
+    property Title: string read FTitle write FTitle;
+  end;
+
+implementation
+
+uses
+  Math, StrUtils, Pastel.Controls, Pastel.NativeDialogs, Pastel.Lang{$IFDEF ANDROID}, Pastel.Device, Pastel.Java{$ENDIF};
+
+function ModalResultCaption(R: Integer): string;
+begin
+  case R of
+    mrOk: Result := _('OK');
+    mrCancel: Result := _('Cancel');
+    mrAbort: Result := _('Abort');
+    mrRetry: Result := _('Retry');
+    mrIgnore: Result := _('Ignore');
+    mrYes: Result := _('Yes');
+    mrNo: Result := _('No');
+    mrClose: Result := _('Close');
+  else
+    Result := IntToStr(R);
+  end;
+end;
+
+function ButtonName(R: Integer): string;
+begin
+  case R of
+    mrOk: Result := 'OkButton';
+    mrCancel: Result := 'CancelButton';
+    mrAbort: Result := 'AbortButton';
+    mrRetry: Result := 'RetryButton';
+    mrIgnore: Result := 'IgnoreButton';
+    mrYes: Result := 'YesButton';
+    mrNo: Result := 'NoButton';
+    mrClose: Result := 'CloseButton';
+  else
+    Result := 'Button' + IntToStr(R);
+  end;
+end;
+
+function CheckForm: TForm;
+begin
+  Result := MainForm;
+  if Result = nil then
+    raise Exception.Create('dialogs need a window: show them after Application.Run started');
+end;
+
+{ a dialog: title, content, then a row of buttons on the right }
+function NewDialog(const Title: string; MinWidth: Integer; out Content: TColumn): TPopup;
+var
+  T: TLabel;
+begin
+  Result := TPopup.Create(nil);
+  Result.Padding := 20;
+  if UIStyle.DialogRadius > 16 then
+    Result.Padding := 24;      { round corners need more room }
+  Result.Radius := UIStyle.DialogRadius;
+  Result.Gap := 14;
+  Result.Width := MinWidth;
+  if Title <> '' then
+  begin
+    T := TLabel.Create(Result);
+    T.Name := 'DialogTitle';
+    T.Text := _(Title);
+    T.Bold := True;
+    T.FontSize := 16;
+    T.Parent := Result;
+  end;
+  Content := TColumn.Create(Result);
+  Content.Gap := 10;
+  Content.Parent := Result;
+end;
+
+function AddButtons(P: TPopup; const Buttons: array of Integer; Danger: Boolean): TRow;
+var
+  I, J: Integer;
+  B: TButton;
+begin
+  Result := TRow.Create(P);
+  Result.Gap := 8;
+  Result.Justify := jsEnd;
+  Result.Parent := P;
+  { the default first in the list: on the right, like most systems; on the
+    left where the style says so (Windows: OK Cancel) }
+  for J := 0 to High(Buttons) do
+  begin
+    if UIStyle.DefaultButtonFirst then I := J else I := High(Buttons) - J;
+    B := TButton.Create(P);
+    B.Name := ButtonName(Buttons[I]);
+    B.Text := ModalResultCaption(Buttons[I]);
+    B.ModalResult := Buttons[I];
+    if I = 0 then
+    begin
+      B.Default := True;
+      if Danger then B.Style := bsDanger;
+    end
+    else if UIStyle.DialogFlatButtons then
+      B.Style := bsFlat
+    else
+      B.Style := bsSecondary;
+    B.Cancel := (Buttons[I] = mrCancel) or (Buttons[I] = mrNo) or (Buttons[I] = mrClose) or
+      ((Length(Buttons) = 1) and (I = 0));
+    B.Parent := Result;
+  end;
+end;
+
+function NewMessage(const Msg, Title: string; const Buttons: array of Integer; Danger: Boolean): TPopup;
+var
+  Content: TColumn;
+  L: TLabel;
+begin
+  Result := NewDialog(Title, 380, Content);
+  L := TLabel.Create(Result);
+  L.Name := 'MessageText';
+  L.Text := Msg;
+  L.WordWrap := True;
+  L.Parent := Content;
+  if Length(Buttons) = 0 then
+    AddButtons(Result, [mrOk], Danger)
+  else
+    AddButtons(Result, Buttons, Danger);
+end;
+
+function NewInput(const Title, Prompt, Value: string; out E: TEdit): TPopup;
+var
+  Content: TColumn;
+  L: TLabel;
+begin
+  Result := NewDialog(Title, 380, Content);
+  if Prompt <> '' then
+  begin
+    L := TLabel.Create(Result);
+    L.Name := 'MessageText';
+    L.Text := Prompt;
+    L.WordWrap := True;
+    L.Parent := Content;
+  end;
+  E := TEdit.Create(Result);
+  E.Name := 'InputEdit';
+  E.Text := Value;
+  E.SelectAll;
+  E.Parent := Content;
+  AddButtons(Result, [mrOk, mrCancel], False);
+end;
+
+function MessageDlg(const Msg, Title: string; const Buttons: array of Integer; Danger: Boolean): Integer;
+var
+  P: TPopup;
+begin
+  P := NewMessage(Msg, Title, Buttons, Danger);
+  try
+    Result := P.ShowModal(CheckForm);
+    if Result = mrNone then
+      Result := mrCancel;
+  finally
+    P.Free;
+  end;
+end;
+
+procedure ShowMessage(const Msg: string; const Title: string);
+begin
+  MessageDlg(Msg, Title, [mrOk]);
+end;
+
+{$IFDEF ANDROID}
+type
+  { the phone's Toast, on Android's UI thread }
+  TToaster = class
+    Msg: string;
+    Long: Boolean;
+    procedure Show;
+  end;
+
+procedure TToaster.Show;
+var
+  T: TJavaObject;
+begin
+  try
+    T := JavaStaticO('android.widget.Toast', 'makeText',
+      '(Landroid/content/Context;Ljava/lang/CharSequence;I)Landroid/widget/Toast;', [JavaActivity.Handle, Msg, Ord(Long)]);
+    JavaCall(T, 'android.widget.Toast', 'show', '()V', []);
+  finally
+    Free;
+  end;
+end;
+{$ENDIF}
+
+procedure ShowToast(const Msg: string; Long: Boolean);
+{$IFDEF ANDROID}
+var
+  T: TToaster;
+{$ENDIF}
+begin
+  {$IFDEF ANDROID}
+  T := TToaster.Create;
+  T.Msg := Msg;
+  T.Long := Long;
+  try
+    JavaRunOnUiThread(@T.Show);
+    Exit;
+  except
+    T.Free;      { no Java: Pastel's own below }
+  end;
+  {$ENDIF}
+  if MainForm <> nil then
+    if Long then
+      MainForm.ShowToast(Msg, 3500)
+    else
+      MainForm.ShowToast(Msg, 2000);
+end;
+
+function Ask(const Msg: string; const Title: string): Boolean;
+begin
+  Result := MessageDlg(Msg, Title, [mrYes, mrNo]) = mrYes;
+end;
+
+function InputQuery(const Title, Prompt: string; var Value: string): Boolean;
+var
+  P: TPopup;
+  E: TEdit;
+begin
+  P := NewInput(Title, Prompt, Value, E);
+  try
+    Result := P.ShowModal(CheckForm) = mrOk;
+    if Result then
+      Value := E.Text;
+  finally
+    P.Free;
+  end;
+end;
+
+function LoginDialog(const Title: string; var User, Password: string; const Error: string): Boolean;
+var
+  P: TPopup;
+  Content: TColumn;
+  L: TLabel;
+  UserEdit, PasswordEdit: TEdit;
+begin
+  P := NewDialog(Title, 380, Content);
+  try
+    if Error <> '' then
+    begin
+      L := TLabel.Create(P);
+      L.Name := 'MessageText';
+      L.Text := Error;
+      L.WordWrap := True;
+      L.Color := Theme.Danger;
+      L.Parent := Content;
+    end;
+    L := TLabel.Create(P);
+    L.Text := _('E-mail');
+    L.Parent := Content;
+    UserEdit := TEdit.Create(P);
+    UserEdit.Name := 'UserEdit';
+    UserEdit.Text := User;
+    UserEdit.Parent := Content;
+    L := TLabel.Create(P);
+    L.Text := _('Password');
+    L.Parent := Content;
+    PasswordEdit := TEdit.Create(P);
+    PasswordEdit.Name := 'PasswordEdit';
+    PasswordEdit.Password := True;
+    PasswordEdit.Parent := Content;
+    AddButtons(P, [mrOk, mrCancel], False);
+    if User <> '' then
+      PasswordEdit.SetFocus
+    else
+      UserEdit.SetFocus;
+    Result := P.ShowModal(CheckForm) = mrOk;
+    if Result then
+    begin
+      User := Trim(UserEdit.Text);
+      Password := PasswordEdit.Text;
+    end;
+  finally
+    P.Free;
+  end;
+end;
+
+{ ---- the dialogs without waiting ---- }
+
+type
+  { passes a dialog's answer on to the method given; owned by the dialog }
+  TAnswer = class(TComponent)
+  public
+    OnModal: TModalDoneEvent;
+    OnInput: TInputDoneEvent;
+    OnFile: TFileDoneEvent;
+    Edit: TEdit;
+    Ok: Boolean;
+    FileName: string;
+    procedure Closed(Sender: TObject; ModalResult: Integer);
+    procedure GiveFile(Sender: TObject);
+  end;
+
+procedure TAnswer.Closed(Sender: TObject; ModalResult: Integer);
+begin
+  if Assigned(OnModal) then
+    OnModal(Sender, ModalResult);
+  if Assigned(OnInput) then
+    if ModalResult = mrOk then
+      OnInput(Sender, True, Edit.Text)
+    else
+      OnInput(Sender, False, '');
+end;
+
+{ a file dialog's answer that was there at once (the system's dialog), given later like the others }
+procedure TAnswer.GiveFile(Sender: TObject);
+begin
+  try
+    if Assigned(OnFile) then
+      OnFile(nil, Ok, FileName);
+  finally
+    ReleaseLater(Self);
+  end;
+end;
+
+procedure MessageDlg(const Msg, Title: string; const Buttons: array of Integer; OnDone: TModalDoneEvent;
+  Danger: Boolean);
+var
+  P: TPopup;
+  A: TAnswer;
+begin
+  P := NewMessage(Msg, Title, Buttons, Danger);
+  A := TAnswer.Create(P);
+  A.OnModal := OnDone;
+  P.ShowModal(CheckForm, @A.Closed, True);
+end;
+
+procedure ShowMessage(const Msg: string; OnDone: TModalDoneEvent; const Title: string);
+begin
+  MessageDlg(Msg, Title, [mrOk], OnDone);
+end;
+
+procedure Ask(const Msg: string; OnDone: TModalDoneEvent; const Title: string);
+begin
+  MessageDlg(Msg, Title, [mrYes, mrNo], OnDone);
+end;
+
+procedure InputQuery(const Title, Prompt, Value: string; OnDone: TInputDoneEvent);
+var
+  P: TPopup;
+  A: TAnswer;
+  E: TEdit;
+begin
+  P := NewInput(Title, Prompt, Value, E);
+  A := TAnswer.Create(P);
+  A.Edit := E;
+  A.OnInput := OnDone;
+  P.ShowModal(CheckForm, @A.Closed, True);
+end;
+
+function InputBox(const Title, Prompt, Default: string): string;
+begin
+  Result := Default;
+  if not InputQuery(Title, Prompt, Result) then
+    Result := Default;
+end;
+
+{ ---- file dialogs ---- }
+
+type
+  TFileDialogKind = (fdOpen, fdSave, fdFolder);
+
+  TFileDialog = class(TComponent)
+  private
+    FKind: TFileDialogKind;
+    FPopup: TPopup;
+    FPath: TEdit;
+    FList: TListBox;
+    FName: TEdit;
+    FFilter: TComboBox;
+    FFilters: TStringList;    { Name=patterns }
+    FDir: string;
+    FResult, FDefaultExt: string;
+    FDone: TFileDoneEvent;
+    procedure PopupClosed(Sender: TObject; ModalResult: Integer);
+    procedure Fill;
+    procedure GoTo_(const Dir: string);
+    function Matches(const FileName: string): Boolean;
+    function EntryPath(Index: Integer): string;
+    function IsFolderEntry(Index: Integer): Boolean;
+    procedure ListChanged(Sender: TObject);
+    procedure ListActivated(Sender: TObject);
+    procedure UpClicked(Sender: TObject);
+    procedure PathSubmitted(Sender: TObject);
+    procedure FilterChanged(Sender: TObject);
+    procedure AcceptClicked(Sender: TObject);
+    procedure NameSubmitted(Sender: TObject);
+    function TryAccept: Boolean;
+  public
+    constructor CreateKind(AKind: TFileDialogKind; const Title, Filter, Start, DefaultExt: string);
+    destructor Destroy; override;
+    function Execute(out FileName: string): Boolean; overload;
+    { without waiting: OnDone with the answer, then the dialog frees itself }
+    procedure Execute(OnDone: TFileDoneEvent); overload;
+  end;
+
+const
+  FolderMark = '/';
+
+constructor TFileDialog.CreateKind(AKind: TFileDialogKind; const Title, Filter, Start, DefaultExt: string);
+var
+  Content: TColumn;
+  Top, Bottom: TRow;
+  Up, OkBtn, CancelBtn: TButton;
+  Parts: TStringArray;
+  I: Integer;
+begin
+  inherited Create(nil);
+  FKind := AKind;
+  FDefaultExt := DefaultExt;
+  FFilters := TStringList.Create;
+  Parts := Filter.Split(['|']);
+  I := 0;
+  while I + 1 <= High(Parts) do
+  begin
+    FFilters.Add(Parts[I] + '=' + Parts[I + 1]);
+    Inc(I, 2);
+  end;
+  if FFilters.Count = 0 then
+    FFilters.Add(_('All files') + '=*');
+
+  FPopup := NewDialog(Title, 560, Content);
+  Top := TRow.Create(FPopup);
+  Top.Gap := 8;
+  Top.Parent := Content;
+  Up := TButton.Create(FPopup);
+  Up.Name := 'UpButton';
+  Up.Text := '↑';
+  Up.Hint := _('The folder above');
+  Up.Style := bsSecondary;
+  Up.OnClick := @UpClicked;
+  Up.Parent := Top;
+  FPath := TEdit.Create(FPopup);
+  FPath.Name := 'PathEdit';
+  FPath.Grow := 1;
+  FPath.OnSubmit := @PathSubmitted;
+  FPath.Parent := Top;
+
+  FList := TListBox.Create(FPopup);
+  FList.Name := 'FileList';
+  FList.Height := 260;
+  FList.OnChange := @ListChanged;
+  FList.OnDblClick := @ListActivated;
+  FList.Parent := Content;
+
+  Bottom := TRow.Create(FPopup);
+  Bottom.Gap := 8;
+  Bottom.Parent := Content;
+  FName := TEdit.Create(FPopup);
+  FName.Name := 'FileNameEdit';
+  FName.Placeholder := _('File name');
+  FName.Grow := 1;
+  FName.OnSubmit := @NameSubmitted;
+  FName.Visible := FKind <> fdFolder;
+  FName.Parent := Bottom;
+  FFilter := TComboBox.Create(FPopup);
+  FFilter.Name := 'FilterCombo';
+  for I := 0 to FFilters.Count - 1 do
+    FFilter.Items.Add(FFilters.Names[I]);
+  FFilter.ItemIndex := 0;
+  FFilter.OnChange := @FilterChanged;
+  FFilter.Visible := (FKind <> fdFolder) and (FFilters.Count > 1);
+  FFilter.Parent := Bottom;
+
+  Top := TRow.Create(FPopup);
+  Top.Gap := 8;
+  Top.Justify := jsEnd;
+  Top.Parent := FPopup;
+  CancelBtn := TButton.Create(FPopup);
+  CancelBtn.Name := 'CancelButton';
+  CancelBtn.Text := _('Cancel');
+  CancelBtn.Style := bsSecondary;
+  CancelBtn.ModalResult := mrCancel;
+  CancelBtn.Cancel := True;
+  CancelBtn.Parent := Top;
+  OkBtn := TButton.Create(FPopup);
+  OkBtn.Name := 'OkButton';
+  case FKind of
+    fdOpen: OkBtn.Text := _('Open');
+    fdSave: OkBtn.Text := _('Save');
+  else
+    OkBtn.Text := _('Choose');
+  end;
+  OkBtn.OnClick := @AcceptClicked;
+  OkBtn.Parent := Top;
+
+  { where to start }
+  if (Start <> '') and DirectoryExists(Start) then
+    FDir := Start
+  else if (Start <> '') and DirectoryExists(ExtractFileDir(ExpandFileName(Start))) then
+  begin
+    FDir := ExtractFileDir(ExpandFileName(Start));
+    FName.Text := ExtractFileName(Start);
+  end
+  else
+    FDir := GetCurrentDir;
+  GoTo_(FDir);
+end;
+
+destructor TFileDialog.Destroy;
+begin
+  FPopup.Free;
+  FFilters.Free;
+  inherited Destroy;
+end;
+
+function TFileDialog.Matches(const FileName: string): Boolean;
+var
+  Pat: string;
+begin
+  if FKind = fdFolder then
+    Exit(False);
+  for Pat in FFilters.ValueFromIndex[Math.Max(0, FFilter.ItemIndex)].Split([';']) do
+    if (Trim(Pat) = '*') or (Trim(Pat) = '*.*') or IsWild(FileName, Trim(Pat), True) then
+      Exit(True);
+  Result := False;
+end;
+
+procedure TFileDialog.Fill;
+var
+  SR: TSearchRec;
+  Dirs, Files: TStringList;
+begin
+  Dirs := TStringList.Create;
+  Files := TStringList.Create;
+  try
+    Dirs.Sorted := True;
+    Files.Sorted := True;
+    Dirs.CaseSensitive := False;
+    Files.CaseSensitive := False;
+    if FindFirst(IncludeTrailingPathDelimiter(FDir) + AllFilesMask, faAnyFile or faDirectory, SR) = 0 then
+    try
+      repeat
+        if (SR.Name = '.') or (SR.Name = '..') or (SR.Name[1] = '.') then
+          Continue;
+        if (SR.Attr and faDirectory) <> 0 then
+          Dirs.Add(SR.Name + FolderMark)
+        else if Matches(SR.Name) then
+          Files.Add(SR.Name);
+      until FindNext(SR) <> 0;
+    finally
+      FindClose(SR);
+    end;
+    FList.Items.BeginUpdate;
+    try
+      FList.Items.Assign(Dirs);
+      FList.Items.AddStrings(Files);
+    finally
+      FList.Items.EndUpdate;
+    end;
+    FList.ItemIndex := -1;
+  finally
+    Dirs.Free;
+    Files.Free;
+  end;
+end;
+
+procedure TFileDialog.GoTo_(const Dir: string);
+begin
+  if not DirectoryExists(Dir) then
+    Exit;
+  FDir := ExcludeTrailingPathDelimiter(ExpandFileName(Dir));
+  if FDir = '' then
+    FDir := PathDelim;
+  FPath.Text := FDir;
+  Fill;
+end;
+
+function TFileDialog.IsFolderEntry(Index: Integer): Boolean;
+begin
+  Result := (Index >= 0) and AnsiEndsStr(FolderMark, FList.Items[Index]);
+end;
+
+function TFileDialog.EntryPath(Index: Integer): string;
+var
+  N: string;
+begin
+  N := FList.Items[Index];
+  if IsFolderEntry(Index) then
+    N := Copy(N, 1, Length(N) - Length(FolderMark));
+  Result := IncludeTrailingPathDelimiter(FDir) + N;
+end;
+
+procedure TFileDialog.ListChanged(Sender: TObject);
+begin
+  if (FList.ItemIndex >= 0) and not IsFolderEntry(FList.ItemIndex) then
+    FName.Text := FList.Items[FList.ItemIndex];
+end;
+
+procedure TFileDialog.ListActivated(Sender: TObject);
+begin
+  if FList.ItemIndex < 0 then
+    Exit;
+  if IsFolderEntry(FList.ItemIndex) then
+    GoTo_(EntryPath(FList.ItemIndex))
+  else if TryAccept then
+    FPopup.Close(mrOk);
+end;
+
+procedure TFileDialog.UpClicked(Sender: TObject);
+begin
+  GoTo_(ExtractFileDir(FDir));
+end;
+
+procedure TFileDialog.PathSubmitted(Sender: TObject);
+begin
+  if DirectoryExists(FPath.Text) then
+    GoTo_(FPath.Text)
+  else
+    FPath.Text := FDir;
+end;
+
+procedure TFileDialog.FilterChanged(Sender: TObject);
+begin
+  Fill;
+end;
+
+function TFileDialog.TryAccept: Boolean;
+var
+  N, F: string;
+begin
+  Result := False;
+  if FKind = fdFolder then
+  begin
+    if (FList.ItemIndex >= 0) and IsFolderEntry(FList.ItemIndex) then
+      FResult := EntryPath(FList.ItemIndex)
+    else
+      FResult := FDir;
+    Exit(True);
+  end;
+  N := Trim(FName.Text);
+  if N = '' then
+    Exit;
+  if (ExtractFilePath(N) <> '') and DirectoryExists(ExpandFileName(N)) then
+  begin
+    GoTo_(N);
+    FName.Text := '';
+    Exit;
+  end;
+  if ExtractFilePath(N) = '' then
+    F := IncludeTrailingPathDelimiter(FDir) + N
+  else
+    F := ExpandFileName(N);
+  if DirectoryExists(F) then
+  begin
+    GoTo_(F);
+    FName.Text := '';
+    Exit;
+  end;
+  if FKind = fdOpen then
+  begin
+    if not FileExists(F) then
+    begin
+      MessageDlg(Format(_('"%s" was not found.'), [N]), _('Open'), [mrOk]);
+      Exit;
+    end;
+  end
+  else
+  begin
+    if (ExtractFileExt(F) = '') and (FDefaultExt <> '') then
+      F := F + FDefaultExt;
+    if FileExists(F) and (MessageDlg(Format(_('"%s" exists already. Replace it?'), [ExtractFileName(F)]),
+      _('Save'), [mrYes, mrNo]) <> mrYes) then
+      Exit;
+  end;
+  FResult := F;
+  Result := True;
+end;
+
+procedure TFileDialog.AcceptClicked(Sender: TObject);
+begin
+  if (FKind <> fdFolder) and (FList.ItemIndex >= 0) and IsFolderEntry(FList.ItemIndex) and
+     ((CheckForm.Focused = FList) or (Trim(FName.Text) = '')) then
+  begin
+    GoTo_(EntryPath(FList.ItemIndex));
+    Exit;
+  end;
+  if TryAccept then
+    FPopup.Close(mrOk);
+end;
+
+procedure TFileDialog.NameSubmitted(Sender: TObject);
+begin
+  AcceptClicked(Sender);
+end;
+
+function TFileDialog.Execute(out FileName: string): Boolean;
+begin
+  if FKind = fdFolder then
+    FPopup.ActiveControl := FList
+  else
+  begin
+    FPopup.ActiveControl := FName;
+    FName.SelectAll;         { typing replaces the suggested name }
+  end;
+  Result := FPopup.ShowModal(CheckForm) = mrOk;
+  if Result then
+    FileName := FResult;
+end;
+
+procedure TFileDialog.Execute(OnDone: TFileDoneEvent);
+begin
+  FDone := OnDone;
+  if FKind = fdFolder then
+    FPopup.ActiveControl := FList
+  else
+  begin
+    FPopup.ActiveControl := FName;
+    FName.SelectAll;
+  end;
+  FPopup.ShowModal(CheckForm, @PopupClosed);
+end;
+
+procedure TFileDialog.PopupClosed(Sender: TObject; ModalResult: Integer);
+var
+  D: TFileDoneEvent;
+begin
+  D := FDone;
+  FDone := nil;
+  ReleaseLater(Self);
+  if Assigned(D) then
+    if ModalResult = mrOk then
+      D(nil, True, FResult)
+    else
+      D(nil, False, '');
+end;
+
+{ the system's dialog; False when there is none (then Pastel's is shown) }
+function TryNative(Kind: TNativeDialogKind; const Title, Filter, DefaultExt: string;
+  var FileName: string; out Ok: Boolean): Boolean;
+var
+  D: TNativeDialog;
+  P: TPopup;
+  Content: TColumn;
+  L: TLabel;
+begin
+  Ok := False;
+  Result := False;
+  if not UseNativeDialogs or (SysUtils.GetEnvironmentVariable('PASTEL_HEADLESS') = '1') or
+    (SysUtils.GetEnvironmentVariable('PASTEL_TEST_SCRIPT') <> '') or (SysUtils.GetEnvironmentVariable('PASTEL_NATIVE_DIALOGS') = '0') then
+    Exit;
+  D := TNativeDialog.Create(Kind, Title, Filter, FileName, DefaultExt);
+  try
+    if Assigned(NativeWindowHook) then
+      D.Owner := NativeWindowHook();
+    if not D.Start then
+      Exit;
+    Result := True;
+    if D.Running then
+    begin
+      { the dialog is another program: the window keeps drawing, dimmed }
+      P := NewDialog('', 320, Content);
+      try
+        L := TLabel.Create(P);
+        L.Text := Title + '...';
+        L.Parent := Content;
+        P.Modal := True;
+        P.PopupCentered(CheckForm);
+        while D.Running do
+        begin
+          if Assigned(ModalStep) then
+            ModalStep();
+          Sleep(15);
+        end;
+        P.Close;
+      finally
+        P.Free;
+      end;
+    end;
+    Ok := D.Ok;
+    if Ok then
+      FileName := D.FileName;
+  finally
+    D.Free;
+  end;
+end;
+
+{$IFDEF ANDROID}
+{ the kind of file a filter asks for ('Pictures|*.png;*.jpg' -> image/*), for Android's picker }
+function MimeOfFilter(const Filter: string): string;
+var
+  Names, Patterns: TStringArray;
+  E: string;
+begin
+  Result := '*/*';
+  if Filter = '' then
+    Exit;
+  SplitFilter(Filter, Names, Patterns);
+  if Length(Patterns) = 0 then
+    Exit;
+  E := LowerCase(ExtractFileExt(Patterns[0].Split([';'])[0]));
+  case E of
+    '.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp': Result := 'image/*';
+    '.pdf': Result := 'application/pdf';
+    '.txt', '.md', '.log': Result := 'text/*';
+    '.csv': Result := 'text/*';
+    '.json': Result := 'application/json';
+    '.mp3', '.wav', '.ogg': Result := 'audio/*';
+    '.mp4', '.mkv', '.webm': Result := 'video/*';
+  end;
+end;
+{$ENDIF}
+
+function OpenFileDialog(var FileName: string; const Filter: string; const Title: string): Boolean;
+var
+  D: TFileDialog;
+  F: string;
+begin
+  {$IFDEF ANDROID}
+  { the phone's own picker (files, Drive, gallery): a copy in the app's cache }
+  F := PickFile(MimeOfFilter(Filter));
+  Result := F <> '';
+  if Result then
+    FileName := F;
+  Exit;
+  {$ENDIF}
+  if TryNative(ndOpen, Title, Filter, '', FileName, Result) then
+    Exit;
+  D := TFileDialog.CreateKind(fdOpen, Title, Filter, FileName, '');
+  try
+    Result := D.Execute(F);
+    if Result then
+      FileName := F;
+  finally
+    D.Free;
+  end;
+end;
+
+function SaveFileDialog(var FileName: string; const Filter: string; const Title: string;
+  const DefaultExt: string): Boolean;
+var
+  D: TFileDialog;
+  F: string;
+begin
+  if TryNative(ndSave, Title, Filter, DefaultExt, FileName, Result) then
+    Exit;
+  D := TFileDialog.CreateKind(fdSave, Title, Filter, FileName, DefaultExt);
+  try
+    Result := D.Execute(F);
+    if Result then
+      FileName := F;
+  finally
+    D.Free;
+  end;
+end;
+
+function SelectFolderDialog(var Folder: string; const Title: string): Boolean;
+var
+  D: TFileDialog;
+  F: string;
+begin
+  if TryNative(ndFolder, Title, '', '', Folder, Result) then
+    Exit;
+  D := TFileDialog.CreateKind(fdFolder, Title, '', Folder, '');
+  try
+    Result := D.Execute(F);
+    if Result then
+      Folder := F;
+  finally
+    D.Free;
+  end;
+end;
+
+{ the answer of the system's dialog (it was there at once): given later, like Pastel's }
+procedure GiveLater(OnDone: TFileDoneEvent; Ok: Boolean; const FileName: string);
+var
+  A: TAnswer;
+begin
+  A := TAnswer.Create(nil);
+  A.OnFile := OnDone;
+  A.Ok := Ok;
+  A.FileName := FileName;
+  CallLater(@A.GiveFile, nil);
+end;
+
+procedure OpenFileDialog(const FileName, Filter, Title: string; OnDone: TFileDoneEvent);
+var
+  F: string;
+  Ok: Boolean;
+begin
+  {$IFDEF ANDROID}
+  { the phone's own picker, without waiting }
+  PickFile(MimeOfFilter(Filter), OnDone);
+  Exit;
+  {$ENDIF}
+  F := FileName;
+  if TryNative(ndOpen, Title, Filter, '', F, Ok) then
+  begin
+    GiveLater(OnDone, Ok, F);
+    Exit;
+  end;
+  TFileDialog.CreateKind(fdOpen, Title, Filter, FileName, '').Execute(OnDone);
+end;
+
+procedure SaveFileDialog(const FileName, Filter, Title, DefaultExt: string; OnDone: TFileDoneEvent);
+var
+  F: string;
+  Ok: Boolean;
+begin
+  F := FileName;
+  if TryNative(ndSave, Title, Filter, DefaultExt, F, Ok) then
+  begin
+    GiveLater(OnDone, Ok, F);
+    Exit;
+  end;
+  TFileDialog.CreateKind(fdSave, Title, Filter, FileName, DefaultExt).Execute(OnDone);
+end;
+
+procedure SelectFolderDialog(const Folder, Title: string; OnDone: TFileDoneEvent);
+var
+  F: string;
+  Ok: Boolean;
+begin
+  F := Folder;
+  if TryNative(ndFolder, Title, '', '', F, Ok) then
+  begin
+    GiveLater(OnDone, Ok, F);
+    Exit;
+  end;
+  TFileDialog.CreateKind(fdFolder, Title, '', Folder, '').Execute(OnDone);
+end;
+
+{ ---- the dialog components ---- }
+
+constructor TOpenDialog.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FTitle := 'Open';
+end;
+
+function TOpenDialog.Execute: Boolean;
+var
+  F: string;
+begin
+  F := FFileName;
+  Result := OpenFileDialog(F, FFilter, FTitle);
+  if Result then
+    FFileName := F;
+end;
+
+procedure TOpenDialog.Execute(OnDone: TFileDoneEvent);
+begin
+  FDone := OnDone;
+  OpenFileDialog(FFileName, FFilter, FTitle, @Answered);
+end;
+
+procedure TOpenDialog.Answered(Sender: TObject; Ok: Boolean; const FileName: string);
+var
+  D: TFileDoneEvent;
+begin
+  if Ok then
+    FFileName := FileName;
+  D := FDone;
+  FDone := nil;
+  if Assigned(D) then
+    D(Self, Ok, FileName);
+end;
+
+constructor TSaveDialog.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  Title := 'Save';
+end;
+
+function TSaveDialog.Execute: Boolean;
+var
+  F: string;
+begin
+  F := FileName;
+  Result := SaveFileDialog(F, Filter, Title, FDefaultExt);
+  if Result then
+    FileName := F;
+end;
+
+procedure TSaveDialog.Execute(OnDone: TFileDoneEvent);
+begin
+  FDone := OnDone;
+  SaveFileDialog(FileName, Filter, Title, FDefaultExt, @Answered);
+end;
+
+constructor TSelectFolderDialog.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FTitle := 'Choose a folder';
+end;
+
+function TSelectFolderDialog.Execute: Boolean;
+var
+  F: string;
+begin
+  F := FFolder;
+  Result := SelectFolderDialog(F, FTitle);
+  if Result then
+    FFolder := F;
+end;
+
+procedure TSelectFolderDialog.Execute(OnDone: TFileDoneEvent);
+begin
+  FDone := OnDone;
+  SelectFolderDialog(FFolder, FTitle, @Answered);
+end;
+
+procedure TSelectFolderDialog.Answered(Sender: TObject; Ok: Boolean; const FileName: string);
+var
+  D: TFileDoneEvent;
+begin
+  if Ok then
+    FFolder := FileName;
+  D := FDone;
+  FDone := nil;
+  if Assigned(D) then
+    D(Self, Ok, FileName);
+end;
+
+initialization
+  RegisterNonVisual(TOpenDialog);
+  RegisterNonVisual(TSaveDialog);
+  RegisterNonVisual(TSelectFolderDialog);
+
+end.
