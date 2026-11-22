@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guide: a REST API with a database · Pastel</title>
+<meta name="description" content="Pastel: a modern cross-platform app framework and toolchain for Object Pascal. Desktop, phone, web and console apps from one codebase.">
+<script>
+  try { var t = localStorage.getItem('pastel-theme'); } catch (e) {}
+  document.documentElement.dataset.bsTheme = t || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hl-dark">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body class="section-docs">
+<nav class="navbar navbar-expand-lg sticky-top site-header">
+  <div class="container-fluid px-lg-4">
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="index.html">
+      <span class="logo" aria-hidden="true"></span>Pastel
+    </a>
+        <button class="btn btn-sm btn-outline-secondary d-lg-none me-auto" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">Menu</button>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#top" aria-controls="top" aria-expanded="false" aria-label="Links">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="top">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link active" href="docs.html">Docs</a></li>
+        <li class="nav-item"><a class="nav-link" href="getting-started.html">Get started</a></li>
+        <li class="nav-item"><a class="nav-link " href="download.html">Download</a></li>
+        <li class="nav-item"><a class="nav-link " href="changelog.html">Changelog</a></li>
+      </ul>
+      <div class="search position-relative my-2 my-lg-0 me-lg-3">
+        <input id="search" class="form-control form-control-sm" type="search" placeholder="Search the docs  /" autocomplete="off" data-base="" aria-label="Search the docs">
+        <div id="results" class="dropdown-menu shadow"></div>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        <button id="theme" class="btn btn-sm btn-outline-secondary" type="button" aria-label="Light or dark" title="Light or dark"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+        <a class="btn btn-sm btn-outline-secondary" href="https://github.com/azrov/pastel">GitHub</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-lg-4">
+  <div class="row">
+    <aside class="col-lg-3 col-xl-2 docs-sidebar">
+      <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+        <div class="offcanvas-header border-bottom">
+          <h5 class="offcanvas-title" id="sidebarLabel">Documentation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+          <nav class="docs-nav w-100">
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g0" aria-expanded="false">Start</button>
+              <div class="collapse " id="g0">
+                <a href="readme.html">Overview</a>
+                <a href="docs.html">All topics</a>
+                <a href="getting-started.html">Getting started</a>
+                <a href="commands.html">The pastel command</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g1" aria-expanded="false">Handbook</button>
+              <div class="collapse " id="g1">
+                <a href="handbook/README.html">The Pastel Handbook</a>
+                <a href="handbook/01-hello.html">1. Your first program</a>
+                <a href="handbook/02-values.html">2. Values, types and variables</a>
+                <a href="handbook/03-decisions-loops.html">3. Decisions and loops</a>
+                <a href="handbook/04-routines.html">4. Procedures and functions</a>
+                <a href="handbook/05-structured-types.html">5. Arrays, records, enumerations and sets</a>
+                <a href="handbook/06-strings.html">6. Text</a>
+                <a href="handbook/07-units.html">7. Units</a>
+                <a href="handbook/08-classes.html">8. Classes and objects</a>
+                <a href="handbook/09-exceptions.html">9. When things go wrong</a>
+                <a href="handbook/10-generics.html">10. Lists, dictionaries and generics</a>
+                <a href="handbook/11-files-json.html">11. Files and JSON</a>
+                <a href="handbook/12-testing.html">12. Testing</a>
+                <a href="handbook/13-interfaces.html">13. Interfaces and the command line</a>
+                <a href="handbook/14-first-window.html">14. Your first window</a>
+                <a href="handbook/15-layout.html">15. Layout</a>
+                <a href="handbook/16-grids-and-dialogs.html">16. Grids and dialogs</a>
+                <a href="handbook/17-database.html">17. A database</a>
+                <a href="handbook/18-charts-and-reports.html">18. Charts and reports</a>
+                <a href="handbook/19-look-and-languages.html">19. Look and languages</a>
+                <a href="handbook/20-background.html">20. Work in the background</a>
+                <a href="handbook/21-phones.html">21. Phones</a>
+                <a href="handbook/22-shipping.html">22. Shipping</a>
+                <a href="handbook/appendix-a-cheat-sheet.html">Appendix A. Object Pascal at a glance</a>
+                <a href="handbook/appendix-b-from-delphi.html">Appendix B. Coming from Delphi or Lazarus</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start " type="button" data-bs-toggle="collapse" data-bs-target="#g2" aria-expanded="true">Guides</button>
+              <div class="collapse show" id="g2">
+                <a href="guide-cli.html">Writing a command-line tool</a>
+                <a href="guide-api.html" class="current" aria-current="page">A REST API with a database</a>
+                <a href="guide-desktop.html">Building a desktop app</a>
+                <a href="guide-business.html">A business system — desktop app and server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g3" aria-expanded="false">Desktop and phone apps</button>
+              <div class="collapse " id="g3">
+                <a href="forms.html">Forms and controls</a>
+                <a href="controls.html">Controls reference</a>
+                <a href="styles.html">Styles: Fluent, Material and your own</a>
+                <a href="components.html">Writing components</a>
+                <a href="android.html">Android</a>
+                <a href="device.html">The phone&#39;s features</a>
+                <a href="java.html">Java from Pascal</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g4" aria-expanded="false">Programs and services</button>
+              <div class="collapse " id="g4">
+                <a href="console.html">Console programs</a>
+                <a href="data.html">JSON, settings and logging</a>
+                <a href="documents.html">Reports, PDF, Excel and printing</a>
+                <a href="system.html">Files, programs, HTTP and the environment</a>
+                <a href="services.html">Services: programs that keep running</a>
+                <a href="web.html">Web APIs and sites: Pastel.Web</a>
+                <a href="websockets.html">WebSockets: Pastel.WebSocket</a>
+                <a href="mail.html">E-mail: Pastel.Mail</a>
+                <a href="pages.html">Web pages from templates</a>
+                <a href="markdown.html">Markdown</a>
+                <a href="database.html">Databases: Pastel.Db</a>
+                <a href="sync.html">Data that works offline: Pastel.Sync</a>
+                <a href="auth.html">Users and login: Pastel.Auth</a>
+                <a href="security.html">Passwords, tokens and signatures: Pastel.Crypto, Pastel.Jwt</a>
+                <a href="deploy.html">Deploying to a Linux server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g5" aria-expanded="false">Working with Pastel</button>
+              <div class="collapse " id="g5">
+                <a href="project.html">The project file: pastel.toml</a>
+                <a href="workflow.html">Everyday work: watch, format, libraries</a>
+                <a href="packages.html">Packages</a>
+                <a href="testing.html">Testing</a>
+                <a href="vscode.html">Pastel for Visual Studio Code</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g6" aria-expanded="false">Reference</button>
+              <div class="collapse " id="g6">
+                <a href="api/index.html">Pastel API reference</a>
+                <a href="compatibility.html">Compatibility: what stays the same</a>
+                <a href="performance.html">Performance</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g7" aria-expanded="false">Examples</button>
+              <div class="collapse " id="g7">
+                <a href="examples/components-demo.html">components-demo</a>
+                <a href="examples/components.html">components</a>
+                <a href="examples/contacts.html">contacts</a>
+                <a href="examples/dupfinder.html">dupfinder</a>
+                <a href="examples/notepad.html">notepad</a>
+                <a href="examples/notes-api.html">notes-api</a>
+                <a href="examples/pocket-app.html">pocket-app</a>
+                <a href="examples/pocket-cli.html">pocket-cli</a>
+                <a href="examples/pocket-core.html">pocket-core</a>
+                <a href="examples/salon-api.html">salon-api</a>
+                <a href="examples/salon-core.html">salon-core</a>
+                <a href="examples/salon-desk.html">salon-desk</a>
+                <a href="examples/weather.html">weather</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g8" aria-expanded="false">Project</button>
+              <div class="collapse " id="g8">
+                <a href="roadmap.html">Pastel roadmap to 1.0</a>
+                <a href="changelog.html">Changelog</a>
+                <a href="vscode-changelog.html">Changelog of the VS Code extension</a>
+                <a href="contributing.html">Contributing to Pastel</a>
+                <a href="security-policy.html">Security</a>
+                <a href="code-of-conduct.html">Code of conduct</a>
+                <a href="announcing-1.0.html">Announcing Pastel 1.0</a>
+              </div>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </aside>
+    <main class="col-12 col-lg-9 col-xl-8 docs-main">
+      <article class="markdown">
+<h1 id="guide-a-rest-api-with-a-database"><a class="anchor" href="#guide-a-rest-api-with-a-database">#</a>Guide: a REST API with a database</h1>
+<p>From an empty folder to an API running on a server: tasks with a
+title, a priority and a done flag. About half an hour.</p>
+<h2 id="1-the-project"><a class="anchor" href="#1-the-project">#</a>1. The project</h2>
+<pre><code class="language-sh">pastel new api tasks
+cd tasks
+pastel run
+</code></pre>
+<pre><code class="language-sh">curl -s localhost:8080/api/tasks -d '{&quot;title&quot;: &quot;Süt al&quot;}'
+curl -s localhost:8080/api/tasks
+</code></pre>
+<p>The parts:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>src/main.pas</code></td>
+<td>the service: opens the database, runs the migrations, adds the routes</td>
+</tr>
+<tr>
+<td><code>src/models/tasks.pas</code></td>
+<td>the model: every SQL statement about tasks</td>
+</tr>
+<tr>
+<td><code>src/controllers/taskscontroller.pas</code></td>
+<td>the controller: routes, checks, JSON answers</td>
+</tr>
+<tr>
+<td><code>database/migrations/</code></td>
+<td>the tables</td>
+</tr>
+<tr>
+<td><code>tests/tasks_test.pas</code></td>
+<td>tests of the model and the API</td>
+</tr>
+<tr>
+<td><code>config.toml</code></td>
+<td>settings while developing (SQLite in <code>data/app.db</code>)</td>
+</tr>
+</tbody></table>
+<p>In VS Code the Pastel panel lists the routes, the jobs and the
+migrations; above every route is <strong>▶ Send</strong>, which sends a request to the
+running API and shows the answer.</p>
+<h2 id="2-a-new-column-a-migration"><a class="anchor" href="#2-a-new-column-a-migration">#</a>2. A new column: a migration</h2>
+<pre><code class="language-sh">pastel migrate new add_priority
+</code></pre>
+<p><code>database/migrations/002_add_priority.sql</code>:</p>
+<pre><code class="language-sql">alter table tasks add column priority integer not null default 0;
+</code></pre>
+<p>The next <code>pastel run</code> applies it (or <code>pastel migrate</code> now; <code>pastel migrate status</code> shows what ran). Never change a migration that ran somewhere; add
+a new one.</p>
+<h2 id="3-the-model"><a class="anchor" href="#3-the-model">#</a>3. The model</h2>
+<p>In <code>src/models/tasks.pas</code>, select the new column everywhere and add it to
+<code>Add</code>:</p>
+<pre><code class="language-pascal">function TTasks.Add(const Title: string; Priority: Integer; Done: Boolean): TJSONObject;
+var
+  Id: Int64;
+begin
+  Id := FDb.Insert('insert into tasks (title, priority, done, created_at) values (?, ?, ?, ?)',
+    [Title, Priority, Done, DateToISO8601(LocalTimeToUniversal(Now))]);
+  Result := Find(Id);
+end;
+</code></pre>
+<p>Values always go in as <code>?</code>, never pasted into the SQL. More:
+<a href="database.html">database.md</a>.</p>
+<h2 id="4-the-controller"><a class="anchor" href="#4-the-controller">#</a>4. The controller</h2>
+<p>Check the input with <code>Req.Validate</code>; every problem goes back at once as
+422:</p>
+<pre><code class="language-pascal">procedure TTasksController.CreateTask(Req: TWebRequest; Res: TWebResponse);
+var
+  V: TValidator;
+  Title: string;
+  Priority: Int64;
+begin
+  V := Req.Validate;
+  Title := V.Str('title', 1, 200);
+  Priority := V.OptInt('priority', 0, 0, 5);
+  V.Check;
+  Res.Json(FTasks.Add(Title, Priority, False), 201);
+end;
+</code></pre>
+<p>A new route, in <code>Routes</code>:</p>
+<pre><code class="language-pascal">Web.Get('/api/tasks/urgent', @UrgentTasks);
+</code></pre>
+<p>Errors: <code>raise EWebError.Create(404, 'no task with this id')</code>; anything
+unexpected becomes 500 and goes to the log. More: <a href="web.html">web.md</a>.</p>
+<h2 id="5-tests"><a class="anchor" href="#5-tests">#</a>5. Tests</h2>
+<pre><code class="language-sh">pastel test
+</code></pre>
+<p>The tests get a fresh SQLite database each, with the migrations applied.
+Add one for the priority:</p>
+<pre><code class="language-pascal">procedure TTasksTests.KeepsThePriority;
+var
+  T: TJSONObject;
+begin
+  Model.Add('x', 3, False).Free;
+  T := Model.Find(1);
+  try
+    AssertEquals(3, JInt(T, 'priority'));
+  finally
+    T.Free;
+  end;
+end;
+</code></pre>
+<p><code>pastel test --watch</code> runs them on every save.</p>
+<h2 id="6-who-may-call-it"><a class="anchor" href="#6-who-may-call-it">#</a>6. Who may call it</h2>
+<p>In <code>config.toml</code>:</p>
+<pre><code class="language-toml">[api]
+keys = [&quot;a-long-random-key-from-openssl-rand&quot;]
+</code></pre>
+<p>Now <code>/api/...</code> needs <code>X-API-Key: &lt;key&gt;</code> (Send Request in VS Code adds it
+from <code>config.toml</code>). For users who log in, use JWT instead:
+<a href="web.html#who-is-calling-api-keys-and-tokens">web.md</a>. The example key
+<code>CHANGE-ME-...</code> is refused, so a server never runs with it.</p>
+<h2 id="7-work-in-the-background"><a class="anchor" href="#7-work-in-the-background">#</a>7. Work in the background</h2>
+<p>Sending a mail when a task is done should not slow the answer down:</p>
+<pre><code class="language-pascal">FMail := TWorkerPool.Create('mail', 2, @SendDoneMail);
+...
+FMail.Submit(JObject(['id', Id]).AsJSON);
+</code></pre>
+<p><a href="services.html#background-work-pastelworkers">services.md</a>.</p>
+<h2 id="8-postgresql"><a class="anchor" href="#8-postgresql">#</a>8. PostgreSQL</h2>
+<pre><code class="language-toml">[database]
+url = &quot;postgres://tasks:password@localhost/tasks&quot;
+</code></pre>
+<p>Nothing else changes: the same migrations and SQL run on SQLite,
+PostgreSQL and MySQL/MariaDB. Add <code>libpq5</code> to <code>[package.deb] depends</code>.</p>
+<h2 id="9-on-a-server"><a class="anchor" href="#9-on-a-server">#</a>9. On a server</h2>
+<pre><code class="language-sh">pastel package deb
+scp dist/tasks_0.1.0_amd64.deb you@server:
+ssh you@server
+sudo apt install ./tasks_0.1.0_amd64.deb
+sudo nano /etc/tasks/config.toml        # the real key, the database
+sudo systemctl start tasks
+</code></pre>
+<p>Or <code>pastel package docker</code>. HTTPS with Caddy or nginx in front:
+<a href="deploy.html">deploy.md</a>.</p>
+
+      </article>
+      <p class="edit mt-5"><a href="https://github.com/azrov/pastel/edit/main/docs/guide-api.md">Improve this page on GitHub</a></p>
+    </main>
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <div class="sticky">
+        <div class="toc-title">On this page</div>
+        <a href="#1-the-project">1. The project</a>
+        <a href="#2-a-new-column-a-migration">2. A new column: a migration</a>
+        <a href="#3-the-model">3. The model</a>
+        <a href="#4-the-controller">4. The controller</a>
+        <a href="#5-tests">5. Tests</a>
+        <a href="#6-who-may-call-it">6. Who may call it</a>
+        <a href="#7-work-in-the-background">7. Work in the background</a>
+        <a href="#8-postgresql">8. PostgreSQL</a>
+        <a href="#9-on-a-server">9. On a server</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer py-4 mt-5">
+  <div class="container d-flex flex-wrap gap-3 justify-content-between small text-body-secondary">
+    <span>Pastel 2.1.0-beta.4 · MIT License · built with Pastel.Markdown and Pastel.Pages</span>
+    <span class="d-flex gap-3">
+      <a href="docs.html">Documentation</a>
+      <a href="download.html">Download</a>
+      <a href="contributing.html">Contributing</a>
+      <a href="https://github.com/azrov/pastel">GitHub</a>
+    </span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/delphi.min.js"></script>
+<script src="assets/site.js"></script>
+</body>
+</html>

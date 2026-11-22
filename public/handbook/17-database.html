@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>17. A database · Pastel</title>
+<meta name="description" content="Pastel: a modern cross-platform app framework and toolchain for Object Pascal. Desktop, phone, web and console apps from one codebase.">
+<script>
+  try { var t = localStorage.getItem('pastel-theme'); } catch (e) {}
+  document.documentElement.dataset.bsTheme = t || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hl-dark">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body class="section-docs">
+<nav class="navbar navbar-expand-lg sticky-top site-header">
+  <div class="container-fluid px-lg-4">
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="../index.html">
+      <span class="logo" aria-hidden="true"></span>Pastel
+    </a>
+        <button class="btn btn-sm btn-outline-secondary d-lg-none me-auto" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">Menu</button>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#top" aria-controls="top" aria-expanded="false" aria-label="Links">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="top">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link active" href="../docs.html">Docs</a></li>
+        <li class="nav-item"><a class="nav-link" href="../getting-started.html">Get started</a></li>
+        <li class="nav-item"><a class="nav-link " href="../download.html">Download</a></li>
+        <li class="nav-item"><a class="nav-link " href="../changelog.html">Changelog</a></li>
+      </ul>
+      <div class="search position-relative my-2 my-lg-0 me-lg-3">
+        <input id="search" class="form-control form-control-sm" type="search" placeholder="Search the docs  /" autocomplete="off" data-base="../" aria-label="Search the docs">
+        <div id="results" class="dropdown-menu shadow"></div>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        <button id="theme" class="btn btn-sm btn-outline-secondary" type="button" aria-label="Light or dark" title="Light or dark"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+        <a class="btn btn-sm btn-outline-secondary" href="https://github.com/azrov/pastel">GitHub</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-lg-4">
+  <div class="row">
+    <aside class="col-lg-3 col-xl-2 docs-sidebar">
+      <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+        <div class="offcanvas-header border-bottom">
+          <h5 class="offcanvas-title" id="sidebarLabel">Documentation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+          <nav class="docs-nav w-100">
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g0" aria-expanded="false">Start</button>
+              <div class="collapse " id="g0">
+                <a href="../readme.html">Overview</a>
+                <a href="../docs.html">All topics</a>
+                <a href="../getting-started.html">Getting started</a>
+                <a href="../commands.html">The pastel command</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start " type="button" data-bs-toggle="collapse" data-bs-target="#g1" aria-expanded="true">Handbook</button>
+              <div class="collapse show" id="g1">
+                <a href="../handbook/README.html">The Pastel Handbook</a>
+                <a href="../handbook/01-hello.html">1. Your first program</a>
+                <a href="../handbook/02-values.html">2. Values, types and variables</a>
+                <a href="../handbook/03-decisions-loops.html">3. Decisions and loops</a>
+                <a href="../handbook/04-routines.html">4. Procedures and functions</a>
+                <a href="../handbook/05-structured-types.html">5. Arrays, records, enumerations and sets</a>
+                <a href="../handbook/06-strings.html">6. Text</a>
+                <a href="../handbook/07-units.html">7. Units</a>
+                <a href="../handbook/08-classes.html">8. Classes and objects</a>
+                <a href="../handbook/09-exceptions.html">9. When things go wrong</a>
+                <a href="../handbook/10-generics.html">10. Lists, dictionaries and generics</a>
+                <a href="../handbook/11-files-json.html">11. Files and JSON</a>
+                <a href="../handbook/12-testing.html">12. Testing</a>
+                <a href="../handbook/13-interfaces.html">13. Interfaces and the command line</a>
+                <a href="../handbook/14-first-window.html">14. Your first window</a>
+                <a href="../handbook/15-layout.html">15. Layout</a>
+                <a href="../handbook/16-grids-and-dialogs.html">16. Grids and dialogs</a>
+                <a href="../handbook/17-database.html" class="current" aria-current="page">17. A database</a>
+                <a href="../handbook/18-charts-and-reports.html">18. Charts and reports</a>
+                <a href="../handbook/19-look-and-languages.html">19. Look and languages</a>
+                <a href="../handbook/20-background.html">20. Work in the background</a>
+                <a href="../handbook/21-phones.html">21. Phones</a>
+                <a href="../handbook/22-shipping.html">22. Shipping</a>
+                <a href="../handbook/appendix-a-cheat-sheet.html">Appendix A. Object Pascal at a glance</a>
+                <a href="../handbook/appendix-b-from-delphi.html">Appendix B. Coming from Delphi or Lazarus</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g2" aria-expanded="false">Guides</button>
+              <div class="collapse " id="g2">
+                <a href="../guide-cli.html">Writing a command-line tool</a>
+                <a href="../guide-api.html">A REST API with a database</a>
+                <a href="../guide-desktop.html">Building a desktop app</a>
+                <a href="../guide-business.html">A business system — desktop app and server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g3" aria-expanded="false">Desktop and phone apps</button>
+              <div class="collapse " id="g3">
+                <a href="../forms.html">Forms and controls</a>
+                <a href="../controls.html">Controls reference</a>
+                <a href="../styles.html">Styles: Fluent, Material and your own</a>
+                <a href="../components.html">Writing components</a>
+                <a href="../android.html">Android</a>
+                <a href="../device.html">The phone&#39;s features</a>
+                <a href="../java.html">Java from Pascal</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g4" aria-expanded="false">Programs and services</button>
+              <div class="collapse " id="g4">
+                <a href="../console.html">Console programs</a>
+                <a href="../data.html">JSON, settings and logging</a>
+                <a href="../documents.html">Reports, PDF, Excel and printing</a>
+                <a href="../system.html">Files, programs, HTTP and the environment</a>
+                <a href="../services.html">Services: programs that keep running</a>
+                <a href="../web.html">Web APIs and sites: Pastel.Web</a>
+                <a href="../websockets.html">WebSockets: Pastel.WebSocket</a>
+                <a href="../mail.html">E-mail: Pastel.Mail</a>
+                <a href="../pages.html">Web pages from templates</a>
+                <a href="../markdown.html">Markdown</a>
+                <a href="../database.html">Databases: Pastel.Db</a>
+                <a href="../sync.html">Data that works offline: Pastel.Sync</a>
+                <a href="../auth.html">Users and login: Pastel.Auth</a>
+                <a href="../security.html">Passwords, tokens and signatures: Pastel.Crypto, Pastel.Jwt</a>
+                <a href="../deploy.html">Deploying to a Linux server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g5" aria-expanded="false">Working with Pastel</button>
+              <div class="collapse " id="g5">
+                <a href="../project.html">The project file: pastel.toml</a>
+                <a href="../workflow.html">Everyday work: watch, format, libraries</a>
+                <a href="../packages.html">Packages</a>
+                <a href="../testing.html">Testing</a>
+                <a href="../vscode.html">Pastel for Visual Studio Code</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g6" aria-expanded="false">Reference</button>
+              <div class="collapse " id="g6">
+                <a href="../api/index.html">Pastel API reference</a>
+                <a href="../compatibility.html">Compatibility: what stays the same</a>
+                <a href="../performance.html">Performance</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g7" aria-expanded="false">Examples</button>
+              <div class="collapse " id="g7">
+                <a href="../examples/components-demo.html">components-demo</a>
+                <a href="../examples/components.html">components</a>
+                <a href="../examples/contacts.html">contacts</a>
+                <a href="../examples/dupfinder.html">dupfinder</a>
+                <a href="../examples/notepad.html">notepad</a>
+                <a href="../examples/notes-api.html">notes-api</a>
+                <a href="../examples/pocket-app.html">pocket-app</a>
+                <a href="../examples/pocket-cli.html">pocket-cli</a>
+                <a href="../examples/pocket-core.html">pocket-core</a>
+                <a href="../examples/salon-api.html">salon-api</a>
+                <a href="../examples/salon-core.html">salon-core</a>
+                <a href="../examples/salon-desk.html">salon-desk</a>
+                <a href="../examples/weather.html">weather</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g8" aria-expanded="false">Project</button>
+              <div class="collapse " id="g8">
+                <a href="../roadmap.html">Pastel roadmap to 1.0</a>
+                <a href="../changelog.html">Changelog</a>
+                <a href="../vscode-changelog.html">Changelog of the VS Code extension</a>
+                <a href="../contributing.html">Contributing to Pastel</a>
+                <a href="../security-policy.html">Security</a>
+                <a href="../code-of-conduct.html">Code of conduct</a>
+                <a href="../announcing-1.0.html">Announcing Pastel 1.0</a>
+              </div>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </aside>
+    <main class="col-12 col-lg-9 col-xl-8 docs-main">
+      <article class="markdown">
+<h1 id="17-a-database"><a class="anchor" href="#17-a-database">#</a>17. A database</h1>
+<p>Chapter 11 kept Pocket's entries in a JSON file: read everything when the program starts, write everything when it
+changes. That is fine for a hundred entries. An app that is changed every day, by a click here and a delete there,
+wants a <strong>database</strong>: it writes only what changed, it cannot be left half-written when the battery dies, and it finds
+the rows you ask for without reading the rest.</p>
+<h2 id="sql-in-one-page"><a class="anchor" href="#sql-in-one-page">#</a>SQL in one page</h2>
+<p>A relational database keeps <strong>tables</strong>: rows with the same columns, like a sheet. You talk to it in <strong>SQL</strong>, a
+language of its own:</p>
+<pre><code class="language-sql">create table entries (id integer primary key, day varchar(10), category varchar(100), amount decimal(14,2));
+insert into entries (day, category, amount) values ('2026-11-03', 'Food', 12.50);
+select category, amount from entries where day &gt;= '2026-11-01' order by amount desc;
+update entries set amount = 13 where id = 1;
+delete from entries where id = 1;
+</code></pre>
+<p><code>primary key</code> makes <code>id</code> the row's number, given by the database. <code>where</code> chooses rows, <code>order by</code> sorts them.
+Dates as <code>YYYY-MM-DD</code> text sort in the right order — the reason Pocket stores them that way.</p>
+<h2 id="pasteldb"><a class="anchor" href="#pasteldb">#</a>Pastel.Db</h2>
+<p><code>Pastel.Db</code> speaks to <strong>SQLite</strong> (a database in one file, nothing to install), <strong>PostgreSQL</strong> and <strong>MySQL</strong> with the
+same code. A <code>TDatabase</code> is opened from an address:</p>
+<pre><code class="language-pascal">program Ledger;
+
+{$mode objfpc}{$H+}
+
+uses
+  SysUtils, fpjson, Pastel.Db, Pastel.Json;
+
+var
+  Db: TDatabase;
+  Rows: TJSONArray;
+  I: Integer;
+  Id: Int64;
+begin
+  Db := TDatabase.Open('sqlite::memory:');      // in memory; 'sqlite:pocket.db' is a file
+  try
+    Db.Exec('create table entries (id integer primary key, day varchar(10), ' +
+      'category varchar(100), amount decimal(14,2))', []);
+    Db.Insert('insert into entries (day, category, amount) values (?, ?, ?)', ['2026-11-03', 'Food', 12.5]);
+    Db.Insert('insert into entries (day, category, amount) values (?, ?, ?)', ['2026-11-04', 'Rent', 650]);
+    Id := Db.Insert('insert into entries (day, category, amount) values (?, ?, ?)', ['2026-11-04', 'Food', 8.2]);
+    WriteLn('The last entry got the id ', Id);
+
+    Rows := Db.Query('select category, sum(amount) as total from entries group by category order by total desc', []);
+    try
+      for I := 0 to Rows.Count - 1 do
+        WriteLn(Format('%-6s %8.2f', [JStr(Rows.Items[I], 'category'), JFloat(Rows.Items[I], 'total')]));
+    finally
+      Rows.Free;
+    end;
+
+    WriteLn('Entries for food: ', Db.QueryInt('select count(*) from entries where category = ?', ['Food'], 0));
+    WriteLn('Changed: ', Db.Exec('update entries set amount = amount + 1 where category = ?', ['Food']));
+  finally
+    Db.Free;
+  end;
+end.
+</code></pre>
+<pre><code class="language-output">The last entry got the id 3
+Rent     650.00
+Food      20.70
+Entries for food: 2
+Changed: 2
+</code></pre>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Db.Exec(SQL, [values])</code></td>
+<td><code>create</code>, <code>update</code>, <code>delete</code>: the number of rows changed</td>
+</tr>
+<tr>
+<td><code>Db.Insert(SQL, [values])</code></td>
+<td>an <code>insert</code>: the new row's id</td>
+</tr>
+<tr>
+<td><code>Db.Query(SQL, [values])</code></td>
+<td>the rows, as a <code>TJSONArray</code> of objects (chapter 11) — <strong>you free it</strong></td>
+</tr>
+<tr>
+<td><code>Db.QueryOne(SQL, [values])</code></td>
+<td>the first row, or <code>nil</code></td>
+</tr>
+<tr>
+<td><code>Db.QueryInt</code>, <code>Db.QueryValue</code></td>
+<td>the first column of the first row, as a number or a text</td>
+</tr>
+</tbody></table>
+<h3 id="values-go-in-as"><a class="anchor" href="#values-go-in-as">#</a>Values go in as <code>?</code></h3>
+<p>Never build SQL with <code>+</code>:</p>
+<pre><code class="language-pascal">Db.Exec('delete from entries where category = ''' + Name + '''', []);   // NO
+Db.Exec('delete from entries where category = ?', [Name]);              // yes
+</code></pre>
+<p>If <code>Name</code> came from a field and someone typed <code>x' or '1'='1</code>, the first line deletes every row. With <code>?</code> the value
+is sent apart from the SQL and is only ever a value. This mistake — <em>SQL injection</em> — is one of the most common
+security holes there is; <code>?</code> rules it out.</p>
+<h2 id="pockets-store-in-a-database"><a class="anchor" href="#pockets-store-in-a-database">#</a>Pocket's store in a database</h2>
+<p>Chapter 13 made <code>IEntryStore</code> an interface so that the place the entries are kept can change. Here is the third
+store, built on a database:</p>
+<!-- file: examples/pocket-core/src/pocketdbstore.pas -->
+<pre><code class="language-pascal">{ The entries in a database (SQLite in the app; PostgreSQL or MySQL work the
+  same). One more IEntryStore: the code that uses a store does not change.
+
+    Store := TDbStore.Create('sqlite:' + JoinPath([DataDir, 'pocket.db']));
+    Store.Load(Entries);
+
+  Besides Load and Save (everything at once) it keeps one entry at a time:
+  Put (new or changed) and Remove - what an app does after every edit.
+
+  Handbook: chapter 17 (databases). }
+unit PocketDbStore;
+
+{$mode objfpc}{$H+}
+
+interface
+
+uses
+  SysUtils, Pastel.Db, PocketEntries, PocketStore;
+
+type
+  TDbStore = class(TInterfacedObject, IEntryStore)
+  private
+    FDb: TDatabase;
+  public
+    { 'sqlite:pocket.db', 'sqlite::memory:', 'postgres://...'; the table is made when missing. }
+    constructor Create(const Url: string);
+    destructor Destroy; override;
+    procedure Load(Entries: TEntryList);
+    procedure Save(Entries: TEntryList);
+    function Where: string;
+    { One entry: a new one (Id 0) gets its id; a changed one is written over. }
+    procedure Put(E: TEntry);
+    procedure Remove(AId: Int64);
+    property Db: TDatabase read FDb;
+  end;
+
+implementation
+
+uses
+  fpjson, Pastel.Json;
+
+constructor TDbStore.Create(const Url: string);
+begin
+  inherited Create;
+  FDb := TDatabase.Open(Url);
+  FDb.Exec('create table if not exists entries (' +
+    'id integer primary key, ' +
+    'day varchar(10) not null, ' +
+    'kind varchar(10) not null, ' +
+    'category varchar(100) not null, ' +
+    'amount decimal(14,2) not null, ' +
+    'note varchar(500) not null default '''')', []);
+end;
+
+destructor TDbStore.Destroy;
+begin
+  FDb.Free;
+  inherited Destroy;
+end;
+
+function TDbStore.Where: string;
+begin
+  Result := FDb.SafeUrl;
+end;
+
+procedure TDbStore.Load(Entries: TEntryList);
+var
+  Rows: TJSONArray;
+  Row: TJSONData;
+  Kind: TEntryKind;
+  E: TEntry;
+  I: Integer;
+begin
+  Entries.Clear;
+  Rows := FDb.Query('select id, day, kind, category, amount, note from entries order by day desc, id desc', []);
+  try
+    for I := 0 to Rows.Count - 1 do
+    begin
+      Row := Rows.Items[I];
+      TryParseKind(JStr(Row, 'kind'), Kind);
+      E := Entries.AddEntry(IsoToDate(JStr(Row, 'day')), Kind, JStr(Row, 'category'),
+        JFloat(Row, 'amount'), JStr(Row, 'note'));
+      E.Id := JInt(Row, 'id');
+    end;
+  finally
+    Rows.Free;
+  end;
+end;
+
+procedure PutIn(S: TDbSession; E: TEntry);
+begin
+  if E.Id = 0 then
+    E.Id := S.Insert('insert into entries (day, kind, category, amount, note) values (?, ?, ?, ?, ?)',
+      [DateToIso(E.Date), KindName(E.Kind), E.Category, Double(E.Amount), E.Note])
+  else if S.Exec('update entries set day = ?, kind = ?, category = ?, amount = ?, note = ? where id = ?',
+    [DateToIso(E.Date), KindName(E.Kind), E.Category, Double(E.Amount), E.Note, E.Id]) = 0 then
+    { an id from somewhere else (a JSON file): kept with it }
+    S.Exec('insert into entries (id, day, kind, category, amount, note) values (?, ?, ?, ?, ?, ?)',
+      [E.Id, DateToIso(E.Date), KindName(E.Kind), E.Category, Double(E.Amount), E.Note]);
+end;
+
+procedure TDbStore.Put(E: TEntry);
+begin
+  PutIn(FDb, E);
+end;
+
+procedure TDbStore.Remove(AId: Int64);
+begin
+  FDb.Exec('delete from entries where id = ?', [AId]);
+end;
+
+procedure TDbStore.Save(Entries: TEntryList);
+var
+  Tx: TDbTransaction;
+  E: TEntry;
+begin
+  { all or nothing: a failure halfway leaves the table as it was }
+  Tx := FDb.BeginTransaction;
+  try
+    Tx.Exec('delete from entries', []);
+    for E in Entries do
+    begin
+      if E.Id &lt;&gt; 0 then
+        Tx.Exec('insert into entries (id, day, kind, category, amount, note) values (?, ?, ?, ?, ?, ?)',
+          [E.Id, DateToIso(E.Date), KindName(E.Kind), E.Category, Double(E.Amount), E.Note])
+      else
+        PutIn(Tx, E);
+    end;
+    Tx.Commit;
+  finally
+    Tx.Free;
+  end;
+end;
+
+end.
+</code></pre>
+<p>Points to look at:</p>
+<ul>
+<li><strong>The table is made when missing</strong> (<code>create table if not exists</code>), so a new app on a new phone starts with an
+empty table. A bigger app uses <em>migrations</em> — numbered SQL files run once each, in order (<a href="../database.html#migrations-the-tables">database.md</a>).</li>
+<li><strong><code>Load</code> reads the rows back as JSON</strong>, with <code>JStr</code>, <code>JFloat</code> and <code>JInt</code> from chapter 11.</li>
+<li><strong><code>Put</code> writes one entry</strong>: an <code>insert</code> for a new one, which gives it its id, an <code>update</code> for a changed one. The app
+calls it after every edit, so nothing is lost if the app is closed or killed.</li>
+<li><strong><code>Save</code> uses a transaction</strong>: everything between <code>BeginTransaction</code> and <code>Commit</code> happens together or not at all.
+If writing the 500th entry fails, the <code>finally</code> frees the transaction without <code>Commit</code> and the table is as it was
+— never half old and half new.</li>
+<li><code>PutIn</code> takes a <code>TDbSession</code>: both <code>TDatabase</code> and <code>TDbTransaction</code> are one, so the same code writes inside a
+transaction or outside it.</li>
+</ul>
+<p>Because it is an <code>IEntryStore</code>, <code>pocket-cli</code> could use it with no change but one line — try exercise 1.</p>
+<h2 id="where-the-file-lives"><a class="anchor" href="#where-the-file-lives">#</a>Where the file lives</h2>
+<p>The app must keep its database where it may write, and where the user's files are not:</p>
+<!-- part of: examples/pocket-app/src/forms/Home.pas -->
+<pre><code class="language-pascal">{ Where the entries are kept: POCKET_DB, or pocket.db in the app's own folder. }
+function DatabaseUrl: string;
+
+implementation
+
+uses
+  DateUtils, Pastel.Env, Pastel.Lang, Pastel.Device, Pastel.Print, Pastel.Report, Pastel.Sheets, Pastel.Workers,
+  PocketReports, PocketStore, PocketImport, EntryEditor;
+
+type
+  { what the import in the background needs, and what it leaves for ImportDone }
+  TImportJob = class
+    FileName: string;
+    Entries: TEntryList;       { the file's entries; given to the main list in ImportDone }
+    constructor Create(const AFileName: string);
+    destructor Destroy; override;
+  end;
+
+constructor TImportJob.Create(const AFileName: string);
+begin
+  inherited Create;
+  FileName := AFileName;
+  Entries := TEntryList.Create;
+end;
+</code></pre>
+<p><code>GetAppConfigDir</code> is the app's own folder — <code>~/.config/pocket-app</code> on Linux, <code>AppData\Local\pocket-app</code> on Windows.
+An Android app has a private folder of its own and starts in it, so a plain name is enough there. <code>{$IFDEF ANDROID}</code>
+compiles a part only for one platform; use it sparingly, for the few places where platforms really differ.</p>
+<p>The environment variable <code>POCKET_DB</code> overrides the place. The app's tests use it to start with a database of their
+own — <code>sqlite::memory:</code> or a file in a temporary folder — and never touch the real one.</p>
+<h2 id="exercises"><a class="anchor" href="#exercises">#</a>Exercises</h2>
+<ol>
+<li>Give <code>pocket-cli</code> a <code>--db</code> option: with it, the command line keeps its entries in a <code>TDbStore</code> instead of the
+JSON file.</li>
+<li>Write a <code>select</code> that gives the month's expenses by category straight from the database (<code>group by</code>, <code>where day like '2026-11-%'</code>). Compare it with <code>TotalsByCategory</code>.</li>
+<li>Try the <code>delete</code> with <code>+</code> from above on a table of your own, with the evil name. Then with <code>?</code>.</li>
+<li>★ Add a column <code>account</code> to the table without losing the entries of people who already have the app. (Hint:
+<code>alter table</code>, and how would the app know whether the column is there?)</li>
+</ol>
+<p>Next: <a href="../handbook/18-charts-and-reports.html">18. Charts and reports</a></p>
+
+      </article>
+      <p class="edit mt-5"><a href="https://github.com/azrov/pastel/edit/main/docs/handbook/17-database.md">Improve this page on GitHub</a></p>
+    </main>
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <div class="sticky">
+        <div class="toc-title">On this page</div>
+        <a href="#sql-in-one-page">SQL in one page</a>
+        <a href="#pasteldb">Pastel.Db</a>
+        <a href="#pockets-store-in-a-database">Pocket&#39;s store in a database</a>
+        <a href="#where-the-file-lives">Where the file lives</a>
+        <a href="#exercises">Exercises</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer py-4 mt-5">
+  <div class="container d-flex flex-wrap gap-3 justify-content-between small text-body-secondary">
+    <span>Pastel 2.1.0-beta.4 · MIT License · built with Pastel.Markdown and Pastel.Pages</span>
+    <span class="d-flex gap-3">
+      <a href="../docs.html">Documentation</a>
+      <a href="../download.html">Download</a>
+      <a href="../contributing.html">Contributing</a>
+      <a href="https://github.com/azrov/pastel">GitHub</a>
+    </span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/delphi.min.js"></script>
+<script src="../assets/site.js"></script>
+</body>
+</html>

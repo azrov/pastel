@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Testing · Pastel</title>
+<meta name="description" content="Pastel: a modern cross-platform app framework and toolchain for Object Pascal. Desktop, phone, web and console apps from one codebase.">
+<script>
+  try { var t = localStorage.getItem('pastel-theme'); } catch (e) {}
+  document.documentElement.dataset.bsTheme = t || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hl-dark">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body class="section-docs">
+<nav class="navbar navbar-expand-lg sticky-top site-header">
+  <div class="container-fluid px-lg-4">
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="index.html">
+      <span class="logo" aria-hidden="true"></span>Pastel
+    </a>
+        <button class="btn btn-sm btn-outline-secondary d-lg-none me-auto" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">Menu</button>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#top" aria-controls="top" aria-expanded="false" aria-label="Links">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="top">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link active" href="docs.html">Docs</a></li>
+        <li class="nav-item"><a class="nav-link" href="getting-started.html">Get started</a></li>
+        <li class="nav-item"><a class="nav-link " href="download.html">Download</a></li>
+        <li class="nav-item"><a class="nav-link " href="changelog.html">Changelog</a></li>
+      </ul>
+      <div class="search position-relative my-2 my-lg-0 me-lg-3">
+        <input id="search" class="form-control form-control-sm" type="search" placeholder="Search the docs  /" autocomplete="off" data-base="" aria-label="Search the docs">
+        <div id="results" class="dropdown-menu shadow"></div>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        <button id="theme" class="btn btn-sm btn-outline-secondary" type="button" aria-label="Light or dark" title="Light or dark"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+        <a class="btn btn-sm btn-outline-secondary" href="https://github.com/azrov/pastel">GitHub</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-lg-4">
+  <div class="row">
+    <aside class="col-lg-3 col-xl-2 docs-sidebar">
+      <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+        <div class="offcanvas-header border-bottom">
+          <h5 class="offcanvas-title" id="sidebarLabel">Documentation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+          <nav class="docs-nav w-100">
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g0" aria-expanded="false">Start</button>
+              <div class="collapse " id="g0">
+                <a href="readme.html">Overview</a>
+                <a href="docs.html">All topics</a>
+                <a href="getting-started.html">Getting started</a>
+                <a href="commands.html">The pastel command</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g1" aria-expanded="false">Handbook</button>
+              <div class="collapse " id="g1">
+                <a href="handbook/README.html">The Pastel Handbook</a>
+                <a href="handbook/01-hello.html">1. Your first program</a>
+                <a href="handbook/02-values.html">2. Values, types and variables</a>
+                <a href="handbook/03-decisions-loops.html">3. Decisions and loops</a>
+                <a href="handbook/04-routines.html">4. Procedures and functions</a>
+                <a href="handbook/05-structured-types.html">5. Arrays, records, enumerations and sets</a>
+                <a href="handbook/06-strings.html">6. Text</a>
+                <a href="handbook/07-units.html">7. Units</a>
+                <a href="handbook/08-classes.html">8. Classes and objects</a>
+                <a href="handbook/09-exceptions.html">9. When things go wrong</a>
+                <a href="handbook/10-generics.html">10. Lists, dictionaries and generics</a>
+                <a href="handbook/11-files-json.html">11. Files and JSON</a>
+                <a href="handbook/12-testing.html">12. Testing</a>
+                <a href="handbook/13-interfaces.html">13. Interfaces and the command line</a>
+                <a href="handbook/14-first-window.html">14. Your first window</a>
+                <a href="handbook/15-layout.html">15. Layout</a>
+                <a href="handbook/16-grids-and-dialogs.html">16. Grids and dialogs</a>
+                <a href="handbook/17-database.html">17. A database</a>
+                <a href="handbook/18-charts-and-reports.html">18. Charts and reports</a>
+                <a href="handbook/19-look-and-languages.html">19. Look and languages</a>
+                <a href="handbook/20-background.html">20. Work in the background</a>
+                <a href="handbook/21-phones.html">21. Phones</a>
+                <a href="handbook/22-shipping.html">22. Shipping</a>
+                <a href="handbook/appendix-a-cheat-sheet.html">Appendix A. Object Pascal at a glance</a>
+                <a href="handbook/appendix-b-from-delphi.html">Appendix B. Coming from Delphi or Lazarus</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g2" aria-expanded="false">Guides</button>
+              <div class="collapse " id="g2">
+                <a href="guide-cli.html">Writing a command-line tool</a>
+                <a href="guide-api.html">A REST API with a database</a>
+                <a href="guide-desktop.html">Building a desktop app</a>
+                <a href="guide-business.html">A business system — desktop app and server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g3" aria-expanded="false">Desktop and phone apps</button>
+              <div class="collapse " id="g3">
+                <a href="forms.html">Forms and controls</a>
+                <a href="controls.html">Controls reference</a>
+                <a href="styles.html">Styles: Fluent, Material and your own</a>
+                <a href="components.html">Writing components</a>
+                <a href="android.html">Android</a>
+                <a href="device.html">The phone&#39;s features</a>
+                <a href="java.html">Java from Pascal</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g4" aria-expanded="false">Programs and services</button>
+              <div class="collapse " id="g4">
+                <a href="console.html">Console programs</a>
+                <a href="data.html">JSON, settings and logging</a>
+                <a href="documents.html">Reports, PDF, Excel and printing</a>
+                <a href="system.html">Files, programs, HTTP and the environment</a>
+                <a href="services.html">Services: programs that keep running</a>
+                <a href="web.html">Web APIs and sites: Pastel.Web</a>
+                <a href="websockets.html">WebSockets: Pastel.WebSocket</a>
+                <a href="mail.html">E-mail: Pastel.Mail</a>
+                <a href="pages.html">Web pages from templates</a>
+                <a href="markdown.html">Markdown</a>
+                <a href="database.html">Databases: Pastel.Db</a>
+                <a href="sync.html">Data that works offline: Pastel.Sync</a>
+                <a href="auth.html">Users and login: Pastel.Auth</a>
+                <a href="security.html">Passwords, tokens and signatures: Pastel.Crypto, Pastel.Jwt</a>
+                <a href="deploy.html">Deploying to a Linux server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start " type="button" data-bs-toggle="collapse" data-bs-target="#g5" aria-expanded="true">Working with Pastel</button>
+              <div class="collapse show" id="g5">
+                <a href="project.html">The project file: pastel.toml</a>
+                <a href="workflow.html">Everyday work: watch, format, libraries</a>
+                <a href="packages.html">Packages</a>
+                <a href="testing.html" class="current" aria-current="page">Testing</a>
+                <a href="vscode.html">Pastel for Visual Studio Code</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g6" aria-expanded="false">Reference</button>
+              <div class="collapse " id="g6">
+                <a href="api/index.html">Pastel API reference</a>
+                <a href="compatibility.html">Compatibility: what stays the same</a>
+                <a href="performance.html">Performance</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g7" aria-expanded="false">Examples</button>
+              <div class="collapse " id="g7">
+                <a href="examples/components-demo.html">components-demo</a>
+                <a href="examples/components.html">components</a>
+                <a href="examples/contacts.html">contacts</a>
+                <a href="examples/dupfinder.html">dupfinder</a>
+                <a href="examples/notepad.html">notepad</a>
+                <a href="examples/notes-api.html">notes-api</a>
+                <a href="examples/pocket-app.html">pocket-app</a>
+                <a href="examples/pocket-cli.html">pocket-cli</a>
+                <a href="examples/pocket-core.html">pocket-core</a>
+                <a href="examples/salon-api.html">salon-api</a>
+                <a href="examples/salon-core.html">salon-core</a>
+                <a href="examples/salon-desk.html">salon-desk</a>
+                <a href="examples/weather.html">weather</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g8" aria-expanded="false">Project</button>
+              <div class="collapse " id="g8">
+                <a href="roadmap.html">Pastel roadmap to 1.0</a>
+                <a href="changelog.html">Changelog</a>
+                <a href="vscode-changelog.html">Changelog of the VS Code extension</a>
+                <a href="contributing.html">Contributing to Pastel</a>
+                <a href="security-policy.html">Security</a>
+                <a href="code-of-conduct.html">Code of conduct</a>
+                <a href="announcing-1.0.html">Announcing Pastel 1.0</a>
+              </div>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </aside>
+    <main class="col-12 col-lg-9 col-xl-8 docs-main">
+      <article class="markdown">
+<h1 id="testing"><a class="anchor" href="#testing">#</a>Testing</h1>
+<p>Tests live in the <code>tests/</code> folder of a project. Run them with:</p>
+<pre><code class="language-sh">pastel test                # all tests
+pastel test greeting       # only tests whose suite or name contains &quot;greeting&quot;
+pastel test --json         # results as JSON, for editors and CI tools
+</code></pre>
+<p><code>pastel test</code> builds every unit in <code>tests/</code> into one test program, together with your project's own units, and runs it. The exit code is 1 when a test fails, so it works in CI as is. In VS Code: <em>Pastel: Run Tests</em>, or <em>Run Tests</em> in the Pastel panel.</p>
+<h2 id="writing-tests"><a class="anchor" href="#writing-tests">#</a>Writing tests</h2>
+<p>A test file is a unit. Each published method of a <code>TTestSuite</code> class is one test:</p>
+<pre><code class="language-pascal">unit Greeting_Test;
+
+{$mode objfpc}{$H+}
+
+interface
+
+uses
+  Pastel.Testing, Greeting;
+
+type
+  TGreetingTests = class(TTestSuite)
+  published
+    procedure GreetsByName;
+    procedure EmptyNameGreetsTheWorld;
+  end;
+
+implementation
+
+procedure TGreetingTests.GreetsByName;
+begin
+  AssertEquals('Hello, Ali!', MakeGreeting('Ali'));
+end;
+
+procedure TGreetingTests.EmptyNameGreetsTheWorld;
+begin
+  AssertStartsWith('Hello, world', MakeGreeting(''));
+end;
+
+initialization
+  RegisterTests(TGreetingTests);
+end.
+</code></pre>
+<p>Method names become readable test names: <code>GreetsByName</code> is shown as &quot;greets by name&quot;, and the suite <code>TGreetingTests</code> as &quot;Greeting&quot;.</p>
+<pre><code>Greeting
+  PASS greets by name (0 ms)
+  FAIL empty name greets the world
+       expected &quot;Hello, !&quot; to start with &quot;Hello, world&quot;
+       at tests/greeting_test.pas:24
+
+Tests: 1 failed, 1 passed, 2 total (1 ms)
+</code></pre>
+<p>A failing assert shows the file and line of the test. An unexpected exception is reported as an error with its class, message and line.</p>
+<h3 id="set-up-and-tear-down"><a class="anchor" href="#set-up-and-tear-down">#</a>Set up and tear down</h3>
+<p>Override <code>SetUp</code> and <code>TearDown</code> to prepare and clean up for every test. Each test gets a fresh suite object, so fields start empty in every test.</p>
+<pre><code class="language-pascal">type
+  TStoreTests = class(TTestSuite)
+  private
+    FStore: TStore;
+  public
+    procedure SetUp; override;
+    procedure TearDown; override;
+  published
+    procedure AddsItems;
+  end;
+
+procedure TStoreTests.SetUp;
+begin
+  FStore := TStore.Create;
+end;
+
+procedure TStoreTests.TearDown;
+begin
+  FStore.Free;
+end;
+</code></pre>
+<h3 id="tests-without-a-class"><a class="anchor" href="#tests-without-a-class">#</a>Tests without a class</h3>
+<p>For a quick check, a plain procedure works too:</p>
+<pre><code class="language-pascal">procedure AddsNumbers;
+begin
+  AssertEquals(4, 2 + 2);
+end;
+
+initialization
+  Test('adds numbers', @AddsNumbers);
+</code></pre>
+<h2 id="asserts"><a class="anchor" href="#asserts">#</a>Asserts</h2>
+<table>
+<thead>
+<tr>
+<th>Assert</th>
+<th>Passes when</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>AssertTrue(Cond)</code> / <code>AssertFalse(Cond)</code></td>
+<td>the condition is true / false</td>
+</tr>
+<tr>
+<td><code>AssertEquals(Expected, Actual)</code></td>
+<td>equal; for text, whole numbers, booleans and floating point numbers (with an optional <code>Delta</code>)</td>
+</tr>
+<tr>
+<td><code>AssertNotEquals(NotExpected, Actual)</code></td>
+<td>different (text, whole numbers)</td>
+</tr>
+<tr>
+<td><code>AssertContains(Part, Actual)</code></td>
+<td><code>Actual</code> contains <code>Part</code></td>
+</tr>
+<tr>
+<td><code>AssertStartsWith(Prefix, Actual)</code></td>
+<td><code>Actual</code> starts with <code>Prefix</code></td>
+</tr>
+<tr>
+<td><code>AssertNil(P)</code> / <code>AssertNotNil(P)</code></td>
+<td>the pointer or object is / is not nil</td>
+</tr>
+<tr>
+<td><code>AssertRaises(EClass, @Proc)</code></td>
+<td>calling <code>Proc</code> raises <code>EClass</code> (or a descendant); <code>Proc</code> can be a method of the suite</td>
+</tr>
+<tr>
+<td><code>Fail(Msg)</code></td>
+<td>never: fails with a message</td>
+</tr>
+<tr>
+<td><code>Skip(Reason)</code></td>
+<td>never: marks the test as skipped</td>
+</tr>
+</tbody></table>
+<p>Every assert takes an optional last argument with your own message, shown next to the failure.</p>
+<h2 id="good-to-know"><a class="anchor" href="#good-to-know">#</a>Good to know</h2>
+<ul>
+<li>Tests are compiled in debug mode with range and overflow checks, so mistakes like reading past the end of an array show up as errors.</li>
+<li>The define <code>PASTEL_TEST</code> is set while compiling tests: <code>{$IFDEF PASTEL_TEST} ... {$ENDIF}</code>.</li>
+<li>The test program is built in <code>build/&lt;platform&gt;/test/</code>; you never need to touch it.</li>
+</ul>
+<h2 id="in-vs-code"><a class="anchor" href="#in-vs-code">#</a>In VS Code</h2>
+<p>With the Pastel extension, the <strong>Testing</strong> view (the flask icon) lists every test of the project: files, suites and tests, read from <code>tests/</code> as you type. Click ▶ next to a test, a suite, a file or the whole project to run it; a failed test shows its message at the line of the failing assert. The debug icon runs the chosen tests in the debugger, so a breakpoint in the test or in the code it tests stops there.</p>
+<p>Behind the scenes this is <code>pastel test --json</code>, with exact names to run single tests:</p>
+<pre><code class="language-sh">pastel test =TGreetingTests.GreetsByName   # exactly this test
+pastel test --no-run                       # only build; prints the test program's path
+</code></pre>
+
+      </article>
+      <p class="edit mt-5"><a href="https://github.com/azrov/pastel/edit/main/docs/testing.md">Improve this page on GitHub</a></p>
+    </main>
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <div class="sticky">
+        <div class="toc-title">On this page</div>
+        <a href="#writing-tests">Writing tests</a>
+        <a href="#asserts">Asserts</a>
+        <a href="#good-to-know">Good to know</a>
+        <a href="#in-vs-code">In VS Code</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer py-4 mt-5">
+  <div class="container d-flex flex-wrap gap-3 justify-content-between small text-body-secondary">
+    <span>Pastel 2.1.0-beta.4 · MIT License · built with Pastel.Markdown and Pastel.Pages</span>
+    <span class="d-flex gap-3">
+      <a href="docs.html">Documentation</a>
+      <a href="download.html">Download</a>
+      <a href="contributing.html">Contributing</a>
+      <a href="https://github.com/azrov/pastel">GitHub</a>
+    </span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/delphi.min.js"></script>
+<script src="assets/site.js"></script>
+</body>
+</html>

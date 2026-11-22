@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>7. Units · Pastel</title>
+<meta name="description" content="Pastel: a modern cross-platform app framework and toolchain for Object Pascal. Desktop, phone, web and console apps from one codebase.">
+<script>
+  try { var t = localStorage.getItem('pastel-theme'); } catch (e) {}
+  document.documentElement.dataset.bsTheme = t || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hl-dark">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body class="section-docs">
+<nav class="navbar navbar-expand-lg sticky-top site-header">
+  <div class="container-fluid px-lg-4">
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="../index.html">
+      <span class="logo" aria-hidden="true"></span>Pastel
+    </a>
+        <button class="btn btn-sm btn-outline-secondary d-lg-none me-auto" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">Menu</button>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#top" aria-controls="top" aria-expanded="false" aria-label="Links">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="top">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link active" href="../docs.html">Docs</a></li>
+        <li class="nav-item"><a class="nav-link" href="../getting-started.html">Get started</a></li>
+        <li class="nav-item"><a class="nav-link " href="../download.html">Download</a></li>
+        <li class="nav-item"><a class="nav-link " href="../changelog.html">Changelog</a></li>
+      </ul>
+      <div class="search position-relative my-2 my-lg-0 me-lg-3">
+        <input id="search" class="form-control form-control-sm" type="search" placeholder="Search the docs  /" autocomplete="off" data-base="../" aria-label="Search the docs">
+        <div id="results" class="dropdown-menu shadow"></div>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        <button id="theme" class="btn btn-sm btn-outline-secondary" type="button" aria-label="Light or dark" title="Light or dark"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+        <a class="btn btn-sm btn-outline-secondary" href="https://github.com/azrov/pastel">GitHub</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-lg-4">
+  <div class="row">
+    <aside class="col-lg-3 col-xl-2 docs-sidebar">
+      <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+        <div class="offcanvas-header border-bottom">
+          <h5 class="offcanvas-title" id="sidebarLabel">Documentation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+          <nav class="docs-nav w-100">
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g0" aria-expanded="false">Start</button>
+              <div class="collapse " id="g0">
+                <a href="../readme.html">Overview</a>
+                <a href="../docs.html">All topics</a>
+                <a href="../getting-started.html">Getting started</a>
+                <a href="../commands.html">The pastel command</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start " type="button" data-bs-toggle="collapse" data-bs-target="#g1" aria-expanded="true">Handbook</button>
+              <div class="collapse show" id="g1">
+                <a href="../handbook/README.html">The Pastel Handbook</a>
+                <a href="../handbook/01-hello.html">1. Your first program</a>
+                <a href="../handbook/02-values.html">2. Values, types and variables</a>
+                <a href="../handbook/03-decisions-loops.html">3. Decisions and loops</a>
+                <a href="../handbook/04-routines.html">4. Procedures and functions</a>
+                <a href="../handbook/05-structured-types.html">5. Arrays, records, enumerations and sets</a>
+                <a href="../handbook/06-strings.html">6. Text</a>
+                <a href="../handbook/07-units.html" class="current" aria-current="page">7. Units</a>
+                <a href="../handbook/08-classes.html">8. Classes and objects</a>
+                <a href="../handbook/09-exceptions.html">9. When things go wrong</a>
+                <a href="../handbook/10-generics.html">10. Lists, dictionaries and generics</a>
+                <a href="../handbook/11-files-json.html">11. Files and JSON</a>
+                <a href="../handbook/12-testing.html">12. Testing</a>
+                <a href="../handbook/13-interfaces.html">13. Interfaces and the command line</a>
+                <a href="../handbook/14-first-window.html">14. Your first window</a>
+                <a href="../handbook/15-layout.html">15. Layout</a>
+                <a href="../handbook/16-grids-and-dialogs.html">16. Grids and dialogs</a>
+                <a href="../handbook/17-database.html">17. A database</a>
+                <a href="../handbook/18-charts-and-reports.html">18. Charts and reports</a>
+                <a href="../handbook/19-look-and-languages.html">19. Look and languages</a>
+                <a href="../handbook/20-background.html">20. Work in the background</a>
+                <a href="../handbook/21-phones.html">21. Phones</a>
+                <a href="../handbook/22-shipping.html">22. Shipping</a>
+                <a href="../handbook/appendix-a-cheat-sheet.html">Appendix A. Object Pascal at a glance</a>
+                <a href="../handbook/appendix-b-from-delphi.html">Appendix B. Coming from Delphi or Lazarus</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g2" aria-expanded="false">Guides</button>
+              <div class="collapse " id="g2">
+                <a href="../guide-cli.html">Writing a command-line tool</a>
+                <a href="../guide-api.html">A REST API with a database</a>
+                <a href="../guide-desktop.html">Building a desktop app</a>
+                <a href="../guide-business.html">A business system — desktop app and server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g3" aria-expanded="false">Desktop and phone apps</button>
+              <div class="collapse " id="g3">
+                <a href="../forms.html">Forms and controls</a>
+                <a href="../controls.html">Controls reference</a>
+                <a href="../styles.html">Styles: Fluent, Material and your own</a>
+                <a href="../components.html">Writing components</a>
+                <a href="../android.html">Android</a>
+                <a href="../device.html">The phone&#39;s features</a>
+                <a href="../java.html">Java from Pascal</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g4" aria-expanded="false">Programs and services</button>
+              <div class="collapse " id="g4">
+                <a href="../console.html">Console programs</a>
+                <a href="../data.html">JSON, settings and logging</a>
+                <a href="../documents.html">Reports, PDF, Excel and printing</a>
+                <a href="../system.html">Files, programs, HTTP and the environment</a>
+                <a href="../services.html">Services: programs that keep running</a>
+                <a href="../web.html">Web APIs and sites: Pastel.Web</a>
+                <a href="../websockets.html">WebSockets: Pastel.WebSocket</a>
+                <a href="../mail.html">E-mail: Pastel.Mail</a>
+                <a href="../pages.html">Web pages from templates</a>
+                <a href="../markdown.html">Markdown</a>
+                <a href="../database.html">Databases: Pastel.Db</a>
+                <a href="../sync.html">Data that works offline: Pastel.Sync</a>
+                <a href="../auth.html">Users and login: Pastel.Auth</a>
+                <a href="../security.html">Passwords, tokens and signatures: Pastel.Crypto, Pastel.Jwt</a>
+                <a href="../deploy.html">Deploying to a Linux server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g5" aria-expanded="false">Working with Pastel</button>
+              <div class="collapse " id="g5">
+                <a href="../project.html">The project file: pastel.toml</a>
+                <a href="../workflow.html">Everyday work: watch, format, libraries</a>
+                <a href="../packages.html">Packages</a>
+                <a href="../testing.html">Testing</a>
+                <a href="../vscode.html">Pastel for Visual Studio Code</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g6" aria-expanded="false">Reference</button>
+              <div class="collapse " id="g6">
+                <a href="../api/index.html">Pastel API reference</a>
+                <a href="../compatibility.html">Compatibility: what stays the same</a>
+                <a href="../performance.html">Performance</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g7" aria-expanded="false">Examples</button>
+              <div class="collapse " id="g7">
+                <a href="../examples/components-demo.html">components-demo</a>
+                <a href="../examples/components.html">components</a>
+                <a href="../examples/contacts.html">contacts</a>
+                <a href="../examples/dupfinder.html">dupfinder</a>
+                <a href="../examples/notepad.html">notepad</a>
+                <a href="../examples/notes-api.html">notes-api</a>
+                <a href="../examples/pocket-app.html">pocket-app</a>
+                <a href="../examples/pocket-cli.html">pocket-cli</a>
+                <a href="../examples/pocket-core.html">pocket-core</a>
+                <a href="../examples/salon-api.html">salon-api</a>
+                <a href="../examples/salon-core.html">salon-core</a>
+                <a href="../examples/salon-desk.html">salon-desk</a>
+                <a href="../examples/weather.html">weather</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g8" aria-expanded="false">Project</button>
+              <div class="collapse " id="g8">
+                <a href="../roadmap.html">Pastel roadmap to 1.0</a>
+                <a href="../changelog.html">Changelog</a>
+                <a href="../vscode-changelog.html">Changelog of the VS Code extension</a>
+                <a href="../contributing.html">Contributing to Pastel</a>
+                <a href="../security-policy.html">Security</a>
+                <a href="../code-of-conduct.html">Code of conduct</a>
+                <a href="../announcing-1.0.html">Announcing Pastel 1.0</a>
+              </div>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </aside>
+    <main class="col-12 col-lg-9 col-xl-8 docs-main">
+      <article class="markdown">
+<h1 id="7-units"><a class="anchor" href="#7-units">#</a>7. Units</h1>
+<p>A program in one file is fine for a page of code. Beyond that, it gets hard to find things, and code that would be
+useful elsewhere is stuck inside it. Pascal splits programs into <strong>units</strong>: files of related types and routines,
+each with a public part and a private part. This chapter shows how units work — and starts Pocket for real.</p>
+<h2 id="a-unit"><a class="anchor" href="#a-unit">#</a>A unit</h2>
+<pre><code class="language-pascal">unit Greetings;
+
+{$mode objfpc}{$H+}
+
+interface
+
+{ What other units and programs may use. }
+function Greet(const Name: string): string;
+
+implementation
+
+uses
+  SysUtils;
+
+{ Only this unit sees it. }
+function Polite(const Name: string): string;
+begin
+  if Name = '' then
+    Result := 'friend'
+  else
+    Result := Name;
+end;
+
+function Greet(const Name: string): string;
+begin
+  Result := Format('Hello, %s!', [Polite(Name)]);
+end;
+
+end.
+</code></pre>
+<p>A unit has two parts:</p>
+<ul>
+<li><strong><code>interface</code></strong> — the <em>declarations</em> other code may use: types, constants, variables, and the first line of each
+public routine. It is the unit's promise to the rest of the program.</li>
+<li><strong><code>implementation</code></strong> — the code of those routines, and anything else the unit needs only for itself (<code>Polite</code>
+here: nobody outside can call it).</li>
+</ul>
+<p>The unit ends with <code>end.</code> The file is named after the unit, in lower case: <code>greetings.pas</code>.</p>
+<p>A program (or another unit) names the unit in its <code>uses</code> clause, and from then on can use what its interface
+offers:</p>
+<pre><code class="language-pascal">program UseGreetings;
+
+{$mode objfpc}{$H+}
+
+uses
+  Greetings;
+
+begin
+  WriteLn(Greet('Ada'));
+  WriteLn(Greet(''));
+end.
+</code></pre>
+<pre><code class="language-output">Hello, Ada!
+Hello, friend!
+</code></pre>
+<h3 id="two-uses-clauses"><a class="anchor" href="#two-uses-clauses">#</a>Two uses clauses</h3>
+<p>A unit can have a <code>uses</code> clause in each part. Units needed by the <strong>interface</strong> (a type used in a public
+declaration) go in the first; units needed only by the code go in the <code>implementation</code> one. Keep the first short:
+everything it names becomes a dependency of everyone who uses your unit.</p>
+<p>Two units may not use each other in their <em>interface</em> parts — Pascal needs to know one before the other. When two
+units really need each other, one of them names the other in its implementation's <code>uses</code>.</p>
+<h3 id="names-from-two-units"><a class="anchor" href="#names-from-two-units">#</a>Names from two units</h3>
+<p>When two units offer the same name, the unit named <strong>later</strong> in <code>uses</code> wins. To pick one, write the unit's name
+before it: <code>SysUtils.Format(...)</code>, <code>Greetings.Greet(...)</code>.</p>
+<h3 id="initialization-and-finalization"><a class="anchor" href="#initialization-and-finalization">#</a>initialization and finalization</h3>
+<p>A unit may end with code that runs once when the program starts, and once when it ends:</p>
+<pre><code class="language-pascal">unit Counter;
+
+{$mode objfpc}{$H+}
+
+interface
+
+var
+  Calls: Integer;
+
+procedure Count;
+
+implementation
+
+procedure Count;
+begin
+  Inc(Calls);
+end;
+
+initialization
+  Calls := 0;
+  WriteLn('(Counter is ready)');
+
+end.
+</code></pre>
+<pre><code class="language-pascal">program UseCounter;
+
+{$mode objfpc}{$H+}
+
+uses
+  Counter;
+
+begin
+  WriteLn('Working...');
+  Count;
+  Count;
+  WriteLn('Count was called ', Calls, ' times.');
+end.
+</code></pre>
+<pre><code class="language-output">(Counter is ready)
+Working...
+Count was called 2 times.
+</code></pre>
+<p>The <code>initialization</code> of every unit runs before the program's <code>begin</code>, in the order of the <code>uses</code> clauses. A
+<code>finalization</code> section, after it, runs when the program ends — the place to free what the initialization made
+(chapter 8 shows freeing). By then the screen may already be closed, so do not write to it there.</p>
+<p>Use them sparingly: code that runs &quot;by itself&quot; is easy to forget about.</p>
+<h2 id="where-units-live-in-a-pastel-project"><a class="anchor" href="#where-units-live-in-a-pastel-project">#</a>Where units live in a Pastel project</h2>
+<p>Pastel finds the units of a project by itself: every <code>.pas</code> file in <code>src/</code> and its sub-folders. There is no list to
+keep up to date — make a file, name the unit in <code>uses</code>, and build. A common layout:</p>
+<pre><code>src/
+├── main.pas            the program
+├── forms/              windows (part 2)
+├── models/             the data
+└── services/           the work: files, network, calculations
+</code></pre>
+<p>The folders are for people; to the compiler a unit is a unit, wherever it is.</p>
+<p><code>pastel new</code> also gives every project a unit you do not see: <strong><code>AppInfo</code></strong>, made from <code>pastel.toml</code> at every build.
+<code>AppName</code> and <code>AppVersion</code> in it always match the project file.</p>
+<h2 id="pocket-begins"><a class="anchor" href="#pocket-begins">#</a>Pocket begins</h2>
+<p>Time to start the real program. Make a project:</p>
+<pre><code class="language-sh">pastel new console pocket
+cd pocket
+</code></pre>
+<p>Pocket's first unit is everything about money as text: writing an amount (<code>FormatMoney</code>, chapter 4) and reading
+one (<code>TryParseMoney</code>, chapter 6). Make <code>src/pocketmoney.pas</code>:</p>
+<!-- file: examples/pocket-core/src/pocketmoney.pas -->
+<pre><code class="language-pascal">{ Money as text and back: amounts are Currency (exact to 4 decimal places,
+  no rounding surprises like 0.1 + 0.2 with Double).
+
+    FormatMoney(1234.5)            -&gt; '1,234.50'
+    TryParseMoney('12,5', Amount)  -&gt; True, Amount = 12.5
+
+  Handbook: chapter 2 (types), chapter 6 (strings). }
+unit PocketMoney;
+
+{$mode objfpc}{$H+}
+
+interface
+
+{ 1234.5 -&gt; '1,234.50': a comma between thousands, a dot before the cents. }
+function FormatMoney(Amount: Currency): string;
+
+{ An amount typed by a person: '12', '12.5', '12,50', '1,234.50', '1.234,50'.
+  The last dot or comma with one or two digits after it starts the cents;
+  others only group thousands. False when it is not an amount. }
+function TryParseMoney(const Text: string; out Amount: Currency): Boolean;
+
+implementation
+
+uses
+  SysUtils;
+
+function FormatMoney(Amount: Currency): string;
+var
+  Whole, Cents: Int64;
+  Digits: string;
+  I, Count: Integer;
+  Negative: Boolean;
+begin
+  Negative := Amount &lt; 0;
+  if Negative then
+    Amount := -Amount;
+  { Currency keeps 4 decimal places: to cents, a half cent up (Round would
+    take it to the even number: Round(0.5) = 0) }
+  Cents := Trunc(Amount * 100 + 0.5);
+  Whole := Cents div 100;
+  Cents := Cents mod 100;
+  Digits := IntToStr(Whole);
+  { a comma before every group of three digits, from the right }
+  Result := '';
+  Count := 0;
+  for I := Length(Digits) downto 1 do
+  begin
+    if (Count &gt; 0) and (Count mod 3 = 0) then
+      Result := ',' + Result;
+    Result := Digits[I] + Result;
+    Inc(Count);
+  end;
+  Result := Result + '.' + Format('%.2d', [Cents]);
+  if Negative then
+    Result := '-' + Result;
+end;
+
+function TryParseMoney(const Text: string; out Amount: Currency): Boolean;
+var
+  S, Clean: string;
+  I, DecimalAt: Integer;
+  Negative: Boolean;
+  FS: TFormatSettings;
+begin
+  Amount := 0;
+  S := Trim(Text);
+  Negative := (S &lt;&gt; '') and (S[1] = '-');
+  if Negative then
+    Delete(S, 1, 1);
+  if S = '' then
+    Exit(False);
+  { where the cents start: the last separator with one or two digits after it }
+  DecimalAt := 0;
+  for I := Length(S) downto 1 do
+    if S[I] in ['.', ','] then
+    begin
+      if Length(S) - I &lt;= 2 then
+        DecimalAt := I;
+      Break;
+    end;
+  Clean := '';
+  for I := 1 to Length(S) do
+    if S[I] in ['0'..'9'] then
+      Clean := Clean + S[I]
+    else if I = DecimalAt then
+      Clean := Clean + '.'
+    else if not (S[I] in ['.', ',', ' ']) then
+      Exit(False);            { a letter or another sign: not an amount }
+  if (Clean = '') or (Clean = '.') then
+    Exit(False);
+  { a dot, whatever the computer's language writes }
+  FS := DefaultFormatSettings;
+  FS.DecimalSeparator := '.';
+  Result := TryStrToCurr(Clean, Amount, FS);
+  if Result and Negative then
+    Amount := -Amount;
+end;
+
+end.
+</code></pre>
+<p>Some things are new since the versions in chapters 4 and 6:</p>
+<ul>
+<li>The comment at the top says what the unit is for, with an example. Write one for every unit: it is the first thing
+a reader sees.</li>
+<li>The interface has only the two routines and a comment for each — the contract. How they do it is in the
+implementation, which a user of the unit never needs to read.</li>
+<li><code>FormatMoney</code> handles negative amounts: it remembers the sign, works on the positive amount, and puts the minus
+back at the end.</li>
+</ul>
+<p>Now <code>src/main.pas</code> uses it:</p>
+<pre><code class="language-pascal">program PocketTry;
+
+{$mode objfpc}{$H+}
+
+uses
+  PocketMoney;
+
+var
+  Amount, Total: Currency;
+  Line: string;
+begin
+  Total := 0;
+  repeat
+    Write('Amount (empty to stop): ');
+    ReadLn(Line);
+    if Line = '' then
+      Break;
+    if TryParseMoney(Line, Amount) then
+      Total := Total + Amount
+    else
+      WriteLn('  &quot;', Line, '&quot; is not an amount.');
+  until False;
+  WriteLn('Total: ', FormatMoney(Total));
+end.
+</code></pre>
+<pre><code class="language-input">12.50
+1.234,50
+lunch
+-4
+</code></pre>
+<pre><code class="language-output">Amount (empty to stop): Amount (empty to stop): Amount (empty to stop):   &quot;lunch&quot; is not an amount.
+Amount (empty to stop): Amount (empty to stop): Total: 1,243.00
+</code></pre>
+<p><code>repeat … until False</code> loops forever; the <code>Break</code> inside is the way out. (An empty input — the line after <code>-4</code> —
+ends it.)</p>
+<p>The program is short because the details live in the unit. That is the point: <code>main.pas</code> says <em>what</em> happens, the
+units say <em>how</em>.</p>
+<h2 id="exercises"><a class="anchor" href="#exercises">#</a>Exercises</h2>
+<ol>
+<li>Move the <code>Week</code> program's day names (chapter 5) into a unit <code>Days</code> with a function
+<code>DayName(Day: Integer): string</code>, and use it from a program.</li>
+<li>Give <code>PocketMoney</code> a function <code>FormatMoneyWith(Amount: Currency; const Symbol: string): string</code> that writes
+<code>'12.50 €'</code>. Use <code>FormatMoney</code> inside it.</li>
+<li>What happens when a program uses a unit that is not in <code>src/</code>? Read the compiler's message.</li>
+<li>★ Make two units that use each other in their interfaces. Read the error. Then move one <code>uses</code> into the
+implementation part and see it compile.</li>
+</ol>
+<p>Next: <a href="../handbook/08-classes.html">8. Classes and objects</a></p>
+
+      </article>
+      <p class="edit mt-5"><a href="https://github.com/azrov/pastel/edit/main/docs/handbook/07-units.md">Improve this page on GitHub</a></p>
+    </main>
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <div class="sticky">
+        <div class="toc-title">On this page</div>
+        <a href="#a-unit">A unit</a>
+        <a href="#where-units-live-in-a-pastel-project">Where units live in a Pastel project</a>
+        <a href="#pocket-begins">Pocket begins</a>
+        <a href="#exercises">Exercises</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer py-4 mt-5">
+  <div class="container d-flex flex-wrap gap-3 justify-content-between small text-body-secondary">
+    <span>Pastel 2.1.0-beta.4 · MIT License · built with Pastel.Markdown and Pastel.Pages</span>
+    <span class="d-flex gap-3">
+      <a href="../docs.html">Documentation</a>
+      <a href="../download.html">Download</a>
+      <a href="../contributing.html">Contributing</a>
+      <a href="https://github.com/azrov/pastel">GitHub</a>
+    </span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/delphi.min.js"></script>
+<script src="../assets/site.js"></script>
+</body>
+</html>

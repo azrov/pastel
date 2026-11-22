@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Java from Pascal · Pastel</title>
+<meta name="description" content="Pastel: a modern cross-platform app framework and toolchain for Object Pascal. Desktop, phone, web and console apps from one codebase.">
+<script>
+  try { var t = localStorage.getItem('pastel-theme'); } catch (e) {}
+  document.documentElement.dataset.bsTheme = t || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hl-dark">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body class="section-docs">
+<nav class="navbar navbar-expand-lg sticky-top site-header">
+  <div class="container-fluid px-lg-4">
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="index.html">
+      <span class="logo" aria-hidden="true"></span>Pastel
+    </a>
+        <button class="btn btn-sm btn-outline-secondary d-lg-none me-auto" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">Menu</button>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#top" aria-controls="top" aria-expanded="false" aria-label="Links">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="top">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link active" href="docs.html">Docs</a></li>
+        <li class="nav-item"><a class="nav-link" href="getting-started.html">Get started</a></li>
+        <li class="nav-item"><a class="nav-link " href="download.html">Download</a></li>
+        <li class="nav-item"><a class="nav-link " href="changelog.html">Changelog</a></li>
+      </ul>
+      <div class="search position-relative my-2 my-lg-0 me-lg-3">
+        <input id="search" class="form-control form-control-sm" type="search" placeholder="Search the docs  /" autocomplete="off" data-base="" aria-label="Search the docs">
+        <div id="results" class="dropdown-menu shadow"></div>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        <button id="theme" class="btn btn-sm btn-outline-secondary" type="button" aria-label="Light or dark" title="Light or dark"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+        <a class="btn btn-sm btn-outline-secondary" href="https://github.com/azrov/pastel">GitHub</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-lg-4">
+  <div class="row">
+    <aside class="col-lg-3 col-xl-2 docs-sidebar">
+      <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+        <div class="offcanvas-header border-bottom">
+          <h5 class="offcanvas-title" id="sidebarLabel">Documentation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+          <nav class="docs-nav w-100">
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g0" aria-expanded="false">Start</button>
+              <div class="collapse " id="g0">
+                <a href="readme.html">Overview</a>
+                <a href="docs.html">All topics</a>
+                <a href="getting-started.html">Getting started</a>
+                <a href="commands.html">The pastel command</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g1" aria-expanded="false">Handbook</button>
+              <div class="collapse " id="g1">
+                <a href="handbook/README.html">The Pastel Handbook</a>
+                <a href="handbook/01-hello.html">1. Your first program</a>
+                <a href="handbook/02-values.html">2. Values, types and variables</a>
+                <a href="handbook/03-decisions-loops.html">3. Decisions and loops</a>
+                <a href="handbook/04-routines.html">4. Procedures and functions</a>
+                <a href="handbook/05-structured-types.html">5. Arrays, records, enumerations and sets</a>
+                <a href="handbook/06-strings.html">6. Text</a>
+                <a href="handbook/07-units.html">7. Units</a>
+                <a href="handbook/08-classes.html">8. Classes and objects</a>
+                <a href="handbook/09-exceptions.html">9. When things go wrong</a>
+                <a href="handbook/10-generics.html">10. Lists, dictionaries and generics</a>
+                <a href="handbook/11-files-json.html">11. Files and JSON</a>
+                <a href="handbook/12-testing.html">12. Testing</a>
+                <a href="handbook/13-interfaces.html">13. Interfaces and the command line</a>
+                <a href="handbook/14-first-window.html">14. Your first window</a>
+                <a href="handbook/15-layout.html">15. Layout</a>
+                <a href="handbook/16-grids-and-dialogs.html">16. Grids and dialogs</a>
+                <a href="handbook/17-database.html">17. A database</a>
+                <a href="handbook/18-charts-and-reports.html">18. Charts and reports</a>
+                <a href="handbook/19-look-and-languages.html">19. Look and languages</a>
+                <a href="handbook/20-background.html">20. Work in the background</a>
+                <a href="handbook/21-phones.html">21. Phones</a>
+                <a href="handbook/22-shipping.html">22. Shipping</a>
+                <a href="handbook/appendix-a-cheat-sheet.html">Appendix A. Object Pascal at a glance</a>
+                <a href="handbook/appendix-b-from-delphi.html">Appendix B. Coming from Delphi or Lazarus</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g2" aria-expanded="false">Guides</button>
+              <div class="collapse " id="g2">
+                <a href="guide-cli.html">Writing a command-line tool</a>
+                <a href="guide-api.html">A REST API with a database</a>
+                <a href="guide-desktop.html">Building a desktop app</a>
+                <a href="guide-business.html">A business system — desktop app and server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start " type="button" data-bs-toggle="collapse" data-bs-target="#g3" aria-expanded="true">Desktop and phone apps</button>
+              <div class="collapse show" id="g3">
+                <a href="forms.html">Forms and controls</a>
+                <a href="controls.html">Controls reference</a>
+                <a href="styles.html">Styles: Fluent, Material and your own</a>
+                <a href="components.html">Writing components</a>
+                <a href="android.html">Android</a>
+                <a href="device.html">The phone&#39;s features</a>
+                <a href="java.html" class="current" aria-current="page">Java from Pascal</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g4" aria-expanded="false">Programs and services</button>
+              <div class="collapse " id="g4">
+                <a href="console.html">Console programs</a>
+                <a href="data.html">JSON, settings and logging</a>
+                <a href="documents.html">Reports, PDF, Excel and printing</a>
+                <a href="system.html">Files, programs, HTTP and the environment</a>
+                <a href="services.html">Services: programs that keep running</a>
+                <a href="web.html">Web APIs and sites: Pastel.Web</a>
+                <a href="websockets.html">WebSockets: Pastel.WebSocket</a>
+                <a href="mail.html">E-mail: Pastel.Mail</a>
+                <a href="pages.html">Web pages from templates</a>
+                <a href="markdown.html">Markdown</a>
+                <a href="database.html">Databases: Pastel.Db</a>
+                <a href="sync.html">Data that works offline: Pastel.Sync</a>
+                <a href="auth.html">Users and login: Pastel.Auth</a>
+                <a href="security.html">Passwords, tokens and signatures: Pastel.Crypto, Pastel.Jwt</a>
+                <a href="deploy.html">Deploying to a Linux server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g5" aria-expanded="false">Working with Pastel</button>
+              <div class="collapse " id="g5">
+                <a href="project.html">The project file: pastel.toml</a>
+                <a href="workflow.html">Everyday work: watch, format, libraries</a>
+                <a href="packages.html">Packages</a>
+                <a href="testing.html">Testing</a>
+                <a href="vscode.html">Pastel for Visual Studio Code</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g6" aria-expanded="false">Reference</button>
+              <div class="collapse " id="g6">
+                <a href="api/index.html">Pastel API reference</a>
+                <a href="compatibility.html">Compatibility: what stays the same</a>
+                <a href="performance.html">Performance</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g7" aria-expanded="false">Examples</button>
+              <div class="collapse " id="g7">
+                <a href="examples/components-demo.html">components-demo</a>
+                <a href="examples/components.html">components</a>
+                <a href="examples/contacts.html">contacts</a>
+                <a href="examples/dupfinder.html">dupfinder</a>
+                <a href="examples/notepad.html">notepad</a>
+                <a href="examples/notes-api.html">notes-api</a>
+                <a href="examples/pocket-app.html">pocket-app</a>
+                <a href="examples/pocket-cli.html">pocket-cli</a>
+                <a href="examples/pocket-core.html">pocket-core</a>
+                <a href="examples/salon-api.html">salon-api</a>
+                <a href="examples/salon-core.html">salon-core</a>
+                <a href="examples/salon-desk.html">salon-desk</a>
+                <a href="examples/weather.html">weather</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g8" aria-expanded="false">Project</button>
+              <div class="collapse " id="g8">
+                <a href="roadmap.html">Pastel roadmap to 1.0</a>
+                <a href="changelog.html">Changelog</a>
+                <a href="vscode-changelog.html">Changelog of the VS Code extension</a>
+                <a href="contributing.html">Contributing to Pastel</a>
+                <a href="security-policy.html">Security</a>
+                <a href="code-of-conduct.html">Code of conduct</a>
+                <a href="announcing-1.0.html">Announcing Pastel 1.0</a>
+              </div>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </aside>
+    <main class="col-12 col-lg-9 col-xl-8 docs-main">
+      <article class="markdown">
+<h1 id="java-from-pascal"><a class="anchor" href="#java-from-pascal">#</a>Java from Pascal</h1>
+<p>Android is written in Java: everything a phone can do is a Java class — <code>Toast</code>, <code>AlarmManager</code>, <code>BluetoothAdapter</code>,
+<code>TextToSpeech</code>, <code>MediaPlayer</code>. Pastel's own units cover what most apps need (dialogs, notifications, the camera, the
+place); for the rest, Pascal calls Java directly.</p>
+<h2 id="the-classes-you-need-as-pascal"><a class="anchor" href="#the-classes-you-need-as-pascal">#</a>The classes you need, as Pascal</h2>
+<p><code>pastel java add</code> reads the classes from Android's <code>android.jar</code> and writes typed Pascal for them into
+<code>src/java/javaclasses.pas</code> (like Delphi's Java2OP):</p>
+<pre><code class="language-sh">pastel java search Toast                       # which classes have that name
+pastel java add android.widget.Toast android.os.Build android.os.Build.VERSION
+</code></pre>
+<pre><code class="language-pascal">uses Pastel.Java, JavaClasses;
+
+JToast.makeText(JavaActivity, 'Saved', JToast.LENGTH_SHORT).show;     // (on the UI thread: below)
+Label1.Text := JBuild.MODEL + ', Android ' + JBuild_VERSION.RELEASE;
+</code></pre>
+<p>Each class becomes a record named <code>J</code> and the class's name (<code>JToast</code>; an inner class <code>JNotification_Builder</code>) with:</p>
+<ul>
+<li>its methods, the inherited ones too, with the same names (<code>show</code>, <code>setText</code>, <code>getWidth</code>);</li>
+<li>its constructors as <code>New</code>: <code>JIntent.New(JavaActivity, ...)</code>;</li>
+<li>its constants (<code>JToast.LENGTH_SHORT</code>) and static fields (<code>JBuild.MODEL</code>).</li>
+</ul>
+<p><code>String</code> and <code>CharSequence</code> are Pascal strings; <code>int</code>, <code>long</code>, <code>boolean</code>, <code>double</code>... their Pascal types; the
+classes of the list their records; other objects <code>TJavaObject</code>. Java does not keep the names of parameters, so
+they are named after their types (<code>AContext</code>, <code>AInt</code>). A comment above each method shows the Java one. The list
+is kept in <code>pastel.toml</code>; <code>pastel java remove</code> takes a class out, <code>pastel java</code> writes the unit again.</p>
+<pre><code class="language-toml">[java]
+classes = [&quot;android.widget.Toast&quot;, &quot;android.os.Build&quot;]
+</code></pre>
+<p>The file is written by Pastel: change the list, not the file. It is part of the project (in git): building
+does not need Android's SDK.</p>
+<h2 id="the-apps-own-java"><a class="anchor" href="#the-apps-own-java">#</a>The app's own Java</h2>
+<p>Java files in <code>src/java</code> (with their packages' folders) are compiled into the app with Pastel's: for an example
+of Android's documentation copied as it is, or a listener, or anything that is easier in Java. Add their classes
+to the list like Android's:</p>
+<pre><code class="language-java">// src/java/demo/Greeter.java
+package demo;
+
+public class Greeter {
+    public static String hello(String name) { return &quot;Hello, &quot; + name; }
+}
+</code></pre>
+<pre><code class="language-sh">pastel java add demo.Greeter
+</code></pre>
+<pre><code class="language-pascal">Label1.Text := JGreeter.hello('Ada');
+</code></pre>
+<p>They need Java's compiler (<code>javac</code>, a JDK) and Android's <code>d8</code> (build tools 28 or newer) or <code>dx</code>.</p>
+<h2 id="calls-of-your-own"><a class="anchor" href="#calls-of-your-own">#</a>Calls of your own</h2>
+<p>Without the generated records, <code>Pastel.Java</code> calls any method by its name and Java's signature:</p>
+<pre><code class="language-pascal">S := JavaFieldStr('android.os.Build', 'MODEL');
+N := JavaStaticI('java.lang.Integer', 'parseInt', '(Ljava/lang/String;)I', ['42']);
+L := JavaNew('java.util.ArrayList', '()V', []);
+JavaCallZ(L, 'java.util.ArrayList', 'add', '(Ljava/lang/Object;)Z', [JavaString('x').Handle]);
+</code></pre>
+<p><code>JavaCall</code> answers nothing; <code>JavaCallZ</code>, <code>...I</code>, <code>...J</code>, <code>...F</code>, <code>...D</code>, <code>...O</code>, <code>...Str</code> a <code>Boolean</code>, <code>Integer</code>,
+<code>Int64</code>, <code>Single</code>, <code>Double</code>, <code>TJavaObject</code>, <code>string</code>; <code>JavaStatic...</code> the same for static methods. Pascal strings
+become <code>java.lang.String</code>; objects are passed as <code>Obj.Handle</code>.</p>
+<p><code>TJavaObject</code> keeps a Java object alive while Pascal uses it and lets it go by itself, like a string. A Java
+exception becomes an <code>EJavaError</code> with Java's message:</p>
+<pre><code class="language-pascal">try
+  N := JavaStaticI('java.lang.Integer', 'parseInt', '(Ljava/lang/String;)I', [Edit1.Text]);
+except
+  on E: EJavaError do ShowMessage(E.Message);   // java.lang.NumberFormatException: For input string: &quot;x&quot;
+end;
+</code></pre>
+<h2 id="java-calling-pascal-listeners"><a class="anchor" href="#java-calling-pascal-listeners">#</a>Java calling Pascal: listeners</h2>
+<p>Android tells an app what happened through interfaces: <code>View.OnClickListener</code>, <code>Runnable</code>,
+<code>TextToSpeech.OnInitListener</code>. <code>JavaImplement</code> makes an object of an interface whose methods are a Pascal method:</p>
+<pre><code class="language-pascal">procedure THomeForm.SpeechReady(const Method: string; const Args: TJavaArgs; var Answer: TJavaObject);
+begin
+  if Method = 'onInit' then
+    StatusLabel.Text := 'ready: ' + IntToStr(Args[0].AsInteger);
+end;
+
+Speech := JTextToSpeech.New(JavaActivity, JTextToSpeech_OnInitListener.Implement(@SpeechReady));
+</code></pre>
+<p>The handler gets the method's name and its arguments, <code>TJavaObject</code>s: numbers and <code>Boolean</code>s boxed (<code>AsInteger</code>,
+<code>AsInt64</code>, <code>AsBoolean</code>, <code>AsDouble</code>), strings with <code>AsString</code>. A method that answers sets <code>Answer</code>: an object, a string
+(<code>JavaString</code>), a boxed number of the method's type (<code>JavaInteger</code>, <code>JavaInt64</code>, <code>JavaBoolean</code>, <code>JavaSingle</code>,
+<code>JavaDouble</code>); left alone, Java gets null, 0 or <code>False</code>. An exception in the handler becomes a Java
+<code>RuntimeException</code> where Java called.</p>
+<p>An interface with two methods of one name (<code>onClick(View)</code> and <code>onClick(DialogInterface, int)</code>) tells them apart
+with <code>JavaCallbackSignature</code> inside the handler: Java's signature of the method called,
+<code>'(Landroid/view/View;)V'</code>.</p>
+<p><code>pastel java add</code> writes <code>Implement</code> for the interfaces of the list; without them,
+<code>JavaImplement('android.speech.tts.TextToSpeech$OnInitListener', @SpeechReady)</code>.</p>
+<p>The handler runs on the app's own thread, where forms can be used, like an event of a button: a method that answers
+nothing (<code>void</code>) is called later and Java goes on; one that answers waits for it. <code>JavaImplement(Name, @Handler, False)</code> calls it at once on Java's thread (it must not touch forms then). The objects live while the program does:
+make a listener once, not at each call.</p>
+<h2 id="threads"><a class="anchor" href="#threads">#</a>Threads</h2>
+<p>Pascal's code runs on the app's own thread; Java can be called from there and from any other thread. Android's
+views and <code>Toast</code> want Android's UI thread: <code>JavaRunOnUiThread(@Method)</code> runs a method there, later, without
+waiting (it must not touch Pastel's forms):</p>
+<pre><code class="language-pascal">procedure THomeForm.SayIt;           // on Android's UI thread
+begin
+  JToast.makeText(JavaActivity, 'Hello', JToast.LENGTH_LONG).show;
+end;
+
+JavaRunOnUiThread(@SayIt);
+</code></pre>
+<p>For a short message <code>ShowToast('Saved')</code> (Pastel.Dialogs) does all this — and draws one on computers.</p>
+<h2 id="on-computers"><a class="anchor" href="#on-computers">#</a>On computers</h2>
+<p>The same calls work in desktop apps with Java installed (<code>JAVA_HOME</code>, else the <code>java</code> of the PATH): Pastel starts
+Java the first time it is needed. Java's own classes (<code>java.util</code>, <code>java.time</code>...) are there; the project's
+<code>src/java</code> while it is developed; a program's <code>.jar</code> files beside it in <code>java/</code> (or <code>PASTEL_JAVA_CLASSPATH</code>).
+<code>[java] jars = [&quot;libs/some.jar&quot;]</code> adds a library's classes to <code>pastel java add</code>. <code>JavaAvailable</code> says whether Java
+is there (<code>JavaProblem</code> why not).</p>
+
+      </article>
+      <p class="edit mt-5"><a href="https://github.com/azrov/pastel/edit/main/docs/java.md">Improve this page on GitHub</a></p>
+    </main>
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <div class="sticky">
+        <div class="toc-title">On this page</div>
+        <a href="#the-classes-you-need-as-pascal">The classes you need, as Pascal</a>
+        <a href="#the-apps-own-java">The app&#39;s own Java</a>
+        <a href="#calls-of-your-own">Calls of your own</a>
+        <a href="#java-calling-pascal-listeners">Java calling Pascal: listeners</a>
+        <a href="#threads">Threads</a>
+        <a href="#on-computers">On computers</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer py-4 mt-5">
+  <div class="container d-flex flex-wrap gap-3 justify-content-between small text-body-secondary">
+    <span>Pastel 2.1.0-beta.4 · MIT License · built with Pastel.Markdown and Pastel.Pages</span>
+    <span class="d-flex gap-3">
+      <a href="docs.html">Documentation</a>
+      <a href="download.html">Download</a>
+      <a href="contributing.html">Contributing</a>
+      <a href="https://github.com/azrov/pastel">GitHub</a>
+    </span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/delphi.min.js"></script>
+<script src="assets/site.js"></script>
+</body>
+</html>

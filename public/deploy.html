@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deploying to a Linux server · Pastel</title>
+<meta name="description" content="Pastel: a modern cross-platform app framework and toolchain for Object Pascal. Desktop, phone, web and console apps from one codebase.">
+<script>
+  try { var t = localStorage.getItem('pastel-theme'); } catch (e) {}
+  document.documentElement.dataset.bsTheme = t || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hl-dark">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body class="section-docs">
+<nav class="navbar navbar-expand-lg sticky-top site-header">
+  <div class="container-fluid px-lg-4">
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="index.html">
+      <span class="logo" aria-hidden="true"></span>Pastel
+    </a>
+        <button class="btn btn-sm btn-outline-secondary d-lg-none me-auto" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">Menu</button>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#top" aria-controls="top" aria-expanded="false" aria-label="Links">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="top">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link active" href="docs.html">Docs</a></li>
+        <li class="nav-item"><a class="nav-link" href="getting-started.html">Get started</a></li>
+        <li class="nav-item"><a class="nav-link " href="download.html">Download</a></li>
+        <li class="nav-item"><a class="nav-link " href="changelog.html">Changelog</a></li>
+      </ul>
+      <div class="search position-relative my-2 my-lg-0 me-lg-3">
+        <input id="search" class="form-control form-control-sm" type="search" placeholder="Search the docs  /" autocomplete="off" data-base="" aria-label="Search the docs">
+        <div id="results" class="dropdown-menu shadow"></div>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        <button id="theme" class="btn btn-sm btn-outline-secondary" type="button" aria-label="Light or dark" title="Light or dark"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+        <a class="btn btn-sm btn-outline-secondary" href="https://github.com/azrov/pastel">GitHub</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-lg-4">
+  <div class="row">
+    <aside class="col-lg-3 col-xl-2 docs-sidebar">
+      <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+        <div class="offcanvas-header border-bottom">
+          <h5 class="offcanvas-title" id="sidebarLabel">Documentation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+          <nav class="docs-nav w-100">
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g0" aria-expanded="false">Start</button>
+              <div class="collapse " id="g0">
+                <a href="readme.html">Overview</a>
+                <a href="docs.html">All topics</a>
+                <a href="getting-started.html">Getting started</a>
+                <a href="commands.html">The pastel command</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g1" aria-expanded="false">Handbook</button>
+              <div class="collapse " id="g1">
+                <a href="handbook/README.html">The Pastel Handbook</a>
+                <a href="handbook/01-hello.html">1. Your first program</a>
+                <a href="handbook/02-values.html">2. Values, types and variables</a>
+                <a href="handbook/03-decisions-loops.html">3. Decisions and loops</a>
+                <a href="handbook/04-routines.html">4. Procedures and functions</a>
+                <a href="handbook/05-structured-types.html">5. Arrays, records, enumerations and sets</a>
+                <a href="handbook/06-strings.html">6. Text</a>
+                <a href="handbook/07-units.html">7. Units</a>
+                <a href="handbook/08-classes.html">8. Classes and objects</a>
+                <a href="handbook/09-exceptions.html">9. When things go wrong</a>
+                <a href="handbook/10-generics.html">10. Lists, dictionaries and generics</a>
+                <a href="handbook/11-files-json.html">11. Files and JSON</a>
+                <a href="handbook/12-testing.html">12. Testing</a>
+                <a href="handbook/13-interfaces.html">13. Interfaces and the command line</a>
+                <a href="handbook/14-first-window.html">14. Your first window</a>
+                <a href="handbook/15-layout.html">15. Layout</a>
+                <a href="handbook/16-grids-and-dialogs.html">16. Grids and dialogs</a>
+                <a href="handbook/17-database.html">17. A database</a>
+                <a href="handbook/18-charts-and-reports.html">18. Charts and reports</a>
+                <a href="handbook/19-look-and-languages.html">19. Look and languages</a>
+                <a href="handbook/20-background.html">20. Work in the background</a>
+                <a href="handbook/21-phones.html">21. Phones</a>
+                <a href="handbook/22-shipping.html">22. Shipping</a>
+                <a href="handbook/appendix-a-cheat-sheet.html">Appendix A. Object Pascal at a glance</a>
+                <a href="handbook/appendix-b-from-delphi.html">Appendix B. Coming from Delphi or Lazarus</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g2" aria-expanded="false">Guides</button>
+              <div class="collapse " id="g2">
+                <a href="guide-cli.html">Writing a command-line tool</a>
+                <a href="guide-api.html">A REST API with a database</a>
+                <a href="guide-desktop.html">Building a desktop app</a>
+                <a href="guide-business.html">A business system — desktop app and server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g3" aria-expanded="false">Desktop and phone apps</button>
+              <div class="collapse " id="g3">
+                <a href="forms.html">Forms and controls</a>
+                <a href="controls.html">Controls reference</a>
+                <a href="styles.html">Styles: Fluent, Material and your own</a>
+                <a href="components.html">Writing components</a>
+                <a href="android.html">Android</a>
+                <a href="device.html">The phone&#39;s features</a>
+                <a href="java.html">Java from Pascal</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start " type="button" data-bs-toggle="collapse" data-bs-target="#g4" aria-expanded="true">Programs and services</button>
+              <div class="collapse show" id="g4">
+                <a href="console.html">Console programs</a>
+                <a href="data.html">JSON, settings and logging</a>
+                <a href="documents.html">Reports, PDF, Excel and printing</a>
+                <a href="system.html">Files, programs, HTTP and the environment</a>
+                <a href="services.html">Services: programs that keep running</a>
+                <a href="web.html">Web APIs and sites: Pastel.Web</a>
+                <a href="websockets.html">WebSockets: Pastel.WebSocket</a>
+                <a href="mail.html">E-mail: Pastel.Mail</a>
+                <a href="pages.html">Web pages from templates</a>
+                <a href="markdown.html">Markdown</a>
+                <a href="database.html">Databases: Pastel.Db</a>
+                <a href="sync.html">Data that works offline: Pastel.Sync</a>
+                <a href="auth.html">Users and login: Pastel.Auth</a>
+                <a href="security.html">Passwords, tokens and signatures: Pastel.Crypto, Pastel.Jwt</a>
+                <a href="deploy.html" class="current" aria-current="page">Deploying to a Linux server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g5" aria-expanded="false">Working with Pastel</button>
+              <div class="collapse " id="g5">
+                <a href="project.html">The project file: pastel.toml</a>
+                <a href="workflow.html">Everyday work: watch, format, libraries</a>
+                <a href="packages.html">Packages</a>
+                <a href="testing.html">Testing</a>
+                <a href="vscode.html">Pastel for Visual Studio Code</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g6" aria-expanded="false">Reference</button>
+              <div class="collapse " id="g6">
+                <a href="api/index.html">Pastel API reference</a>
+                <a href="compatibility.html">Compatibility: what stays the same</a>
+                <a href="performance.html">Performance</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g7" aria-expanded="false">Examples</button>
+              <div class="collapse " id="g7">
+                <a href="examples/components-demo.html">components-demo</a>
+                <a href="examples/components.html">components</a>
+                <a href="examples/contacts.html">contacts</a>
+                <a href="examples/dupfinder.html">dupfinder</a>
+                <a href="examples/notepad.html">notepad</a>
+                <a href="examples/notes-api.html">notes-api</a>
+                <a href="examples/pocket-app.html">pocket-app</a>
+                <a href="examples/pocket-cli.html">pocket-cli</a>
+                <a href="examples/pocket-core.html">pocket-core</a>
+                <a href="examples/salon-api.html">salon-api</a>
+                <a href="examples/salon-core.html">salon-core</a>
+                <a href="examples/salon-desk.html">salon-desk</a>
+                <a href="examples/weather.html">weather</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g8" aria-expanded="false">Project</button>
+              <div class="collapse " id="g8">
+                <a href="roadmap.html">Pastel roadmap to 1.0</a>
+                <a href="changelog.html">Changelog</a>
+                <a href="vscode-changelog.html">Changelog of the VS Code extension</a>
+                <a href="contributing.html">Contributing to Pastel</a>
+                <a href="security-policy.html">Security</a>
+                <a href="code-of-conduct.html">Code of conduct</a>
+                <a href="announcing-1.0.html">Announcing Pastel 1.0</a>
+              </div>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </aside>
+    <main class="col-12 col-lg-9 col-xl-8 docs-main">
+      <article class="markdown">
+<h1 id="deploying-to-a-linux-server"><a class="anchor" href="#deploying-to-a-linux-server">#</a>Deploying to a Linux server</h1>
+<p>Three ways, from simplest to most packaged. All of them start with a
+release build from <code>pastel package</code>; the program is one file and needs no
+runtime on the server.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Use it when</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>pastel package</code></td>
+<td>copying a folder is enough: <code>.tar.gz</code> with the program and its files</td>
+</tr>
+<tr>
+<td><code>pastel package deb</code></td>
+<td>Debian, Ubuntu, Raspberry Pi OS servers: <code>apt install</code>, systemd, upgrades</td>
+</tr>
+<tr>
+<td><code>pastel package docker</code></td>
+<td>the server runs containers (Docker, Podman, Kubernetes)</td>
+</tr>
+</tbody></table>
+<h2 id="a-deb"><a class="anchor" href="#a-deb">#</a>A .deb</h2>
+<pre><code class="language-sh">pastel package deb                       # dist/myapi_0.1.0_amd64.deb
+pastel package deb --target linux-arm64  # dist/myapi_0.1.0_arm64.deb (Raspberry Pi 4/5)
+pastel package deb --all                 # every Linux platform in pastel.toml
+</code></pre>
+<p>On the server:</p>
+<pre><code class="language-sh">sudo apt install ./myapi_0.1.0_amd64.deb
+sudo nano /etc/myapi/config.toml         # real API keys, the database
+sudo systemctl start myapi
+journalctl -u myapi -f
+</code></pre>
+<p>What goes where:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>/opt/myapi/</code></td>
+<td>the program, README, and what <code>[package] include</code> lists (migrations too)</td>
+</tr>
+<tr>
+<td><code>/usr/lib/systemd/system/myapi.service</code></td>
+<td><code>deploy/myapi.service</code> (services)</td>
+</tr>
+<tr>
+<td><code>/etc/myapi/config.toml</code></td>
+<td><code>config.example.toml</code> (services); kept on upgrades when you changed it</td>
+</tr>
+<tr>
+<td><code>/var/lib/myapi/</code></td>
+<td>the service's data (the SQLite database), made by systemd</td>
+</tr>
+<tr>
+<td><code>/usr/bin/myapi</code></td>
+<td>a link to the program (console programs and apps)</td>
+</tr>
+</tbody></table>
+<p>The service is enabled on install but not started, so you can set it up
+first; an upgrade (<code>apt install</code> of a newer .deb) restarts it if it was
+running. <code>apt remove myapi</code> stops it; the data in <code>/var/lib</code> stays.</p>
+<p><code>pastel.toml</code>:</p>
+<pre><code class="language-toml">[project]
+description = &quot;The shop's order API&quot;
+
+[package]
+maintainer = &quot;Ayşe Yılmaz &lt;ayse@example.com&gt;&quot;
+
+[package.deb]
+depends = [&quot;libsqlite3-0&quot;]     # libpq5 for PostgreSQL, libmariadb3 for MySQL/MariaDB
+</code></pre>
+<p>The .deb is made by Pastel itself, so it can be made on Windows and macOS
+too. An API whose settings still have the example API key
+(<code>CHANGE-ME-...</code>) does not start: it says so in the journal.</p>
+<h2 id="a-container-image"><a class="anchor" href="#a-container-image">#</a>A container image</h2>
+<pre><code class="language-sh">pastel package docker              # builds the image myapi:0.1.0 (and :latest)
+pastel package docker --no-build   # only dist/docker-linux/ with the Dockerfile
+docker run -p 8080:8080 -e MYAPI_API_KEYS=$(openssl rand -hex 32) -v myapi-data:/var/lib/myapi myapi
+</code></pre>
+<p>The image is Debian slim (<code>[package.docker] base = &quot;...&quot;</code> for another)
+with the packages of <code>[package.deb] depends</code>. The program runs as a user
+without rights, logs JSON to the container's output, listens on all
+addresses (port 8080) and has a health check. Settings come from
+environment variables: <code>MYAPI_DATABASE_URL=postgres://...</code>,
+<code>MYAPI_API_KEYS=key1,key2</code>, <code>MYAPI_LOG_LEVEL=debug</code>. <code>docker stop</code> stops it
+cleanly.</p>
+<h2 id="https-a-reverse-proxy-in-front"><a class="anchor" href="#https-a-reverse-proxy-in-front">#</a>HTTPS: a reverse proxy in front</h2>
+<p>The Pastel web server speaks plain HTTP and listens on <code>127.0.0.1</code>; a
+reverse proxy on the same machine adds HTTPS and the domain name.</p>
+<p><strong>Caddy</strong> (gets the certificate by itself), <code>/etc/caddy/Caddyfile</code>:</p>
+<pre><code>api.example.com {
+    reverse_proxy 127.0.0.1:8080
+}
+</code></pre>
+<p><strong>nginx</strong>, with a certificate from <code>certbot --nginx</code>:</p>
+<pre><code class="language-nginx">server {
+    server_name api.example.com;
+    client_max_body_size 10m;
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Host $host;
+    }
+}
+</code></pre>
+<p>Then set <code>[server] trust_proxy = true</code>, so client addresses (logs, rate
+limits) come from the proxy's <code>X-Forwarded-For</code> (<a href="web.html">web.md</a>).</p>
+<p>With <a href="websockets.html">WebSockets</a>, their addresses also need:</p>
+<pre><code class="language-nginx">    location /live/ {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection &quot;upgrade&quot;;
+        proxy_read_timeout 1h;
+    }
+</code></pre>
+<h2 id="checklist"><a class="anchor" href="#checklist">#</a>Checklist</h2>
+<ul>
+<li>Real secrets in <code>/etc/myapi/config.toml</code> or the environment, never in the code or the image.</li>
+<li><code>[server] address = &quot;127.0.0.1&quot;</code> behind a proxy; the firewall opens only 80 and 443.</li>
+<li><code>/health</code> for monitoring.</li>
+<li>Backups of <code>/var/lib/myapi</code> (SQLite: <code>sqlite3 app.db &quot;.backup backup.db&quot;</code> while it runs) or of the database server.</li>
+<li>Services and systemd in detail: <a href="services.html">services.md</a>.</li>
+</ul>
+
+      </article>
+      <p class="edit mt-5"><a href="https://github.com/azrov/pastel/edit/main/docs/deploy.md">Improve this page on GitHub</a></p>
+    </main>
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <div class="sticky">
+        <div class="toc-title">On this page</div>
+        <a href="#a-deb">A .deb</a>
+        <a href="#a-container-image">A container image</a>
+        <a href="#https-a-reverse-proxy-in-front">HTTPS: a reverse proxy in front</a>
+        <a href="#checklist">Checklist</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer py-4 mt-5">
+  <div class="container d-flex flex-wrap gap-3 justify-content-between small text-body-secondary">
+    <span>Pastel 2.1.0-beta.4 · MIT License · built with Pastel.Markdown and Pastel.Pages</span>
+    <span class="d-flex gap-3">
+      <a href="docs.html">Documentation</a>
+      <a href="download.html">Download</a>
+      <a href="contributing.html">Contributing</a>
+      <a href="https://github.com/azrov/pastel">GitHub</a>
+    </span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/delphi.min.js"></script>
+<script src="assets/site.js"></script>
+</body>
+</html>

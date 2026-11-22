@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pastel.Dialogs · Pastel</title>
+<meta name="description" content="Pastel: a modern cross-platform app framework and toolchain for Object Pascal. Desktop, phone, web and console apps from one codebase.">
+<script>
+  try { var t = localStorage.getItem('pastel-theme'); } catch (e) {}
+  document.documentElement.dataset.bsTheme = t || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hl-dark">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body class="section-docs">
+<nav class="navbar navbar-expand-lg sticky-top site-header">
+  <div class="container-fluid px-lg-4">
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="../index.html">
+      <span class="logo" aria-hidden="true"></span>Pastel
+    </a>
+        <button class="btn btn-sm btn-outline-secondary d-lg-none me-auto" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">Menu</button>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#top" aria-controls="top" aria-expanded="false" aria-label="Links">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="top">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link active" href="../docs.html">Docs</a></li>
+        <li class="nav-item"><a class="nav-link" href="../getting-started.html">Get started</a></li>
+        <li class="nav-item"><a class="nav-link " href="../download.html">Download</a></li>
+        <li class="nav-item"><a class="nav-link " href="../changelog.html">Changelog</a></li>
+      </ul>
+      <div class="search position-relative my-2 my-lg-0 me-lg-3">
+        <input id="search" class="form-control form-control-sm" type="search" placeholder="Search the docs  /" autocomplete="off" data-base="../" aria-label="Search the docs">
+        <div id="results" class="dropdown-menu shadow"></div>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        <button id="theme" class="btn btn-sm btn-outline-secondary" type="button" aria-label="Light or dark" title="Light or dark"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+        <a class="btn btn-sm btn-outline-secondary" href="https://github.com/azrov/pastel">GitHub</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-lg-4">
+  <div class="row">
+    <aside class="col-lg-3 col-xl-2 docs-sidebar">
+      <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+        <div class="offcanvas-header border-bottom">
+          <h5 class="offcanvas-title" id="sidebarLabel">Documentation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+          <nav class="docs-nav w-100">
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g0" aria-expanded="false">Start</button>
+              <div class="collapse " id="g0">
+                <a href="../readme.html">Overview</a>
+                <a href="../docs.html">All topics</a>
+                <a href="../getting-started.html">Getting started</a>
+                <a href="../commands.html">The pastel command</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g1" aria-expanded="false">Handbook</button>
+              <div class="collapse " id="g1">
+                <a href="../handbook/README.html">The Pastel Handbook</a>
+                <a href="../handbook/01-hello.html">1. Your first program</a>
+                <a href="../handbook/02-values.html">2. Values, types and variables</a>
+                <a href="../handbook/03-decisions-loops.html">3. Decisions and loops</a>
+                <a href="../handbook/04-routines.html">4. Procedures and functions</a>
+                <a href="../handbook/05-structured-types.html">5. Arrays, records, enumerations and sets</a>
+                <a href="../handbook/06-strings.html">6. Text</a>
+                <a href="../handbook/07-units.html">7. Units</a>
+                <a href="../handbook/08-classes.html">8. Classes and objects</a>
+                <a href="../handbook/09-exceptions.html">9. When things go wrong</a>
+                <a href="../handbook/10-generics.html">10. Lists, dictionaries and generics</a>
+                <a href="../handbook/11-files-json.html">11. Files and JSON</a>
+                <a href="../handbook/12-testing.html">12. Testing</a>
+                <a href="../handbook/13-interfaces.html">13. Interfaces and the command line</a>
+                <a href="../handbook/14-first-window.html">14. Your first window</a>
+                <a href="../handbook/15-layout.html">15. Layout</a>
+                <a href="../handbook/16-grids-and-dialogs.html">16. Grids and dialogs</a>
+                <a href="../handbook/17-database.html">17. A database</a>
+                <a href="../handbook/18-charts-and-reports.html">18. Charts and reports</a>
+                <a href="../handbook/19-look-and-languages.html">19. Look and languages</a>
+                <a href="../handbook/20-background.html">20. Work in the background</a>
+                <a href="../handbook/21-phones.html">21. Phones</a>
+                <a href="../handbook/22-shipping.html">22. Shipping</a>
+                <a href="../handbook/appendix-a-cheat-sheet.html">Appendix A. Object Pascal at a glance</a>
+                <a href="../handbook/appendix-b-from-delphi.html">Appendix B. Coming from Delphi or Lazarus</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g2" aria-expanded="false">Guides</button>
+              <div class="collapse " id="g2">
+                <a href="../guide-cli.html">Writing a command-line tool</a>
+                <a href="../guide-api.html">A REST API with a database</a>
+                <a href="../guide-desktop.html">Building a desktop app</a>
+                <a href="../guide-business.html">A business system — desktop app and server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g3" aria-expanded="false">Desktop and phone apps</button>
+              <div class="collapse " id="g3">
+                <a href="../forms.html">Forms and controls</a>
+                <a href="../controls.html">Controls reference</a>
+                <a href="../styles.html">Styles: Fluent, Material and your own</a>
+                <a href="../components.html">Writing components</a>
+                <a href="../android.html">Android</a>
+                <a href="../device.html">The phone&#39;s features</a>
+                <a href="../java.html">Java from Pascal</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g4" aria-expanded="false">Programs and services</button>
+              <div class="collapse " id="g4">
+                <a href="../console.html">Console programs</a>
+                <a href="../data.html">JSON, settings and logging</a>
+                <a href="../documents.html">Reports, PDF, Excel and printing</a>
+                <a href="../system.html">Files, programs, HTTP and the environment</a>
+                <a href="../services.html">Services: programs that keep running</a>
+                <a href="../web.html">Web APIs and sites: Pastel.Web</a>
+                <a href="../websockets.html">WebSockets: Pastel.WebSocket</a>
+                <a href="../mail.html">E-mail: Pastel.Mail</a>
+                <a href="../pages.html">Web pages from templates</a>
+                <a href="../markdown.html">Markdown</a>
+                <a href="../database.html">Databases: Pastel.Db</a>
+                <a href="../sync.html">Data that works offline: Pastel.Sync</a>
+                <a href="../auth.html">Users and login: Pastel.Auth</a>
+                <a href="../security.html">Passwords, tokens and signatures: Pastel.Crypto, Pastel.Jwt</a>
+                <a href="../deploy.html">Deploying to a Linux server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g5" aria-expanded="false">Working with Pastel</button>
+              <div class="collapse " id="g5">
+                <a href="../project.html">The project file: pastel.toml</a>
+                <a href="../workflow.html">Everyday work: watch, format, libraries</a>
+                <a href="../packages.html">Packages</a>
+                <a href="../testing.html">Testing</a>
+                <a href="../vscode.html">Pastel for Visual Studio Code</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start " type="button" data-bs-toggle="collapse" data-bs-target="#g6" aria-expanded="true">Reference</button>
+              <div class="collapse show" id="g6">
+                <a href="../api/index.html">Pastel API reference</a>
+                <a href="../compatibility.html">Compatibility: what stays the same</a>
+                <a href="../performance.html">Performance</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g7" aria-expanded="false">Examples</button>
+              <div class="collapse " id="g7">
+                <a href="../examples/components-demo.html">components-demo</a>
+                <a href="../examples/components.html">components</a>
+                <a href="../examples/contacts.html">contacts</a>
+                <a href="../examples/dupfinder.html">dupfinder</a>
+                <a href="../examples/notepad.html">notepad</a>
+                <a href="../examples/notes-api.html">notes-api</a>
+                <a href="../examples/pocket-app.html">pocket-app</a>
+                <a href="../examples/pocket-cli.html">pocket-cli</a>
+                <a href="../examples/pocket-core.html">pocket-core</a>
+                <a href="../examples/salon-api.html">salon-api</a>
+                <a href="../examples/salon-core.html">salon-core</a>
+                <a href="../examples/salon-desk.html">salon-desk</a>
+                <a href="../examples/weather.html">weather</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g8" aria-expanded="false">Project</button>
+              <div class="collapse " id="g8">
+                <a href="../roadmap.html">Pastel roadmap to 1.0</a>
+                <a href="../changelog.html">Changelog</a>
+                <a href="../vscode-changelog.html">Changelog of the VS Code extension</a>
+                <a href="../contributing.html">Contributing to Pastel</a>
+                <a href="../security-policy.html">Security</a>
+                <a href="../code-of-conduct.html">Code of conduct</a>
+                <a href="../announcing-1.0.html">Announcing Pastel 1.0</a>
+              </div>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </aside>
+    <main class="col-12 col-lg-9 col-xl-8 docs-main">
+      <article class="markdown">
+<h1 id="pasteldialogs"><a class="anchor" href="#pasteldialogs">#</a>Pastel.Dialogs</h1>
+<p>Dialogs: messages, questions, input, choosing files and folders.</p>
+<pre><code>ShowMessage('Saved.');
+if Ask('Delete this note?') then ...
+Name := InputBox('New file', 'Name:', 'notes.txt');
+if OpenFileDialog(FileName, 'Text files|*.txt;*.md|All files|*') then ...
+if SaveFileDialog(FileName, 'Notes|*.txt') then ...
+</code></pre>
+<p>Messages and questions are drawn by Pastel inside the window. The file
+and folder dialogs are the system's own when it has them (Windows; Linux
+with zenity or kdialog), else Pastel's; UseNativeDialogs := False always
+takes Pastel's. Test scripts and headless runs get Pastel's, which
+scripts can click. They wait until the user answered, like Delphi's.
+Each has a second form that does not wait: it returns at once and calls a
+method of yours with the answer — the way for phones (nothing should wait
+inside an event there):
+Ask('Delete this note?', @DeleteAnswered);
+...
+procedure TMainForm.DeleteAnswered(Sender: TObject; AResult: Integer);
+begin
+if AResult = mrYes then DeleteNote;
+end;
+Their controls have names a test script can use:
+OkButton, CancelButton, YesButton, NoButton, InputEdit, FileList,
+FileNameEdit, PathEdit.</p>
+<p><code>uses Pastel.Dialogs;</code> · source: <a href="https://github.com/azrov/pastel/blob/main/framework/src/pastel.dialogs.pas">framework/src/pastel.dialogs.pas</a></p>
+<p><strong>Contents:</strong> <a href="#topendialog">TOpenDialog</a> · <a href="#tsavedialog">TSaveDialog</a> · <a href="#tselectfolderdialog">TSelectFolderDialog</a> · <a href="#showmessage">ShowMessage</a> · <a href="#showmessage">ShowMessage</a> · <a href="#showtoast">ShowToast</a> · <a href="#ask">Ask</a> · <a href="#ask">Ask</a> · <a href="#messagedlg">MessageDlg</a> · <a href="#messagedlg">MessageDlg</a> · <a href="#inputbox">InputBox</a> · <a href="#inputquery">InputQuery</a> · <a href="#inputquery">InputQuery</a> · <a href="#logindialog">LoginDialog</a> · <a href="#openfiledialog">OpenFileDialog</a> · <a href="#openfiledialog">OpenFileDialog</a> · <a href="#savefiledialog">SaveFileDialog</a> · <a href="#selectfolderdialog">SelectFolderDialog</a> · <a href="#savefiledialog">SaveFileDialog</a> · <a href="#selectfolderdialog">SelectFolderDialog</a> · <a href="#modalresultcaption">ModalResultCaption</a></p>
+<h2 id="types"><a class="anchor" href="#types">#</a>Types</h2>
+<h3 id="topendialog"><a class="anchor" href="#topendialog">#</a>TOpenDialog</h3>
+<pre><code class="language-pascal">type TOpenDialog = class(TComponent)
+</code></pre>
+<p>The file dialogs as components, like Delphi's: put one on the form (it is not
+drawn), set its properties in the designer and call Execute:
+if OpenDialog1.Execute then
+Memo.Lines.LoadFromFile(OpenDialog1.FileName);</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>constructor Create(AOwner: TComponent)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function Execute: Boolean</code></td>
+<td>Shows the dialog; True when the user chose a file (then in FileName).</td>
+</tr>
+<tr>
+<td><code>procedure Execute(OnDone: TFileDoneEvent)</code></td>
+<td>The same without waiting: FileName is set, then OnDone(Self, Ok, FileName).</td>
+</tr>
+<tr>
+<td><code>property FileName: string</code></td>
+<td>Where it starts (a file or a folder); the chosen file after Execute.</td>
+</tr>
+<tr>
+<td><code>property Filter: string</code></td>
+<td>'Pictures|<em>.png;</em>.jpg|All files|*'</td>
+</tr>
+<tr>
+<td><code>property Title: string</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="tsavedialog"><a class="anchor" href="#tsavedialog">#</a>TSaveDialog</h3>
+<pre><code class="language-pascal">type TSaveDialog = class(TOpenDialog)
+</code></pre>
+<p>Asks before replacing a file that exists; DefaultExt ('.txt') is added when the name has none.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>constructor Create(AOwner: TComponent)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function Execute: Boolean</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure Execute(OnDone: TFileDoneEvent)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property DefaultExt: string</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="tselectfolderdialog"><a class="anchor" href="#tselectfolderdialog">#</a>TSelectFolderDialog</h3>
+<pre><code class="language-pascal">type TSelectFolderDialog = class(TComponent)
+</code></pre>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>constructor Create(AOwner: TComponent)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function Execute: Boolean</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure Execute(OnDone: TFileDoneEvent)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Folder: string</code></td>
+<td>Where it starts; the chosen folder after Execute.</td>
+</tr>
+<tr>
+<td><code>property Title: string</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<h2 id="other-types"><a class="anchor" href="#other-types">#</a>Other types</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>type TInputDoneEvent = procedure(Sender: TObject; Ok: Boolean; Value: string)</code></td>
+<td>The answer of InputQuery without waiting: Ok for OK, Value the text typed.</td>
+</tr>
+<tr>
+<td><code>type TFileDoneEvent = procedure(Sender: TObject; Ok: Boolean; FileName: string)</code></td>
+<td>The answer of a file dialog without waiting: Ok when a file (folder) was chosen.</td>
+</tr>
+</tbody></table>
+<h2 id="routines"><a class="anchor" href="#routines">#</a>Routines</h2>
+<h3 id="showmessage"><a class="anchor" href="#showmessage">#</a>ShowMessage</h3>
+<pre><code class="language-pascal">procedure ShowMessage(const Msg: string; const Title: string = '')
+</code></pre>
+<p>A message with an OK button.</p>
+<h3 id="showmessage-1"><a class="anchor" href="#showmessage-1">#</a>ShowMessage</h3>
+<pre><code class="language-pascal">procedure ShowMessage(const Msg: string; OnDone: TModalDoneEvent; const Title: string = '')
+</code></pre>
+<p>The same without waiting; OnDone (may be nil) when it is closed.</p>
+<h3 id="showtoast"><a class="anchor" href="#showtoast">#</a>ShowToast</h3>
+<pre><code class="language-pascal">procedure ShowToast(const Msg: string; Long: Boolean = False)
+</code></pre>
+<p>A short message for a moment, without a button (Android's Toast; drawn by
+Pastel near the bottom of the window elsewhere): 'Saved', 'Copied'.</p>
+<h3 id="ask"><a class="anchor" href="#ask">#</a>Ask</h3>
+<pre><code class="language-pascal">function Ask(const Msg: string; const Title: string = ''): Boolean
+</code></pre>
+<p>A question with Yes and No; True for Yes.</p>
+<h3 id="ask-1"><a class="anchor" href="#ask-1">#</a>Ask</h3>
+<pre><code class="language-pascal">procedure Ask(const Msg: string; OnDone: TModalDoneEvent; const Title: string = '')
+</code></pre>
+<p>The same without waiting: OnDone gets mrYes or mrNo.</p>
+<h3 id="messagedlg"><a class="anchor" href="#messagedlg">#</a>MessageDlg</h3>
+<pre><code class="language-pascal">function MessageDlg(const Msg: string; const Title: string; const Buttons: array of Integer; Danger: Boolean = False): Integer
+</code></pre>
+<p>A message with the buttons given (mrOk, mrCancel, mrYes, mrNo, mrAbort,
+mrRetry, mrIgnore, mrClose); the result is the button chosen, or mrCancel
+for Escape. The first button is the default (Enter). Danger: the first
+button is red (for deleting and the like).</p>
+<h3 id="messagedlg-1"><a class="anchor" href="#messagedlg-1">#</a>MessageDlg</h3>
+<pre><code class="language-pascal">procedure MessageDlg(const Msg: string; const Title: string; const Buttons: array of Integer; OnDone: TModalDoneEvent; Danger: Boolean = False)
+</code></pre>
+<p>The same without waiting: OnDone gets the button chosen (mrCancel for Escape).</p>
+<h3 id="inputbox"><a class="anchor" href="#inputbox">#</a>InputBox</h3>
+<pre><code class="language-pascal">function InputBox(const Title: string; const Prompt: string; const Default: string): string
+</code></pre>
+<p>Asks for a line of text; Default when cancelled.</p>
+<h3 id="inputquery"><a class="anchor" href="#inputquery">#</a>InputQuery</h3>
+<pre><code class="language-pascal">function InputQuery(const Title: string; const Prompt: string; var Value: string): Boolean
+</code></pre>
+<p>The same; False when cancelled (Value is not changed then).</p>
+<h3 id="inputquery-1"><a class="anchor" href="#inputquery-1">#</a>InputQuery</h3>
+<pre><code class="language-pascal">procedure InputQuery(const Title: string; const Prompt: string; const Value: string; OnDone: TInputDoneEvent)
+</code></pre>
+<p>The same without waiting: OnDone gets Ok and the text.</p>
+<h3 id="logindialog"><a class="anchor" href="#logindialog">#</a>LoginDialog</h3>
+<pre><code class="language-pascal">function LoginDialog(const Title: string; var User: string; var Password: string; const Error: string = ''): Boolean
+</code></pre>
+<p>Asks for an e-mail (or user name) and a password; Error is shown above
+them (after a failed try). With Pastel.Auth:
+while LoginDialog('Salon', Email, Password, Client.Error) do
+if Client.Login(Email, Password) then Break;</p>
+<h3 id="openfiledialog"><a class="anchor" href="#openfiledialog">#</a>OpenFileDialog</h3>
+<pre><code class="language-pascal">function OpenFileDialog(var FileName: string; const Filter: string = ''; const Title: string = 'Open'): Boolean
+</code></pre>
+<p>Filter: 'Pictures|<em>.png;</em>.jpg|All files|*'. FileName: where to start
+(a file or a folder); on True the chosen file.</p>
+<h3 id="openfiledialog-1"><a class="anchor" href="#openfiledialog-1">#</a>OpenFileDialog</h3>
+<pre><code class="language-pascal">procedure OpenFileDialog(const FileName: string; const Filter: string; const Title: string; OnDone: TFileDoneEvent)
+</code></pre>
+<p>The file dialogs without waiting: OnDone gets Ok and the file (folder).</p>
+<h3 id="savefiledialog"><a class="anchor" href="#savefiledialog">#</a>SaveFileDialog</h3>
+<pre><code class="language-pascal">procedure SaveFileDialog(const FileName: string; const Filter: string; const Title: string; const DefaultExt: string; OnDone: TFileDoneEvent)
+</code></pre>
+<h3 id="selectfolderdialog"><a class="anchor" href="#selectfolderdialog">#</a>SelectFolderDialog</h3>
+<pre><code class="language-pascal">procedure SelectFolderDialog(const Folder: string; const Title: string; OnDone: TFileDoneEvent)
+</code></pre>
+<h3 id="savefiledialog-1"><a class="anchor" href="#savefiledialog-1">#</a>SaveFileDialog</h3>
+<pre><code class="language-pascal">function SaveFileDialog(var FileName: string; const Filter: string = ''; const Title: string = 'Save'; const DefaultExt: string = ''): Boolean
+</code></pre>
+<p>Asks before replacing a file that exists. DefaultExt ('.txt') is added
+when the name has none.</p>
+<h3 id="selectfolderdialog-1"><a class="anchor" href="#selectfolderdialog-1">#</a>SelectFolderDialog</h3>
+<pre><code class="language-pascal">function SelectFolderDialog(var Folder: string; const Title: string = 'Choose a folder'): Boolean
+</code></pre>
+<h3 id="modalresultcaption"><a class="anchor" href="#modalresultcaption">#</a>ModalResultCaption</h3>
+<pre><code class="language-pascal">function ModalResultCaption(R: Integer): string
+</code></pre>
+<p>The caption of a modal result: 'OK', 'Cancel', 'Yes'...</p>
+<h2 id="constants-and-variables"><a class="anchor" href="#constants-and-variables">#</a>Constants and variables</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>var UseNativeDialogs: Boolean</code></td>
+<td>File and folder dialogs of the system when there are some.</td>
+</tr>
+</tbody></table>
+
+      </article>
+      <p class="edit mt-5"><a href="https://github.com/azrov/pastel/edit/main/docs/api/pastel.dialogs.md">Improve this page on GitHub</a></p>
+    </main>
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <div class="sticky">
+        <div class="toc-title">On this page</div>
+        <a href="#types">Types</a>
+        <a href="#other-types">Other types</a>
+        <a href="#routines">Routines</a>
+        <a href="#constants-and-variables">Constants and variables</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer py-4 mt-5">
+  <div class="container d-flex flex-wrap gap-3 justify-content-between small text-body-secondary">
+    <span>Pastel 2.1.0-beta.4 · MIT License · built with Pastel.Markdown and Pastel.Pages</span>
+    <span class="d-flex gap-3">
+      <a href="../docs.html">Documentation</a>
+      <a href="../download.html">Download</a>
+      <a href="../contributing.html">Contributing</a>
+      <a href="https://github.com/azrov/pastel">GitHub</a>
+    </span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/delphi.min.js"></script>
+<script src="../assets/site.js"></script>
+</body>
+</html>

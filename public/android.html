@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Android · Pastel</title>
+<meta name="description" content="Pastel: a modern cross-platform app framework and toolchain for Object Pascal. Desktop, phone, web and console apps from one codebase.">
+<script>
+  try { var t = localStorage.getItem('pastel-theme'); } catch (e) {}
+  document.documentElement.dataset.bsTheme = t || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hl-dark">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body class="section-docs">
+<nav class="navbar navbar-expand-lg sticky-top site-header">
+  <div class="container-fluid px-lg-4">
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="index.html">
+      <span class="logo" aria-hidden="true"></span>Pastel
+    </a>
+        <button class="btn btn-sm btn-outline-secondary d-lg-none me-auto" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">Menu</button>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#top" aria-controls="top" aria-expanded="false" aria-label="Links">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="top">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link active" href="docs.html">Docs</a></li>
+        <li class="nav-item"><a class="nav-link" href="getting-started.html">Get started</a></li>
+        <li class="nav-item"><a class="nav-link " href="download.html">Download</a></li>
+        <li class="nav-item"><a class="nav-link " href="changelog.html">Changelog</a></li>
+      </ul>
+      <div class="search position-relative my-2 my-lg-0 me-lg-3">
+        <input id="search" class="form-control form-control-sm" type="search" placeholder="Search the docs  /" autocomplete="off" data-base="" aria-label="Search the docs">
+        <div id="results" class="dropdown-menu shadow"></div>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        <button id="theme" class="btn btn-sm btn-outline-secondary" type="button" aria-label="Light or dark" title="Light or dark"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+        <a class="btn btn-sm btn-outline-secondary" href="https://github.com/azrov/pastel">GitHub</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-lg-4">
+  <div class="row">
+    <aside class="col-lg-3 col-xl-2 docs-sidebar">
+      <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+        <div class="offcanvas-header border-bottom">
+          <h5 class="offcanvas-title" id="sidebarLabel">Documentation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+          <nav class="docs-nav w-100">
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g0" aria-expanded="false">Start</button>
+              <div class="collapse " id="g0">
+                <a href="readme.html">Overview</a>
+                <a href="docs.html">All topics</a>
+                <a href="getting-started.html">Getting started</a>
+                <a href="commands.html">The pastel command</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g1" aria-expanded="false">Handbook</button>
+              <div class="collapse " id="g1">
+                <a href="handbook/README.html">The Pastel Handbook</a>
+                <a href="handbook/01-hello.html">1. Your first program</a>
+                <a href="handbook/02-values.html">2. Values, types and variables</a>
+                <a href="handbook/03-decisions-loops.html">3. Decisions and loops</a>
+                <a href="handbook/04-routines.html">4. Procedures and functions</a>
+                <a href="handbook/05-structured-types.html">5. Arrays, records, enumerations and sets</a>
+                <a href="handbook/06-strings.html">6. Text</a>
+                <a href="handbook/07-units.html">7. Units</a>
+                <a href="handbook/08-classes.html">8. Classes and objects</a>
+                <a href="handbook/09-exceptions.html">9. When things go wrong</a>
+                <a href="handbook/10-generics.html">10. Lists, dictionaries and generics</a>
+                <a href="handbook/11-files-json.html">11. Files and JSON</a>
+                <a href="handbook/12-testing.html">12. Testing</a>
+                <a href="handbook/13-interfaces.html">13. Interfaces and the command line</a>
+                <a href="handbook/14-first-window.html">14. Your first window</a>
+                <a href="handbook/15-layout.html">15. Layout</a>
+                <a href="handbook/16-grids-and-dialogs.html">16. Grids and dialogs</a>
+                <a href="handbook/17-database.html">17. A database</a>
+                <a href="handbook/18-charts-and-reports.html">18. Charts and reports</a>
+                <a href="handbook/19-look-and-languages.html">19. Look and languages</a>
+                <a href="handbook/20-background.html">20. Work in the background</a>
+                <a href="handbook/21-phones.html">21. Phones</a>
+                <a href="handbook/22-shipping.html">22. Shipping</a>
+                <a href="handbook/appendix-a-cheat-sheet.html">Appendix A. Object Pascal at a glance</a>
+                <a href="handbook/appendix-b-from-delphi.html">Appendix B. Coming from Delphi or Lazarus</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g2" aria-expanded="false">Guides</button>
+              <div class="collapse " id="g2">
+                <a href="guide-cli.html">Writing a command-line tool</a>
+                <a href="guide-api.html">A REST API with a database</a>
+                <a href="guide-desktop.html">Building a desktop app</a>
+                <a href="guide-business.html">A business system — desktop app and server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start " type="button" data-bs-toggle="collapse" data-bs-target="#g3" aria-expanded="true">Desktop and phone apps</button>
+              <div class="collapse show" id="g3">
+                <a href="forms.html">Forms and controls</a>
+                <a href="controls.html">Controls reference</a>
+                <a href="styles.html">Styles: Fluent, Material and your own</a>
+                <a href="components.html">Writing components</a>
+                <a href="android.html" class="current" aria-current="page">Android</a>
+                <a href="device.html">The phone&#39;s features</a>
+                <a href="java.html">Java from Pascal</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g4" aria-expanded="false">Programs and services</button>
+              <div class="collapse " id="g4">
+                <a href="console.html">Console programs</a>
+                <a href="data.html">JSON, settings and logging</a>
+                <a href="documents.html">Reports, PDF, Excel and printing</a>
+                <a href="system.html">Files, programs, HTTP and the environment</a>
+                <a href="services.html">Services: programs that keep running</a>
+                <a href="web.html">Web APIs and sites: Pastel.Web</a>
+                <a href="websockets.html">WebSockets: Pastel.WebSocket</a>
+                <a href="mail.html">E-mail: Pastel.Mail</a>
+                <a href="pages.html">Web pages from templates</a>
+                <a href="markdown.html">Markdown</a>
+                <a href="database.html">Databases: Pastel.Db</a>
+                <a href="sync.html">Data that works offline: Pastel.Sync</a>
+                <a href="auth.html">Users and login: Pastel.Auth</a>
+                <a href="security.html">Passwords, tokens and signatures: Pastel.Crypto, Pastel.Jwt</a>
+                <a href="deploy.html">Deploying to a Linux server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g5" aria-expanded="false">Working with Pastel</button>
+              <div class="collapse " id="g5">
+                <a href="project.html">The project file: pastel.toml</a>
+                <a href="workflow.html">Everyday work: watch, format, libraries</a>
+                <a href="packages.html">Packages</a>
+                <a href="testing.html">Testing</a>
+                <a href="vscode.html">Pastel for Visual Studio Code</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g6" aria-expanded="false">Reference</button>
+              <div class="collapse " id="g6">
+                <a href="api/index.html">Pastel API reference</a>
+                <a href="compatibility.html">Compatibility: what stays the same</a>
+                <a href="performance.html">Performance</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g7" aria-expanded="false">Examples</button>
+              <div class="collapse " id="g7">
+                <a href="examples/components-demo.html">components-demo</a>
+                <a href="examples/components.html">components</a>
+                <a href="examples/contacts.html">contacts</a>
+                <a href="examples/dupfinder.html">dupfinder</a>
+                <a href="examples/notepad.html">notepad</a>
+                <a href="examples/notes-api.html">notes-api</a>
+                <a href="examples/pocket-app.html">pocket-app</a>
+                <a href="examples/pocket-cli.html">pocket-cli</a>
+                <a href="examples/pocket-core.html">pocket-core</a>
+                <a href="examples/salon-api.html">salon-api</a>
+                <a href="examples/salon-core.html">salon-core</a>
+                <a href="examples/salon-desk.html">salon-desk</a>
+                <a href="examples/weather.html">weather</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g8" aria-expanded="false">Project</button>
+              <div class="collapse " id="g8">
+                <a href="roadmap.html">Pastel roadmap to 1.0</a>
+                <a href="changelog.html">Changelog</a>
+                <a href="vscode-changelog.html">Changelog of the VS Code extension</a>
+                <a href="contributing.html">Contributing to Pastel</a>
+                <a href="security-policy.html">Security</a>
+                <a href="code-of-conduct.html">Code of conduct</a>
+                <a href="announcing-1.0.html">Announcing Pastel 1.0</a>
+              </div>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </aside>
+    <main class="col-12 col-lg-9 col-xl-8 docs-main">
+      <article class="markdown">
+<h1 id="android"><a class="anchor" href="#android">#</a>Android</h1>
+<p>The same Pascal code and <code>.pform</code> forms run on Android phones and tablets. An app is built as <code>libmain.so</code> and packed into an <code>.apk</code> that runs as a <em>NativeActivity</em>: there is no Java code, and Pastel draws the forms itself, as on the desktop.</p>
+<blockquote>
+<p><strong>A preview.</strong> Building and packing are tested on every change; running is being tried on real phones now. Tell us what you see: an issue with the phone's model and Android version, and the log (<code>pastel run --target android</code> shows it).</p>
+</blockquote>
+<h2 id="phones-tv-boxes-and-the-emulator"><a class="anchor" href="#phones-tv-boxes-and-the-emulator">#</a>Phones, TV boxes and the emulator</h2>
+<p>An Android device has one of four kinds of processor (CPU). Pastel builds for all of them, and one <code>.apk</code> can carry all four:</p>
+<table>
+<thead>
+<tr>
+<th>Target</th>
+<th>Android's name</th>
+<th>Devices</th>
+<th>Android</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>android-arm64</code></td>
+<td><code>arm64-v8a</code></td>
+<td>most phones and tablets since about 2016</td>
+<td>5 and newer</td>
+</tr>
+<tr>
+<td><code>android-arm</code></td>
+<td><code>armeabi-v7a</code></td>
+<td>older phones, most TV boxes, cheap tablets; 64-bit phones run it too</td>
+<td>4.4 and newer</td>
+</tr>
+<tr>
+<td><code>android-x86_64</code></td>
+<td><code>x86_64</code></td>
+<td>the Android emulator on a PC (Android Studio's, or others)</td>
+<td>5 and newer</td>
+</tr>
+<tr>
+<td><code>android-x86</code></td>
+<td><code>x86</code></td>
+<td>older emulators, a few Intel tablets</td>
+<td>4.4 and newer</td>
+</tr>
+</tbody></table>
+<p><code>adb shell getprop ro.product.cpu.abilist</code> tells a device's kind; <em>Settings → About</em> does too on most phones.</p>
+<h2 id="setting-it-up-once"><a class="anchor" href="#setting-it-up-once">#</a>Setting it up (once)</h2>
+<p>On Linux (Ubuntu, Mint, Debian):</p>
+<pre><code class="language-sh">sudo apt install fpc fpc-source                                     # the compiler and its sources
+sudo apt install binutils-aarch64-linux-gnu binutils-arm-linux-gnueabi binutils-x86-64-linux-gnu binutils-i686-linux-gnu
+sudo apt install aapt zipalign apksigner android-sdk-platform-23 default-jdk-headless adb
+pastel doctor --install android
+</code></pre>
+<p><code>pastel doctor --install android</code> sets up every kind of device whose binutils (assembler and linker) are installed, once, into <code>~/.pastel/</code> (about half a minute):</p>
+<ul>
+<li><strong>the compilers</strong>: the ARM 64-bit one comes with the <code>fpc</code> package; the ARM 32-bit (<code>ppcrossarm</code>) and x86 (<code>ppcross386</code>) ones are built from Free Pascal's sources (<code>fpc-source</code>) — a few seconds each. The 64-bit PC compiler makes x86_64 code itself.</li>
+<li><strong>Free Pascal's units</strong> for Android, for each kind.</li>
+<li><strong>small stand-ins for the phone's system libraries</strong>, so <strong>the Android NDK is not needed</strong>.</li>
+</ul>
+<p>The third line brings Android's packing tools, a platform (<code>android.jar</code>), Java (to sign) and <code>adb</code> (to install on a connected phone or emulator). With Android Studio installed, its SDK is used too (<code>ANDROID_HOME</code>, or <code>~/Android/Sdk</code>).</p>
+<p><code>pastel setup android</code> does the same and then checks Android's tools one by one (Java, the SDK, the platform, the
+build tools, <code>adb</code> and the phone, bundletool for Google Play) and says which commands work;
+<code>pastel setup android --yes</code> installs the missing packages with Android's <code>sdkmanager</code> — Android Studio's, or, when
+there is none (Ubuntu's packages), Google's command-line tools fetched into <code>~/Android/Sdk</code> (no <code>sudo</code>). The newest
+build tools of the SDKs come before older ones on the <code>PATH</code>.</p>
+<p><code>pastel doctor</code> then shows <code>✓ android-arm64</code>, <code>✓ android-arm</code>, <code>✓ android-x86_64</code>, <code>✓ android-x86</code>. One kind alone: <code>pastel doctor --install android-arm</code>.</p>
+<p><strong>Free Pascal's sources from freepascal.org</strong> (an archive you unpacked, instead of <code>fpc-source</code>) work too: point <code>FPCDIR</code> at the folder that has <code>compiler/</code> and <code>rtl/</code> in it.</p>
+<pre><code class="language-sh">FPCDIR=~/fpc-3.2.2-src pastel doctor --install android
+</code></pre>
+<h2 id="making-an-app-for-the-phone"><a class="anchor" href="#making-an-app-for-the-phone">#</a>Making an app for the phone</h2>
+<p>In VS Code: <strong>Pastel: New Project…</strong> → <em>Mobile</em> → <em>Android App</em>. Or in a terminal:</p>
+<pre><code class="language-sh">pastel new app shop --phone             # forms made for phones; any app project works too
+cd shop
+pastel build --target android-arm       # build/android-arm/debug/libmain.so (any target above)
+pastel package apk                      # dist/shop-0.1.0.apk for every kind set up, signed, ready to install
+pastel package apk --target android-arm # only one kind: a smaller .apk
+</code></pre>
+<p><code>pastel build --target android</code> is <code>android-arm64</code>. <code>pastel package apk</code> puts in every kind this computer is set up for; with <code>platforms = [&quot;android-arm64&quot;, &quot;android-arm&quot;]</code> in <code>pastel.toml</code>, exactly those.</p>
+<p>To have it built with the others, add it to the platforms in <code>pastel.toml</code>:</p>
+<pre><code class="language-toml">[targets]
+platforms = [&quot;linux&quot;, &quot;windows&quot;, &quot;android&quot;]
+</code></pre>
+<h2 id="forms-for-phones"><a class="anchor" href="#forms-for-phones">#</a>Forms for phones</h2>
+<p><code>--phone</code> (on <code>pastel new app</code> and <code>pastel new form</code>; the wizard's <em>Android App</em> uses it, and <strong>New Form…</strong> in a phone app too) makes forms for small, upright screens: the controls are stacked (<code>Layout = Flow</code>) and as wide as the screen, and edits and buttons are 48 pixels high — the size a finger hits. The designer's size box shows the form at <em>Phone 360 × 640</em>.</p>
+<pre><code>object HomeForm: THomeForm
+  Width = 360
+  Height = 640
+  Padding = 16
+  Gap = 12
+  object NameEdit: TEdit
+    Height = 48
+    Placeholder = 'Your name'
+  end
+  object SendButton: TButton
+    Height = 48
+    Text = 'Send'
+    OnClick = SendClick
+  end
+end
+</code></pre>
+<p>A free-placed form (<code>Layout = Free</code>) works on a phone too: give the controls <code>Anchors</code> so they follow the screen's width.</p>
+<h2 id="in-vs-code"><a class="anchor" href="#in-vs-code">#</a>In VS Code</h2>
+<p>The status bar shows the <strong>platform</strong> F9 and Ctrl+F9 use (like Delphi's <em>Target Platforms</em>); a phone app (<code>platforms = [&quot;android&quot;]</code>) starts on <em>android</em>. Click it to choose another one.</p>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>F9</th>
+<th>Ctrl+F9</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>this computer (<code>linux</code>, <code>windows</code>)</td>
+<td>build and run</td>
+<td>build</td>
+</tr>
+<tr>
+<td><code>android</code></td>
+<td>build for the connected phone's or emulator's CPU, install, start, show the log</td>
+<td><code>pastel package apk</code>: one <code>.apk</code> for every kind set up</td>
+</tr>
+<tr>
+<td><code>android-arm</code>, <code>android-x86_64</code>…</td>
+<td>the same, for that kind only</td>
+<td>an <code>.apk</code> for that kind</td>
+</tr>
+<tr>
+<td>another desktop (<code>windows</code> on Linux)</td>
+<td>build (it cannot run here)</td>
+<td>build</td>
+</tr>
+</tbody></table>
+<h2 id="trying-it-on-your-phone"><a class="anchor" href="#trying-it-on-your-phone">#</a>Trying it on your phone</h2>
+<ol>
+<li>On the phone: <em>Settings → About phone</em>, tap <em>Build number</em> seven times; then <em>Settings → Developer options → USB debugging</em> on.</li>
+<li>Connect it with USB and allow the computer on the phone; <code>adb devices</code> lists it.</li>
+<li>In the project:</li>
+</ol>
+<pre><code class="language-sh">pastel run --target android
+</code></pre>
+<p><strong>Hot reload on the phone</strong>: while it runs, save a <code>.pform</code> file and the phone shows the change at once, keeping what was typed — the debug build asks <code>pastel run</code> for its form through the USB cable (<code>adb reverse</code>, port 7865). Code changes need <code>pastel run</code> again.</p>
+<p>It asks the phone which kind of CPU it has, packs a debug <code>.apk</code> for it, installs it, starts it and shows its log (<code>WriteLn</code>, errors) until <code>Ctrl+C</code>. Without a cable: copy <code>dist/shop-0.1.0.apk</code> (made by <code>pastel package apk</code>, with every kind) to the phone or TV box and open it (allow installing from this source once).</p>
+<h2 id="when-the-app-closes"><a class="anchor" href="#when-the-app-closes">#</a>When the app closes</h2>
+<p>The phone's log says why. <code>pastel run --target android</code> (F9) shows it after starting the app; for an app started on the phone itself (or a TV box over the network: <code>adb connect 192.168.1.50:5555</code>):</p>
+<pre><code class="language-sh">pastel logcat              # the app's lines, by its package name; Ctrl+C stops
+</code></pre>
+<p>In VS Code: <strong>Pastel: Android Log</strong>. Only the app's lines are shown — those of its processes, its start and its end, and crash reports. A crash in the Pascal code shows where it was, from the debug build:</p>
+<pre><code>15:43:01 F libc: Fatal signal 11 (SIGSEGV), code 1, fault addr 0x0 in tid 4330
+15:43:01 F DEBUG:     #00 pc 0006d4d8  /data/app/dev.pastel.shop-1/lib/arm/libmain.so   &lt;- ClearClick (Home.pas:33)
+</code></pre>
+<p>What to look for:</p>
+<table>
+<thead>
+<tr>
+<th>In the log</th>
+<th>What it means</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>dlopen failed</code>, <code>UnsatisfiedLinkError</code></td>
+<td>Android could not load <code>libmain.so</code>: the line says which name is missing</td>
+</tr>
+<tr>
+<td><code>Fatal signal 11 (SIGSEGV)</code> and a <code>backtrace</code></td>
+<td>the Pascal code crashed: the <code>&lt;-</code> lines say where</td>
+</tr>
+<tr>
+<td><code>pastel</code> lines</td>
+<td>what the app writes (<code>WriteLn</code>, errors it caught)</td>
+</tr>
+</tbody></table>
+<p><code>pastel logcat --all</code> shows every line of the phone. The whole log is in <code>build/android/logcat.txt</code>: send it with the phone's model and Android version when you ask for help.</p>
+<h2 id="when-the-phone-stops-the-app"><a class="anchor" href="#when-the-phone-stops-the-app">#</a>When the phone stops the app</h2>
+<p>An app in the background can be stopped by Android to free memory (and, after a change of some settings, opened
+again). When the user comes back, the app starts again — and Pastel puts back what its forms showed: the text of
+edits, check boxes, choices of lists, the tab, scroll positions, the controls of frames. <code>OnCreate</code> runs after that,
+so it sees the values.</p>
+<p>What is not in a control is the app's to keep: write it in <code>SaveState</code> (lines of text) in <code>OnSaveState</code>, read it
+back in <code>OnCreate</code>:</p>
+<pre><code class="language-pascal">procedure THomeForm.FormSaveState(Sender: TObject);
+begin
+  SaveState.Values['customer'] := IntToStr(FCustomerId);
+end;
+
+procedure THomeForm.FormCreate(Sender: TObject);
+begin
+  FCustomerId := StrToIntDef(SaveState.Values['customer'], 0);   // 0 the first time
+end;
+</code></pre>
+<p>It is for a short time (what the user was doing), not for data: data goes to the database or to files.</p>
+<h2 id="trying-it-in-the-emulator"><a class="anchor" href="#trying-it-in-the-emulator">#</a>Trying it in the emulator</h2>
+<p>No phone at hand? Android Studio's emulator runs Android on the PC (<em>Device Manager → Create device</em>, an <em>x86_64</em> system image). Start it; <code>adb devices</code> lists it like a phone, and <code>pastel run --target android</code> (F9) installs the <code>x86_64</code> build there. The emulator needs the PC's virtualization (KVM on Linux, enabled in the BIOS).</p>
+<h2 id="what-is-different-on-a-phone"><a class="anchor" href="#what-is-different-on-a-phone">#</a>What is different on a phone</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Fingers</strong></td>
+<td>A tap is a click, two quick taps a double click; holding a finger still is a right click (popup menus); dragging up and down scrolls lists, grids and scroll boxes, and a quick swipe lets them glide on (a finger stops them). Sliders, splitters, paint boxes and edits get the finger's movement themselves.</td>
+</tr>
+<tr>
+<td><strong>Back button</strong></td>
+<td>Closes the dialog or menu on top; on the main form it closes the app (<code>OnCloseQuery</code> can say no). On Android 13 and newer it comes through the system's back callback, as Android 16 requires of apps made for it.</td>
+</tr>
+<tr>
+<td><strong>Keyboard</strong></td>
+<td>The on-screen keyboard comes up for an edit (a tap brings it back after the back button closed it) and goes when the focus leaves it. It is the kind the edit needs: <code>KeyboardType = ktNumber</code> (numbers), <code>ktDecimal</code>, <code>ktPhone</code>, <code>ktEmail</code>, <code>ktUrl</code>, <code>ktTime</code>; <code>TNumberEdit</code>, <code>TCurrencyEdit</code> and <code>TTimeEdit</code> choose by themselves, <code>Password</code> hides the suggestions. Its Enter key says what <code>ReturnKeyType</code> says (Done, Next — to the next control —, Go, Search, Send); in a <code>TMemo</code> it makes a new line. The keyboard sees the edit's real text and cursor (Pastel's activity keeps a copy of the focused edit, like Android's own edits): suggestions, corrections, swipe and voice typing, Backspace into the word before, the keyboard's paste and select all; the word being composed is underlined. The edit's rules stay (<code>MaxLength</code>, a <code>TMaskEdit</code>'s mask). While it is up, the form is laid out in the part above it, so the edit stays in sight. Every letter arrives whole — ş, ğ, é, other alphabets, emoji. Hardware keyboards work too.</td>
+</tr>
+<tr>
+<td><strong>Size</strong></td>
+<td>The form fills the screen; <code>Width</code> and <code>Height</code> are only its design size. Use <code>Anchors</code> (or <code>Layout = Flow</code>) so the controls follow the screen, also when the phone is turned. The screen's density is taken into account: a 40-pixel button is as big as on a desktop monitor. Tablets and TVs: <code>MaxContentWidth</code>, <code>ScreenClass</code> and views (<code>Home.tablet.pform</code>), see <a href="forms.html#phones-tablets-tvs-and-windows-of-every-size">forms.md</a>. The text size of the phone's settings makes text larger.</td>
+</tr>
+<tr>
+<td><strong>TV boxes</strong></td>
+<td>The remote's arrows move the focus from control to control, OK presses; the app is on Android TV's home screen (with a banner made from the icon) and in a TV box's app list.</td>
+</tr>
+<tr>
+<td><strong>Dark mode and language</strong></td>
+<td>Follow the phone's settings (<code>Appearance = System</code>, the built-in translations).</td>
+</tr>
+<tr>
+<td><strong>Files</strong></td>
+<td><code>GetUserDir</code>, settings files and SQLite databases go into the app's own folder, which stays when the app is updated. The project's <code>assets/</code> are inside the app.</td>
+</tr>
+<tr>
+<td><strong>Fonts</strong></td>
+<td>The phone's own (Roboto); text is drawn by Pastel's TrueType reader, without FreeType.</td>
+</tr>
+<tr>
+<td><strong>Desktop only</strong></td>
+<td>A menu bar, a splitter and a status bar are for desktops (the designer's palette says so). System file dialogs are not there yet: Pastel's own dialog is used.</td>
+</tr>
+</tbody></table>
+<h2 id="data-the-network-and-the-phones-features"><a class="anchor" href="#data-the-network-and-the-phones-features">#</a>Data, the network and the phone's features</h2>
+<ul>
+<li><strong>Databases</strong>: <code>Pastel.Db</code> with SQLite works on the phone as on a computer. Android does not let apps load the
+phone's own SQLite, so every app that uses <code>Pastel.Db</code> carries one (about 0.9 MB per kind of CPU; <code>pastel package apk</code>
+puts it in by itself). The file goes into the app's own folder: <code>TDatabase.Open('sqlite:shop.db')</code>.</li>
+<li><strong>HTTP and HTTPS</strong>: <code>Pastel.Http</code> (and <code>Pastel.Sync</code>) use the phone's own: its certificates, its proxy. A server on
+the local network (<code>http://192.168.1.20:8080</code>) is fine in a debug build; a release build sends only <code>https://</code>
+(as Android Studio's apps), unless <code>[package.android] cleartext = true</code> allows plain <code>http://</code> too. Android's HTTP
+has no <code>PATCH</code>: Pastel sends <code>POST</code> with <code>X-HTTP-Method-Override: PATCH</code>, which Pastel's web server understands.</li>
+<li><strong>The phone's features</strong> — share, call, open, vibrate, notify, pick a file, take a photo, the place — are in
+<code>Pastel.Device</code> (<a href="device.html">device.md</a>). Copy and paste in edits use the phone's clipboard.</li>
+<li><strong>Anything else of Android</strong> — every Java class, and Java files of your own: <a href="java.html">java.md</a>
+(<code>pastel java add android.speech.tts.TextToSpeech</code>).</li>
+<li><strong>Web pages, video, sound and the camera</strong> in a form: <code>TWebBrowser</code>, <code>TVideoView</code>, <code>TMediaPlayer</code>, <code>TCameraView</code>
+(<code>Pastel.NativeViews</code>, <a href="controls.html#web-pages-video-and-sound">controls.md</a>): Android's own WebView, VideoView,
+MediaPlayer and Camera2.</li>
+<li><strong>Maps</strong>: <code>TMapView</code> (<a href="controls.html#tmapview">controls.md</a>), drawn by Pastel from map tiles, as on computers.</li>
+<li><strong>Push messages</strong> (Firebase) and <strong>&quot;is it you?&quot;</strong> (fingerprint, face, PIN): <a href="device.html#push-messages">device.md</a>.</li>
+</ul>
+<h2 id="android-libraries-aar-maven"><a class="anchor" href="#android-libraries-aar-maven">#</a>Android libraries (.aar, Maven)</h2>
+<p>Libraries made for Android — AndroidX, Google's and Firebase's, a scanner's SDK — go into <code>[package.android] libraries</code>:
+Maven coordinates (what each needs comes with it) or <code>.aar</code>/<code>.jar</code> files of the project.</p>
+<pre><code class="language-toml">[package.android]
+libraries = [&quot;androidx.browser:browser:1.8.0&quot;, &quot;libs/scanner.aar&quot;, &quot;libs/util.jar&quot;]
+# repositories = [&quot;https://maven.google.com&quot;, &quot;https://repo1.maven.org/maven2&quot;]   # the default; a folder works too
+</code></pre>
+<p><code>pastel package apk</code> (and <code>aab</code>) fetches them once into <code>~/.pastel/maven/</code> (<code>PASTEL_MAVEN_CACHE</code>: another folder) — their POM's compile and runtime
+dependencies too; when two ask for one library, the highest version wins — and puts into the app what each brings:
+its classes (with R classes for its resources), its resources, assets and native libraries (<code>jni/&lt;abi&gt;/*.so</code>, for
+the app's CPUs), and its manifest's parts: permissions, activities, services, receivers, providers (<code>${applicationId}</code>
+filled in, <code>tools:node=&quot;remove&quot;</code> left out). The app starts from the highest Android version a library asks for.
+<code>pastel java add</code> and <code>pastel java search</code> see their classes, so they are used from Pascal like Android's own
+(<a href="java.html">java.md</a>). A <code>google-services.json</code> (Firebase) next to <code>pastel.toml</code> becomes the values Firebase's
+libraries read.</p>
+<p>Libraries with resources need <code>aapt2</code>, and newer ones (Java 8 code, AndroidX) <code>d8</code> — Android's build tools 28 or
+newer (<code>pastel setup android --yes</code>); Ubuntu's <code>dx</code> dexes only older, plain ones. A library made against a newer
+Android than the platform here (AndroidX's <code>core</code> needs API 31: <code>android:attr/lStar</code>) is said before packing, with
+what to install.</p>
+<h2 id="work-when-the-app-is-not-on-the-screen"><a class="anchor" href="#work-when-the-app-is-not-on-the-screen">#</a>Work when the app is not on the screen</h2>
+<p><code>Pastel.Background</code> (<a href="device.html#background-work-and-jobs">device.md</a>):</p>
+<ul>
+<li><strong>Background work</strong> the user started — music, a route, an upload — keeps the app running with a notification
+until it is done: <code>StartBackgroundWork('Uploading photos', '3 of 20', bkDataSync)</code> ... <code>StopBackgroundWork</code>.
+Android's foreground service; its kind is in <code>pastel.toml</code>.</li>
+<li><strong>Background jobs</strong>: a Pascal function Android runs from time to time — also when the app is closed, and after the
+phone restarted: <code>RegisterBackgroundJob('sync', @SyncNow)</code> in an initialization, <code>ScheduleBackgroundJob('sync', 60)</code>.
+Android's JobScheduler (15 minutes at least, when the phone sees fit); the function runs on a thread of its own,
+without the window: data, files, HTTP.</li>
+</ul>
+<pre><code class="language-toml">[package.android]
+background = [&quot;jobs&quot;, &quot;data_sync&quot;]    # jobs; data_sync, media_playback, location, connected_device: background work
+</code></pre>
+<h2 id="threads"><a class="anchor" href="#threads">#</a>Threads</h2>
+<p>Pascal runs on a thread of its own — the app's thread — and draws the whole window itself; Android's views and
+callbacks are on Android's UI thread. Pastel keeps it so: a long event handler does not freeze Android (no &quot;app
+isn't responding&quot;), and Pascal code never waits for Java's thread. What crosses goes through Pastel's bridge: calls
+to Java run on Android's thread (<code>Pastel.Java</code> from any thread), answers come back as events on the app's thread
+(<code>OnPermissions</code>, <code>OnPicked</code>, the native views' events). Background jobs run on threads of their own. Your own
+threads (<code>TThread</code>, <code>Pastel.Workers</code>) are as on a computer; <code>TThread.Synchronize</code>/<code>Queue</code> reach the app's thread.</p>
+<h2 id="google-play"><a class="anchor" href="#google-play">#</a>Google Play</h2>
+<p>Google Play takes an Android App Bundle (<code>.aab</code>), signed with your own key, made for a recent Android:</p>
+<pre><code class="language-sh">pastel keystore                                     # once: keys/upload.keystore, written into pastel.toml
+PASTEL_KEYSTORE_PASSWORD=... pastel package aab     # dist/shop-1.0.0.aab, every kind of CPU in it
+</code></pre>
+<pre><code class="language-toml">[package.android]
+keystore = &quot;keys/upload.keystore&quot;
+alias = &quot;upload&quot;
+# target_sdk = 36       # the Android version the app is made for: 36 unless set (Google Play's rule since August 2026)
+</code></pre>
+<p>It needs <code>aapt2</code> and a platform of Android 13 (API 33) or newer — Android Studio's SDK Manager: <strong>Android SDK
+Build-Tools 36</strong> and <strong>Android 16 (API 36)</strong>, with <code>ANDROID_HOME</code> set — and bundletool (<code>bundletool-all-&lt;version&gt;.jar</code>
+from <a href="https://github.com/google/bundletool/releases">its releases</a>, into <code>~/.pastel/android/</code>, or <code>PASTEL_BUNDLETOOL</code>).
+Ubuntu's own <code>aapt</code>/<code>aapt2</code> read platforms up to Android 14 (34): enough, Pastel takes the newest they read. Upload it
+in the Play Console; Play makes the <code>.apk</code> for each phone.</p>
+<p>What Google Play and new phones ask of an app, Pastel does by itself:</p>
+<ul>
+<li><strong>Made for Android 16</strong> (<code>targetSdkVersion</code> 36). An <code>.apk</code> too, when a platform of Android 13 or newer is installed;
+with only an older one (Ubuntu's <code>android-sdk-platform-23</code>) it is made for that, and runs on new phones in an older mode.</li>
+<li><strong>16 KB memory pages</strong> (newer phones such as the Pixel 8 and later; Google Play's rule since November 2025): the
+app's library and SQLite are laid out for them, and still run on every older phone.</li>
+<li><strong>Drawn behind the status and navigation bars</strong> (Android 15 and newer): Pastel keeps the form between them.</li>
+<li><strong>Back</strong>: Android 16 no longer sends the Back key to apps made for it; Pastel's apps ask for it, so Back still
+closes a popup, goes back a form or leaves the app.</li>
+<li><strong>The icon in the phone's shape</strong> (circle, squircle, rounded square — Android 8 and newer), made from <code>assets/icon.png</code>.</li>
+<li><strong>The phone's light or dark look</strong> for the window and the status bar's icons (Android 10 and newer).</li>
+<li><strong>Backup</strong>: the app's data (its database, its settings) goes into the phone's backup, and comes back on a new
+phone; <code>backup = false</code> keeps it out (an app that keeps sign-in tokens, say).</li>
+</ul>
+<h2 id="the-apps-id-name-icon-and-key"><a class="anchor" href="#the-apps-id-name-icon-and-key">#</a>The app's id, name, icon and key</h2>
+<pre><code class="language-toml">[project]
+title = &quot;Shop&quot;                     # the name under the icon
+
+[package.android]
+id = &quot;com.example.shop&quot;            # the app's id on the phone and in Google Play (default: dev.pastel.&lt;name&gt;)
+orientation = &quot;portrait&quot;           # or &quot;landscape&quot;; default: turns with the phone
+keystore = &quot;keys/shop.keystore&quot;    # the release key (default: a debug key made once in ~/.pastel/android/)
+alias = &quot;shop&quot;
+splash = &quot;#1E1B2E&quot;                 # the color behind the icon while the app starts (default: the phone's light or dark)
+cleartext = true                   # plain http:// in a release build too (default: https:// only)
+backup = false                     # the app's data out of the phone's backup (default: in it)
+receive_shares = [&quot;text/plain&quot;, &quot;image/*&quot;]   # in other apps' share menu (device.md: shared with the app)
+</code></pre>
+<p>The icon is <code>assets/icon.png</code> (a square PNG, 512 × 512 is best; <code>pastel new app</code> puts Pastel's there to replace, and <strong>Pastel: Set App Icon…</strong> in VS Code copies yours there) — the same picture as on the desktop, in Android's five sizes. On Android 8 and newer the phone cuts it to its own shape: an icon with a background of its own (a colored square, as Pastel's) fills the shape, its background color around it; a picture on transparent stays inside the circle every shape keeps, on white. The version is <code>[project] version</code> (<code>1.2.3</code> becomes the version code 10203).</p>
+<p>A release key is made once and kept safe — Google Play and updates need the same key every time (<a href="commands.html#pastel-keystore">pastel keystore</a>):</p>
+<pre><code class="language-sh">pastel keystore                                   # keys/upload.keystore, written into pastel.toml
+PASTEL_KEYSTORE_PASSWORD=... pastel package aab
+</code></pre>
+<h2 id="an-example"><a class="anchor" href="#an-example">#</a>An example</h2>
+<p><a href="https://github.com/azrov/pastel-demos/tree/main/salon-phone">salon-phone</a> in pastel-demos: the salon's appointments
+on the phone — a day's list, a new appointment, Done, Call, Share, Sync with the same server as the desktop app —
+with salon-core, the same library as the desktop app and the server.</p>
+<h2 id="not-there-yet"><a class="anchor" href="#not-there-yet">#</a>Not there yet</h2>
+<ul>
+<li>Tried on real devices: an ARM 32-bit phone (Android 10) and a TV box run apps, the keyboard works; ARM 64-bit, x86 and Android 4.4–5 are checked (the right instructions, Android's library format) but not yet run on such devices; SQLite, HTTPS, <code>Pastel.Device</code> and the <code>.aab</code> are new and wait for their first runs on phones — reports are welcome</li>
+<li>Web pages, video and the camera's picture over the app's window: a dialog, or a menu over them, hides them
+while it is open (the phone's view would cover it)</li>
+<li>Google Play's in-app purchases and ads (their libraries go in with <code>libraries</code>; Pascal's side through
+<a href="java.html">java.md</a> until Pastel has its own)</li>
+<li>Widgets on the home screen</li>
+<li>Databases other than SQLite on the phone (PostgreSQL and MySQL clients are not there); a phone app talks to a server instead (<code>Pastel.Sync</code>)</li>
+</ul>
+<p>See the <a href="roadmap.html#15--android-in-preview">roadmap</a>.</p>
+
+      </article>
+      <p class="edit mt-5"><a href="https://github.com/azrov/pastel/edit/main/docs/android.md">Improve this page on GitHub</a></p>
+    </main>
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <div class="sticky">
+        <div class="toc-title">On this page</div>
+        <a href="#phones-tv-boxes-and-the-emulator">Phones, TV boxes and the emulator</a>
+        <a href="#setting-it-up-once">Setting it up (once)</a>
+        <a href="#making-an-app-for-the-phone">Making an app for the phone</a>
+        <a href="#forms-for-phones">Forms for phones</a>
+        <a href="#in-vs-code">In VS Code</a>
+        <a href="#trying-it-on-your-phone">Trying it on your phone</a>
+        <a href="#when-the-app-closes">When the app closes</a>
+        <a href="#when-the-phone-stops-the-app">When the phone stops the app</a>
+        <a href="#trying-it-in-the-emulator">Trying it in the emulator</a>
+        <a href="#what-is-different-on-a-phone">What is different on a phone</a>
+        <a href="#data-the-network-and-the-phones-features">Data, the network and the phone&#39;s features</a>
+        <a href="#android-libraries-aar-maven">Android libraries (.aar, Maven)</a>
+        <a href="#work-when-the-app-is-not-on-the-screen">Work when the app is not on the screen</a>
+        <a href="#threads">Threads</a>
+        <a href="#google-play">Google Play</a>
+        <a href="#the-apps-id-name-icon-and-key">The app&#39;s id, name, icon and key</a>
+        <a href="#an-example">An example</a>
+        <a href="#not-there-yet">Not there yet</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer py-4 mt-5">
+  <div class="container d-flex flex-wrap gap-3 justify-content-between small text-body-secondary">
+    <span>Pastel 2.1.0-beta.4 · MIT License · built with Pastel.Markdown and Pastel.Pages</span>
+    <span class="d-flex gap-3">
+      <a href="docs.html">Documentation</a>
+      <a href="download.html">Download</a>
+      <a href="contributing.html">Contributing</a>
+      <a href="https://github.com/azrov/pastel">GitHub</a>
+    </span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/delphi.min.js"></script>
+<script src="assets/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Console programs · Pastel</title>
+<meta name="description" content="Pastel: a modern cross-platform app framework and toolchain for Object Pascal. Desktop, phone, web and console apps from one codebase.">
+<script>
+  try { var t = localStorage.getItem('pastel-theme'); } catch (e) {}
+  document.documentElement.dataset.bsTheme = t || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hl-dark">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body class="section-docs">
+<nav class="navbar navbar-expand-lg sticky-top site-header">
+  <div class="container-fluid px-lg-4">
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="index.html">
+      <span class="logo" aria-hidden="true"></span>Pastel
+    </a>
+        <button class="btn btn-sm btn-outline-secondary d-lg-none me-auto" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">Menu</button>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#top" aria-controls="top" aria-expanded="false" aria-label="Links">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="top">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link active" href="docs.html">Docs</a></li>
+        <li class="nav-item"><a class="nav-link" href="getting-started.html">Get started</a></li>
+        <li class="nav-item"><a class="nav-link " href="download.html">Download</a></li>
+        <li class="nav-item"><a class="nav-link " href="changelog.html">Changelog</a></li>
+      </ul>
+      <div class="search position-relative my-2 my-lg-0 me-lg-3">
+        <input id="search" class="form-control form-control-sm" type="search" placeholder="Search the docs  /" autocomplete="off" data-base="" aria-label="Search the docs">
+        <div id="results" class="dropdown-menu shadow"></div>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        <button id="theme" class="btn btn-sm btn-outline-secondary" type="button" aria-label="Light or dark" title="Light or dark"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+        <a class="btn btn-sm btn-outline-secondary" href="https://github.com/azrov/pastel">GitHub</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-lg-4">
+  <div class="row">
+    <aside class="col-lg-3 col-xl-2 docs-sidebar">
+      <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+        <div class="offcanvas-header border-bottom">
+          <h5 class="offcanvas-title" id="sidebarLabel">Documentation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+          <nav class="docs-nav w-100">
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g0" aria-expanded="false">Start</button>
+              <div class="collapse " id="g0">
+                <a href="readme.html">Overview</a>
+                <a href="docs.html">All topics</a>
+                <a href="getting-started.html">Getting started</a>
+                <a href="commands.html">The pastel command</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g1" aria-expanded="false">Handbook</button>
+              <div class="collapse " id="g1">
+                <a href="handbook/README.html">The Pastel Handbook</a>
+                <a href="handbook/01-hello.html">1. Your first program</a>
+                <a href="handbook/02-values.html">2. Values, types and variables</a>
+                <a href="handbook/03-decisions-loops.html">3. Decisions and loops</a>
+                <a href="handbook/04-routines.html">4. Procedures and functions</a>
+                <a href="handbook/05-structured-types.html">5. Arrays, records, enumerations and sets</a>
+                <a href="handbook/06-strings.html">6. Text</a>
+                <a href="handbook/07-units.html">7. Units</a>
+                <a href="handbook/08-classes.html">8. Classes and objects</a>
+                <a href="handbook/09-exceptions.html">9. When things go wrong</a>
+                <a href="handbook/10-generics.html">10. Lists, dictionaries and generics</a>
+                <a href="handbook/11-files-json.html">11. Files and JSON</a>
+                <a href="handbook/12-testing.html">12. Testing</a>
+                <a href="handbook/13-interfaces.html">13. Interfaces and the command line</a>
+                <a href="handbook/14-first-window.html">14. Your first window</a>
+                <a href="handbook/15-layout.html">15. Layout</a>
+                <a href="handbook/16-grids-and-dialogs.html">16. Grids and dialogs</a>
+                <a href="handbook/17-database.html">17. A database</a>
+                <a href="handbook/18-charts-and-reports.html">18. Charts and reports</a>
+                <a href="handbook/19-look-and-languages.html">19. Look and languages</a>
+                <a href="handbook/20-background.html">20. Work in the background</a>
+                <a href="handbook/21-phones.html">21. Phones</a>
+                <a href="handbook/22-shipping.html">22. Shipping</a>
+                <a href="handbook/appendix-a-cheat-sheet.html">Appendix A. Object Pascal at a glance</a>
+                <a href="handbook/appendix-b-from-delphi.html">Appendix B. Coming from Delphi or Lazarus</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g2" aria-expanded="false">Guides</button>
+              <div class="collapse " id="g2">
+                <a href="guide-cli.html">Writing a command-line tool</a>
+                <a href="guide-api.html">A REST API with a database</a>
+                <a href="guide-desktop.html">Building a desktop app</a>
+                <a href="guide-business.html">A business system — desktop app and server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g3" aria-expanded="false">Desktop and phone apps</button>
+              <div class="collapse " id="g3">
+                <a href="forms.html">Forms and controls</a>
+                <a href="controls.html">Controls reference</a>
+                <a href="styles.html">Styles: Fluent, Material and your own</a>
+                <a href="components.html">Writing components</a>
+                <a href="android.html">Android</a>
+                <a href="device.html">The phone&#39;s features</a>
+                <a href="java.html">Java from Pascal</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start " type="button" data-bs-toggle="collapse" data-bs-target="#g4" aria-expanded="true">Programs and services</button>
+              <div class="collapse show" id="g4">
+                <a href="console.html" class="current" aria-current="page">Console programs</a>
+                <a href="data.html">JSON, settings and logging</a>
+                <a href="documents.html">Reports, PDF, Excel and printing</a>
+                <a href="system.html">Files, programs, HTTP and the environment</a>
+                <a href="services.html">Services: programs that keep running</a>
+                <a href="web.html">Web APIs and sites: Pastel.Web</a>
+                <a href="websockets.html">WebSockets: Pastel.WebSocket</a>
+                <a href="mail.html">E-mail: Pastel.Mail</a>
+                <a href="pages.html">Web pages from templates</a>
+                <a href="markdown.html">Markdown</a>
+                <a href="database.html">Databases: Pastel.Db</a>
+                <a href="sync.html">Data that works offline: Pastel.Sync</a>
+                <a href="auth.html">Users and login: Pastel.Auth</a>
+                <a href="security.html">Passwords, tokens and signatures: Pastel.Crypto, Pastel.Jwt</a>
+                <a href="deploy.html">Deploying to a Linux server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g5" aria-expanded="false">Working with Pastel</button>
+              <div class="collapse " id="g5">
+                <a href="project.html">The project file: pastel.toml</a>
+                <a href="workflow.html">Everyday work: watch, format, libraries</a>
+                <a href="packages.html">Packages</a>
+                <a href="testing.html">Testing</a>
+                <a href="vscode.html">Pastel for Visual Studio Code</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g6" aria-expanded="false">Reference</button>
+              <div class="collapse " id="g6">
+                <a href="api/index.html">Pastel API reference</a>
+                <a href="compatibility.html">Compatibility: what stays the same</a>
+                <a href="performance.html">Performance</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g7" aria-expanded="false">Examples</button>
+              <div class="collapse " id="g7">
+                <a href="examples/components-demo.html">components-demo</a>
+                <a href="examples/components.html">components</a>
+                <a href="examples/contacts.html">contacts</a>
+                <a href="examples/dupfinder.html">dupfinder</a>
+                <a href="examples/notepad.html">notepad</a>
+                <a href="examples/notes-api.html">notes-api</a>
+                <a href="examples/pocket-app.html">pocket-app</a>
+                <a href="examples/pocket-cli.html">pocket-cli</a>
+                <a href="examples/pocket-core.html">pocket-core</a>
+                <a href="examples/salon-api.html">salon-api</a>
+                <a href="examples/salon-core.html">salon-core</a>
+                <a href="examples/salon-desk.html">salon-desk</a>
+                <a href="examples/weather.html">weather</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g8" aria-expanded="false">Project</button>
+              <div class="collapse " id="g8">
+                <a href="roadmap.html">Pastel roadmap to 1.0</a>
+                <a href="changelog.html">Changelog</a>
+                <a href="vscode-changelog.html">Changelog of the VS Code extension</a>
+                <a href="contributing.html">Contributing to Pastel</a>
+                <a href="security-policy.html">Security</a>
+                <a href="code-of-conduct.html">Code of conduct</a>
+                <a href="announcing-1.0.html">Announcing Pastel 1.0</a>
+              </div>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </aside>
+    <main class="col-12 col-lg-9 col-xl-8 docs-main">
+      <article class="markdown">
+<h1 id="console-programs"><a class="anchor" href="#console-programs">#</a>Console programs</h1>
+<p><code>pastel new console mytool</code> creates a command-line program that already handles arguments, <code>--help</code> and <code>--version</code>. This page shows the units that make console programs pleasant to write:</p>
+<table>
+<thead>
+<tr>
+<th>Unit</th>
+<th>For</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Pastel.Args</code></td>
+<td>Options, flags, arguments, sub-commands, automatic help</td>
+</tr>
+<tr>
+<td><code>Pastel.Term</code></td>
+<td>Colors, tables, progress bars, questions</td>
+</tr>
+<tr>
+<td><code>Pastel.Text</code></td>
+<td>Upper/lower case and lengths that work for every language</td>
+</tr>
+<tr>
+<td><code>AppInfo</code></td>
+<td>Your program's name and version from <code>pastel.toml</code> (generated)</td>
+</tr>
+</tbody></table>
+<h2 id="arguments-pastelargs"><a class="anchor" href="#arguments-pastelargs">#</a>Arguments: <code>Pastel.Args</code></h2>
+<pre><code class="language-pascal">uses
+  Pastel.Args, AppInfo;
+
+var
+  Args: TArgs;
+begin
+  Args := TArgs.Create(AppName, 'Copies folders into an archive.');
+  try
+    Args.Version := AppVersion;
+    Args.Flag('verbose', 'v', 'Show every file');
+    Args.Option('output', 'o', 'Archive to write', 'backup.tar').MetaVar('FILE');
+    Args.Option('level', 'l', 'Compression level').IntRange(1, 9).Default('6');
+    Args.Option('format', 'f', 'Archive format').Choices(['tar', 'zip']).Default('tar');
+    Args.Option('exclude', 'x', 'Pattern to skip').Many;
+    Args.Option('token', '', 'Upload token').Env('BACKUP_TOKEN');
+    Args.Positional('folders', 'Folders to back up').Many;
+    Args.Example('backup -v -o today.tar docs photos');
+    Args.Parse;
+
+    if Args.Has('verbose') then ...
+    Level := Args.GetInt('level');
+    for Folder in Args.GetAll('folders') do ...
+  finally
+    Args.Free;
+  end;
+end.
+</code></pre>
+<p><code>backup --help</code> then prints:</p>
+<pre><code>Copies folders into an archive.
+
+Usage: backup [options] &lt;folders&gt;...
+
+Arguments:
+  &lt;folders&gt;  Folders to back up
+
+Options:
+  -v, --verbose          Show every file
+  -o, --output FILE      Archive to write (default: backup.tar)
+  -l, --level N          Compression level [1-9] (default: 6)
+  -f, --format FORMAT    Archive format [tar|zip] (default: tar)
+  -x, --exclude EXCLUDE  Pattern to skip
+      --token TOKEN      Upload token (env: BACKUP_TOKEN)
+  -h, --help             Show this help
+      --version          Show the version
+      --no-color         Plain output without colors
+
+Examples:
+  backup -v -o today.tar docs photos
+</code></pre>
+<p>Mistakes are explained, with a suggestion when it looks like a typo, and the program ends with exit code 2:</p>
+<pre><code>$ backup --outptu x docs
+error: unknown option &quot;--outptu&quot; (did you mean --output?)
+Run &quot;backup --help&quot; for usage.
+</code></pre>
+<h3 id="defining-arguments"><a class="anchor" href="#defining-arguments">#</a>Defining arguments</h3>
+<table>
+<thead>
+<tr>
+<th>Call</th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Flag(Name, Short, Help)</code></td>
+<td>On/off switch: <code>-v</code>, <code>--verbose</code>. <code>Count</code> tells how often it was given (<code>-vvv</code>).</td>
+</tr>
+<tr>
+<td><code>Option(Name, Short, Help, Default)</code></td>
+<td>Takes a value: <code>-o x</code>, <code>-ox</code>, <code>-o=x</code>, <code>--output x</code>, <code>--output=x</code></td>
+</tr>
+<tr>
+<td><code>Positional(Name, Help)</code></td>
+<td>A word without a dash, in order. Required unless <code>.Optional</code> or a <code>.Default</code> is set.</td>
+</tr>
+<tr>
+<td><code>Command(Name, Description)</code></td>
+<td>A sub-command with its own arguments (see below)</td>
+</tr>
+<tr>
+<td><code>Example(Line)</code></td>
+<td>Shown at the end of the help</td>
+</tr>
+</tbody></table>
+<p>Every definition can be refined by chaining:</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>.Default('x')</code></td>
+<td>Value when not given</td>
+</tr>
+<tr>
+<td><code>.Required</code> / <code>.Optional</code></td>
+<td>Must or need not be given</td>
+</tr>
+<tr>
+<td><code>.Many</code></td>
+<td>Option: may be given several times. Positional: takes all remaining words.</td>
+</tr>
+<tr>
+<td><code>.IsInteger</code>, <code>.IntRange(1, 9)</code></td>
+<td>Must be a whole number (in a range)</td>
+</tr>
+<tr>
+<td><code>.Choices(['a', 'b'])</code></td>
+<td>Must be one of these</td>
+</tr>
+<tr>
+<td><code>.Env('NAME')</code></td>
+<td>Taken from this environment variable when not on the command line</td>
+</tr>
+<tr>
+<td><code>.MetaVar('FILE')</code></td>
+<td>Placeholder shown in the help</td>
+</tr>
+</tbody></table>
+<p>Short names are one letter; use <code>''</code> for none. <code>--</code> ends the options, so <code>tool -- -file</code> passes <code>-file</code> as a word.</p>
+<h3 id="reading-values"><a class="anchor" href="#reading-values">#</a>Reading values</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Args.Has('verbose')</code></td>
+<td>Was it given? (Defaults do not count.)</td>
+</tr>
+<tr>
+<td><code>Args.Get('output')</code></td>
+<td>The value, or the default</td>
+</tr>
+<tr>
+<td><code>Args.GetInt('level')</code></td>
+<td>The value as a number</td>
+</tr>
+<tr>
+<td><code>Args.GetAll('exclude')</code></td>
+<td>All values of a <code>.Many</code> option or positional</td>
+</tr>
+<tr>
+<td><code>Args.Count('verbose')</code></td>
+<td>How many times a flag was given</td>
+</tr>
+</tbody></table>
+<h3 id="sub-commands"><a class="anchor" href="#sub-commands">#</a>Sub-commands</h3>
+<pre><code class="language-pascal">Args := TArgs.Create('todo', 'A small task list.');
+Args.Option('file', '', 'Task file', 'tasks.txt');        // works with every command
+with Args.Command('add', 'Add a task') do
+begin
+  Positional('title', 'What to do');
+  Option('priority', 'p', 'How important').Choices(['low', 'normal', 'high']).Default('normal');
+end;
+with Args.Command('list', 'Show tasks') do
+  Flag('all', 'a', 'Include finished tasks');
+Args.Parse;
+
+case Args.CommandName of
+  'add':  AddTask(Args.Get('title'), Args.Get('priority'));
+  'list': ShowTasks(Args.Has('all'));
+end;
+</code></pre>
+<p><code>todo --help</code> lists the commands; <code>todo add --help</code> shows the options of <code>add</code>.</p>
+<h2 id="terminal-pastelterm"><a class="anchor" href="#terminal-pastelterm">#</a>Terminal: <code>Pastel.Term</code></h2>
+<pre><code class="language-pascal">WriteLn(Green('done'), ' in ', Bold('2.1 s'));
+Success('Backup written');            // ✓ Backup written
+Warning('3 files were skipped');      // ! ... (to stderr)
+Error('Disk full');                   // ✗ ... (to stderr)
+</code></pre>
+<p>Colors: <code>Bold</code>, <code>Dim</code>, <code>Italic</code>, <code>Underline</code>, <code>Red</code>, <code>Green</code>, <code>Yellow</code>, <code>Blue</code>, <code>Magenta</code>, <code>Cyan</code>, <code>Gray</code>, and <code>Rgb('#4F46E5', Text)</code>. They switch themselves off when the output goes to a file or a pipe, when <code>NO_COLOR</code> is set, or with <code>--no-color</code>. <code>FORCE_COLOR=1</code> keeps them on.</p>
+<h3 id="tables"><a class="anchor" href="#tables">#</a>Tables</h3>
+<pre><code class="language-pascal">T := TTable.Create(['File', 'Size', 'State']);
+T.SetAlign(1, alRight);
+T.AddRow(['report.pdf', '1.2 MB', Green('ready')]);
+T.AddRow(['çok-uzun-dosya.txt', '12 KB', Yellow('waiting')]);
+T.Print;
+T.Free;
+</code></pre>
+<pre><code>File                  Size  State
+------------------  ------  -------
+report.pdf          1.2 MB  ready
+çok-uzun-dosya.txt   12 KB  waiting
+</code></pre>
+<p>Columns line up with colored text and with letters like <code>ş</code> or <code>漢</code>.</p>
+<h3 id="progress"><a class="anchor" href="#progress">#</a>Progress</h3>
+<pre><code class="language-pascal">P := TProgress.Create(Files.Count, 'copying');
+for F in Files do
+begin
+  Copy(F);
+  P.Step;
+end;
+P.Free;
+</code></pre>
+<p>In a terminal it is one updating line: <code>[#########-------------]  45%  45/100  copying</code>. In a log file it writes a line every 10%.</p>
+<h3 id="questions"><a class="anchor" href="#questions">#</a>Questions</h3>
+<pre><code class="language-pascal">Name := Ask('Your name', 'Ali');                       // Your name [Ali]:
+if Confirm('Delete 3 files?') then ...                 // Delete 3 files? [y/N]
+Env := Choose('Deploy to', ['staging', 'production']); // numbered list
+Pass := AskPassword('Password');                       // typing is hidden
+</code></pre>
+<p><code>Confirm</code> accepts y/yes and n/no (also e/evet, h/hayır). Questions read from standard input, so answers can be piped in for scripts and tests: <code>printf 'Ali\ny\n' | mytool</code>. <code>IsInteractive</code> tells whether someone is there to answer.</p>
+<h2 id="text-pasteltext"><a class="anchor" href="#text-pasteltext">#</a>Text: <code>Pastel.Text</code></h2>
+<p>Free Pascal's <code>UpperCase</code> and <code>LowerCase</code> only change A–Z, and <code>Length</code> counts bytes. For text in any language use:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Upper('ayşe')</code></td>
+<td><code>'AYŞE'</code></td>
+</tr>
+<tr>
+<td><code>Upper('istanbul', 'tr')</code></td>
+<td><code>'İSTANBUL'</code> (Turkish and Azerbaijani dotted i: <code>'tr'</code>, <code>'az'</code>)</td>
+</tr>
+<tr>
+<td><code>Lower('ILIK', 'tr')</code></td>
+<td><code>'ılık'</code></td>
+</tr>
+<tr>
+<td><code>Capitalize('şehir')</code></td>
+<td><code>'Şehir'</code></td>
+</tr>
+<tr>
+<td><code>CharCount('ağaç')</code></td>
+<td><code>4</code> (<code>Length</code> gives 6)</td>
+</tr>
+<tr>
+<td><code>CharCopy('ağaç', 2, 2)</code></td>
+<td><code>'ğa'</code></td>
+</tr>
+<tr>
+<td><code>Shorten('çok uzun bir yazı', 7)</code></td>
+<td><code>'çok uz…'</code></td>
+</tr>
+</tbody></table>
+<h2 id="program-information-appinfo"><a class="anchor" href="#program-information-appinfo">#</a>Program information: <code>AppInfo</code></h2>
+<p>Pastel generates the unit <code>AppInfo</code> from <code>pastel.toml</code> on every build:</p>
+<pre><code class="language-pascal">uses AppInfo;
+...
+WriteLn(AppName, ' ', AppVersion);   // values from [project]
+if AppProfile = 'debug' then ...      // debug, release or test
+WriteLn(AppTarget);                   // linux, windows, linux-arm64, ...
+</code></pre>
+<p>Change <code>version</code> in <code>pastel.toml</code> and <code>--version</code> follows.</p>
+<h2 id="utf-8-and-threads"><a class="anchor" href="#utf-8-and-threads">#</a>UTF-8 and threads</h2>
+<p>Pastel adds a small start-up unit to every program:</p>
+<ul>
+<li>All text is UTF-8 on every platform. On Windows the console is switched to UTF-8 too, so <code>WriteLn('Çiğdem')</code> and arguments like <code>mytool ayşe</code> work as on Linux.</li>
+<li>Threads work right away. (With plain Free Pascal on Linux, <code>cthreads</code> has to be the first unit in the program's <code>uses</code>, or <code>TThread</code> stops the program with &quot;no thread support&quot;.)</li>
+</ul>
+
+      </article>
+      <p class="edit mt-5"><a href="https://github.com/azrov/pastel/edit/main/docs/console.md">Improve this page on GitHub</a></p>
+    </main>
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <div class="sticky">
+        <div class="toc-title">On this page</div>
+        <a href="#arguments-pastelargs">Arguments: Pastel.Args</a>
+        <a href="#terminal-pastelterm">Terminal: Pastel.Term</a>
+        <a href="#text-pasteltext">Text: Pastel.Text</a>
+        <a href="#program-information-appinfo">Program information: AppInfo</a>
+        <a href="#utf-8-and-threads">UTF-8 and threads</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer py-4 mt-5">
+  <div class="container d-flex flex-wrap gap-3 justify-content-between small text-body-secondary">
+    <span>Pastel 2.1.0-beta.4 · MIT License · built with Pastel.Markdown and Pastel.Pages</span>
+    <span class="d-flex gap-3">
+      <a href="docs.html">Documentation</a>
+      <a href="download.html">Download</a>
+      <a href="contributing.html">Contributing</a>
+      <a href="https://github.com/azrov/pastel">GitHub</a>
+    </span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/delphi.min.js"></script>
+<script src="assets/site.js"></script>
+</body>
+</html>

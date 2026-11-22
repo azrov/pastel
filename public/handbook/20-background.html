@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>20. Work in the background · Pastel</title>
+<meta name="description" content="Pastel: a modern cross-platform app framework and toolchain for Object Pascal. Desktop, phone, web and console apps from one codebase.">
+<script>
+  try { var t = localStorage.getItem('pastel-theme'); } catch (e) {}
+  document.documentElement.dataset.bsTheme = t || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hl-dark">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body class="section-docs">
+<nav class="navbar navbar-expand-lg sticky-top site-header">
+  <div class="container-fluid px-lg-4">
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="../index.html">
+      <span class="logo" aria-hidden="true"></span>Pastel
+    </a>
+        <button class="btn btn-sm btn-outline-secondary d-lg-none me-auto" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">Menu</button>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#top" aria-controls="top" aria-expanded="false" aria-label="Links">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="top">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link active" href="../docs.html">Docs</a></li>
+        <li class="nav-item"><a class="nav-link" href="../getting-started.html">Get started</a></li>
+        <li class="nav-item"><a class="nav-link " href="../download.html">Download</a></li>
+        <li class="nav-item"><a class="nav-link " href="../changelog.html">Changelog</a></li>
+      </ul>
+      <div class="search position-relative my-2 my-lg-0 me-lg-3">
+        <input id="search" class="form-control form-control-sm" type="search" placeholder="Search the docs  /" autocomplete="off" data-base="../" aria-label="Search the docs">
+        <div id="results" class="dropdown-menu shadow"></div>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        <button id="theme" class="btn btn-sm btn-outline-secondary" type="button" aria-label="Light or dark" title="Light or dark"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+        <a class="btn btn-sm btn-outline-secondary" href="https://github.com/azrov/pastel">GitHub</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-lg-4">
+  <div class="row">
+    <aside class="col-lg-3 col-xl-2 docs-sidebar">
+      <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+        <div class="offcanvas-header border-bottom">
+          <h5 class="offcanvas-title" id="sidebarLabel">Documentation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+          <nav class="docs-nav w-100">
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g0" aria-expanded="false">Start</button>
+              <div class="collapse " id="g0">
+                <a href="../readme.html">Overview</a>
+                <a href="../docs.html">All topics</a>
+                <a href="../getting-started.html">Getting started</a>
+                <a href="../commands.html">The pastel command</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start " type="button" data-bs-toggle="collapse" data-bs-target="#g1" aria-expanded="true">Handbook</button>
+              <div class="collapse show" id="g1">
+                <a href="../handbook/README.html">The Pastel Handbook</a>
+                <a href="../handbook/01-hello.html">1. Your first program</a>
+                <a href="../handbook/02-values.html">2. Values, types and variables</a>
+                <a href="../handbook/03-decisions-loops.html">3. Decisions and loops</a>
+                <a href="../handbook/04-routines.html">4. Procedures and functions</a>
+                <a href="../handbook/05-structured-types.html">5. Arrays, records, enumerations and sets</a>
+                <a href="../handbook/06-strings.html">6. Text</a>
+                <a href="../handbook/07-units.html">7. Units</a>
+                <a href="../handbook/08-classes.html">8. Classes and objects</a>
+                <a href="../handbook/09-exceptions.html">9. When things go wrong</a>
+                <a href="../handbook/10-generics.html">10. Lists, dictionaries and generics</a>
+                <a href="../handbook/11-files-json.html">11. Files and JSON</a>
+                <a href="../handbook/12-testing.html">12. Testing</a>
+                <a href="../handbook/13-interfaces.html">13. Interfaces and the command line</a>
+                <a href="../handbook/14-first-window.html">14. Your first window</a>
+                <a href="../handbook/15-layout.html">15. Layout</a>
+                <a href="../handbook/16-grids-and-dialogs.html">16. Grids and dialogs</a>
+                <a href="../handbook/17-database.html">17. A database</a>
+                <a href="../handbook/18-charts-and-reports.html">18. Charts and reports</a>
+                <a href="../handbook/19-look-and-languages.html">19. Look and languages</a>
+                <a href="../handbook/20-background.html" class="current" aria-current="page">20. Work in the background</a>
+                <a href="../handbook/21-phones.html">21. Phones</a>
+                <a href="../handbook/22-shipping.html">22. Shipping</a>
+                <a href="../handbook/appendix-a-cheat-sheet.html">Appendix A. Object Pascal at a glance</a>
+                <a href="../handbook/appendix-b-from-delphi.html">Appendix B. Coming from Delphi or Lazarus</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g2" aria-expanded="false">Guides</button>
+              <div class="collapse " id="g2">
+                <a href="../guide-cli.html">Writing a command-line tool</a>
+                <a href="../guide-api.html">A REST API with a database</a>
+                <a href="../guide-desktop.html">Building a desktop app</a>
+                <a href="../guide-business.html">A business system — desktop app and server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g3" aria-expanded="false">Desktop and phone apps</button>
+              <div class="collapse " id="g3">
+                <a href="../forms.html">Forms and controls</a>
+                <a href="../controls.html">Controls reference</a>
+                <a href="../styles.html">Styles: Fluent, Material and your own</a>
+                <a href="../components.html">Writing components</a>
+                <a href="../android.html">Android</a>
+                <a href="../device.html">The phone&#39;s features</a>
+                <a href="../java.html">Java from Pascal</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g4" aria-expanded="false">Programs and services</button>
+              <div class="collapse " id="g4">
+                <a href="../console.html">Console programs</a>
+                <a href="../data.html">JSON, settings and logging</a>
+                <a href="../documents.html">Reports, PDF, Excel and printing</a>
+                <a href="../system.html">Files, programs, HTTP and the environment</a>
+                <a href="../services.html">Services: programs that keep running</a>
+                <a href="../web.html">Web APIs and sites: Pastel.Web</a>
+                <a href="../websockets.html">WebSockets: Pastel.WebSocket</a>
+                <a href="../mail.html">E-mail: Pastel.Mail</a>
+                <a href="../pages.html">Web pages from templates</a>
+                <a href="../markdown.html">Markdown</a>
+                <a href="../database.html">Databases: Pastel.Db</a>
+                <a href="../sync.html">Data that works offline: Pastel.Sync</a>
+                <a href="../auth.html">Users and login: Pastel.Auth</a>
+                <a href="../security.html">Passwords, tokens and signatures: Pastel.Crypto, Pastel.Jwt</a>
+                <a href="../deploy.html">Deploying to a Linux server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g5" aria-expanded="false">Working with Pastel</button>
+              <div class="collapse " id="g5">
+                <a href="../project.html">The project file: pastel.toml</a>
+                <a href="../workflow.html">Everyday work: watch, format, libraries</a>
+                <a href="../packages.html">Packages</a>
+                <a href="../testing.html">Testing</a>
+                <a href="../vscode.html">Pastel for Visual Studio Code</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g6" aria-expanded="false">Reference</button>
+              <div class="collapse " id="g6">
+                <a href="../api/index.html">Pastel API reference</a>
+                <a href="../compatibility.html">Compatibility: what stays the same</a>
+                <a href="../performance.html">Performance</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g7" aria-expanded="false">Examples</button>
+              <div class="collapse " id="g7">
+                <a href="../examples/components-demo.html">components-demo</a>
+                <a href="../examples/components.html">components</a>
+                <a href="../examples/contacts.html">contacts</a>
+                <a href="../examples/dupfinder.html">dupfinder</a>
+                <a href="../examples/notepad.html">notepad</a>
+                <a href="../examples/notes-api.html">notes-api</a>
+                <a href="../examples/pocket-app.html">pocket-app</a>
+                <a href="../examples/pocket-cli.html">pocket-cli</a>
+                <a href="../examples/pocket-core.html">pocket-core</a>
+                <a href="../examples/salon-api.html">salon-api</a>
+                <a href="../examples/salon-core.html">salon-core</a>
+                <a href="../examples/salon-desk.html">salon-desk</a>
+                <a href="../examples/weather.html">weather</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g8" aria-expanded="false">Project</button>
+              <div class="collapse " id="g8">
+                <a href="../roadmap.html">Pastel roadmap to 1.0</a>
+                <a href="../changelog.html">Changelog</a>
+                <a href="../vscode-changelog.html">Changelog of the VS Code extension</a>
+                <a href="../contributing.html">Contributing to Pastel</a>
+                <a href="../security-policy.html">Security</a>
+                <a href="../code-of-conduct.html">Code of conduct</a>
+                <a href="../announcing-1.0.html">Announcing Pastel 1.0</a>
+              </div>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </aside>
+    <main class="col-12 col-lg-9 col-xl-8 docs-main">
+      <article class="markdown">
+<h1 id="20-work-in-the-background"><a class="anchor" href="#20-work-in-the-background">#</a>20. Work in the background</h1>
+<p>Most banks give a month of a bank account as a CSV file. Pocket can read one and add its rows as entries. A month is
+quick; ten years of a business account is not, and a file on a network drive may take seconds just to open. While
+the code reads, the window cannot redraw or answer a click — it <em>freezes</em>, and the system offers to kill it.</p>
+<p>The cure is to do slow work on another <strong>thread</strong>, and leave the main thread free for the window.</p>
+<h2 id="the-bank-import"><a class="anchor" href="#the-bank-import">#</a>The bank import</h2>
+<p>First the work itself, in <code>pocket-core</code> — plain code with no window in it, so the command line and the tests can
+use it too:</p>
+<!-- file: examples/pocket-core/src/pocketimport.pas -->
+<pre><code class="language-pascal">{ Entries from a bank's CSV file (most banks give one for a month):
+
+    Date;Description;Amount
+    03.11.2026;MARKET LUNCH;-47,50
+    01.11.2026;SALARY NOVEMBER;3000,00
+
+  The columns are found by their names (date, description or text or note,
+  amount or sum, and category when there is one), in any order and case; the
+  separator (, ; or tab) is guessed. A negative amount is an expense.
+
+    Count := ImportCsv('november.csv', NewEntries);
+
+  It reads a file and nothing else: an app may run it in the background
+  (handbook chapter 20). }
+unit PocketImport;
+
+{$mode objfpc}{$H+}
+
+interface
+
+uses
+  SysUtils, PocketEntries;
+
+type
+  EImportError = class(Exception);
+
+{ Adds the file's rows to Into; returns how many. EImportError (with the line)
+  when a needed column is missing or a value is wrong. }
+function ImportCsv(const FileName: string; Into: TEntryList): Integer;
+
+{ '2026-11-03', '03.11.2026', '03/11/2026' -&gt; the day; False when not a date. }
+function TryParseDay(const S: string; out Day: TDateTime): Boolean;
+
+implementation
+
+uses
+  Pastel.Sheets, PocketMoney;
+
+function TryParseDay(const S: string; out Day: TDateTime): Boolean;
+var
+  T: string;
+  Y, M, D: Integer;
+begin
+  T := Trim(S);
+  Result := False;
+  Day := 0;
+  if Length(T) &lt;&gt; 10 then
+    Exit;
+  if (T[5] = '-') and (T[8] = '-') then          { 2026-11-03 }
+    Result := TryStrToInt(Copy(T, 1, 4), Y) and TryStrToInt(Copy(T, 6, 2), M) and TryStrToInt(Copy(T, 9, 2), D)
+  else if (T[3] in ['.', '/']) and (T[6] = T[3]) then    { 03.11.2026, 03/11/2026: the day first }
+    Result := TryStrToInt(Copy(T, 1, 2), D) and TryStrToInt(Copy(T, 4, 2), M) and TryStrToInt(Copy(T, 7, 4), Y);
+  Result := Result and TryEncodeDate(Y, M, D, Day);
+end;
+
+{ the column with one of the names; -1 when there is none }
+function ColumnOf(const Heads: array of string; const Names: array of string): Integer;
+var
+  I: Integer;
+  N: string;
+begin
+  for I := 0 to High(Heads) do
+    for N in Names do
+      if SameText(Trim(Heads[I]), N) then
+        Exit(I);
+  Result := -1;
+end;
+
+function ImportCsv(const FileName: string; Into: TEntryList): Integer;
+var
+  Rows: TSheetRows;
+  DateCol, TextCol, AmountCol, CategoryCol, I: Integer;
+  Day: TDateTime;
+  Amount: Currency;
+  Kind: TEntryKind;
+  Category: string;
+
+  function Cell(Row, Col: Integer): string;
+  begin
+    if (Col &gt;= 0) and (Col &lt; Length(Rows[Row])) then
+      Result := Trim(Rows[Row][Col])
+    else
+      Result := '';
+  end;
+
+begin
+  Result := 0;
+  try
+    Rows := ReadCsv(FileName);
+  except
+    on E: Exception do
+      raise EImportError.CreateFmt('%s cannot be read: %s', [FileName, E.Message]);
+  end;
+  if Length(Rows) = 0 then
+    Exit;
+  DateCol := ColumnOf(Rows[0], ['date', 'day']);
+  TextCol := ColumnOf(Rows[0], ['description', 'text', 'note', 'details']);
+  AmountCol := ColumnOf(Rows[0], ['amount', 'sum', 'value']);
+  CategoryCol := ColumnOf(Rows[0], ['category']);
+  if (DateCol &lt; 0) or (AmountCol &lt; 0) then
+    raise EImportError.CreateFmt('%s: the first line names the columns; Date and Amount are needed', [FileName]);
+  for I := 1 to High(Rows) do
+  begin
+    if (Length(Rows[I]) = 0) or ((Length(Rows[I]) = 1) and (Trim(Rows[I][0]) = '')) then
+      Continue;                                  { an empty line }
+    if not TryParseDay(Cell(I, DateCol), Day) then
+      raise EImportError.CreateFmt('line %d: &quot;%s&quot; is not a date', [I + 1, Cell(I, DateCol)]);
+    if not TryParseMoney(Cell(I, AmountCol), Amount) or (Amount = 0) then
+      raise EImportError.CreateFmt('line %d: &quot;%s&quot; is not an amount', [I + 1, Cell(I, AmountCol)]);
+    if Amount &lt; 0 then
+      Kind := ekExpense
+    else
+      Kind := ekIncome;
+    Category := Cell(I, CategoryCol);
+    if Category = '' then
+      Category := 'Imported';
+    Into.AddEntry(Day, Kind, Category, Abs(Amount), Cell(I, TextCol));
+    Inc(Result);
+  end;
+end;
+
+end.
+</code></pre>
+<p>It uses what part 1 taught: <code>ReadCsv</code> from <code>Pastel.Sheets</code> gives the rows as arrays of strings; the columns are found
+by their names in the first row, so the order does not matter; and every bad line raises an <code>EImportError</code> that says
+which line and why (chapter 9). A file like this one is read:</p>
+<!-- file: examples/pocket-app/tests/bank.csv -->
+<pre><code>Date;Description;Amount
+04.12.2026;MARKET;-20,00
+01.12.2026;SALARY;3000
+</code></pre>
+<h2 id="threads"><a class="anchor" href="#threads">#</a>Threads</h2>
+<p>A program starts with one thread, the <em>main</em> one. A <code>TThread</code> runs its <code>Execute</code> method next to it, at the same
+time:</p>
+<pre><code class="language-pascal">program Threads;
+
+{$mode objfpc}{$H+}
+
+uses
+  {$IFDEF UNIX}cthreads,{$ENDIF} Classes, SysUtils;
+
+type
+  TSumThread = class(TThread)
+  private
+    FFrom, FTo: Int64;
+  protected
+    procedure Execute; override;
+  public
+    Sum: Int64;
+    constructor Create(AFrom, ATo: Int64);
+  end;
+
+constructor TSumThread.Create(AFrom, ATo: Int64);
+begin
+  FFrom := AFrom;
+  FTo := ATo;
+  inherited Create(False);        // False: starts at once
+end;
+
+procedure TSumThread.Execute;
+var
+  I: Int64;
+begin
+  Sum := 0;
+  for I := FFrom to FTo do
+    Inc(Sum, I);
+end;
+
+var
+  A, B: TSumThread;
+begin
+  A := TSumThread.Create(1, 50000000);
+  B := TSumThread.Create(50000001, 100000000);
+  A.WaitFor;                      // until A's Execute ended
+  B.WaitFor;
+  WriteLn('1 + 2 + ... + 100000000 = ', A.Sum + B.Sum);
+  A.Free;
+  B.Free;
+end.
+</code></pre>
+<pre><code class="language-output">1 + 2 + ... + 100000000 = 5000000050000000
+</code></pre>
+<p>Two halves, summed at the same time on two cores. <code>cthreads</code> gives Linux and macOS programs their threads; it
+comes first in <code>uses</code>. (<code>pastel build</code> adds it to every project for you — it matters when you compile with plain <code>fpc</code>.)</p>
+<h3 id="the-rules"><a class="anchor" href="#the-rules">#</a>The rules</h3>
+<p>Threads share the program's memory, and that is what makes them hard. Two threads that change the same list at the
+same moment break it — not every time, only sometimes, which is worse. So:</p>
+<ol>
+<li><strong>A thread works on its own data.</strong> Give it what it needs before it starts; let it leave its results where only
+it writes.</li>
+<li><strong>Controls belong to the main thread.</strong> Never change a label, a grid or a form from another thread.</li>
+<li><strong>The main thread takes the results</strong> when the thread has finished.</li>
+</ol>
+<p>Threads that must share something use a lock (<code>TCriticalSection</code>) or a queue (<code>TMessageQueue</code> from
+<code>Pastel.Workers</code>); an app rarely needs either.</p>
+<h2 id="runinbackground"><a class="anchor" href="#runinbackground">#</a>RunInBackground</h2>
+<p><code>Pastel.Workers</code> makes the rules easy in an app. <code>RunInBackground(@Work, @Done, Data)</code>:</p>
+<ul>
+<li>runs <code>Work</code> on a thread of its own,</li>
+<li>then <code>Done</code> on the <strong>main thread</strong>, where controls may be changed,</li>
+<li>and gives both the same <code>Data</code> object, which carries what the work needs and what it found.</li>
+</ul>
+<p>An exception in <code>Work</code> does not end the program: its message is in the task's <code>Error</code>, for <code>Done</code> to show.</p>
+<p>Pocket's <em>Import</em> button chooses a file, then hands it to the background:</p>
+<!-- part of: examples/pocket-app/src/forms/Home.pas -->
+<pre><code class="language-pascal">procedure THomeForm.ImportClick(Sender: TObject);
+begin
+  OpenFileDialog('', 'CSV|*.csv', _('Import a bank statement'), @ImportChosen);
+end;
+</code></pre>
+<!-- part of: examples/pocket-app/src/forms/Home.pas -->
+<pre><code class="language-pascal">procedure THomeForm.ImportChosen(Sender: TObject; Ok: Boolean; const FileName: string);
+begin
+  if not Ok then
+    Exit;
+  ImportButton.Enabled := False;
+  RunInBackground(@ImportWork, @ImportDone, TImportJob.Create(FileName));
+end;
+</code></pre>
+<p>The job object carries the file's name in and the entries out:</p>
+<!-- part of: examples/pocket-app/src/forms/Home.pas -->
+<pre><code class="language-pascal">constructor TImportJob.Create(const AFileName: string);
+begin
+  inherited Create;
+  FileName := AFileName;
+  Entries := TEntryList.Create;
+end;
+</code></pre>
+<!-- part of: examples/pocket-app/src/forms/Home.pas -->
+<pre><code class="language-pascal">destructor TImportJob.Destroy;
+begin
+  Entries.Free;
+  inherited Destroy;
+end;
+</code></pre>
+<p>The work touches nothing but the job — not <code>FEntries</code>, not a control:</p>
+<!-- part of: examples/pocket-app/src/forms/Home.pas -->
+<pre><code class="language-pascal">{ a thread of its own: only the job's data here - no controls, not FEntries }
+procedure THomeForm.ImportWork(Sender: TObject);
+var
+  Job: TImportJob;
+begin
+  Job := TImportJob(TBackgroundTask(Sender).Data);
+  ImportCsv(Job.FileName, Job.Entries);         { an exception becomes the task's Error }
+end;
+</code></pre>
+<p><code>Done</code> runs on the main thread, so it may do everything else: put the entries in the list and the database, show the
+month, tell the user.</p>
+<!-- part of: examples/pocket-app/src/forms/Home.pas -->
+<pre><code class="language-pascal">{ the main thread again: the entries into the list and the database }
+procedure THomeForm.ImportDone(Sender: TObject);
+var
+  Task: TBackgroundTask;
+  Job: TImportJob;
+  E: TEntry;
+begin
+  Task := TBackgroundTask(Sender);
+  Job := TImportJob(Task.Data);
+  try
+    ImportButton.Enabled := True;
+    if Task.Error &lt;&gt; '' then
+    begin
+      ShowMessage(Task.Error, _('Import'));
+      Exit;
+    end;
+    Job.Entries.OwnsObjects := False;           { they move to FEntries }
+    for E in Job.Entries do
+    begin
+      FEntries.Add(E);
+      FStore.Put(E);
+    end;
+    if Job.Entries.Count &gt; 0 then
+    begin
+      FYear := YearOf(Job.Entries[0].Date);
+      FMonth := MonthOf(Job.Entries[0].Date);
+    end;
+    ShowMonth;
+    ShowToast(Format(_('%d entries imported'), [Job.Entries.Count]));
+  finally
+    Job.Free;
+  end;
+end;
+</code></pre>
+<p>Who owns what, once more (chapter 10): the job's list owns the entries it read. They move into <code>FEntries</code>, so the job
+must stop owning them before it is freed — <code>OwnsObjects := False</code> — or freeing the job would free entries that
+<code>FEntries</code> still holds. And <code>Done</code> frees the job: the task leaves its <code>Data</code> to <code>Done</code>.</p>
+<p>Meanwhile the <em>Import</em> button is disabled, so a second click cannot start a second import of the same file; it comes
+back in <code>Done</code>, whether the import worked or not.</p>
+<h2 id="downloading"><a class="anchor" href="#downloading">#</a>Downloading</h2>
+<p>The same pattern fits everything slow: a big query, a report of a thousand pages, and above all the network. A
+download of exchange rates with <code>Pastel.Http</code> would look like this:</p>
+<pre><code class="language-pascal">procedure THomeForm.RatesWork(Sender: TObject);
+begin
+  TBackgroundTask(Sender).Data := HttpGetJson('https://example.com/rates.json');
+end;
+
+procedure THomeForm.RatesDone(Sender: TObject);
+var
+  Task: TBackgroundTask;
+begin
+  Task := TBackgroundTask(Sender);
+  try
+    if Task.Error &lt;&gt; '' then
+      ShowToast(_('No connection: the rates of yesterday are used'))
+    else
+      UseRates(TJSONObject(Task.Data));
+  finally
+    Task.Data.Free;
+  end;
+end;
+</code></pre>
+<p>The network can be slow, or not there at all. Never ask it from the main thread — and plan for the answer that does
+not come.</p>
+<h2 id="exercises"><a class="anchor" href="#exercises">#</a>Exercises</h2>
+<ol>
+<li>Run the import with a file of 100,000 lines (write it with a small program and <code>WriteCsv</code>). Watch the window stay
+alive. Then call <code>ImportCsv</code> directly in <code>ImportChosen</code> and compare.</li>
+<li>Give <code>pocket-cli</code> an <code>import</code> command that uses the same <code>ImportCsv</code>.</li>
+<li>Show a <code>TProgressBar</code> while the import runs (set <code>Indeterminate</code>, hide it in <code>Done</code>).</li>
+<li>★ Skip the rows that are already there (the same day, amount and note), and say how many were skipped.</li>
+</ol>
+<p>Next: <a href="../handbook/21-phones.html">21. Phones</a></p>
+
+      </article>
+      <p class="edit mt-5"><a href="https://github.com/azrov/pastel/edit/main/docs/handbook/20-background.md">Improve this page on GitHub</a></p>
+    </main>
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <div class="sticky">
+        <div class="toc-title">On this page</div>
+        <a href="#the-bank-import">The bank import</a>
+        <a href="#threads">Threads</a>
+        <a href="#runinbackground">RunInBackground</a>
+        <a href="#downloading">Downloading</a>
+        <a href="#exercises">Exercises</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer py-4 mt-5">
+  <div class="container d-flex flex-wrap gap-3 justify-content-between small text-body-secondary">
+    <span>Pastel 2.1.0-beta.4 · MIT License · built with Pastel.Markdown and Pastel.Pages</span>
+    <span class="d-flex gap-3">
+      <a href="../docs.html">Documentation</a>
+      <a href="../download.html">Download</a>
+      <a href="../contributing.html">Contributing</a>
+      <a href="https://github.com/azrov/pastel">GitHub</a>
+    </span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/delphi.min.js"></script>
+<script src="../assets/site.js"></script>
+</body>
+</html>

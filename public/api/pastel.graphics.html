@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pastel.Graphics · Pastel</title>
+<meta name="description" content="Pastel: a modern cross-platform app framework and toolchain for Object Pascal. Desktop, phone, web and console apps from one codebase.">
+<script>
+  try { var t = localStorage.getItem('pastel-theme'); } catch (e) {}
+  document.documentElement.dataset.bsTheme = t || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hl-dark">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body class="section-docs">
+<nav class="navbar navbar-expand-lg sticky-top site-header">
+  <div class="container-fluid px-lg-4">
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="../index.html">
+      <span class="logo" aria-hidden="true"></span>Pastel
+    </a>
+        <button class="btn btn-sm btn-outline-secondary d-lg-none me-auto" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">Menu</button>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#top" aria-controls="top" aria-expanded="false" aria-label="Links">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="top">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link active" href="../docs.html">Docs</a></li>
+        <li class="nav-item"><a class="nav-link" href="../getting-started.html">Get started</a></li>
+        <li class="nav-item"><a class="nav-link " href="../download.html">Download</a></li>
+        <li class="nav-item"><a class="nav-link " href="../changelog.html">Changelog</a></li>
+      </ul>
+      <div class="search position-relative my-2 my-lg-0 me-lg-3">
+        <input id="search" class="form-control form-control-sm" type="search" placeholder="Search the docs  /" autocomplete="off" data-base="../" aria-label="Search the docs">
+        <div id="results" class="dropdown-menu shadow"></div>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        <button id="theme" class="btn btn-sm btn-outline-secondary" type="button" aria-label="Light or dark" title="Light or dark"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+        <a class="btn btn-sm btn-outline-secondary" href="https://github.com/azrov/pastel">GitHub</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-lg-4">
+  <div class="row">
+    <aside class="col-lg-3 col-xl-2 docs-sidebar">
+      <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+        <div class="offcanvas-header border-bottom">
+          <h5 class="offcanvas-title" id="sidebarLabel">Documentation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+          <nav class="docs-nav w-100">
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g0" aria-expanded="false">Start</button>
+              <div class="collapse " id="g0">
+                <a href="../readme.html">Overview</a>
+                <a href="../docs.html">All topics</a>
+                <a href="../getting-started.html">Getting started</a>
+                <a href="../commands.html">The pastel command</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g1" aria-expanded="false">Handbook</button>
+              <div class="collapse " id="g1">
+                <a href="../handbook/README.html">The Pastel Handbook</a>
+                <a href="../handbook/01-hello.html">1. Your first program</a>
+                <a href="../handbook/02-values.html">2. Values, types and variables</a>
+                <a href="../handbook/03-decisions-loops.html">3. Decisions and loops</a>
+                <a href="../handbook/04-routines.html">4. Procedures and functions</a>
+                <a href="../handbook/05-structured-types.html">5. Arrays, records, enumerations and sets</a>
+                <a href="../handbook/06-strings.html">6. Text</a>
+                <a href="../handbook/07-units.html">7. Units</a>
+                <a href="../handbook/08-classes.html">8. Classes and objects</a>
+                <a href="../handbook/09-exceptions.html">9. When things go wrong</a>
+                <a href="../handbook/10-generics.html">10. Lists, dictionaries and generics</a>
+                <a href="../handbook/11-files-json.html">11. Files and JSON</a>
+                <a href="../handbook/12-testing.html">12. Testing</a>
+                <a href="../handbook/13-interfaces.html">13. Interfaces and the command line</a>
+                <a href="../handbook/14-first-window.html">14. Your first window</a>
+                <a href="../handbook/15-layout.html">15. Layout</a>
+                <a href="../handbook/16-grids-and-dialogs.html">16. Grids and dialogs</a>
+                <a href="../handbook/17-database.html">17. A database</a>
+                <a href="../handbook/18-charts-and-reports.html">18. Charts and reports</a>
+                <a href="../handbook/19-look-and-languages.html">19. Look and languages</a>
+                <a href="../handbook/20-background.html">20. Work in the background</a>
+                <a href="../handbook/21-phones.html">21. Phones</a>
+                <a href="../handbook/22-shipping.html">22. Shipping</a>
+                <a href="../handbook/appendix-a-cheat-sheet.html">Appendix A. Object Pascal at a glance</a>
+                <a href="../handbook/appendix-b-from-delphi.html">Appendix B. Coming from Delphi or Lazarus</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g2" aria-expanded="false">Guides</button>
+              <div class="collapse " id="g2">
+                <a href="../guide-cli.html">Writing a command-line tool</a>
+                <a href="../guide-api.html">A REST API with a database</a>
+                <a href="../guide-desktop.html">Building a desktop app</a>
+                <a href="../guide-business.html">A business system — desktop app and server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g3" aria-expanded="false">Desktop and phone apps</button>
+              <div class="collapse " id="g3">
+                <a href="../forms.html">Forms and controls</a>
+                <a href="../controls.html">Controls reference</a>
+                <a href="../styles.html">Styles: Fluent, Material and your own</a>
+                <a href="../components.html">Writing components</a>
+                <a href="../android.html">Android</a>
+                <a href="../device.html">The phone&#39;s features</a>
+                <a href="../java.html">Java from Pascal</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g4" aria-expanded="false">Programs and services</button>
+              <div class="collapse " id="g4">
+                <a href="../console.html">Console programs</a>
+                <a href="../data.html">JSON, settings and logging</a>
+                <a href="../documents.html">Reports, PDF, Excel and printing</a>
+                <a href="../system.html">Files, programs, HTTP and the environment</a>
+                <a href="../services.html">Services: programs that keep running</a>
+                <a href="../web.html">Web APIs and sites: Pastel.Web</a>
+                <a href="../websockets.html">WebSockets: Pastel.WebSocket</a>
+                <a href="../mail.html">E-mail: Pastel.Mail</a>
+                <a href="../pages.html">Web pages from templates</a>
+                <a href="../markdown.html">Markdown</a>
+                <a href="../database.html">Databases: Pastel.Db</a>
+                <a href="../sync.html">Data that works offline: Pastel.Sync</a>
+                <a href="../auth.html">Users and login: Pastel.Auth</a>
+                <a href="../security.html">Passwords, tokens and signatures: Pastel.Crypto, Pastel.Jwt</a>
+                <a href="../deploy.html">Deploying to a Linux server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g5" aria-expanded="false">Working with Pastel</button>
+              <div class="collapse " id="g5">
+                <a href="../project.html">The project file: pastel.toml</a>
+                <a href="../workflow.html">Everyday work: watch, format, libraries</a>
+                <a href="../packages.html">Packages</a>
+                <a href="../testing.html">Testing</a>
+                <a href="../vscode.html">Pastel for Visual Studio Code</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start " type="button" data-bs-toggle="collapse" data-bs-target="#g6" aria-expanded="true">Reference</button>
+              <div class="collapse show" id="g6">
+                <a href="../api/index.html">Pastel API reference</a>
+                <a href="../compatibility.html">Compatibility: what stays the same</a>
+                <a href="../performance.html">Performance</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g7" aria-expanded="false">Examples</button>
+              <div class="collapse " id="g7">
+                <a href="../examples/components-demo.html">components-demo</a>
+                <a href="../examples/components.html">components</a>
+                <a href="../examples/contacts.html">contacts</a>
+                <a href="../examples/dupfinder.html">dupfinder</a>
+                <a href="../examples/notepad.html">notepad</a>
+                <a href="../examples/notes-api.html">notes-api</a>
+                <a href="../examples/pocket-app.html">pocket-app</a>
+                <a href="../examples/pocket-cli.html">pocket-cli</a>
+                <a href="../examples/pocket-core.html">pocket-core</a>
+                <a href="../examples/salon-api.html">salon-api</a>
+                <a href="../examples/salon-core.html">salon-core</a>
+                <a href="../examples/salon-desk.html">salon-desk</a>
+                <a href="../examples/weather.html">weather</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g8" aria-expanded="false">Project</button>
+              <div class="collapse " id="g8">
+                <a href="../roadmap.html">Pastel roadmap to 1.0</a>
+                <a href="../changelog.html">Changelog</a>
+                <a href="../vscode-changelog.html">Changelog of the VS Code extension</a>
+                <a href="../contributing.html">Contributing to Pastel</a>
+                <a href="../security-policy.html">Security</a>
+                <a href="../code-of-conduct.html">Code of conduct</a>
+                <a href="../announcing-1.0.html">Announcing Pastel 1.0</a>
+              </div>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </aside>
+    <main class="col-12 col-lg-9 col-xl-8 docs-main">
+      <article class="markdown">
+<h1 id="pastelgraphics"><a class="anchor" href="#pastelgraphics">#</a>Pastel.Graphics</h1>
+<p>Software 2D drawing: colors, an anti-aliased canvas and fonts.</p>
+<p>Everything is drawn by Pastel itself into a 32-bit pixel buffer, so it
+looks the same on every platform. A GPU backend (e.g. Skia) can later
+implement the same drawing calls.</p>
+<p><code>uses Pastel.Graphics;</code> · source: <a href="https://github.com/azrov/pastel/blob/main/framework/src/pastel.graphics.pas">framework/src/pastel.graphics.pas</a></p>
+<p><strong>Contents:</strong> <a href="#trecti">TRectI</a> · <a href="#tpastelfont">TPastelFont</a> · <a href="#tbitmap32">TBitmap32</a> · <a href="#tcanvas32">TCanvas32</a> · <a href="#epastelgraphics">EPastelGraphics</a> · <a href="#rgb">RGB</a> · <a href="#rgba">RGBA</a> · <a href="#withalpha">WithAlpha</a> · <a href="#mix">Mix</a> · <a href="#tryparsecolor">TryParseColor</a> · <a href="#recti">RectI</a> · <a href="#nextcodepoint">NextCodePoint</a> · <a href="#prevcharstart">PrevCharStart</a> · <a href="#fittext">FitText</a> · <a href="#getfont">GetFont</a> · <a href="#setfontfiles">SetFontFiles</a> · <a href="#pascalfonts">PascalFonts</a></p>
+<h2 id="types"><a class="anchor" href="#types">#</a>Types</h2>
+<h3 id="trecti"><a class="anchor" href="#trecti">#</a>TRectI</h3>
+<pre><code class="language-pascal">type TRectI = record
+</code></pre>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>X: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Y: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>W: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>H: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function Contains(PX: Integer; PY: Integer): Boolean</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function Intersect(const R: TRectI): TRectI</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function Union(const R: TRectI): TRectI</code></td>
+<td>The smallest rectangle around both (an empty one is ignored).</td>
+</tr>
+<tr>
+<td><code>function Inflate(D: Integer): TRectI</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="tpastelfont"><a class="anchor" href="#tpastelfont">#</a>TPastelFont</h3>
+<pre><code class="language-pascal">type TPastelFont = class
+</code></pre>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>constructor Create(const FileName: string; ASize: Integer; AEmbolden: Boolean = False)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>destructor Destroy</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function Glyph(CodePoint: Cardinal): PGlyph</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function TextWidth(const S: string): Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function HitTest(const S: string; X: Integer): Integer</code></td>
+<td>Byte index in S whose left edge is closest to pixel offset X.</td>
+</tr>
+<tr>
+<td><code>property Size: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Bold: Boolean</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Ascent: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Descent: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property LineHeight: Integer</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="tbitmap32"><a class="anchor" href="#tbitmap32">#</a>TBitmap32</h3>
+<pre><code class="language-pascal">type TBitmap32 = class
+</code></pre>
+<p>A picture in memory: $AARRGGBB pixels, from PNG, JPEG or BMP files.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>procedure SetSize(AWidth: Integer; AHeight: Integer)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure LoadFromFile(const FileName: string)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure LoadFromStream(Stream: TStream)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function Empty: Boolean</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Width: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Height: Integer</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="tcanvas32"><a class="anchor" href="#tcanvas32">#</a>TCanvas32</h3>
+<pre><code class="language-pascal">type TCanvas32 = class
+</code></pre>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>procedure SetSize(AWidth: Integer; AHeight: Integer)</code></td>
+<td>Width and height in layout units; with Scale 2 the pixels are twice as many.</td>
+</tr>
+<tr>
+<td><code>procedure Clear(C: TColor32)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure PushClip(const R: TRectI)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure PopClip</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure FillRect(X: Integer; Y: Integer; W: Integer; H: Integer; C: TColor32)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure FillRoundRect(X: Integer; Y: Integer; W: Integer; H: Integer; Radius: Single; C: TColor32)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure StrokeRoundRect(X: Integer; Y: Integer; W: Integer; H: Integer; Radius: Single; Thickness: Single; C: TColor32)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure DrawText(Font: TPastelFont; X: Integer; Y: Integer; const S: string; C: TColor32)</code></td>
+<td>Y is the top of the text line; the baseline is Y + Font.Ascent.</td>
+</tr>
+<tr>
+<td><code>procedure DrawLine(X1: Single; Y1: Single; X2: Single; Y2: Single; Thickness: Single; C: TColor32)</code></td>
+<td>An anti-aliased line with round ends.</td>
+</tr>
+<tr>
+<td><code>procedure FillCircle(CX: Single; CY: Single; Radius: Single; C: TColor32)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure FillPie(CX: Single; CY: Single; Radius: Single; InnerRadius: Single; Start: Single; Sweep: Single; C: TColor32)</code></td>
+<td>A slice of a circle (a ring when InnerRadius &gt; 0): from Start, Sweep long (radians; 0 is up, clockwise), for pie and donut charts.</td>
+</tr>
+<tr>
+<td><code>procedure DrawBitmap(B: TBitmap32; X: Integer; Y: Integer; W: Integer; H: Integer; Smooth: Boolean = True; Opacity: Byte = 255)</code></td>
+<td>A picture scaled into the rectangle (bilinear when Smooth), with its transparency.</td>
+</tr>
+<tr>
+<td><code>function GetPixel(X: Integer; Y: Integer): TColor32</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure SaveToPNG(const FileName: string)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function PixelRect(const R: TRectI): TRectI</code></td>
+<td>A rectangle in layout units, in pixels.</td>
+</tr>
+<tr>
+<td><code>function Data: Pointer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Width: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Height: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property PixelWidth: Integer</code></td>
+<td>The size in pixels (Width * Scale).</td>
+</tr>
+<tr>
+<td><code>property PixelHeight: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Scale: Single</code></td>
+<td>Pixels per layout unit: 2 on a &quot;retina&quot; or 200% screen. Text is drawn with a font of the scaled size, so it stays sharp.</td>
+</tr>
+</tbody></table>
+<h3 id="epastelgraphics"><a class="anchor" href="#epastelgraphics">#</a>EPastelGraphics</h3>
+<pre><code class="language-pascal">type EPastelGraphics = class(Exception)
+</code></pre>
+<h2 id="other-types"><a class="anchor" href="#other-types">#</a>Other types</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>type TColor32 = Cardinal</code></td>
+<td>$AARRGGBB. A distinct type so .pform files can use '#RRGGBB' for it.</td>
+</tr>
+</tbody></table>
+<h2 id="routines"><a class="anchor" href="#routines">#</a>Routines</h2>
+<h3 id="rgb"><a class="anchor" href="#rgb">#</a>RGB</h3>
+<pre><code class="language-pascal">function RGB(R: Byte; G: Byte; B: Byte): TColor32
+</code></pre>
+<h3 id="rgba"><a class="anchor" href="#rgba">#</a>RGBA</h3>
+<pre><code class="language-pascal">function RGBA(R: Byte; G: Byte; B: Byte; A: Byte): TColor32
+</code></pre>
+<h3 id="withalpha"><a class="anchor" href="#withalpha">#</a>WithAlpha</h3>
+<pre><code class="language-pascal">function WithAlpha(C: TColor32; A: Byte): TColor32
+</code></pre>
+<h3 id="mix"><a class="anchor" href="#mix">#</a>Mix</h3>
+<pre><code class="language-pascal">function Mix(A: TColor32; B: TColor32; T: Single): TColor32
+</code></pre>
+<h3 id="tryparsecolor"><a class="anchor" href="#tryparsecolor">#</a>TryParseColor</h3>
+<pre><code class="language-pascal">function TryParseColor(const S: string; out C: TColor32): Boolean
+</code></pre>
+<p>Parses '#RGB', '#RRGGBB' or '#AARRGGBB'.</p>
+<h3 id="recti"><a class="anchor" href="#recti">#</a>RectI</h3>
+<pre><code class="language-pascal">function RectI(X: Integer; Y: Integer; W: Integer; H: Integer): TRectI
+</code></pre>
+<h3 id="nextcodepoint"><a class="anchor" href="#nextcodepoint">#</a>NextCodePoint</h3>
+<pre><code class="language-pascal">function NextCodePoint(const S: string; var I: Integer): Cardinal
+</code></pre>
+<p>UTF-8 helpers. NextCodePoint reads one character at byte index I (1-based)
+and moves I past it.</p>
+<h3 id="prevcharstart"><a class="anchor" href="#prevcharstart">#</a>PrevCharStart</h3>
+<pre><code class="language-pascal">function PrevCharStart(const S: string; I: Integer): Integer
+</code></pre>
+<h3 id="fittext"><a class="anchor" href="#fittext">#</a>FitText</h3>
+<pre><code class="language-pascal">function FitText(Font: TPastelFont; const S: string; Width: Integer): string
+</code></pre>
+<p>S cut to fit Width (pixels of Font), with '…'; one line (a line break ends
+it). Quick for long texts: only what can fit is measured, the cut found by halving.</p>
+<h3 id="getfont"><a class="anchor" href="#getfont">#</a>GetFont</h3>
+<pre><code class="language-pascal">function GetFont(Size: Integer; Bold: Boolean = False): TPastelFont
+</code></pre>
+<p>Fonts are shared and cached by size and weight.</p>
+<h3 id="setfontfiles"><a class="anchor" href="#setfontfiles">#</a>SetFontFiles</h3>
+<pre><code class="language-pascal">procedure SetFontFiles(const Regular: string; const Bold: string)
+</code></pre>
+<p>Use these .ttf files instead of the system font (after InitFonts).</p>
+<h3 id="pascalfonts"><a class="anchor" href="#pascalfonts">#</a>PascalFonts</h3>
+<pre><code class="language-pascal">function PascalFonts: Boolean
+</code></pre>
+<p>True when text is drawn by Pastel.TrueType instead of FreeType (always on
+Android; on a desktop without the FreeType library, or with PASTEL_FONT_ENGINE=pascal).</p>
+<h2 id="constants-and-variables"><a class="anchor" href="#constants-and-variables">#</a>Constants and variables</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>var TextScale: Single</code></td>
+<td>Every text is drawn this much larger: the size of text chosen in a phone's settings (Pastel.App sets it, at most 1.3 so forms keep their shape).</td>
+</tr>
+</tbody></table>
+
+      </article>
+      <p class="edit mt-5"><a href="https://github.com/azrov/pastel/edit/main/docs/api/pastel.graphics.md">Improve this page on GitHub</a></p>
+    </main>
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <div class="sticky">
+        <div class="toc-title">On this page</div>
+        <a href="#types">Types</a>
+        <a href="#other-types">Other types</a>
+        <a href="#routines">Routines</a>
+        <a href="#constants-and-variables">Constants and variables</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer py-4 mt-5">
+  <div class="container d-flex flex-wrap gap-3 justify-content-between small text-body-secondary">
+    <span>Pastel 2.1.0-beta.4 · MIT License · built with Pastel.Markdown and Pastel.Pages</span>
+    <span class="d-flex gap-3">
+      <a href="../docs.html">Documentation</a>
+      <a href="../download.html">Download</a>
+      <a href="../contributing.html">Contributing</a>
+      <a href="https://github.com/azrov/pastel">GitHub</a>
+    </span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/delphi.min.js"></script>
+<script src="../assets/site.js"></script>
+</body>
+</html>

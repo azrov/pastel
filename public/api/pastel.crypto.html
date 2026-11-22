@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pastel.Crypto · Pastel</title>
+<meta name="description" content="Pastel: a modern cross-platform app framework and toolchain for Object Pascal. Desktop, phone, web and console apps from one codebase.">
+<script>
+  try { var t = localStorage.getItem('pastel-theme'); } catch (e) {}
+  document.documentElement.dataset.bsTheme = t || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hl-dark">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body class="section-docs">
+<nav class="navbar navbar-expand-lg sticky-top site-header">
+  <div class="container-fluid px-lg-4">
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="../index.html">
+      <span class="logo" aria-hidden="true"></span>Pastel
+    </a>
+        <button class="btn btn-sm btn-outline-secondary d-lg-none me-auto" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">Menu</button>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#top" aria-controls="top" aria-expanded="false" aria-label="Links">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="top">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link active" href="../docs.html">Docs</a></li>
+        <li class="nav-item"><a class="nav-link" href="../getting-started.html">Get started</a></li>
+        <li class="nav-item"><a class="nav-link " href="../download.html">Download</a></li>
+        <li class="nav-item"><a class="nav-link " href="../changelog.html">Changelog</a></li>
+      </ul>
+      <div class="search position-relative my-2 my-lg-0 me-lg-3">
+        <input id="search" class="form-control form-control-sm" type="search" placeholder="Search the docs  /" autocomplete="off" data-base="../" aria-label="Search the docs">
+        <div id="results" class="dropdown-menu shadow"></div>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        <button id="theme" class="btn btn-sm btn-outline-secondary" type="button" aria-label="Light or dark" title="Light or dark"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+        <a class="btn btn-sm btn-outline-secondary" href="https://github.com/azrov/pastel">GitHub</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-lg-4">
+  <div class="row">
+    <aside class="col-lg-3 col-xl-2 docs-sidebar">
+      <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+        <div class="offcanvas-header border-bottom">
+          <h5 class="offcanvas-title" id="sidebarLabel">Documentation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+          <nav class="docs-nav w-100">
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g0" aria-expanded="false">Start</button>
+              <div class="collapse " id="g0">
+                <a href="../readme.html">Overview</a>
+                <a href="../docs.html">All topics</a>
+                <a href="../getting-started.html">Getting started</a>
+                <a href="../commands.html">The pastel command</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g1" aria-expanded="false">Handbook</button>
+              <div class="collapse " id="g1">
+                <a href="../handbook/README.html">The Pastel Handbook</a>
+                <a href="../handbook/01-hello.html">1. Your first program</a>
+                <a href="../handbook/02-values.html">2. Values, types and variables</a>
+                <a href="../handbook/03-decisions-loops.html">3. Decisions and loops</a>
+                <a href="../handbook/04-routines.html">4. Procedures and functions</a>
+                <a href="../handbook/05-structured-types.html">5. Arrays, records, enumerations and sets</a>
+                <a href="../handbook/06-strings.html">6. Text</a>
+                <a href="../handbook/07-units.html">7. Units</a>
+                <a href="../handbook/08-classes.html">8. Classes and objects</a>
+                <a href="../handbook/09-exceptions.html">9. When things go wrong</a>
+                <a href="../handbook/10-generics.html">10. Lists, dictionaries and generics</a>
+                <a href="../handbook/11-files-json.html">11. Files and JSON</a>
+                <a href="../handbook/12-testing.html">12. Testing</a>
+                <a href="../handbook/13-interfaces.html">13. Interfaces and the command line</a>
+                <a href="../handbook/14-first-window.html">14. Your first window</a>
+                <a href="../handbook/15-layout.html">15. Layout</a>
+                <a href="../handbook/16-grids-and-dialogs.html">16. Grids and dialogs</a>
+                <a href="../handbook/17-database.html">17. A database</a>
+                <a href="../handbook/18-charts-and-reports.html">18. Charts and reports</a>
+                <a href="../handbook/19-look-and-languages.html">19. Look and languages</a>
+                <a href="../handbook/20-background.html">20. Work in the background</a>
+                <a href="../handbook/21-phones.html">21. Phones</a>
+                <a href="../handbook/22-shipping.html">22. Shipping</a>
+                <a href="../handbook/appendix-a-cheat-sheet.html">Appendix A. Object Pascal at a glance</a>
+                <a href="../handbook/appendix-b-from-delphi.html">Appendix B. Coming from Delphi or Lazarus</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g2" aria-expanded="false">Guides</button>
+              <div class="collapse " id="g2">
+                <a href="../guide-cli.html">Writing a command-line tool</a>
+                <a href="../guide-api.html">A REST API with a database</a>
+                <a href="../guide-desktop.html">Building a desktop app</a>
+                <a href="../guide-business.html">A business system — desktop app and server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g3" aria-expanded="false">Desktop and phone apps</button>
+              <div class="collapse " id="g3">
+                <a href="../forms.html">Forms and controls</a>
+                <a href="../controls.html">Controls reference</a>
+                <a href="../styles.html">Styles: Fluent, Material and your own</a>
+                <a href="../components.html">Writing components</a>
+                <a href="../android.html">Android</a>
+                <a href="../device.html">The phone&#39;s features</a>
+                <a href="../java.html">Java from Pascal</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g4" aria-expanded="false">Programs and services</button>
+              <div class="collapse " id="g4">
+                <a href="../console.html">Console programs</a>
+                <a href="../data.html">JSON, settings and logging</a>
+                <a href="../documents.html">Reports, PDF, Excel and printing</a>
+                <a href="../system.html">Files, programs, HTTP and the environment</a>
+                <a href="../services.html">Services: programs that keep running</a>
+                <a href="../web.html">Web APIs and sites: Pastel.Web</a>
+                <a href="../websockets.html">WebSockets: Pastel.WebSocket</a>
+                <a href="../mail.html">E-mail: Pastel.Mail</a>
+                <a href="../pages.html">Web pages from templates</a>
+                <a href="../markdown.html">Markdown</a>
+                <a href="../database.html">Databases: Pastel.Db</a>
+                <a href="../sync.html">Data that works offline: Pastel.Sync</a>
+                <a href="../auth.html">Users and login: Pastel.Auth</a>
+                <a href="../security.html">Passwords, tokens and signatures: Pastel.Crypto, Pastel.Jwt</a>
+                <a href="../deploy.html">Deploying to a Linux server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g5" aria-expanded="false">Working with Pastel</button>
+              <div class="collapse " id="g5">
+                <a href="../project.html">The project file: pastel.toml</a>
+                <a href="../workflow.html">Everyday work: watch, format, libraries</a>
+                <a href="../packages.html">Packages</a>
+                <a href="../testing.html">Testing</a>
+                <a href="../vscode.html">Pastel for Visual Studio Code</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start " type="button" data-bs-toggle="collapse" data-bs-target="#g6" aria-expanded="true">Reference</button>
+              <div class="collapse show" id="g6">
+                <a href="../api/index.html">Pastel API reference</a>
+                <a href="../compatibility.html">Compatibility: what stays the same</a>
+                <a href="../performance.html">Performance</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g7" aria-expanded="false">Examples</button>
+              <div class="collapse " id="g7">
+                <a href="../examples/components-demo.html">components-demo</a>
+                <a href="../examples/components.html">components</a>
+                <a href="../examples/contacts.html">contacts</a>
+                <a href="../examples/dupfinder.html">dupfinder</a>
+                <a href="../examples/notepad.html">notepad</a>
+                <a href="../examples/notes-api.html">notes-api</a>
+                <a href="../examples/pocket-app.html">pocket-app</a>
+                <a href="../examples/pocket-cli.html">pocket-cli</a>
+                <a href="../examples/pocket-core.html">pocket-core</a>
+                <a href="../examples/salon-api.html">salon-api</a>
+                <a href="../examples/salon-core.html">salon-core</a>
+                <a href="../examples/salon-desk.html">salon-desk</a>
+                <a href="../examples/weather.html">weather</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g8" aria-expanded="false">Project</button>
+              <div class="collapse " id="g8">
+                <a href="../roadmap.html">Pastel roadmap to 1.0</a>
+                <a href="../changelog.html">Changelog</a>
+                <a href="../vscode-changelog.html">Changelog of the VS Code extension</a>
+                <a href="../contributing.html">Contributing to Pastel</a>
+                <a href="../security-policy.html">Security</a>
+                <a href="../code-of-conduct.html">Code of conduct</a>
+                <a href="../announcing-1.0.html">Announcing Pastel 1.0</a>
+              </div>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </aside>
+    <main class="col-12 col-lg-9 col-xl-8 docs-main">
+      <article class="markdown">
+<h1 id="pastelcrypto"><a class="anchor" href="#pastelcrypto">#</a>Pastel.Crypto</h1>
+<p>Hashes, signatures, passwords and random tokens.</p>
+<pre><code>Sha256Hex('abc')                          // 'ba7816bf...'
+Sig := HmacSha256(Secret, Message);       // raw bytes
+Token := RandomToken;                     // 43 characters, safe in URLs
+Hash := HashPassword('s3cret');           // store this, never the password
+if VerifyPassword(Typed, Hash) then ...
+if SameSecret(Given, Expected) then ...   // takes the same time either way
+</code></pre>
+<p>All in Pascal, no OpenSSL needed. Strings here are bytes (RawByteString);
+text is used as its UTF-8 bytes.</p>
+<p><code>uses Pastel.Crypto;</code> · source: <a href="https://github.com/azrov/pastel/blob/main/framework/src/pastel.crypto.pas">framework/src/pastel.crypto.pas</a></p>
+<p><strong>Contents:</strong> <a href="#sha256">Sha256</a> · <a href="#sha256hex">Sha256Hex</a> · <a href="#sha256file">Sha256File</a> · <a href="#hmacsha256">HmacSha256</a> · <a href="#sha1">Sha1</a> · <a href="#pbkdf2sha256">Pbkdf2Sha256</a> · <a href="#hashpassword">HashPassword</a> · <a href="#verifypassword">VerifyPassword</a> · <a href="#randombytes">RandomBytes</a> · <a href="#randomtoken">RandomToken</a> · <a href="#samesecret">SameSecret</a> · <a href="#base64urlencode">Base64UrlEncode</a> · <a href="#base64urldecode">Base64UrlDecode</a> · <a href="#tohex">ToHex</a></p>
+<h2 id="routines"><a class="anchor" href="#routines">#</a>Routines</h2>
+<h3 id="sha256"><a class="anchor" href="#sha256">#</a>Sha256</h3>
+<pre><code class="language-pascal">function Sha256(const Data: RawByteString): RawByteString
+</code></pre>
+<p>32 bytes</p>
+<h3 id="sha256hex"><a class="anchor" href="#sha256hex">#</a>Sha256Hex</h3>
+<pre><code class="language-pascal">function Sha256Hex(const Data: RawByteString): string
+</code></pre>
+<p>64 hex characters, lower case</p>
+<h3 id="sha256file"><a class="anchor" href="#sha256file">#</a>Sha256File</h3>
+<pre><code class="language-pascal">function Sha256File(const FileName: string): string
+</code></pre>
+<h3 id="hmacsha256"><a class="anchor" href="#hmacsha256">#</a>HmacSha256</h3>
+<pre><code class="language-pascal">function HmacSha256(const Key: RawByteString; const Data: RawByteString): RawByteString
+</code></pre>
+<h3 id="sha1"><a class="anchor" href="#sha1">#</a>Sha1</h3>
+<pre><code class="language-pascal">function Sha1(const Data: RawByteString): RawByteString
+</code></pre>
+<p>20 bytes; SHA-1 is broken for signatures: only for protocols that ask for it (WebSocket's handshake)</p>
+<h3 id="pbkdf2sha256"><a class="anchor" href="#pbkdf2sha256">#</a>Pbkdf2Sha256</h3>
+<pre><code class="language-pascal">function Pbkdf2Sha256(const Password: RawByteString; const Salt: RawByteString; Iterations: Integer; Length: Integer): RawByteString
+</code></pre>
+<p>PBKDF2 with HMAC-SHA256 (RFC 8018)</p>
+<h3 id="hashpassword"><a class="anchor" href="#hashpassword">#</a>HashPassword</h3>
+<pre><code class="language-pascal">function HashPassword(const Password: string; Iterations: Integer = 210000): string
+</code></pre>
+<p>'pbkdf2-sha256$210000$<salt>$<hash>'; a new salt every time</p>
+<h3 id="verifypassword"><a class="anchor" href="#verifypassword">#</a>VerifyPassword</h3>
+<pre><code class="language-pascal">function VerifyPassword(const Password: string; const Hash: string): Boolean
+</code></pre>
+<p>also False for a hash in another format</p>
+<h3 id="randombytes"><a class="anchor" href="#randombytes">#</a>RandomBytes</h3>
+<pre><code class="language-pascal">function RandomBytes(Count: Integer): RawByteString
+</code></pre>
+<p>bytes from the system's secure random source</p>
+<h3 id="randomtoken"><a class="anchor" href="#randomtoken">#</a>RandomToken</h3>
+<pre><code class="language-pascal">function RandomToken(Count: Integer = 32): string
+</code></pre>
+<p>Count random bytes as base64url text: for API keys, session ids, ...</p>
+<h3 id="samesecret"><a class="anchor" href="#samesecret">#</a>SameSecret</h3>
+<pre><code class="language-pascal">function SameSecret(const A: RawByteString; const B: RawByteString): Boolean
+</code></pre>
+<p>compares without stopping at the first difference, so the time taken
+tells an attacker nothing</p>
+<h3 id="base64urlencode"><a class="anchor" href="#base64urlencode">#</a>Base64UrlEncode</h3>
+<pre><code class="language-pascal">function Base64UrlEncode(const Data: RawByteString): string
+</code></pre>
+<h3 id="base64urldecode"><a class="anchor" href="#base64urldecode">#</a>Base64UrlDecode</h3>
+<pre><code class="language-pascal">function Base64UrlDecode(const Text: string): RawByteString
+</code></pre>
+<p>EConvertError for text that is not base64url</p>
+<h3 id="tohex"><a class="anchor" href="#tohex">#</a>ToHex</h3>
+<pre><code class="language-pascal">function ToHex(const Data: RawByteString): string
+</code></pre>
+
+      </article>
+      <p class="edit mt-5"><a href="https://github.com/azrov/pastel/edit/main/docs/api/pastel.crypto.md">Improve this page on GitHub</a></p>
+    </main>
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer py-4 mt-5">
+  <div class="container d-flex flex-wrap gap-3 justify-content-between small text-body-secondary">
+    <span>Pastel 2.1.0-beta.4 · MIT License · built with Pastel.Markdown and Pastel.Pages</span>
+    <span class="d-flex gap-3">
+      <a href="../docs.html">Documentation</a>
+      <a href="../download.html">Download</a>
+      <a href="../contributing.html">Contributing</a>
+      <a href="https://github.com/azrov/pastel">GitHub</a>
+    </span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/delphi.min.js"></script>
+<script src="../assets/site.js"></script>
+</body>
+</html>

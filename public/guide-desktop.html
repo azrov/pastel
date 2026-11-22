@@ -1,0 +1,712 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guide: building a desktop app · Pastel</title>
+<meta name="description" content="Pastel: a modern cross-platform app framework and toolchain for Object Pascal. Desktop, phone, web and console apps from one codebase.">
+<script>
+  try { var t = localStorage.getItem('pastel-theme'); } catch (e) {}
+  document.documentElement.dataset.bsTheme = t || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hl-dark">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body class="section-docs">
+<nav class="navbar navbar-expand-lg sticky-top site-header">
+  <div class="container-fluid px-lg-4">
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="index.html">
+      <span class="logo" aria-hidden="true"></span>Pastel
+    </a>
+        <button class="btn btn-sm btn-outline-secondary d-lg-none me-auto" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">Menu</button>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#top" aria-controls="top" aria-expanded="false" aria-label="Links">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="top">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link active" href="docs.html">Docs</a></li>
+        <li class="nav-item"><a class="nav-link" href="getting-started.html">Get started</a></li>
+        <li class="nav-item"><a class="nav-link " href="download.html">Download</a></li>
+        <li class="nav-item"><a class="nav-link " href="changelog.html">Changelog</a></li>
+      </ul>
+      <div class="search position-relative my-2 my-lg-0 me-lg-3">
+        <input id="search" class="form-control form-control-sm" type="search" placeholder="Search the docs  /" autocomplete="off" data-base="" aria-label="Search the docs">
+        <div id="results" class="dropdown-menu shadow"></div>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        <button id="theme" class="btn btn-sm btn-outline-secondary" type="button" aria-label="Light or dark" title="Light or dark"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+        <a class="btn btn-sm btn-outline-secondary" href="https://github.com/azrov/pastel">GitHub</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-lg-4">
+  <div class="row">
+    <aside class="col-lg-3 col-xl-2 docs-sidebar">
+      <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+        <div class="offcanvas-header border-bottom">
+          <h5 class="offcanvas-title" id="sidebarLabel">Documentation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+          <nav class="docs-nav w-100">
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g0" aria-expanded="false">Start</button>
+              <div class="collapse " id="g0">
+                <a href="readme.html">Overview</a>
+                <a href="docs.html">All topics</a>
+                <a href="getting-started.html">Getting started</a>
+                <a href="commands.html">The pastel command</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g1" aria-expanded="false">Handbook</button>
+              <div class="collapse " id="g1">
+                <a href="handbook/README.html">The Pastel Handbook</a>
+                <a href="handbook/01-hello.html">1. Your first program</a>
+                <a href="handbook/02-values.html">2. Values, types and variables</a>
+                <a href="handbook/03-decisions-loops.html">3. Decisions and loops</a>
+                <a href="handbook/04-routines.html">4. Procedures and functions</a>
+                <a href="handbook/05-structured-types.html">5. Arrays, records, enumerations and sets</a>
+                <a href="handbook/06-strings.html">6. Text</a>
+                <a href="handbook/07-units.html">7. Units</a>
+                <a href="handbook/08-classes.html">8. Classes and objects</a>
+                <a href="handbook/09-exceptions.html">9. When things go wrong</a>
+                <a href="handbook/10-generics.html">10. Lists, dictionaries and generics</a>
+                <a href="handbook/11-files-json.html">11. Files and JSON</a>
+                <a href="handbook/12-testing.html">12. Testing</a>
+                <a href="handbook/13-interfaces.html">13. Interfaces and the command line</a>
+                <a href="handbook/14-first-window.html">14. Your first window</a>
+                <a href="handbook/15-layout.html">15. Layout</a>
+                <a href="handbook/16-grids-and-dialogs.html">16. Grids and dialogs</a>
+                <a href="handbook/17-database.html">17. A database</a>
+                <a href="handbook/18-charts-and-reports.html">18. Charts and reports</a>
+                <a href="handbook/19-look-and-languages.html">19. Look and languages</a>
+                <a href="handbook/20-background.html">20. Work in the background</a>
+                <a href="handbook/21-phones.html">21. Phones</a>
+                <a href="handbook/22-shipping.html">22. Shipping</a>
+                <a href="handbook/appendix-a-cheat-sheet.html">Appendix A. Object Pascal at a glance</a>
+                <a href="handbook/appendix-b-from-delphi.html">Appendix B. Coming from Delphi or Lazarus</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start " type="button" data-bs-toggle="collapse" data-bs-target="#g2" aria-expanded="true">Guides</button>
+              <div class="collapse show" id="g2">
+                <a href="guide-cli.html">Writing a command-line tool</a>
+                <a href="guide-api.html">A REST API with a database</a>
+                <a href="guide-desktop.html" class="current" aria-current="page">Building a desktop app</a>
+                <a href="guide-business.html">A business system — desktop app and server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g3" aria-expanded="false">Desktop and phone apps</button>
+              <div class="collapse " id="g3">
+                <a href="forms.html">Forms and controls</a>
+                <a href="controls.html">Controls reference</a>
+                <a href="styles.html">Styles: Fluent, Material and your own</a>
+                <a href="components.html">Writing components</a>
+                <a href="android.html">Android</a>
+                <a href="device.html">The phone&#39;s features</a>
+                <a href="java.html">Java from Pascal</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g4" aria-expanded="false">Programs and services</button>
+              <div class="collapse " id="g4">
+                <a href="console.html">Console programs</a>
+                <a href="data.html">JSON, settings and logging</a>
+                <a href="documents.html">Reports, PDF, Excel and printing</a>
+                <a href="system.html">Files, programs, HTTP and the environment</a>
+                <a href="services.html">Services: programs that keep running</a>
+                <a href="web.html">Web APIs and sites: Pastel.Web</a>
+                <a href="websockets.html">WebSockets: Pastel.WebSocket</a>
+                <a href="mail.html">E-mail: Pastel.Mail</a>
+                <a href="pages.html">Web pages from templates</a>
+                <a href="markdown.html">Markdown</a>
+                <a href="database.html">Databases: Pastel.Db</a>
+                <a href="sync.html">Data that works offline: Pastel.Sync</a>
+                <a href="auth.html">Users and login: Pastel.Auth</a>
+                <a href="security.html">Passwords, tokens and signatures: Pastel.Crypto, Pastel.Jwt</a>
+                <a href="deploy.html">Deploying to a Linux server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g5" aria-expanded="false">Working with Pastel</button>
+              <div class="collapse " id="g5">
+                <a href="project.html">The project file: pastel.toml</a>
+                <a href="workflow.html">Everyday work: watch, format, libraries</a>
+                <a href="packages.html">Packages</a>
+                <a href="testing.html">Testing</a>
+                <a href="vscode.html">Pastel for Visual Studio Code</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g6" aria-expanded="false">Reference</button>
+              <div class="collapse " id="g6">
+                <a href="api/index.html">Pastel API reference</a>
+                <a href="compatibility.html">Compatibility: what stays the same</a>
+                <a href="performance.html">Performance</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g7" aria-expanded="false">Examples</button>
+              <div class="collapse " id="g7">
+                <a href="examples/components-demo.html">components-demo</a>
+                <a href="examples/components.html">components</a>
+                <a href="examples/contacts.html">contacts</a>
+                <a href="examples/dupfinder.html">dupfinder</a>
+                <a href="examples/notepad.html">notepad</a>
+                <a href="examples/notes-api.html">notes-api</a>
+                <a href="examples/pocket-app.html">pocket-app</a>
+                <a href="examples/pocket-cli.html">pocket-cli</a>
+                <a href="examples/pocket-core.html">pocket-core</a>
+                <a href="examples/salon-api.html">salon-api</a>
+                <a href="examples/salon-core.html">salon-core</a>
+                <a href="examples/salon-desk.html">salon-desk</a>
+                <a href="examples/weather.html">weather</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g8" aria-expanded="false">Project</button>
+              <div class="collapse " id="g8">
+                <a href="roadmap.html">Pastel roadmap to 1.0</a>
+                <a href="changelog.html">Changelog</a>
+                <a href="vscode-changelog.html">Changelog of the VS Code extension</a>
+                <a href="contributing.html">Contributing to Pastel</a>
+                <a href="security-policy.html">Security</a>
+                <a href="code-of-conduct.html">Code of conduct</a>
+                <a href="announcing-1.0.html">Announcing Pastel 1.0</a>
+              </div>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </aside>
+    <main class="col-12 col-lg-9 col-xl-8 docs-main">
+      <article class="markdown">
+<h1 id="guide-building-a-desktop-app"><a class="anchor" href="#guide-building-a-desktop-app">#</a>Guide: building a desktop app</h1>
+<p>This guide builds a small address book step by step: a window with a list and a form, menus and shortcuts, dialogs, a second window, and data in SQLite. The finished app is in <a href="examples/contacts.html"><code>examples/contacts</code></a>; <a href="examples/notepad.html"><code>examples/notepad</code></a> is a text editor built the same way.</p>
+<p>The basics of <code>.pform</code> files, layout and the designer are in <a href="forms.html">Forms and controls</a>. This guide puts them together.</p>
+<h2 id="1-create-the-project"><a class="anchor" href="#1-create-the-project">#</a>1. Create the project</h2>
+<pre><code class="language-sh">pastel new app contacts
+cd contacts
+pastel run
+</code></pre>
+<p><code>src/main.pas</code> creates the forms and runs the app; <code>src/forms/Home.pform</code> is the main window and <code>Home.pas</code> its code. Keep <code>pastel run</code> going: when you save the <code>.pform</code> file the window updates by itself.</p>
+<h2 id="2-lay-out-the-window"><a class="anchor" href="#2-lay-out-the-window">#</a>2. Lay out the window</h2>
+<p>A row with two columns: a search box and a list on the left, the details on the right.</p>
+<pre><code>object HomeForm: THomeForm
+  Title = 'Contacts'
+  Width = 760
+  Height = 520
+  Padding = 0
+  Gap = 0
+  object Body: TRow
+    Grow = 1
+    Align = Stretch          // the columns get the full height
+    Padding = 16
+    Gap = 16
+    object Side: TColumn
+      Width = 260
+      Gap = 8
+      object SearchEdit: TEdit
+        Placeholder = 'Search'
+        OnChange = SearchChange
+      end
+      object ContactList: TListBox
+        Grow = 1
+        OnChange = ContactListChange
+      end
+    end
+    object Details: TColumn
+      Grow = 1
+      Gap = 8
+      object NameEdit: TEdit
+      end
+      object NotesMemo: TMemo
+        Grow = 1
+      end
+      object SaveButton: TButton
+        Text = 'Save'
+        Default = True
+        OnClick = SaveClick
+      end
+    end
+  end
+end
+</code></pre>
+<p>In VS Code, the designer shows the window as you type; <em>Size</em> shows it at other window sizes and <em>Dark</em> in the dark theme.</p>
+<h2 id="3-menus-shortcuts-and-actions"><a class="anchor" href="#3-menus-shortcuts-and-actions">#</a>3. Menus, shortcuts and actions</h2>
+<p>A <code>TAction</code> is one command with a caption, a shortcut and an <code>Enabled</code> state. Menu items and buttons that use it show the same caption and are disabled together:</p>
+<pre><code>  object MainMenu: TMenuBar
+    object FileMenu: TMenuItem
+      Caption = 'File'
+      object NewItem: TMenuItem
+        Action = NewAction
+      end
+      object Sep1: TMenuItem
+        Caption = '-'
+      end
+      object QuitItem: TMenuItem
+        Caption = 'Quit'
+        ShortCut = 'Ctrl+Q'
+        OnClick = QuitClick
+      end
+    end
+  end
+  object NewAction: TAction
+    Caption = 'New contact'
+    ShortCut = 'Ctrl+N'
+    OnExecute = NewExecute
+  end
+</code></pre>
+<p>and a button with <code>Action = NewAction</code>. The menu bar goes first in the form. <code>TPopupMenu</code> is a right-click menu: give it items and set <code>PopupMenu = EditMenu</code> on a control.</p>
+<p>Shortcuts work anywhere in the window: <code>Ctrl+N</code> runs <code>NewExecute</code>. On macOS <code>Ctrl</code> means <code>Cmd</code>.</p>
+<h2 id="4-event-handlers"><a class="anchor" href="#4-event-handlers">#</a>4. Event handlers</h2>
+<p>Declare the handlers in the form class; the designer's → button next to an event creates them for you.</p>
+<pre><code class="language-pascal">procedure THomeForm.SaveClick(Sender: TObject);
+begin
+  ...
+  ContactList.Items.Add(NameEdit.Text);
+end;
+
+procedure THomeForm.NewExecute(Sender: TObject);
+begin
+  ContactList.ItemIndex := -1;
+  NameEdit.Text := '';
+  NameEdit.SetFocus;
+end;
+</code></pre>
+<h2 id="5-dialogs"><a class="anchor" href="#5-dialogs">#</a>5. Dialogs</h2>
+<p>All dialogs wait for the answer and return it. They are in <code>Pastel.Dialogs</code>, which new forms already have in their <code>uses</code>; in an older form add it yourself. When a routine is missing from the <code>uses</code>, <code>pastel build</code> says where it is:</p>
+<pre><code>src/forms/Home.pas(37,3) Error: Identifier not found &quot;ShowMessage&quot;
+hint: ShowMessage is in Pastel.Dialogs: add it to the uses clause of the unit
+</code></pre>
+<p>The same works for the everyday routines Delphi programs use: <code>IntToStr</code>, <code>Format</code>, <code>FormatDateTime</code> (SysUtils), <code>TStringList</code> (Classes), <code>Min</code>, <code>Max</code> (Math), <code>IncDay</code> (DateUtils).</p>
+<pre><code class="language-pascal">ShowMessage('Saved.');
+if Ask('Delete Ayşe?', 'Delete contact') then ...
+case MessageDlg('Save the changes?', 'Notes', [mrYes, mrNo, mrCancel]) of
+  mrYes: ...
+end;
+Name := InputBox('New list', 'Name of the list:', 'Friends');
+if OpenFileDialog(FileName, 'Text files|*.txt;*.md|All files|*') then ...
+if SaveFileDialog(FileName, 'Text files|*.txt', 'Save', '.txt') then ...
+if SelectFolderDialog(Folder) then ...
+</code></pre>
+<p><code>MessageDlg</code> with <code>Danger = True</code> makes the first button red. The save dialog asks before replacing a file. Messages and questions are drawn by Pastel inside the window. The file dialogs are the system's own (Windows; on Linux zenity or kdialog when installed) and Pastel's drawn ones otherwise; test scripts always get Pastel's, so they can be scripted (step 9). <code>UseNativeDialogs := False</code> always uses Pastel's.</p>
+<h2 id="6-a-second-window"><a class="anchor" href="#6-a-second-window">#</a>6. A second window</h2>
+<pre><code class="language-sh">pastel new form Settings
+</code></pre>
+<p>creates <code>Settings.pform</code> / <code>Settings.pas</code> with OK and Cancel buttons and adds the form to <code>main.pas</code>. Show it as a dialog:</p>
+<pre><code class="language-pascal">if SettingsForm.ShowModal = mrOk then
+  ApplySettings;
+</code></pre>
+<p>A button with <code>ModalResult = mrOk</code> closes the dialog with that result; <code>Default = True</code> is pressed by Enter, <code>Cancel = True</code> by Escape. Before closing, <code>OnCloseQuery</code> can say no (for example when a field is empty).</p>
+<p><code>ShowModal</code> waits until the dialog is closed. Its second form does not wait: it returns at once and calls a method of yours with the result — the better way in apps for phones, where nothing should wait inside an event (Delphi's <code>ShowModal(procedure ...)</code> on Android):</p>
+<pre><code class="language-pascal">procedure TMainForm.SettingsClick(Sender: TObject);
+begin
+  SettingsForm.ShowModal(@SettingsClosed);
+end;
+
+procedure TMainForm.SettingsClosed(Sender: TObject; AResult: Integer);
+begin
+  if AResult = mrOk then
+    ApplySettings;
+end;
+</code></pre>
+<p>The messages and questions have the same two forms: <code>ShowMessage('Saved.')</code> / <code>ShowMessage('Saved.', @Done)</code>, <code>Ask('Delete?')</code> / <code>Ask('Delete?', @DeleteAnswered)</code> (the method gets <code>mrYes</code> or <code>mrNo</code>), <code>MessageDlg(..., @Done)</code>, <code>InputQuery(Title, Prompt, Value, @NameTyped)</code> (gets <code>Ok</code> and the text), and the file dialogs (<code>OpenFileDialog(FileName, Filter, Title, @FileChosen)</code>, <code>TOpenDialog.Execute(@FileChosen)</code>; they get <code>Ok</code> and the file).</p>
+<h2 id="7-keeping-the-data"><a class="anchor" href="#7-keeping-the-data">#</a>7. Keeping the data</h2>
+<p>Put the data code in its own unit under <code>src/services/</code>, not in the form: then it can be tested without a window. <a href="https://github.com/azrov/pastel/blob/main/examples/contacts/src/services/contactstore.pas"><code>contactstore.pas</code></a> keeps the contacts in SQLite with <code>Pastel.Db</code>:</p>
+<pre><code class="language-pascal">FDb := TDatabase.Create('sqlite:' + GetAppConfigDir(False) + 'contacts.db', 1);
+FDb.Exec('create table if not exists contacts (id integer primary key autoincrement, name text not null)', []);
+Rows := FDb.Query('select * from contacts where name like ? order by name', ['%' + Filter + '%']);
+</code></pre>
+<p><code>GetAppConfigDir(False)</code> is the right place for an app's files: <code>~/.config/contacts</code> on Linux, <code>AppData\Local\contacts</code> on Windows. See <a href="database.html">Databases</a> for transactions and migrations, and <a href="testing.html">Testing</a> for <code>pastel test</code>.</p>
+<h3 id="tables-and-data-binding"><a class="anchor" href="#tables-and-data-binding">#</a>Tables and data binding</h3>
+<p>A <code>TListView</code> shows rows with columns; a <code>TGrid</code> can also edit cells. Columns take their value from the field named in <code>Field</code>:</p>
+<pre><code>object ContactList: TListView
+  Grow = 1
+  OnChange = ContactListChange
+  object NameColumn: TGridColumn
+    Title = 'Name'
+    Field = 'name'
+  end
+  object PhoneColumn: TGridColumn
+    Title = 'Phone'
+    Field = 'phone'
+    Width = 130
+  end
+end
+</code></pre>
+<pre><code class="language-pascal">Rows := FDb.Query('select * from contacts order by name', []);
+ContactList.LoadJson(Rows);        // one row per contact
+ContactList.Row                     // the selected row, -1 for none
+</code></pre>
+<p>A click on a column title sorts (<code>Sortable = False</code> turns it off), and only the visible rows are drawn, so tens of thousands of rows are fine. With <code>Editable = True</code>, F2, Enter, a double click or typing edits a cell; <code>OnCellEdit</code> can check or change the value.</p>
+<p>A <code>TDataBinding</code> connects the edit controls to the fields of a record, so you don't copy every value by hand:</p>
+<pre><code>object ContactData: TDataBinding
+  Fields = ('NameEdit', 'PhoneEdit', 'EmailEdit', 'NotesMemo')
+end
+</code></pre>
+<pre><code class="language-pascal">ContactData.Load(Rows.Objects[ContactList.Row]);   // NameEdit.Text := name, ...
+Data := ContactData.ToJson;                        // {&quot;name&quot;: ..., &quot;phone&quot;: ...}
+if ContactData.Modified then ...                   // the user changed something
+</code></pre>
+<p><code>NameEdit</code> binds the field <code>name</code> (the control's name without its kind, in snake_case: <code>FullNameEdit</code> → <code>full_name</code>); <code>'AgeSlider=age_years'</code> names the field. Check boxes and switches bind booleans, sliders numbers, combo boxes their text. <code>LoadObject</code>/<code>SaveObject</code> work with an object's published properties, <code>LoadRow</code>/<code>SaveRow</code> with a grid row.</p>
+<p>A <code>TTreeView</code> shows a tree: <code>Items = ('Documents', '  Letters', '  Bills', 'Pictures')</code> (two spaces per level), or <code>Folders.Add('Documents').AddChild('Letters')</code> from code; <code>Folders.Text</code> is the selected node's path (<code>'Documents/Letters'</code>).</p>
+<h2 id="8-long-work-timers-and-threads"><a class="anchor" href="#8-long-work-timers-and-threads">#</a>8. Long work, timers and threads</h2>
+<p>A <code>TTimer</code> (<code>Interval = 1000</code>, <code>OnTimer = Tick</code>) runs code on the UI thread at intervals. Work that takes long (a download, a big query) belongs in a thread; to show the result, hand it back to the UI thread with <code>TThread.Queue</code>:</p>
+<pre><code class="language-pascal">type
+  THomeForm = class(THomeFormBase)
+    ...
+  private
+    FResult: string;
+    procedure Download;          // runs in another thread
+    procedure ShowResult;        // runs on the UI thread
+  end;
+
+procedure THomeForm.RefreshClick(Sender: TObject);
+begin
+  Busy.Active := True;
+  TThread.ExecuteInThread(@Download);
+end;
+
+procedure THomeForm.Download;
+begin
+  FResult := HttpGet('https://example.com/list.txt').Body;   // Pastel.Http
+  TThread.Queue(nil, @ShowResult);
+end;
+
+procedure THomeForm.ShowResult;
+begin
+  Busy.Active := False;
+  ResultMemo.Text := FResult;
+end;
+</code></pre>
+<p>Never touch controls from the other thread; <code>TThread.Queue</code> (or <code>Synchronize</code>, which waits) runs the method on the UI thread, and the window wakes up for it. While the work runs, a <code>TSpinner</code> or a <code>TProgressBar</code> with <code>Indeterminate = True</code> shows that something is happening. In a long loop on the UI thread, <code>Application.ProcessMessages</code> keeps the window responding.</p>
+<h2 id="9-testing-the-window"><a class="anchor" href="#9-testing-the-window">#</a>9. Testing the window</h2>
+<p>The window can be driven by a script, without a display. <a href="https://github.com/azrov/pastel/blob/main/examples/contacts/tests/ui.txt"><code>tests/ui.txt</code></a> of the example:</p>
+<pre><code>type NameEdit Ayşe Yılmaz
+click SaveButton
+expect CountLabel 1 contact
+key ctrl+d
+expect MessageText Delete Ayşe Yılmaz?
+click YesButton
+expect CountLabel no contacts
+</code></pre>
+<pre><code class="language-sh">pastel build
+PASTEL_HEADLESS=1 PASTEL_TEST_SCRIPT=tests/ui.txt ./build/linux/debug/contacts
+</code></pre>
+<p>The commands are listed in <a href="forms.html#testing-a-form-without-a-window">Forms and controls</a>.</p>
+<h2 id="10-look-and-feel-languages"><a class="anchor" href="#10-look-and-feel-languages">#</a>10. Look and feel, languages</h2>
+<ul>
+<li><p><strong>Dark theme:</strong> <code>Appearance = System</code> on the main form follows the computer's setting; <code>Dark</code> and <code>Light</code> fix it. Set <code>Appearance</code> from code to switch while the app runs.</p></li>
+<li><p><strong>Sharp on high-DPI screens:</strong> Pastel draws at the screen's real resolution; sizes in <code>.pform</code> files are in logical pixels.</p></li>
+<li><p><strong>Icon and fonts:</strong> put <code>assets/icon.png</code> in the project for the window icon (and the icon of the Windows <code>.exe</code>), <code>assets/font.ttf</code> (and <code>font-bold.ttf</code>) to use your own font. Everything in <code>assets/</code> is compiled into the program in release builds (<code>pastel build --release</code>); <code>TImage.FileName = 'logo.png'</code> and <code>OpenAsset('data/list.json')</code> find the files either way.</p></li>
+<li><p><strong>The style:</strong> <code>style = &quot;auto&quot;</code> in <code>assets/theme.toml</code> (new apps have it) gives each platform its own look: Fluent on Windows, Material on Android. <code>&quot;pastel&quot;</code>, <code>&quot;fluent&quot;</code>, <code>&quot;material&quot;</code> or a style file of your own fix one; see <a href="styles.html">Styles</a>.</p></li>
+<li><p><strong>Your colors:</strong> <code>assets/theme.toml</code> changes the theme for the whole app:</p>
+<pre><code class="language-toml">accent = &quot;#0EA5E9&quot;
+radius = 10
+font_size = 15
+[dark]
+accent = &quot;#38BDF8&quot;
+</code></pre>
+<p>Names: <code>accent</code>, <code>on_accent</code>, <code>background</code>, <code>surface</code>, <code>text</code>, <code>text_muted</code>, <code>border</code>, <code>danger</code>, <code>radius</code>, <code>font_size</code>; hover and pressed shades follow the color.</p></li>
+<li><p><strong>Languages:</strong> write the texts in code as <code>_('Save')</code> (unit <code>Pastel.Lang</code>). <code>pastel lang add tr</code> creates <code>assets/lang/tr.json</code> with every text of the project (the <code>.pform</code> texts and the <code>_('...')</code> calls); fill in the translations, and run <code>pastel lang</code> again after changes: it adds new texts and tells you what is missing. The app uses the computer's language (<code>PASTEL_LANG=tr</code> to try one), and the dialog buttons are translated too. <code>FormatNumber(1234.5, 2)</code> and <code>FormatDateShort(Date)</code> write numbers and dates the way the language does (<code>1.234,50</code> and <code>31.10.2026</code> in Turkish). <a href="examples/notepad.html"><code>examples/notepad</code></a> is translated into Turkish.</p></li>
+</ul>
+<h2 id="11-your-own-controls"><a class="anchor" href="#11-your-own-controls">#</a>11. Your own controls</h2>
+<pre><code class="language-sh">pastel new control StarRating
+</code></pre>
+<p>writes <code>src/controls/starrating.pas</code>: a <code>TControl</code> with <code>Measure</code> (its size), <code>Paint</code> (drawing on the canvas), <code>MouseDown</code> and a published property, registered with <code>RegisterControl(TStarRating)</code>. Use it in <code>.pform</code> files like any other control (<code>object Rating: TStarRating</code>). Its published properties appear in the designer's properties panel and the control in the toolbox (at the front, in italics). For that, <code>pastel schema</code>, <code>check</code> and <code>preview</code> compile a copy of the pastel tool together with your controls into <code>build/designer/</code>; it is made again when a control changes.</p>
+<p>Inside <code>Paint</code>, draw within <code>Bounds</code> with <code>C.FillRoundRect</code>, <code>C.DrawText</code>, <code>C.FillCircle</code>, <code>C.DrawLine</code>, <code>C.DrawBitmap</code> and the colors of <code>Theme</code>. Call <code>Invalidate</code> when the look changes and <code>Changed</code> when the size changes.</p>
+<h2 id="12-shipping"><a class="anchor" href="#12-shipping">#</a>12. Shipping</h2>
+<p>Give the app a name people see and a description in <code>pastel.toml</code>:</p>
+<pre><code class="language-toml">[project]
+name = &quot;notepad&quot;
+title = &quot;Notepad&quot;
+description = &quot;A small text editor&quot;
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>What you get</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>pastel package</code></td>
+<td><code>dist/notepad-1.0.0-linux.tar.gz</code>: the program, README, LICENSE</td>
+</tr>
+<tr>
+<td><code>pastel package deb</code></td>
+<td>A Debian/Ubuntu package with a menu entry and the icon; it depends on SDL2 and FreeType</td>
+</tr>
+<tr>
+<td><code>pastel package appimage</code></td>
+<td><code>notepad-1.0.0-x86_64.AppImage</code>: one file that runs on most Linux systems</td>
+</tr>
+<tr>
+<td><code>pastel package --target windows</code></td>
+<td>A <code>.zip</code> with <code>notepad.exe</code>, <code>SDL2.dll</code> and <code>freetype.dll</code></td>
+</tr>
+<tr>
+<td><code>pastel package installer --target windows</code></td>
+<td><code>notepad-1.0.0-windows-setup.exe</code>: installs for the user, with a Start menu entry and an uninstaller (needs <code>makensis</code>: <code>sudo apt install nsis</code>)</td>
+</tr>
+</tbody></table>
+<p>Building for Windows on Linux: <code>pastel doctor --install windows</code> sets it up once. It compiles Free Pascal's basic units for Windows from the Free Pascal sources (<code>sudo apt install fpc-source</code>) and downloads <code>SDL2.dll</code> and <code>freetype.dll</code> into <code>~/.pastel/</code>; every Windows build copies them next to the <code>.exe</code>. The <code>.exe</code> gets <code>assets/icon.png</code> as its icon.</p>
+<p>See <a href="deploy.html">Deploying</a> for servers.</p>
+<h2 id="controls"><a class="anchor" href="#controls">#</a>Controls</h2>
+<p>All controls have <code>Width</code>, <code>Height</code> (0 = as big as the content), <code>Grow</code>, <code>Visible</code>, <code>Enabled</code>, <code>Hint</code> and <code>PopupMenu</code>.</p>
+<h3 id="containers"><a class="anchor" href="#containers">#</a>Containers</h3>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Properties</th>
+<th>Events</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>TColumn</code></td>
+<td>Children top to bottom. <code>Gap</code>, <code>Padding</code>, <code>Align</code> (<code>Stretch</code>), <code>Justify</code>, <code>Color</code>, <code>Radius</code>, <code>BorderColor</code>, <code>BorderWidth</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>TRow</code></td>
+<td>Children left to right; like <code>TColumn</code> with <code>Align = Center</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>TCard</code></td>
+<td>A column with a background, border and rounded corners</td>
+<td></td>
+</tr>
+<tr>
+<td><code>TScrollBox</code></td>
+<td>A column that scrolls (mouse wheel, scroll bar, focus moves bring controls into view)</td>
+<td></td>
+</tr>
+<tr>
+<td><code>TTabControl</code></td>
+<td>Pages: its children are <code>TTabSheet</code>s. <code>TabIndex</code></td>
+<td><code>OnChange</code></td>
+</tr>
+<tr>
+<td><code>TTabSheet</code></td>
+<td>One page: <code>Caption</code> and the column properties</td>
+<td></td>
+</tr>
+<tr>
+<td><code>TSpacer</code></td>
+<td>Takes the free space</td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="text"><a class="anchor" href="#text">#</a>Text</h3>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Properties</th>
+<th>Events</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>TLabel</code></td>
+<td><code>Text</code> (may have line breaks), <code>FontSize</code>, <code>Bold</code>, <code>Color</code>, <code>TextAlign</code>, <code>WordWrap</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>TEdit</code></td>
+<td><code>Text</code>, <code>Placeholder</code>, <code>Password</code>, <code>ReadOnly</code>, <code>MaxLength</code>; <code>SelectAll</code>, <code>SelStart</code>, <code>SelLength</code> from code</td>
+<td><code>OnChange</code>, <code>OnSubmit</code></td>
+</tr>
+<tr>
+<td><code>TMemo</code></td>
+<td><code>Text</code>, <code>Lines</code>, <code>WordWrap</code>, <code>Placeholder</code>, <code>ReadOnly</code>, <code>MaxLength</code>; scrolls</td>
+<td><code>OnChange</code></td>
+</tr>
+</tbody></table>
+<p>Editing: mouse and <code>Shift</code> selection, double-click selects a word, <code>Ctrl+A</code>, cut/copy/paste, undo/redo (<code>Ctrl+Z</code>, <code>Ctrl+Y</code>), <code>Ctrl+Left/Right</code> by words, <code>Home</code>/<code>End</code>, <code>PageUp</code>/<code>PageDown</code> in a memo.</p>
+<h3 id="choices"><a class="anchor" href="#choices">#</a>Choices</h3>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Properties</th>
+<th>Events</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>TButton</code></td>
+<td><code>Text</code>, <code>Icon</code> (<code>'save'</code>, <code>'add'</code>...), <code>Style</code> (<code>Primary</code>, <code>Secondary</code>, <code>Danger</code>, <code>Flat</code>), <code>Action</code>, <code>ModalResult</code>, <code>Default</code>, <code>Cancel</code></td>
+<td><code>OnClick</code></td>
+</tr>
+<tr>
+<td><code>TCheckBox</code></td>
+<td><code>Text</code>, <code>Checked</code></td>
+<td><code>OnChange</code></td>
+</tr>
+<tr>
+<td><code>TSwitch</code></td>
+<td>An on/off switch: <code>Text</code>, <code>Checked</code></td>
+<td><code>OnChange</code></td>
+</tr>
+<tr>
+<td><code>TRadioButton</code></td>
+<td><code>Text</code>, <code>Checked</code>; one per parent is checked</td>
+<td><code>OnChange</code></td>
+</tr>
+<tr>
+<td><code>TComboBox</code></td>
+<td><code>Items</code>, <code>ItemIndex</code>, <code>Text</code>, <code>Placeholder</code>; opens a list (keyboard: arrows, Enter, Escape)</td>
+<td><code>OnChange</code></td>
+</tr>
+<tr>
+<td><code>TListBox</code></td>
+<td><code>Items</code>, <code>ItemIndex</code>, <code>ItemHeight</code>, <code>HotTrack</code>; only visible rows are drawn</td>
+<td><code>OnChange</code>, <code>OnDblClick</code>, <code>OnItemClick</code></td>
+</tr>
+<tr>
+<td><code>TSlider</code></td>
+<td><code>Position</code>, <code>Min</code>, <code>Max</code>, <code>Step</code>; arrows move it</td>
+<td><code>OnChange</code></td>
+</tr>
+</tbody></table>
+<h3 id="pictures-and-progress"><a class="anchor" href="#pictures-and-progress">#</a>Pictures and progress</h3>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Properties</th>
+<th>Events</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>TImage</code></td>
+<td><code>FileName</code> (in <code>assets/</code>, next to the program, or a full path), <code>Fit</code> (<code>Contain</code>, <code>Cover</code>, <code>Stretch</code>, <code>Center</code>); <code>LoadFromStream</code>, <code>Picture</code> from code. PNG, JPEG, BMP</td>
+<td></td>
+</tr>
+<tr>
+<td><code>TProgressBar</code></td>
+<td><code>Position</code>, <code>Max</code>, <code>Indeterminate</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>TSpinner</code></td>
+<td><code>Active</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="tables-and-trees"><a class="anchor" href="#tables-and-trees">#</a>Tables and trees</h3>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Properties</th>
+<th>Events</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>TGrid</code></td>
+<td>Columns are <code>TGridColumn</code> children (<code>Title</code>, <code>Field</code>, <code>Width</code>, <code>Alignment</code>, <code>ReadOnly</code>). <code>Editable</code>, <code>RowSelect</code>, <code>Sortable</code>, <code>Striped</code>, <code>RowHeight</code>; <code>AddRow</code>, <code>Cells[Col, Row]</code>, <code>LoadJson</code>, <code>ToJson</code>, <code>SortBy</code>, <code>FindRow</code>, <code>Row</code>, <code>Col</code> from code</td>
+<td><code>OnChange</code>, <code>OnDblClick</code>, <code>OnCellEdit</code>, <code>OnSort</code></td>
+</tr>
+<tr>
+<td><code>TListView</code></td>
+<td>A grid for choosing rows: whole rows are selected, nothing is edited</td>
+<td><code>OnChange</code>, <code>OnDblClick</code></td>
+</tr>
+<tr>
+<td><code>TTreeView</code></td>
+<td><code>Items</code> (indented by two spaces per level); <code>Add</code>, <code>AddChild</code>, <code>Selected</code>, <code>FindNode</code>, <code>FullExpand</code>, <code>Text</code> (the selected path) from code</td>
+<td><code>OnChange</code>, <code>OnDblClick</code></td>
+</tr>
+<tr>
+<td><code>TDataBinding</code></td>
+<td>Not visible: <code>Fields = ('NameEdit', 'AgeSlider=age')</code>; <code>Load</code>, <code>Save</code>, <code>ToJson</code>, <code>Clear</code>, <code>Modified</code></td>
+<td><code>OnLoad</code></td>
+</tr>
+</tbody></table>
+<h3 id="menus-and-commands"><a class="anchor" href="#menus-and-commands">#</a>Menus and commands</h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Properties</th>
+<th>Events</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>TMenuBar</code></td>
+<td>The window's menu bar; its items are the menus</td>
+<td></td>
+</tr>
+<tr>
+<td><code>TMenuItem</code></td>
+<td><code>Caption</code> (<code>'-'</code> for a line), <code>ShortCut</code> (<code>'Ctrl+Shift+S'</code>, <code>'F5'</code>), <code>Checked</code>, <code>Action</code>; items inside are a submenu</td>
+<td><code>OnClick</code></td>
+</tr>
+<tr>
+<td><code>TPopupMenu</code></td>
+<td>A right-click menu; set <code>PopupMenu = ...</code> on a control</td>
+<td></td>
+</tr>
+<tr>
+<td><code>TAction</code></td>
+<td><code>Caption</code>, <code>ShortCut</code>, <code>Enabled</code>, <code>Checked</code></td>
+<td><code>OnExecute</code></td>
+</tr>
+<tr>
+<td><code>TTimer</code></td>
+<td><code>Interval</code> (ms), <code>Enabled</code></td>
+<td><code>OnTimer</code></td>
+</tr>
+</tbody></table>
+
+      </article>
+      <p class="edit mt-5"><a href="https://github.com/azrov/pastel/edit/main/docs/guide-desktop.md">Improve this page on GitHub</a></p>
+    </main>
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <div class="sticky">
+        <div class="toc-title">On this page</div>
+        <a href="#1-create-the-project">1. Create the project</a>
+        <a href="#2-lay-out-the-window">2. Lay out the window</a>
+        <a href="#3-menus-shortcuts-and-actions">3. Menus, shortcuts and actions</a>
+        <a href="#4-event-handlers">4. Event handlers</a>
+        <a href="#5-dialogs">5. Dialogs</a>
+        <a href="#6-a-second-window">6. A second window</a>
+        <a href="#7-keeping-the-data">7. Keeping the data</a>
+        <a href="#8-long-work-timers-and-threads">8. Long work, timers and threads</a>
+        <a href="#9-testing-the-window">9. Testing the window</a>
+        <a href="#10-look-and-feel-languages">10. Look and feel, languages</a>
+        <a href="#11-your-own-controls">11. Your own controls</a>
+        <a href="#12-shipping">12. Shipping</a>
+        <a href="#controls">Controls</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer py-4 mt-5">
+  <div class="container d-flex flex-wrap gap-3 justify-content-between small text-body-secondary">
+    <span>Pastel 2.1.0-beta.4 · MIT License · built with Pastel.Markdown and Pastel.Pages</span>
+    <span class="d-flex gap-3">
+      <a href="docs.html">Documentation</a>
+      <a href="download.html">Download</a>
+      <a href="contributing.html">Contributing</a>
+      <a href="https://github.com/azrov/pastel">GitHub</a>
+    </span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/delphi.min.js"></script>
+<script src="assets/site.js"></script>
+</body>
+</html>

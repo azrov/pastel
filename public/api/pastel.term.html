@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pastel.Term · Pastel</title>
+<meta name="description" content="Pastel: a modern cross-platform app framework and toolchain for Object Pascal. Desktop, phone, web and console apps from one codebase.">
+<script>
+  try { var t = localStorage.getItem('pastel-theme'); } catch (e) {}
+  document.documentElement.dataset.bsTheme = t || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hl-dark">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body class="section-docs">
+<nav class="navbar navbar-expand-lg sticky-top site-header">
+  <div class="container-fluid px-lg-4">
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="../index.html">
+      <span class="logo" aria-hidden="true"></span>Pastel
+    </a>
+        <button class="btn btn-sm btn-outline-secondary d-lg-none me-auto" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">Menu</button>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#top" aria-controls="top" aria-expanded="false" aria-label="Links">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="top">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link active" href="../docs.html">Docs</a></li>
+        <li class="nav-item"><a class="nav-link" href="../getting-started.html">Get started</a></li>
+        <li class="nav-item"><a class="nav-link " href="../download.html">Download</a></li>
+        <li class="nav-item"><a class="nav-link " href="../changelog.html">Changelog</a></li>
+      </ul>
+      <div class="search position-relative my-2 my-lg-0 me-lg-3">
+        <input id="search" class="form-control form-control-sm" type="search" placeholder="Search the docs  /" autocomplete="off" data-base="../" aria-label="Search the docs">
+        <div id="results" class="dropdown-menu shadow"></div>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        <button id="theme" class="btn btn-sm btn-outline-secondary" type="button" aria-label="Light or dark" title="Light or dark"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+        <a class="btn btn-sm btn-outline-secondary" href="https://github.com/azrov/pastel">GitHub</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-lg-4">
+  <div class="row">
+    <aside class="col-lg-3 col-xl-2 docs-sidebar">
+      <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+        <div class="offcanvas-header border-bottom">
+          <h5 class="offcanvas-title" id="sidebarLabel">Documentation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+          <nav class="docs-nav w-100">
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g0" aria-expanded="false">Start</button>
+              <div class="collapse " id="g0">
+                <a href="../readme.html">Overview</a>
+                <a href="../docs.html">All topics</a>
+                <a href="../getting-started.html">Getting started</a>
+                <a href="../commands.html">The pastel command</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g1" aria-expanded="false">Handbook</button>
+              <div class="collapse " id="g1">
+                <a href="../handbook/README.html">The Pastel Handbook</a>
+                <a href="../handbook/01-hello.html">1. Your first program</a>
+                <a href="../handbook/02-values.html">2. Values, types and variables</a>
+                <a href="../handbook/03-decisions-loops.html">3. Decisions and loops</a>
+                <a href="../handbook/04-routines.html">4. Procedures and functions</a>
+                <a href="../handbook/05-structured-types.html">5. Arrays, records, enumerations and sets</a>
+                <a href="../handbook/06-strings.html">6. Text</a>
+                <a href="../handbook/07-units.html">7. Units</a>
+                <a href="../handbook/08-classes.html">8. Classes and objects</a>
+                <a href="../handbook/09-exceptions.html">9. When things go wrong</a>
+                <a href="../handbook/10-generics.html">10. Lists, dictionaries and generics</a>
+                <a href="../handbook/11-files-json.html">11. Files and JSON</a>
+                <a href="../handbook/12-testing.html">12. Testing</a>
+                <a href="../handbook/13-interfaces.html">13. Interfaces and the command line</a>
+                <a href="../handbook/14-first-window.html">14. Your first window</a>
+                <a href="../handbook/15-layout.html">15. Layout</a>
+                <a href="../handbook/16-grids-and-dialogs.html">16. Grids and dialogs</a>
+                <a href="../handbook/17-database.html">17. A database</a>
+                <a href="../handbook/18-charts-and-reports.html">18. Charts and reports</a>
+                <a href="../handbook/19-look-and-languages.html">19. Look and languages</a>
+                <a href="../handbook/20-background.html">20. Work in the background</a>
+                <a href="../handbook/21-phones.html">21. Phones</a>
+                <a href="../handbook/22-shipping.html">22. Shipping</a>
+                <a href="../handbook/appendix-a-cheat-sheet.html">Appendix A. Object Pascal at a glance</a>
+                <a href="../handbook/appendix-b-from-delphi.html">Appendix B. Coming from Delphi or Lazarus</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g2" aria-expanded="false">Guides</button>
+              <div class="collapse " id="g2">
+                <a href="../guide-cli.html">Writing a command-line tool</a>
+                <a href="../guide-api.html">A REST API with a database</a>
+                <a href="../guide-desktop.html">Building a desktop app</a>
+                <a href="../guide-business.html">A business system — desktop app and server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g3" aria-expanded="false">Desktop and phone apps</button>
+              <div class="collapse " id="g3">
+                <a href="../forms.html">Forms and controls</a>
+                <a href="../controls.html">Controls reference</a>
+                <a href="../styles.html">Styles: Fluent, Material and your own</a>
+                <a href="../components.html">Writing components</a>
+                <a href="../android.html">Android</a>
+                <a href="../device.html">The phone&#39;s features</a>
+                <a href="../java.html">Java from Pascal</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g4" aria-expanded="false">Programs and services</button>
+              <div class="collapse " id="g4">
+                <a href="../console.html">Console programs</a>
+                <a href="../data.html">JSON, settings and logging</a>
+                <a href="../documents.html">Reports, PDF, Excel and printing</a>
+                <a href="../system.html">Files, programs, HTTP and the environment</a>
+                <a href="../services.html">Services: programs that keep running</a>
+                <a href="../web.html">Web APIs and sites: Pastel.Web</a>
+                <a href="../websockets.html">WebSockets: Pastel.WebSocket</a>
+                <a href="../mail.html">E-mail: Pastel.Mail</a>
+                <a href="../pages.html">Web pages from templates</a>
+                <a href="../markdown.html">Markdown</a>
+                <a href="../database.html">Databases: Pastel.Db</a>
+                <a href="../sync.html">Data that works offline: Pastel.Sync</a>
+                <a href="../auth.html">Users and login: Pastel.Auth</a>
+                <a href="../security.html">Passwords, tokens and signatures: Pastel.Crypto, Pastel.Jwt</a>
+                <a href="../deploy.html">Deploying to a Linux server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g5" aria-expanded="false">Working with Pastel</button>
+              <div class="collapse " id="g5">
+                <a href="../project.html">The project file: pastel.toml</a>
+                <a href="../workflow.html">Everyday work: watch, format, libraries</a>
+                <a href="../packages.html">Packages</a>
+                <a href="../testing.html">Testing</a>
+                <a href="../vscode.html">Pastel for Visual Studio Code</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start " type="button" data-bs-toggle="collapse" data-bs-target="#g6" aria-expanded="true">Reference</button>
+              <div class="collapse show" id="g6">
+                <a href="../api/index.html">Pastel API reference</a>
+                <a href="../compatibility.html">Compatibility: what stays the same</a>
+                <a href="../performance.html">Performance</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g7" aria-expanded="false">Examples</button>
+              <div class="collapse " id="g7">
+                <a href="../examples/components-demo.html">components-demo</a>
+                <a href="../examples/components.html">components</a>
+                <a href="../examples/contacts.html">contacts</a>
+                <a href="../examples/dupfinder.html">dupfinder</a>
+                <a href="../examples/notepad.html">notepad</a>
+                <a href="../examples/notes-api.html">notes-api</a>
+                <a href="../examples/pocket-app.html">pocket-app</a>
+                <a href="../examples/pocket-cli.html">pocket-cli</a>
+                <a href="../examples/pocket-core.html">pocket-core</a>
+                <a href="../examples/salon-api.html">salon-api</a>
+                <a href="../examples/salon-core.html">salon-core</a>
+                <a href="../examples/salon-desk.html">salon-desk</a>
+                <a href="../examples/weather.html">weather</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g8" aria-expanded="false">Project</button>
+              <div class="collapse " id="g8">
+                <a href="../roadmap.html">Pastel roadmap to 1.0</a>
+                <a href="../changelog.html">Changelog</a>
+                <a href="../vscode-changelog.html">Changelog of the VS Code extension</a>
+                <a href="../contributing.html">Contributing to Pastel</a>
+                <a href="../security-policy.html">Security</a>
+                <a href="../code-of-conduct.html">Code of conduct</a>
+                <a href="../announcing-1.0.html">Announcing Pastel 1.0</a>
+              </div>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </aside>
+    <main class="col-12 col-lg-9 col-xl-8 docs-main">
+      <article class="markdown">
+<h1 id="pastelterm"><a class="anchor" href="#pastelterm">#</a>Pastel.Term</h1>
+<p>Terminal output and input for console programs.</p>
+<pre><code>WriteLn(Green('done'), ' in ', Bold('2.1s'));
+T := TTable.Create(['Name', 'Size']);
+T.AddRow(['report.pdf', '1.2 MB']);
+T.Print;
+if Confirm('Delete 3 files?') then ...
+Name := Ask('Your name', 'Ali');
+</code></pre>
+<p>Colors are switched off automatically when the output is not a terminal
+(a pipe or a file), when NO_COLOR is set, or on old Windows consoles.
+Prompts read from standard input, so they also work in scripts and tests.</p>
+<p><code>uses Pastel.Term;</code> · source: <a href="https://github.com/azrov/pastel/blob/main/framework/src/pastel.term.pas">framework/src/pastel.term.pas</a></p>
+<p><strong>Contents:</strong> <a href="#ttextalign">TTextAlign</a> · <a href="#ttable">TTable</a> · <a href="#tprogress">TProgress</a> · <a href="#bold">Bold</a> · <a href="#dim">Dim</a> · <a href="#italic">Italic</a> · <a href="#underline">Underline</a> · <a href="#red">Red</a> · <a href="#green">Green</a> · <a href="#yellow">Yellow</a> · <a href="#blue">Blue</a> · <a href="#magenta">Magenta</a> · <a href="#cyan">Cyan</a> · <a href="#gray">Gray</a> · <a href="#rgb">Rgb</a> · <a href="#stripstyles">StripStyles</a> · <a href="#colorsenabled">ColorsEnabled</a> · <a href="#setcolors">SetColors</a> · <a href="#isterminal">IsTerminal</a> · <a href="#terminalwidth">TerminalWidth</a> · <a href="#displaywidth">DisplayWidth</a> · <a href="#padright">PadRight</a> · <a href="#padleft">PadLeft</a> · <a href="#success">Success</a> · <a href="#info">Info</a> · <a href="#warning">Warning</a> · <a href="#error">Error</a> · <a href="#ask">Ask</a> · <a href="#confirm">Confirm</a> · <a href="#choose">Choose</a> · <a href="#askpassword">AskPassword</a> · <a href="#isinteractive">IsInteractive</a></p>
+<h2 id="types"><a class="anchor" href="#types">#</a>Types</h2>
+<h3 id="ttextalign"><a class="anchor" href="#ttextalign">#</a>TTextAlign</h3>
+<pre><code class="language-pascal">type TTextAlign = (alLeft, alRight, alCenter)
+</code></pre>
+<ul>
+<li><code>alLeft</code></li>
+<li><code>alRight</code></li>
+<li><code>alCenter</code></li>
+</ul>
+<h3 id="ttable"><a class="anchor" href="#ttable">#</a>TTable</h3>
+<pre><code class="language-pascal">type TTable = class
+</code></pre>
+<p>A table printed with aligned columns and a line under the header.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>constructor Create(const AHeader: array of string)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure AddRow(const Cells: array of string)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure SetAlign(Column: Integer; Align: TTextAlign)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function RowCount: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function ToText: string</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure Print</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="tprogress"><a class="anchor" href="#tprogress">#</a>TProgress</h3>
+<pre><code class="language-pascal">type TProgress = class
+</code></pre>
+<p>A progress bar on one line: &quot;[########------]  45%  45/100  copying&quot;.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>constructor Create(ATotal: Int64; const ALabel: string = '')</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>destructor Destroy</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure Step(Amount: Int64 = 1)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure SetPosition(AValue: Int64)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure SetLabel(const AValue: string)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure Finish</code></td>
+<td>Ends the line; called by Free too.</td>
+</tr>
+<tr>
+<td><code>property Position: Int64</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Total: Int64</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<h2 id="routines"><a class="anchor" href="#routines">#</a>Routines</h2>
+<h3 id="bold"><a class="anchor" href="#bold">#</a>Bold</h3>
+<pre><code class="language-pascal">function Bold(const S: string): string
+</code></pre>
+<h3 id="dim"><a class="anchor" href="#dim">#</a>Dim</h3>
+<pre><code class="language-pascal">function Dim(const S: string): string
+</code></pre>
+<h3 id="italic"><a class="anchor" href="#italic">#</a>Italic</h3>
+<pre><code class="language-pascal">function Italic(const S: string): string
+</code></pre>
+<h3 id="underline"><a class="anchor" href="#underline">#</a>Underline</h3>
+<pre><code class="language-pascal">function Underline(const S: string): string
+</code></pre>
+<h3 id="red"><a class="anchor" href="#red">#</a>Red</h3>
+<pre><code class="language-pascal">function Red(const S: string): string
+</code></pre>
+<h3 id="green"><a class="anchor" href="#green">#</a>Green</h3>
+<pre><code class="language-pascal">function Green(const S: string): string
+</code></pre>
+<h3 id="yellow"><a class="anchor" href="#yellow">#</a>Yellow</h3>
+<pre><code class="language-pascal">function Yellow(const S: string): string
+</code></pre>
+<h3 id="blue"><a class="anchor" href="#blue">#</a>Blue</h3>
+<pre><code class="language-pascal">function Blue(const S: string): string
+</code></pre>
+<h3 id="magenta"><a class="anchor" href="#magenta">#</a>Magenta</h3>
+<pre><code class="language-pascal">function Magenta(const S: string): string
+</code></pre>
+<h3 id="cyan"><a class="anchor" href="#cyan">#</a>Cyan</h3>
+<pre><code class="language-pascal">function Cyan(const S: string): string
+</code></pre>
+<h3 id="gray"><a class="anchor" href="#gray">#</a>Gray</h3>
+<pre><code class="language-pascal">function Gray(const S: string): string
+</code></pre>
+<h3 id="rgb"><a class="anchor" href="#rgb">#</a>Rgb</h3>
+<pre><code class="language-pascal">function Rgb(const Hex: string; const S: string): string
+</code></pre>
+<p>24-bit color from '#RRGGBB'; falls back to plain text.</p>
+<h3 id="stripstyles"><a class="anchor" href="#stripstyles">#</a>StripStyles</h3>
+<pre><code class="language-pascal">function StripStyles(const S: string): string
+</code></pre>
+<p>Removes escape codes.</p>
+<h3 id="colorsenabled"><a class="anchor" href="#colorsenabled">#</a>ColorsEnabled</h3>
+<pre><code class="language-pascal">function ColorsEnabled: Boolean
+</code></pre>
+<p>True if colors are used. Can be changed, e.g. for a --no-color option.</p>
+<h3 id="setcolors"><a class="anchor" href="#setcolors">#</a>SetColors</h3>
+<pre><code class="language-pascal">procedure SetColors(AEnabled: Boolean)
+</code></pre>
+<h3 id="isterminal"><a class="anchor" href="#isterminal">#</a>IsTerminal</h3>
+<pre><code class="language-pascal">function IsTerminal: Boolean
+</code></pre>
+<p>True if standard output is a terminal (not a file or a pipe).</p>
+<h3 id="terminalwidth"><a class="anchor" href="#terminalwidth">#</a>TerminalWidth</h3>
+<pre><code class="language-pascal">function TerminalWidth: Integer
+</code></pre>
+<h3 id="displaywidth"><a class="anchor" href="#displaywidth">#</a>DisplayWidth</h3>
+<pre><code class="language-pascal">function DisplayWidth(const S: string): Integer
+</code></pre>
+<p>Number of columns a text takes on screen (UTF-8 aware, styles ignored).</p>
+<h3 id="padright"><a class="anchor" href="#padright">#</a>PadRight</h3>
+<pre><code class="language-pascal">function PadRight(const S: string; Width: Integer): string
+</code></pre>
+<h3 id="padleft"><a class="anchor" href="#padleft">#</a>PadLeft</h3>
+<pre><code class="language-pascal">function PadLeft(const S: string; Width: Integer): string
+</code></pre>
+<h3 id="success"><a class="anchor" href="#success">#</a>Success</h3>
+<pre><code class="language-pascal">procedure Success(const Msg: string)
+</code></pre>
+<h3 id="info"><a class="anchor" href="#info">#</a>Info</h3>
+<pre><code class="language-pascal">procedure Info(const Msg: string)
+</code></pre>
+<h3 id="warning"><a class="anchor" href="#warning">#</a>Warning</h3>
+<pre><code class="language-pascal">procedure Warning(const Msg: string)
+</code></pre>
+<h3 id="error"><a class="anchor" href="#error">#</a>Error</h3>
+<pre><code class="language-pascal">procedure Error(const Msg: string)
+</code></pre>
+<h3 id="ask"><a class="anchor" href="#ask">#</a>Ask</h3>
+<pre><code class="language-pascal">function Ask(const Question: string; const Default: string = ''): string
+</code></pre>
+<h3 id="confirm"><a class="anchor" href="#confirm">#</a>Confirm</h3>
+<pre><code class="language-pascal">function Confirm(const Question: string; Default: Boolean = False): Boolean
+</code></pre>
+<p>Yes/no question; Enter gives Default.</p>
+<h3 id="choose"><a class="anchor" href="#choose">#</a>Choose</h3>
+<pre><code class="language-pascal">function Choose(const Question: string; const Choices: array of string; Default: Integer = 0): Integer
+</code></pre>
+<p>Shows numbered choices; returns the index of the chosen one.</p>
+<h3 id="askpassword"><a class="anchor" href="#askpassword">#</a>AskPassword</h3>
+<pre><code class="language-pascal">function AskPassword(const Question: string): string
+</code></pre>
+<p>Like Ask, but the typed text is not shown (when standard input is a terminal).</p>
+<h3 id="isinteractive"><a class="anchor" href="#isinteractive">#</a>IsInteractive</h3>
+<pre><code class="language-pascal">function IsInteractive: Boolean
+</code></pre>
+<p>True when standard input is a terminal (someone can answer questions).</p>
+
+      </article>
+      <p class="edit mt-5"><a href="https://github.com/azrov/pastel/edit/main/docs/api/pastel.term.md">Improve this page on GitHub</a></p>
+    </main>
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <div class="sticky">
+        <div class="toc-title">On this page</div>
+        <a href="#types">Types</a>
+        <a href="#routines">Routines</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer py-4 mt-5">
+  <div class="container d-flex flex-wrap gap-3 justify-content-between small text-body-secondary">
+    <span>Pastel 2.1.0-beta.4 · MIT License · built with Pastel.Markdown and Pastel.Pages</span>
+    <span class="d-flex gap-3">
+      <a href="../docs.html">Documentation</a>
+      <a href="../download.html">Download</a>
+      <a href="../contributing.html">Contributing</a>
+      <a href="https://github.com/azrov/pastel">GitHub</a>
+    </span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/delphi.min.js"></script>
+<script src="../assets/site.js"></script>
+</body>
+</html>

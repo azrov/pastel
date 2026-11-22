@@ -1,0 +1,2371 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pastel.UI · Pastel</title>
+<meta name="description" content="Pastel: a modern cross-platform app framework and toolchain for Object Pascal. Desktop, phone, web and console apps from one codebase.">
+<script>
+  try { var t = localStorage.getItem('pastel-theme'); } catch (e) {}
+  document.documentElement.dataset.bsTheme = t || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hl-dark">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body class="section-docs">
+<nav class="navbar navbar-expand-lg sticky-top site-header">
+  <div class="container-fluid px-lg-4">
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="../index.html">
+      <span class="logo" aria-hidden="true"></span>Pastel
+    </a>
+        <button class="btn btn-sm btn-outline-secondary d-lg-none me-auto" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">Menu</button>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#top" aria-controls="top" aria-expanded="false" aria-label="Links">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="top">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link active" href="../docs.html">Docs</a></li>
+        <li class="nav-item"><a class="nav-link" href="../getting-started.html">Get started</a></li>
+        <li class="nav-item"><a class="nav-link " href="../download.html">Download</a></li>
+        <li class="nav-item"><a class="nav-link " href="../changelog.html">Changelog</a></li>
+      </ul>
+      <div class="search position-relative my-2 my-lg-0 me-lg-3">
+        <input id="search" class="form-control form-control-sm" type="search" placeholder="Search the docs  /" autocomplete="off" data-base="../" aria-label="Search the docs">
+        <div id="results" class="dropdown-menu shadow"></div>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        <button id="theme" class="btn btn-sm btn-outline-secondary" type="button" aria-label="Light or dark" title="Light or dark"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+        <a class="btn btn-sm btn-outline-secondary" href="https://github.com/azrov/pastel">GitHub</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-lg-4">
+  <div class="row">
+    <aside class="col-lg-3 col-xl-2 docs-sidebar">
+      <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+        <div class="offcanvas-header border-bottom">
+          <h5 class="offcanvas-title" id="sidebarLabel">Documentation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+          <nav class="docs-nav w-100">
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g0" aria-expanded="false">Start</button>
+              <div class="collapse " id="g0">
+                <a href="../readme.html">Overview</a>
+                <a href="../docs.html">All topics</a>
+                <a href="../getting-started.html">Getting started</a>
+                <a href="../commands.html">The pastel command</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g1" aria-expanded="false">Handbook</button>
+              <div class="collapse " id="g1">
+                <a href="../handbook/README.html">The Pastel Handbook</a>
+                <a href="../handbook/01-hello.html">1. Your first program</a>
+                <a href="../handbook/02-values.html">2. Values, types and variables</a>
+                <a href="../handbook/03-decisions-loops.html">3. Decisions and loops</a>
+                <a href="../handbook/04-routines.html">4. Procedures and functions</a>
+                <a href="../handbook/05-structured-types.html">5. Arrays, records, enumerations and sets</a>
+                <a href="../handbook/06-strings.html">6. Text</a>
+                <a href="../handbook/07-units.html">7. Units</a>
+                <a href="../handbook/08-classes.html">8. Classes and objects</a>
+                <a href="../handbook/09-exceptions.html">9. When things go wrong</a>
+                <a href="../handbook/10-generics.html">10. Lists, dictionaries and generics</a>
+                <a href="../handbook/11-files-json.html">11. Files and JSON</a>
+                <a href="../handbook/12-testing.html">12. Testing</a>
+                <a href="../handbook/13-interfaces.html">13. Interfaces and the command line</a>
+                <a href="../handbook/14-first-window.html">14. Your first window</a>
+                <a href="../handbook/15-layout.html">15. Layout</a>
+                <a href="../handbook/16-grids-and-dialogs.html">16. Grids and dialogs</a>
+                <a href="../handbook/17-database.html">17. A database</a>
+                <a href="../handbook/18-charts-and-reports.html">18. Charts and reports</a>
+                <a href="../handbook/19-look-and-languages.html">19. Look and languages</a>
+                <a href="../handbook/20-background.html">20. Work in the background</a>
+                <a href="../handbook/21-phones.html">21. Phones</a>
+                <a href="../handbook/22-shipping.html">22. Shipping</a>
+                <a href="../handbook/appendix-a-cheat-sheet.html">Appendix A. Object Pascal at a glance</a>
+                <a href="../handbook/appendix-b-from-delphi.html">Appendix B. Coming from Delphi or Lazarus</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g2" aria-expanded="false">Guides</button>
+              <div class="collapse " id="g2">
+                <a href="../guide-cli.html">Writing a command-line tool</a>
+                <a href="../guide-api.html">A REST API with a database</a>
+                <a href="../guide-desktop.html">Building a desktop app</a>
+                <a href="../guide-business.html">A business system — desktop app and server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g3" aria-expanded="false">Desktop and phone apps</button>
+              <div class="collapse " id="g3">
+                <a href="../forms.html">Forms and controls</a>
+                <a href="../controls.html">Controls reference</a>
+                <a href="../styles.html">Styles: Fluent, Material and your own</a>
+                <a href="../components.html">Writing components</a>
+                <a href="../android.html">Android</a>
+                <a href="../device.html">The phone&#39;s features</a>
+                <a href="../java.html">Java from Pascal</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g4" aria-expanded="false">Programs and services</button>
+              <div class="collapse " id="g4">
+                <a href="../console.html">Console programs</a>
+                <a href="../data.html">JSON, settings and logging</a>
+                <a href="../documents.html">Reports, PDF, Excel and printing</a>
+                <a href="../system.html">Files, programs, HTTP and the environment</a>
+                <a href="../services.html">Services: programs that keep running</a>
+                <a href="../web.html">Web APIs and sites: Pastel.Web</a>
+                <a href="../websockets.html">WebSockets: Pastel.WebSocket</a>
+                <a href="../mail.html">E-mail: Pastel.Mail</a>
+                <a href="../pages.html">Web pages from templates</a>
+                <a href="../markdown.html">Markdown</a>
+                <a href="../database.html">Databases: Pastel.Db</a>
+                <a href="../sync.html">Data that works offline: Pastel.Sync</a>
+                <a href="../auth.html">Users and login: Pastel.Auth</a>
+                <a href="../security.html">Passwords, tokens and signatures: Pastel.Crypto, Pastel.Jwt</a>
+                <a href="../deploy.html">Deploying to a Linux server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g5" aria-expanded="false">Working with Pastel</button>
+              <div class="collapse " id="g5">
+                <a href="../project.html">The project file: pastel.toml</a>
+                <a href="../workflow.html">Everyday work: watch, format, libraries</a>
+                <a href="../packages.html">Packages</a>
+                <a href="../testing.html">Testing</a>
+                <a href="../vscode.html">Pastel for Visual Studio Code</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start " type="button" data-bs-toggle="collapse" data-bs-target="#g6" aria-expanded="true">Reference</button>
+              <div class="collapse show" id="g6">
+                <a href="../api/index.html">Pastel API reference</a>
+                <a href="../compatibility.html">Compatibility: what stays the same</a>
+                <a href="../performance.html">Performance</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g7" aria-expanded="false">Examples</button>
+              <div class="collapse " id="g7">
+                <a href="../examples/components-demo.html">components-demo</a>
+                <a href="../examples/components.html">components</a>
+                <a href="../examples/contacts.html">contacts</a>
+                <a href="../examples/dupfinder.html">dupfinder</a>
+                <a href="../examples/notepad.html">notepad</a>
+                <a href="../examples/notes-api.html">notes-api</a>
+                <a href="../examples/pocket-app.html">pocket-app</a>
+                <a href="../examples/pocket-cli.html">pocket-cli</a>
+                <a href="../examples/pocket-core.html">pocket-core</a>
+                <a href="../examples/salon-api.html">salon-api</a>
+                <a href="../examples/salon-core.html">salon-core</a>
+                <a href="../examples/salon-desk.html">salon-desk</a>
+                <a href="../examples/weather.html">weather</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g8" aria-expanded="false">Project</button>
+              <div class="collapse " id="g8">
+                <a href="../roadmap.html">Pastel roadmap to 1.0</a>
+                <a href="../changelog.html">Changelog</a>
+                <a href="../vscode-changelog.html">Changelog of the VS Code extension</a>
+                <a href="../contributing.html">Contributing to Pastel</a>
+                <a href="../security-policy.html">Security</a>
+                <a href="../code-of-conduct.html">Code of conduct</a>
+                <a href="../announcing-1.0.html">Announcing Pastel 1.0</a>
+              </div>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </aside>
+    <main class="col-12 col-lg-9 col-xl-8 docs-main">
+      <article class="markdown">
+<h1 id="pastelui"><a class="anchor" href="#pastelui">#</a>Pastel.UI</h1>
+<p>Controls, layout and input handling.</p>
+<p>Controls are TComponent descendants with published properties, so they can
+be created from .pform files the same way Delphi creates forms from .dfm.
+Layout is a small flexbox-style model: TColumn and TRow place children one
+after another, Grow shares the free space, Align/Justify position them.</p>
+<p><code>uses Pastel.UI;</code> · source: <a href="https://github.com/azrov/pastel/blob/main/framework/src/pastel.ui.pas">framework/src/pastel.ui.pas</a></p>
+<p><strong>Contents:</strong> <a href="#talignitems">TAlignItems</a> · <a href="#tjustify">TJustify</a> · <a href="#timagefit">TImageFit</a> · <a href="#tlayoutkind">TLayoutKind</a> · <a href="#tanchorkind">TAnchorKind</a> · <a href="#tdock">TDock</a> · <a href="#ttextalign">TTextAlign</a> · <a href="#tbuttonstyle">TButtonStyle</a> · <a href="#tkeyboardtype">TKeyboardType</a> · <a href="#treturnkeytype">TReturnKeyType</a> · <a href="#tscreenclass">TScreenClass</a> · <a href="#tcursorkind">TCursorKind</a> · <a href="#twindowstate">TWindowState</a> · <a href="#tthememode">TThemeMode</a> · <a href="#tgesturestate">TGestureState</a> · <a href="#tgestureinfo">TGestureInfo</a> · <a href="#tdragmode">TDragMode</a> · <a href="#tfieldlook">TFieldLook</a> · <a href="#tfocuslook">TFocusLook</a> · <a href="#tswitchlook">TSwitchLook</a> · <a href="#tstylelook">TStyleLook</a> · <a href="#tuistyle">TUIStyle</a> · <a href="#tcontrol">TControl</a> · <a href="#taction">TAction</a> · <a href="#tbox">TBox</a> · <a href="#tcolumn">TColumn</a> · <a href="#tpanel">TPanel</a> · <a href="#trow">TRow</a> · <a href="#tflow">TFlow</a> · <a href="#tcard">TCard</a> · <a href="#tspacer">TSpacer</a> · <a href="#tlabel">TLabel</a> · <a href="#tbutton">TButton</a> · <a href="#teditstate">TEditState</a> · <a href="#tvisualline">TVisualLine</a> · <a href="#tsyntaxkind">TSyntaxKind</a> · <a href="#tsyntaxspan">TSyntaxSpan</a> · <a href="#tcustomedit">TCustomEdit</a> · <a href="#tedit">TEdit</a> · <a href="#tmemo">TMemo</a> · <a href="#tpopupside">TPopupSide</a> · <a href="#tpopup">TPopup</a> · <a href="#tpullrefresh">TPullRefresh</a> · <a href="#ttimer">TTimer</a> · <a href="#tform">TForm</a> · <a href="#ttheme">TTheme</a> · <a href="#usedarktheme">UseDarkTheme</a> · <a href="#usestyle">UseStyle</a> · <a href="#platformstyle">PlatformStyle</a> · <a href="#loadstyle">LoadStyle</a> · <a href="#stylenames">StyleNames</a> · <a href="#findlook">FindLook</a> · <a href="#drawfocus">DrawFocus</a> · <a href="#drawfocus">DrawFocus</a> · <a href="#paintfield">PaintField</a> · <a href="#fieldheight">FieldHeight</a> · <a href="#styleradius">StyleRadius</a> · <a href="#syntaxcolor">SyntaxColor</a> · <a href="#setthemevalue">SetThemeValue</a> · <a href="#invalidatearea">InvalidateArea</a> · <a href="#requestanimation">RequestAnimation</a> · <a href="#animationtime">AnimationTime</a> · <a href="#requestanimation">RequestAnimation</a> · <a href="#processtimers">ProcessTimers</a> · <a href="#drawgrip">DrawGrip</a> · <a href="#releaselater">ReleaseLater</a> · <a href="#calllater">CallLater</a> · <a href="#processreleases">ProcessReleases</a> · <a href="#wraptext">WrapText</a> · <a href="#registercontrol">RegisterControl</a> · <a href="#findcontrolclass">FindControlClass</a> · <a href="#controlclasscount">ControlClassCount</a> · <a href="#controlclassat">ControlClassAt</a> · <a href="#registernonvisual">RegisterNonVisual</a> · <a href="#findnonvisualclass">FindNonVisualClass</a> · <a href="#nonvisualclasscount">NonVisualClassCount</a> · <a href="#nonvisualclassat">NonVisualClassAt</a> · <a href="#utf16tobyteindex">Utf16ToByteIndex</a> · <a href="#bytetoutf16index">ByteToUtf16Index</a></p>
+<h2 id="types"><a class="anchor" href="#types">#</a>Types</h2>
+<h3 id="talignitems"><a class="anchor" href="#talignitems">#</a>TAlignItems</h3>
+<pre><code class="language-pascal">type TAlignItems = (aiStretch, aiStart, aiCenter, aiEnd)
+</code></pre>
+<ul>
+<li><code>aiStretch</code></li>
+<li><code>aiStart</code></li>
+<li><code>aiCenter</code></li>
+<li><code>aiEnd</code></li>
+</ul>
+<h3 id="tjustify"><a class="anchor" href="#tjustify">#</a>TJustify</h3>
+<pre><code class="language-pascal">type TJustify = (jsStart, jsCenter, jsEnd, jsSpaceBetween)
+</code></pre>
+<ul>
+<li><code>jsStart</code></li>
+<li><code>jsCenter</code></li>
+<li><code>jsEnd</code></li>
+<li><code>jsSpaceBetween</code></li>
+</ul>
+<h3 id="timagefit"><a class="anchor" href="#timagefit">#</a>TImageFit</h3>
+<pre><code class="language-pascal">type TImageFit = (ifContain, ifCover, ifStretch, ifCenter)
+</code></pre>
+<p>How a picture fills its place: Contain: all of it fits; Cover: fills, cut at the edges; Stretch; Center: real size.</p>
+<ul>
+<li><code>ifContain</code> How a picture fills its place: Contain: all of it fits; Cover: fills, cut at the edges; Stretch; Center: real size.</li>
+<li><code>ifCover</code> How a picture fills its place: Contain: all of it fits; Cover: fills, cut at the edges; Stretch; Center: real size.</li>
+<li><code>ifStretch</code> How a picture fills its place: Contain: all of it fits; Cover: fills, cut at the edges; Stretch; Center: real size.</li>
+<li><code>ifCenter</code> How a picture fills its place: Contain: all of it fits; Cover: fills, cut at the edges; Stretch; Center: real size.</li>
+</ul>
+<h3 id="tlayoutkind"><a class="anchor" href="#tlayoutkind">#</a>TLayoutKind</h3>
+<pre><code class="language-pascal">type TLayoutKind = (lkFlow, lkFree)
+</code></pre>
+<p>How a box places its children. Flow: below each other (or side by side in a row), the
+responsive way; Free: where their Left and Top say, like Delphi and Lazarus forms.</p>
+<ul>
+<li><code>lkFlow</code> How a box places its children. Flow: below each other (or side by side in a row), the responsive way; Free: where their Left and Top say, like Delphi and Lazarus forms.</li>
+<li><code>lkFree</code> How a box places its children. Flow: below each other (or side by side in a row), the responsive way; Free: where their Left and Top say, like Delphi and Lazarus forms.</li>
+</ul>
+<h3 id="tanchorkind"><a class="anchor" href="#tanchorkind">#</a>TAnchorKind</h3>
+<pre><code class="language-pascal">type TAnchorKind = (akLeft, akTop, akRight, akBottom)
+</code></pre>
+<p>The edges of a free-placed control that keep their distance to the parent's edges when
+the parent is resized: [Left, Top] stays put, [Left, Right] gets wider with it.</p>
+<ul>
+<li><code>akLeft</code> The edges of a free-placed control that keep their distance to the parent's edges when the parent is resized: [Left, Top] stays put, [Left, Right] gets wider with it.</li>
+<li><code>akTop</code> The edges of a free-placed control that keep their distance to the parent's edges when the parent is resized: [Left, Top] stays put, [Left, Right] gets wider with it.</li>
+<li><code>akRight</code> The edges of a free-placed control that keep their distance to the parent's edges when the parent is resized: [Left, Top] stays put, [Left, Right] gets wider with it.</li>
+<li><code>akBottom</code> The edges of a free-placed control that keep their distance to the parent's edges when the parent is resized: [Left, Top] stays put, [Left, Right] gets wider with it.</li>
+</ul>
+<h3 id="tdock"><a class="anchor" href="#tdock">#</a>TDock</h3>
+<pre><code class="language-pascal">type TDock = (dkNone, dkTop, dkBottom, dkLeft, dkRight, dkFill)
+</code></pre>
+<p>A free-placed control docked to an edge of its parent (Delphi's Align): Fill takes what is left.</p>
+<ul>
+<li><code>dkNone</code> A free-placed control docked to an edge of its parent (Delphi's Align): Fill takes what is left.</li>
+<li><code>dkTop</code> A free-placed control docked to an edge of its parent (Delphi's Align): Fill takes what is left.</li>
+<li><code>dkBottom</code> A free-placed control docked to an edge of its parent (Delphi's Align): Fill takes what is left.</li>
+<li><code>dkLeft</code> A free-placed control docked to an edge of its parent (Delphi's Align): Fill takes what is left.</li>
+<li><code>dkRight</code> A free-placed control docked to an edge of its parent (Delphi's Align): Fill takes what is left.</li>
+<li><code>dkFill</code> A free-placed control docked to an edge of its parent (Delphi's Align): Fill takes what is left.</li>
+</ul>
+<h3 id="ttextalign"><a class="anchor" href="#ttextalign">#</a>TTextAlign</h3>
+<pre><code class="language-pascal">type TTextAlign = (taLeft, taCenter, taRight)
+</code></pre>
+<ul>
+<li><code>taLeft</code></li>
+<li><code>taCenter</code></li>
+<li><code>taRight</code></li>
+</ul>
+<h3 id="tbuttonstyle"><a class="anchor" href="#tbuttonstyle">#</a>TButtonStyle</h3>
+<pre><code class="language-pascal">type TButtonStyle = (bsPrimary, bsSecondary, bsDanger, bsFlat)
+</code></pre>
+<p>bsFlat: no background until the mouse is on it (tool bars).</p>
+<ul>
+<li><code>bsPrimary</code> bsFlat: no background until the mouse is on it (tool bars).</li>
+<li><code>bsSecondary</code> bsFlat: no background until the mouse is on it (tool bars).</li>
+<li><code>bsDanger</code> bsFlat: no background until the mouse is on it (tool bars).</li>
+<li><code>bsFlat</code> bsFlat: no background until the mouse is on it (tool bars).</li>
+</ul>
+<h3 id="tkeyboardtype"><a class="anchor" href="#tkeyboardtype">#</a>TKeyboardType</h3>
+<pre><code class="language-pascal">type TKeyboardType = (ktDefault, ktText, ktNumber, ktDecimal, ktPhone, ktEmail, ktUrl, ktTime)
+</code></pre>
+<p>The on-screen keyboard of a phone for an edit (FireMonkey's KeyboardType):
+ktDefault lets the edit choose (TNumberEdit: numbers).</p>
+<ul>
+<li><code>ktDefault</code> The on-screen keyboard of a phone for an edit (FireMonkey's KeyboardType): ktDefault lets the edit choose (TNumberEdit: numbers).</li>
+<li><code>ktText</code> The on-screen keyboard of a phone for an edit (FireMonkey's KeyboardType): ktDefault lets the edit choose (TNumberEdit: numbers).</li>
+<li><code>ktNumber</code> The on-screen keyboard of a phone for an edit (FireMonkey's KeyboardType): ktDefault lets the edit choose (TNumberEdit: numbers).</li>
+<li><code>ktDecimal</code> The on-screen keyboard of a phone for an edit (FireMonkey's KeyboardType): ktDefault lets the edit choose (TNumberEdit: numbers).</li>
+<li><code>ktPhone</code> The on-screen keyboard of a phone for an edit (FireMonkey's KeyboardType): ktDefault lets the edit choose (TNumberEdit: numbers).</li>
+<li><code>ktEmail</code> The on-screen keyboard of a phone for an edit (FireMonkey's KeyboardType): ktDefault lets the edit choose (TNumberEdit: numbers).</li>
+<li><code>ktUrl</code> The on-screen keyboard of a phone for an edit (FireMonkey's KeyboardType): ktDefault lets the edit choose (TNumberEdit: numbers).</li>
+<li><code>ktTime</code> The on-screen keyboard of a phone for an edit (FireMonkey's KeyboardType): ktDefault lets the edit choose (TNumberEdit: numbers).</li>
+</ul>
+<h3 id="treturnkeytype"><a class="anchor" href="#treturnkeytype">#</a>TReturnKeyType</h3>
+<pre><code class="language-pascal">type TReturnKeyType = (rkDefault, rkDone, rkGo, rkNext, rkSearch, rkSend)
+</code></pre>
+<p>What the Enter key of a phone's on-screen keyboard says and does:
+rkNext goes to the next control, the others are Enter (OnSubmit).</p>
+<ul>
+<li><code>rkDefault</code> What the Enter key of a phone's on-screen keyboard says and does: rkNext goes to the next control, the others are Enter (OnSubmit).</li>
+<li><code>rkDone</code> What the Enter key of a phone's on-screen keyboard says and does: rkNext goes to the next control, the others are Enter (OnSubmit).</li>
+<li><code>rkGo</code> What the Enter key of a phone's on-screen keyboard says and does: rkNext goes to the next control, the others are Enter (OnSubmit).</li>
+<li><code>rkNext</code> What the Enter key of a phone's on-screen keyboard says and does: rkNext goes to the next control, the others are Enter (OnSubmit).</li>
+<li><code>rkSearch</code> What the Enter key of a phone's on-screen keyboard says and does: rkNext goes to the next control, the others are Enter (OnSubmit).</li>
+<li><code>rkSend</code> What the Enter key of a phone's on-screen keyboard says and does: rkNext goes to the next control, the others are Enter (OnSubmit).</li>
+</ul>
+<h3 id="tscreenclass"><a class="anchor" href="#tscreenclass">#</a>TScreenClass</h3>
+<pre><code class="language-pascal">type TScreenClass = (scPhone, scTablet, scDesktop, scTV)
+</code></pre>
+<p>What kind of screen the app is on: a phone, a tablet, a computer's window, a TV.
+Forms can change with it (OnScreenClassChange, views: Home.tablet.pform).</p>
+<ul>
+<li><code>scPhone</code> What kind of screen the app is on: a phone, a tablet, a computer's window, a TV. Forms can change with it (OnScreenClassChange, views: Home.tablet.pform).</li>
+<li><code>scTablet</code> What kind of screen the app is on: a phone, a tablet, a computer's window, a TV. Forms can change with it (OnScreenClassChange, views: Home.tablet.pform).</li>
+<li><code>scDesktop</code> What kind of screen the app is on: a phone, a tablet, a computer's window, a TV. Forms can change with it (OnScreenClassChange, views: Home.tablet.pform).</li>
+<li><code>scTV</code> What kind of screen the app is on: a phone, a tablet, a computer's window, a TV. Forms can change with it (OnScreenClassChange, views: Home.tablet.pform).</li>
+</ul>
+<h3 id="tcursorkind"><a class="anchor" href="#tcursorkind">#</a>TCursorKind</h3>
+<pre><code class="language-pascal">type TCursorKind = (ckArrow, ckIBeam, ckHand, ckSizeWE, ckSizeNS)
+</code></pre>
+<ul>
+<li><code>ckArrow</code></li>
+<li><code>ckIBeam</code></li>
+<li><code>ckHand</code></li>
+<li><code>ckSizeWE</code></li>
+<li><code>ckSizeNS</code></li>
+</ul>
+<h3 id="twindowstate"><a class="anchor" href="#twindowstate">#</a>TWindowState</h3>
+<pre><code class="language-pascal">type TWindowState = (wsNormal, wsMaximized, wsMinimized, wsFullScreen)
+</code></pre>
+<ul>
+<li><code>wsNormal</code></li>
+<li><code>wsMaximized</code></li>
+<li><code>wsMinimized</code></li>
+<li><code>wsFullScreen</code></li>
+</ul>
+<h3 id="tthememode"><a class="anchor" href="#tthememode">#</a>TThemeMode</h3>
+<pre><code class="language-pascal">type TThemeMode = (tmLight, tmDark, tmSystem)
+</code></pre>
+<p>Light, dark, or what the computer is set to.</p>
+<ul>
+<li><code>tmLight</code> Light, dark, or what the computer is set to.</li>
+<li><code>tmDark</code> Light, dark, or what the computer is set to.</li>
+<li><code>tmSystem</code> Light, dark, or what the computer is set to.</li>
+</ul>
+<h3 id="tgesturestate"><a class="anchor" href="#tgesturestate">#</a>TGestureState</h3>
+<pre><code class="language-pascal">type TGestureState = (gsBegin, gsUpdate, gsEnd)
+</code></pre>
+<ul>
+<li><code>gsBegin</code></li>
+<li><code>gsUpdate</code></li>
+<li><code>gsEnd</code></li>
+</ul>
+<h3 id="tgestureinfo"><a class="anchor" href="#tgestureinfo">#</a>TGestureInfo</h3>
+<pre><code class="language-pascal">type TGestureInfo = record
+</code></pre>
+<p>Two fingers (or Ctrl and the wheel on a computer): how much bigger since the
+last call (Scale 1.1: 10 % larger), how much turned (radians, clockwise), and
+their middle (the form's units).</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>State: TGestureState</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Scale: Single</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Rotation: Single</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>X: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Y: Integer</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="tdragmode"><a class="anchor" href="#tdragmode">#</a>TDragMode</h3>
+<pre><code class="language-pascal">type TDragMode = (dmManual, dmAutomatic)
+</code></pre>
+<p>dmAutomatic: pressing it and moving drags it (to a control with OnDragDrop)</p>
+<ul>
+<li><code>dmManual</code> dmAutomatic: pressing it and moving drags it (to a control with OnDragDrop)</li>
+<li><code>dmAutomatic</code> dmAutomatic: pressing it and moving drags it (to a control with OnDragDrop)</li>
+</ul>
+<h3 id="tfieldlook"><a class="anchor" href="#tfieldlook">#</a>TFieldLook</h3>
+<pre><code class="language-pascal">type TFieldLook = (flBox, flUnderline, flOutline)
+</code></pre>
+<p>How an edit or a combo box is drawn: a box with a border (Pastel), a box
+with a line at the bottom (Fluent), an outline that gets thicker when
+focused (Material).</p>
+<ul>
+<li><code>flBox</code> How an edit or a combo box is drawn: a box with a border (Pastel), a box with a line at the bottom (Fluent), an outline that gets thicker when focused (Material).</li>
+<li><code>flUnderline</code> How an edit or a combo box is drawn: a box with a border (Pastel), a box with a line at the bottom (Fluent), an outline that gets thicker when focused (Material).</li>
+<li><code>flOutline</code> How an edit or a combo box is drawn: a box with a border (Pastel), a box with a line at the bottom (Fluent), an outline that gets thicker when focused (Material).</li>
+</ul>
+<h3 id="tfocuslook"><a class="anchor" href="#tfocuslook">#</a>TFocusLook</h3>
+<pre><code class="language-pascal">type TFocusLook = (fkRing, fkOutline)
+</code></pre>
+<p>The keyboard's focus: a soft ring of the accent color (Pastel), or a line
+around in the text color (Fluent, Material).</p>
+<ul>
+<li><code>fkRing</code> The keyboard's focus: a soft ring of the accent color (Pastel), or a line around in the text color (Fluent, Material).</li>
+<li><code>fkOutline</code> The keyboard's focus: a soft ring of the accent color (Pastel), or a line around in the text color (Fluent, Material).</li>
+</ul>
+<h3 id="tswitchlook"><a class="anchor" href="#tswitchlook">#</a>TSwitchLook</h3>
+<pre><code class="language-pascal">type TSwitchLook = (swPill, swFluent, swMaterial)
+</code></pre>
+<ul>
+<li><code>swPill</code></li>
+<li><code>swFluent</code></li>
+<li><code>swMaterial</code></li>
+</ul>
+<h3 id="tstylelook"><a class="anchor" href="#tstylelook">#</a>TStyleLook</h3>
+<pre><code class="language-pascal">type TStyleLook = class
+</code></pre>
+<p>A named look in a style file ([look.Name]), for a control's StyleLookup:
+what it sets instead of the style's (0 or -1: not set).</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>constructor Create</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure Assign(Src: TStyleLook)</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="tuistyle"><a class="anchor" href="#tuistyle">#</a>TUIStyle</h3>
+<pre><code class="language-pascal">type TUIStyle = record
+</code></pre>
+<p>The sizes and shapes of the controls in a style (UseStyle); the colors
+are the Theme's, which a style sets too. Read it in a control of your own
+to look like the others.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Name: string</code></td>
+<td>'pastel', 'fluent', 'material' or a style file's name</td>
+</tr>
+<tr>
+<td><code>ButtonPadX: Integer</code></td>
+<td>buttons: the room around the text (both sides together), the corners (999: round ends), a border on secondary buttons, bold text</td>
+</tr>
+<tr>
+<td><code>ButtonPadY: Integer</code></td>
+<td>buttons: the room around the text (both sides together), the corners (999: round ends), a border on secondary buttons, bold text</td>
+</tr>
+<tr>
+<td><code>ButtonRadius: Integer</code></td>
+<td>buttons: the room around the text (both sides together), the corners (999: round ends), a border on secondary buttons, bold text</td>
+</tr>
+<tr>
+<td><code>ButtonBorder: Integer</code></td>
+<td>buttons: the room around the text (both sides together), the corners (999: round ends), a border on secondary buttons, bold text</td>
+</tr>
+<tr>
+<td><code>ButtonBold: Boolean</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>FlatPadX: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>FlatPadY: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>FlatAccent: Boolean</code></td>
+<td>flat buttons in the accent color (Material's text buttons)</td>
+</tr>
+<tr>
+<td><code>FlatOverlay: Boolean</code></td>
+<td>flat buttons shaded over what is under them (hover and press)</td>
+</tr>
+<tr>
+<td><code>FieldPadX: Integer</code></td>
+<td>edits, combo boxes, date pickers: the room left and right of the text, above and below together</td>
+</tr>
+<tr>
+<td><code>FieldPadY: Integer</code></td>
+<td>edits, combo boxes, date pickers: the room left and right of the text, above and below together</td>
+</tr>
+<tr>
+<td><code>FieldRadius: Integer</code></td>
+<td>edits, combo boxes, date pickers: the room left and right of the text, above and below together</td>
+</tr>
+<tr>
+<td><code>FieldLook: TFieldLook</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>CheckSize: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>CheckRadius: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>SwitchLook: TSwitchLook</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>SliderThumb: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>ProgressHeight: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>PopupRadius: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>DialogRadius: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>FocusLook: TFocusLook</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>DefaultButtonFirst: Boolean</code></td>
+<td>dialogs: the default button first (Windows: OK Cancel), the others as flat buttons</td>
+</tr>
+<tr>
+<td><code>DialogFlatButtons: Boolean</code></td>
+<td>dialogs: the default button first (Windows: OK Cancel), the others as flat buttons</td>
+</tr>
+<tr>
+<td><code>Radius: Integer</code></td>
+<td>the Theme's Radius: cards, lists, grids</td>
+</tr>
+</tbody></table>
+<h3 id="tcontrol"><a class="anchor" href="#tcontrol">#</a>TControl</h3>
+<pre><code class="language-pascal">type TControl = class(TComponent)
+</code></pre>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>function DragsAt(X: Integer; Y: Integer): Boolean</code></td>
+<td>True when a press at X, Y starts a drag of the control's own (a list's grip): a finger there drags instead of scrolling.</td>
+</tr>
+<tr>
+<td><code>constructor Create(AOwner: TComponent)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>destructor Destroy</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure Invalidate</code></td>
+<td>needs repaint only</td>
+</tr>
+<tr>
+<td><code>procedure SetFocus</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function HitTest(X: Integer; Y: Integer): TControl</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function ParentForm: TForm</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function ParentPopup: TPopup</code></td>
+<td>The popup the control is in, or nil.</td>
+</tr>
+<tr>
+<td><code>procedure GetSize(AvailWidth: Integer; out W: Integer; out H: Integer)</code></td>
+<td>Preferred size including explicit Width/Height.</td>
+</tr>
+<tr>
+<td><code>class function DesktopOnly: Boolean</code></td>
+<td>True for controls that only make sense with a mouse and a big window (a menu bar, a splitter, a status bar): the designer says they will not be on phones.</td>
+</tr>
+<tr>
+<td><code>property Parent: TControl</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Children[Index: Integer]: TControl</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property ChildCount: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function IndexOfChild(C: TControl): Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Bounds: TRectI</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property OnDropFiles: TDropFilesEvent</code></td>
+<td>Files dropped on it from the file manager (computers); the control under the place or the first one above it that has the event, else the form's.</td>
+</tr>
+<tr>
+<td><code>property OnGesture: TGestureEvent</code></td>
+<td>Two fingers pinched or turned over it (a picture, a map, a drawing).</td>
+</tr>
+<tr>
+<td><code>property AccessibleName: string</code></td>
+<td>What a screen reader (TalkBack) says for it, when its text does not say it (an icon button: 'Delete').</td>
+</tr>
+<tr>
+<td><code>property DragMode: TDragMode</code></td>
+<td>dmAutomatic: it can be dragged onto controls with OnDragDrop (a finger too).</td>
+</tr>
+<tr>
+<td><code>property OnStartDrag: TStartDragEvent</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property OnDragOver: TDragOverEvent</code></td>
+<td>Something dragged over it: Accept := False refuses it.</td>
+</tr>
+<tr>
+<td><code>property OnDragDrop: TDragDropEvent</code></td>
+<td>Dropped on it.</td>
+</tr>
+<tr>
+<td><code>property OnEndDrag: TEndDragEvent</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Width: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Height: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Grow: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Left: Integer</code></td>
+<td>The place in a parent with Layout = Free (a TPanel, or a form with Layout = Free).</td>
+</tr>
+<tr>
+<td><code>property Top: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Anchors: TAnchors</code></td>
+<td>In a parent with Layout = Free: which edges follow the parent's when it is resized.</td>
+</tr>
+<tr>
+<td><code>property Dock: TDock</code></td>
+<td>In a parent with Layout = Free: docked to an edge (Top, Bottom, Left, Right) or Fill.</td>
+</tr>
+<tr>
+<td><code>property TabOrder: Integer</code></td>
+<td>The Tab key goes through the controls of a parent in TabOrder (equal ones in their order in the .pform).</td>
+</tr>
+<tr>
+<td><code>property TabStop: Boolean</code></td>
+<td>False: the Tab key passes it by (a click still focuses it).</td>
+</tr>
+<tr>
+<td><code>property Visible: Boolean</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Enabled: Boolean</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Hint: string</code></td>
+<td>Shown in a tooltip when the mouse rests on the control.</td>
+</tr>
+<tr>
+<td><code>property PopupMenu: TControl</code></td>
+<td>A TPopupMenu shown on a right click (or the menu key).</td>
+</tr>
+<tr>
+<td><code>property StyleLookup: string</code></td>
+<td>A [look.Name] of the style file in use: its colors, corners and sizes instead of the style's (buttons, labels, boxes, edits, combo boxes).</td>
+</tr>
+</tbody></table>
+<h3 id="taction"><a class="anchor" href="#taction">#</a>TAction</h3>
+<pre><code class="language-pascal">type TAction = class(TBasicAction)
+</code></pre>
+<p>A command with a caption and a keyboard shortcut, used by menu items and
+buttons: one place for what happens, and for Enabled and Checked.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>constructor Create(AOwner: TComponent)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function Execute: Boolean</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Caption: string</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property ShortCut: string</code></td>
+<td>Like 'Ctrl+S', 'Ctrl+Shift+Z', 'F5', 'Delete'.</td>
+</tr>
+<tr>
+<td><code>property Hint: string</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Icon: string</code></td>
+<td>A built-in icon for its buttons and menu items ('save', 'print'...).</td>
+</tr>
+<tr>
+<td><code>property Enabled: Boolean</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Checked: Boolean</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property OnExecute</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="tbox"><a class="anchor" href="#tbox">#</a>TBox</h3>
+<pre><code class="language-pascal">type TBox = class(TControl)
+</code></pre>
+<p>A container that stacks its children vertically or horizontally.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>constructor Create(AOwner: TComponent)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>destructor Destroy</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Horizontal: Boolean</code></td>
+<td>True for TRow: children are placed left to right.</td>
+</tr>
+<tr>
+<td><code>property OnDropFiles</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Layout: TLayoutKind</code></td>
+<td>Flow (default): children below each other, or side by side in a row; Free: where their Left and Top say.</td>
+</tr>
+<tr>
+<td><code>property Gap: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Padding: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Align: TAlignItems</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Justify: TJustify</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Color: TColor32</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property BorderColor: TColor32</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property BorderWidth: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Radius: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property BackgroundImage: string</code></td>
+<td>A picture behind the children: a file in assets/, next to the program, or a full path.</td>
+</tr>
+<tr>
+<td><code>property BackgroundFit: TImageFit</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property MaxContentWidth: Integer</code></td>
+<td>The children use at most this width, in the middle: a form stays readable on a tablet, a TV or a wide window (0: all the width).</td>
+</tr>
+</tbody></table>
+<h3 id="tcolumn"><a class="anchor" href="#tcolumn">#</a>TColumn</h3>
+<pre><code class="language-pascal">type TColumn = class(TBox)
+</code></pre>
+<h3 id="tpanel"><a class="anchor" href="#tpanel">#</a>TPanel</h3>
+<pre><code class="language-pascal">type TPanel = class(TBox)
+</code></pre>
+<p>A box whose children stay where they are put (Left, Top), like a Delphi TPanel.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>constructor Create(AOwner: TComponent)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Layout</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="trow"><a class="anchor" href="#trow">#</a>TRow</h3>
+<pre><code class="language-pascal">type TRow = class(TBox)
+</code></pre>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>constructor Create(AOwner: TComponent)</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="tflow"><a class="anchor" href="#tflow">#</a>TFlow</h3>
+<pre><code class="language-pascal">type TFlow = class(TBox)
+</code></pre>
+<p>A row that wraps: children are placed left to right, and continue on
+the next line when there is no room (chips, tags, buttons, small cards).
+Gap is the space between them, also between lines; in each line the
+ones with Grow share what is left.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>constructor Create(AOwner: TComponent)</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="tcard"><a class="anchor" href="#tcard">#</a>TCard</h3>
+<pre><code class="language-pascal">type TCard = class(TBox)
+</code></pre>
+<p>A white rounded panel with a border (in the theme's colors).</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>constructor Create(AOwner: TComponent)</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="tspacer"><a class="anchor" href="#tspacer">#</a>TSpacer</h3>
+<pre><code class="language-pascal">type TSpacer = class(TControl)
+</code></pre>
+<p>Empty space that takes the free room in a row or column.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>constructor Create(AOwner: TComponent)</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="tlabel"><a class="anchor" href="#tlabel">#</a>TLabel</h3>
+<pre><code class="language-pascal">type TLabel = class(TControl)
+</code></pre>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>constructor Create(AOwner: TComponent)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function Font: TPastelFont</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function TextLines(AWidth: Integer): TStringArray</code></td>
+<td>The lines the text is shown in, at a width (line breaks and wrapping).</td>
+</tr>
+<tr>
+<td><code>property Text: string</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property WordWrap: Boolean</code></td>
+<td>Break long text into lines at the label's width.</td>
+</tr>
+<tr>
+<td><code>property FontSize: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Bold: Boolean</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Color: TColor32</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property TextAlign: TTextAlign</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="tbutton"><a class="anchor" href="#tbutton">#</a>TButton</h3>
+<pre><code class="language-pascal">type TButton = class(TControl)
+</code></pre>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>procedure Notification(AComponent: TComponent; Operation: TOperation)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure Click</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Text: string</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Style: TButtonStyle</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Color: TColor32</code></td>
+<td>Any background color instead of the style's (hover and press shade it); 0: the style's.</td>
+</tr>
+<tr>
+<td><code>property TextColor: TColor32</code></td>
+<td>Any text and icon color; 0: the style's.</td>
+</tr>
+<tr>
+<td><code>property Icon: string</code></td>
+<td>A built-in icon ('save', 'add', 'delete'...; see Pastel.Icons) before the text, or alone.</td>
+</tr>
+<tr>
+<td><code>property Action: TBasicAction</code></td>
+<td>A click runs the action (and Text, Enabled come from it when not set).</td>
+</tr>
+<tr>
+<td><code>property ModalResult: Integer</code></td>
+<td>In a dialog: a click closes it with this result (mrOk, mrCancel...).</td>
+</tr>
+<tr>
+<td><code>property Default: Boolean</code></td>
+<td>Enter in the dialog clicks it.</td>
+</tr>
+<tr>
+<td><code>property Cancel: Boolean</code></td>
+<td>Escape in the dialog clicks it.</td>
+</tr>
+<tr>
+<td><code>property OnClick: TNotifyEvent</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="teditstate"><a class="anchor" href="#teditstate">#</a>TEditState</h3>
+<pre><code class="language-pascal">type TEditState = record
+</code></pre>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Text: string</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Caret: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Anchor: Integer</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="tvisualline"><a class="anchor" href="#tvisualline">#</a>TVisualLine</h3>
+<pre><code class="language-pascal">type TVisualLine = record
+</code></pre>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>StartPos: Integer</code></td>
+<td>byte range in Text, without the line break</td>
+</tr>
+<tr>
+<td><code>EndPos: Integer</code></td>
+<td>byte range in Text, without the line break</td>
+</tr>
+</tbody></table>
+<h3 id="tsyntaxkind"><a class="anchor" href="#tsyntaxkind">#</a>TSyntaxKind</h3>
+<pre><code class="language-pascal">type TSyntaxKind = (skText, skKeyword, skString, skNumber, skComment, skName, skSymbol, skError)
+</code></pre>
+<p>What a part of a code editor's text is (syntax highlighting); each has a
+color of the theme (SyntaxColor).</p>
+<ul>
+<li><code>skText</code> What a part of a code editor's text is (syntax highlighting); each has a color of the theme (SyntaxColor).</li>
+<li><code>skKeyword</code> What a part of a code editor's text is (syntax highlighting); each has a color of the theme (SyntaxColor).</li>
+<li><code>skString</code> What a part of a code editor's text is (syntax highlighting); each has a color of the theme (SyntaxColor).</li>
+<li><code>skNumber</code> What a part of a code editor's text is (syntax highlighting); each has a color of the theme (SyntaxColor).</li>
+<li><code>skComment</code> What a part of a code editor's text is (syntax highlighting); each has a color of the theme (SyntaxColor).</li>
+<li><code>skName</code> What a part of a code editor's text is (syntax highlighting); each has a color of the theme (SyntaxColor).</li>
+<li><code>skSymbol</code> What a part of a code editor's text is (syntax highlighting); each has a color of the theme (SyntaxColor).</li>
+<li><code>skError</code> What a part of a code editor's text is (syntax highlighting); each has a color of the theme (SyntaxColor).</li>
+</ul>
+<h3 id="tsyntaxspan"><a class="anchor" href="#tsyntaxspan">#</a>TSyntaxSpan</h3>
+<pre><code class="language-pascal">type TSyntaxSpan = record
+</code></pre>
+<p>A part of the text: Start (bytes, from 1), Len bytes.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Start: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Len: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Kind: TSyntaxKind</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="tcustomedit"><a class="anchor" href="#tcustomedit">#</a>TCustomEdit</h3>
+<pre><code class="language-pascal">type TCustomEdit = class(TControl)
+</code></pre>
+<p>Text editing for TEdit and TMemo: caret, selection with mouse and
+keyboard, clipboard, undo/redo, scrolling; TMemo adds lines and wrapping.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>constructor Create(AOwner: TComponent)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>destructor Destroy</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function Font: TPastelFont</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure RehighlightText</code></td>
+<td>Colors the text again (OnHighlight), when what it depends on changed.</td>
+</tr>
+<tr>
+<td><code>procedure ShowCompletions</code></td>
+<td>The completion list (typing a word shows it; Ctrl+Space too).</td>
+</tr>
+<tr>
+<td><code>procedure HideCompletions</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function CompletionsShown: Boolean</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure Complete(const Word: string)</code></td>
+<td>Puts Word in place of the word before the caret (the part after its last dot).</td>
+</tr>
+<tr>
+<td><code>procedure SelectAll</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure CopyToClipboard</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure CutToClipboard</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure PasteFromClipboard</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure Undo</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure Redo</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function CanUndo: Boolean</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property CaretPos: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function KeyboardKind: TKeyboardType</code></td>
+<td>The keyboard a phone shows: KeyboardType, or the edit's own choice for ktDefault (ktText for most).</td>
+</tr>
+<tr>
+<td><code>function WantsKeyboard: Boolean</code></td>
+<td>False when the edit brings a picker of its own on a phone (TTimeEdit) instead of the keyboard.</td>
+</tr>
+<tr>
+<td><code>property MultiLine: Boolean</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property IsPassword: Boolean</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property ReturnKeyType: TReturnKeyType</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property SelStart: Integer</code></td>
+<td>The selection: SelStart counts from 0 (bytes), like Delphi.</td>
+</tr>
+<tr>
+<td><code>property SelLength: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property SelText: string</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Text: string</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Placeholder: string</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property ReadOnly: Boolean</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property MaxLength: Integer</code></td>
+<td>At most this many bytes; 0: no limit.</td>
+</tr>
+<tr>
+<td><code>property OnChange: TNotifyEvent</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Error: string</code></td>
+<td>A problem with the value ('Fill this in'): a red border, and the text as a tooltip; typing clears it. TDataBinding.Validate sets it.</td>
+</tr>
+<tr>
+<td><code>property Completions: TStrings</code></td>
+<td>Words offered while typing (table names, keywords...): a list below the caret; Up/Down choose, Enter or Tab put it in, Escape closes it.</td>
+</tr>
+<tr>
+<td><code>property OnCompletions: TCompletionEvent</code></td>
+<td>The words for what is typed, when they depend on it (the columns after 'orders.').</td>
+</tr>
+<tr>
+<td><code>property OnHighlight: THighlightEvent</code></td>
+<td>Syntax highlighting: Pastel.Syntax has HighlightSql, HighlightPascal...</td>
+</tr>
+</tbody></table>
+<h3 id="tedit"><a class="anchor" href="#tedit">#</a>TEdit</h3>
+<pre><code class="language-pascal">type TEdit = class(TCustomEdit)
+</code></pre>
+<p>One line of text.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>property Text</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Placeholder</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property ReadOnly</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property MaxLength</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Password: Boolean</code></td>
+<td>Shows dots instead of the text.</td>
+</tr>
+<tr>
+<td><code>property KeyboardType: TKeyboardType</code></td>
+<td>The phone's on-screen keyboard for it: numbers, a phone pad, e-mail...</td>
+</tr>
+<tr>
+<td><code>property ReturnKeyType</code></td>
+<td>What the on-screen keyboard's Enter key says: Done, Next, Search...</td>
+</tr>
+<tr>
+<td><code>property OnChange</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property OnSubmit: TNotifyEvent</code></td>
+<td>Enter was pressed.</td>
+</tr>
+</tbody></table>
+<h3 id="tmemo"><a class="anchor" href="#tmemo">#</a>TMemo</h3>
+<pre><code class="language-pascal">type TMemo = class(TCustomEdit)
+</code></pre>
+<p>Text with several lines; scrolls, wraps long lines.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>constructor Create(AOwner: TComponent)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Lines: TStrings</code></td>
+<td>The text as lines: Memo.Lines.Add('...'), Memo.Lines[0].</td>
+</tr>
+<tr>
+<td><code>property OnDropFiles</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Text</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Placeholder</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property ReadOnly</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property MaxLength</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property WordWrap: Boolean</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property KeyboardType: TKeyboardType</code></td>
+<td>The phone's on-screen keyboard for it.</td>
+</tr>
+<tr>
+<td><code>property OnChange</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Completions</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property OnCompletions</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property OnHighlight</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="tpopupside"><a class="anchor" href="#tpopupside">#</a>TPopupSide</h3>
+<pre><code class="language-pascal">type TPopupSide = (psAnchor, psLeft, psRight, psBottom)
+</code></pre>
+<p>Where a popup goes: below (or above) its anchor, centered; or along a side
+of the window, as a drawer or a bottom sheet (the window dimmed behind).</p>
+<ul>
+<li><code>psAnchor</code> Where a popup goes: below (or above) its anchor, centered; or along a side of the window, as a drawer or a bottom sheet (the window dimmed behind).</li>
+<li><code>psLeft</code> Where a popup goes: below (or above) its anchor, centered; or along a side of the window, as a drawer or a bottom sheet (the window dimmed behind).</li>
+<li><code>psRight</code> Where a popup goes: below (or above) its anchor, centered; or along a side of the window, as a drawer or a bottom sheet (the window dimmed behind).</li>
+<li><code>psBottom</code> Where a popup goes: below (or above) its anchor, centered; or along a side of the window, as a drawer or a bottom sheet (the window dimmed behind).</li>
+</ul>
+<h3 id="tpopup"><a class="anchor" href="#tpopup">#</a>TPopup</h3>
+<pre><code class="language-pascal">type TPopup = class(TBox)
+</code></pre>
+<p>A panel shown above the form: drop-down lists, menus, dialogs.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>constructor Create(AOwner: TComponent)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure Popup(Form: TForm; const Anchor: TRectI; PlaceRight: Boolean = False)</code></td>
+<td>Shows it on Form, below (or above) Anchor; centered when not given.</td>
+</tr>
+<tr>
+<td><code>procedure PopupCentered(Form: TForm)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function ShowModal(Form: TForm): Integer</code></td>
+<td>Shows it centered with the form dimmed behind it and waits until it is closed; the result is ModalResult.</td>
+</tr>
+<tr>
+<td><code>procedure ShowModal(Form: TForm; OnDone: TModalDoneEvent; FreeWhenDone: Boolean = False)</code></td>
+<td>The same without waiting: returns at once, OnDone is called when it is closed (with ModalResult); FreeWhenDone frees it after that. Phones and browsers prefer it: nothing waits inside an event.</td>
+</tr>
+<tr>
+<td><code>procedure Close(AModalResult: Integer = 0)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Modal: Boolean</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Closed: Boolean</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Shown: Boolean</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property ModalResult: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Side: TPopupSide</code></td>
+<td>Along a side of the window (drawers, bottom sheets) instead of at its anchor.</td>
+</tr>
+<tr>
+<td><code>property ActiveControl: TControl</code></td>
+<td>Gets the focus when a modal popup opens; the first focusable control when nil.</td>
+</tr>
+<tr>
+<td><code>property OnClose: TNotifyEvent</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="tpullrefresh"><a class="anchor" href="#tpullrefresh">#</a>TPullRefresh</h3>
+<pre><code class="language-pascal">type TPullRefresh = class(TComponent)
+</code></pre>
+<p>&quot;Pull down to refresh&quot; of a list (TListView, TGrid, TScrollBox): a finger
+that pulls the list down past its top shows a circle; let go far enough and
+OnRefresh is called, the circle turns until Refreshing := False. On a
+computer F5 does it. Used by the controls; their OnRefresh and Refreshing.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>constructor Create(AControl: TControl)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function Wheel(DY: Integer; AtTop: Boolean): Boolean</code></td>
+<td>a wheel step (a finger's on a phone) at the top: True when it pulls</td>
+</tr>
+<tr>
+<td><code>function Key(K: LongInt): Boolean</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure Paint(C: TCanvas32)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Refreshing: Boolean</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property OnRefresh: TNotifyEvent</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="ttimer"><a class="anchor" href="#ttimer">#</a>TTimer</h3>
+<pre><code class="language-pascal">type TTimer = class(TComponent)
+</code></pre>
+<p>Calls OnTimer every Interval milliseconds while Enabled.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>constructor Create(AOwner: TComponent)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>destructor Destroy</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Interval: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Enabled: Boolean</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property OnTimer: TNotifyEvent</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="tform"><a class="anchor" href="#tform">#</a>TForm</h3>
+<pre><code class="language-pascal">type TForm = class(TBox)
+</code></pre>
+<p>The root of a window. Owns all controls created from its .pform file.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>constructor Create(AOwner: TComponent)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>destructor Destroy</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure Notification(AComponent: TComponent; Operation: TOperation)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function HitTest(X: Integer; Y: Integer): TControl</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure ShowPopup(P: TPopup)</code></td>
+<td>Popups (drop-downs, menus, dialogs), the last one on top.</td>
+</tr>
+<tr>
+<td><code>procedure ClosePopup(P: TPopup)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function PopupCount: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function PopupAt(Index: Integer): TPopup</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function TopPopup: TPopup</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function UpdateTooltip(NowMs: QWord): Boolean</code></td>
+<td>Shows or hides the tooltip; the application calls it while the mouse rests.</td>
+</tr>
+<tr>
+<td><code>procedure HideTooltip</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure ShowToast(const Msg: string; DurationMs: Integer = 2000)</code></td>
+<td>A short message near the bottom for a moment (Android's Toast); clicks go through it. Pastel.Dialogs' ShowToast uses the phone's own on Android.</td>
+</tr>
+<tr>
+<td><code>property ToastText: string</code></td>
+<td>The message shown by ShowToast ('' when none).</td>
+</tr>
+<tr>
+<td><code>procedure HandleMouseWheel(DX: Integer; DY: Integer)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure HandleGesture(const G: TGestureInfo)</code></td>
+<td>A pinch or a turn at G.X, G.Y: to the control there, or the first above it that takes it.</td>
+</tr>
+<tr>
+<td><code>procedure BeginDrag(C: TControl; const Data: string)</code></td>
+<td>Starts dragging C (DragMode = dmManual: from its MouseDown or OnMouseDown) with Data.</td>
+</tr>
+<tr>
+<td><code>property Dragging: Boolean</code></td>
+<td>True while something is dragged.</td>
+</tr>
+<tr>
+<td><code>property DragTarget: TControl</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function SaveState: TStrings</code></td>
+<td>The app's own values kept while a phone stops it in the background (OnSaveState fills it; in OnCreate it has them again, else it is empty): SaveState.Values['page'] := IntToStr(Page);</td>
+</tr>
+<tr>
+<td><code>function HandleDropFiles(X: Integer; Y: Integer; const Files: TStringArray): Boolean</code></td>
+<td>Files dropped at X, Y (the platform layer): to the OnDropFiles there. True when one took them.</td>
+</tr>
+<tr>
+<td><code>procedure HandleContextMenu(X: Integer; Y: Integer)</code></td>
+<td>Right button: the control's PopupMenu.</td>
+</tr>
+<tr>
+<td><code>procedure ClearControls</code></td>
+<td>Removes every control created from the .pform (used by hot reload).</td>
+</tr>
+<tr>
+<td><code>procedure Layout(AWidth: Integer; AHeight: Integer)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure Render(C: TCanvas32)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure RenderArea(C: TCanvas32; const Area: TRectI)</code></td>
+<td>Paints only Area (layout units): what changed since the last Render.</td>
+</tr>
+<tr>
+<td><code>procedure FocusControl(C: TControl)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure FocusNext(Backward: Boolean)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure HandleMouseMove(X: Integer; Y: Integer)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure HandleMouseDown(X: Integer; Y: Integer; Button: Integer = 1; Clicks: Integer = 1)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure HandleMouseUp(X: Integer; Y: Integer; Button: Integer = 1)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure HandleMouseLeave</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure HandleKeyDown(Key: LongInt; Shift: Boolean; Ctrl: Boolean)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure HandleTextInput(const S: string)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function CurrentCursor: TCursorKind</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function FindControl(const AName: string): TControl</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure BindControls</code></td>
+<td>Points the form's fields at the controls created from the .pform. Overridden by the code Pastel generates from the .pform file.</td>
+</tr>
+<tr>
+<td><code>function BindControl(const AName: string; AClass: TControlClass): TControl</code></td>
+<td>Used by BindControls: finds a control and checks its type.</td>
+</tr>
+<tr>
+<td><code>function BindComponent(const AName: string; AClass: TComponentClass): TComponent</code></td>
+<td>The same for components without a place on the form (TTimer...).</td>
+</tr>
+<tr>
+<td><code>property Focused: TControl</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Hovered: TControl</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Captured: TControl</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property ClickCount: Integer</code></td>
+<td>2 for a double click, 3 for a triple click (in MouseDown).</td>
+</tr>
+<tr>
+<td><code>property MouseButton: Integer</code></td>
+<td>1 left, 2 middle, 3 right (in MouseDown).</td>
+</tr>
+<tr>
+<td><code>property ShiftDown: Boolean</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property MouseX: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property MouseY: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property FocusVisible: Boolean</code></td>
+<td>True when focus came from the keyboard (Tab): buttons show a focus ring.</td>
+</tr>
+<tr>
+<td><code>procedure Maximize</code></td>
+<td>Window commands. They take effect on the next pass of the event loop.</td>
+</tr>
+<tr>
+<td><code>procedure Minimize</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure Restore</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>procedure Close</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function CloseQuery: Boolean</code></td>
+<td>Asks OnCloseQuery; True if the window may close.</td>
+</tr>
+<tr>
+<td><code>function ShowModal: Integer</code></td>
+<td>Shows this form as a dialog above the main window and waits until it is closed: by a button with a ModalResult, ModalResult := ..., Close (mrCancel) or Escape. Returns the ModalResult.</td>
+</tr>
+<tr>
+<td><code>procedure ShowModal(OnDone: TModalDoneEvent)</code></td>
+<td>The same without waiting: returns at once; OnDone(Self, ModalResult) is called when the dialog is closed. The way for phones (Delphi's ShowModal(procedure ...) on Android): AppointmentForm.ShowModal(@AppointmentClosed); ... procedure THomeForm.AppointmentClosed(Sender: TObject; AResult: Integer); begin if AResult = mrOk then Reload; end;</td>
+</tr>
+<tr>
+<td><code>procedure Show</code></td>
+<td>Shows the form in a window of its own beside the main one (computers; again: brings it to the front). Phones have one window: it is shown over the main form as without waiting (ShowModal(nil)). Close closes it.</td>
+</tr>
+<tr>
+<td><code>function Showing: Boolean</code></td>
+<td>True while it has a window of its own (Show).</td>
+</tr>
+<tr>
+<td><code>property ModalResult: Integer</code></td>
+<td>Setting it in a dialog form closes the dialog with that result.</td>
+</tr>
+<tr>
+<td><code>procedure WindowStateChanged(AState: TWindowState)</code></td>
+<td>Called by the platform layer when the user changed the window state.</td>
+</tr>
+<tr>
+<td><code>procedure SetScreenClass(AValue: TScreenClass)</code></td>
+<td>Called by the platform layer before laying the form out: the view for that kind of screen is applied (Home.tablet.pform) and OnScreenClassChange runs.</td>
+</tr>
+<tr>
+<td><code>function FocusInDirection(DX: Integer; DY: Integer): Boolean</code></td>
+<td>Moves the focus to the nearest control left, right, up or down (a TV's remote, arrow keys on a phone); False when there is none in that direction.</td>
+</tr>
+<tr>
+<td><code>procedure ActivateFocused</code></td>
+<td>The remote's OK button: presses the focused button, ticks a check box, opens a list (Space, else Enter).</td>
+</tr>
+<tr>
+<td><code>property ScreenClass: TScreenClass</code></td>
+<td>The kind of screen: scPhone, scTablet, scDesktop or scTV.</td>
+</tr>
+<tr>
+<td><code>property View: string</code></td>
+<td>The view applied: 'tablet' for Home.tablet.pform, '' for the form itself.</td>
+</tr>
+<tr>
+<td><code>property Title: string</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Resizable: Boolean</code></td>
+<td>Can the user resize (and maximize) the window?</td>
+</tr>
+<tr>
+<td><code>property MinWidth: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property MinHeight: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property WindowState: TWindowState</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property AlwaysOnTop: Boolean</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Appearance: TThemeMode</code></td>
+<td>The colors of the app: Light, Dark or System (as the computer is set).</td>
+</tr>
+<tr>
+<td><code>property OnCreate: TNotifyEvent</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property OnSaveState: TNotifyEvent</code></td>
+<td>A phone may stop an app in the background to free memory and start it again when the user comes back. What was typed, ticked and chosen comes back by itself; for more, put it into SaveState here (it is in SaveState again in OnCreate, when the app comes back).</td>
+</tr>
+<tr>
+<td><code>property OnCloseQuery: TCloseQueryEvent</code></td>
+<td>Set CanClose to False to keep the window open, e.g. to ask about unsaved work.</td>
+</tr>
+<tr>
+<td><code>property OnClose: TNotifyEvent</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property OnResize: TNotifyEvent</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property OnScreenClassChange: TNotifyEvent</code></td>
+<td>The kind of screen became known or changed (a phone turned into a tablet's split screen, a window made narrow): show, hide or arrange controls for it.</td>
+</tr>
+</tbody></table>
+<h3 id="ttheme"><a class="anchor" href="#ttheme">#</a>TTheme</h3>
+<pre><code class="language-pascal">type TTheme = record
+</code></pre>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Background: TColor32</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Surface: TColor32</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Text: TColor32</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>TextMuted: TColor32</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Placeholder: TColor32</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Accent: TColor32</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>AccentHover: TColor32</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>AccentPressed: TColor32</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>OnAccent: TColor32</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Secondary: TColor32</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>SecondaryHover: TColor32</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>SecondaryPressed: TColor32</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Danger: TColor32</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>DangerHover: TColor32</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>DangerPressed: TColor32</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Border: TColor32</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>BorderHover: TColor32</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>FocusRing: TColor32</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Disabled: TColor32</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Shadow: TColor32</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Backdrop: TColor32</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Selection: TColor32</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>TooltipBack: TColor32</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>TooltipText: TColor32</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Radius: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>FontSize: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Dark: Boolean</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Outline: TColor32</code></td>
+<td>the border of edits and combo boxes (Material's darker outline); Border in the others</td>
+</tr>
+</tbody></table>
+<h2 id="other-types"><a class="anchor" href="#other-types">#</a>Other types</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>type TAnchors = set of TAnchorKind</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>type TCloseQueryEvent = procedure(Sender: TObject; CanClose: Boolean)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>type TModalDoneEvent = procedure(Sender: TObject; AResult: Integer)</code></td>
+<td>Called when a dialog shown without waiting is closed: Sender is the dialog (the form, the popup), AResult the button chosen (mrOk, mrCancel...). In a form's method the parameter cannot be called ModalResult (a property of the form): AResult, like Delphi.</td>
+</tr>
+<tr>
+<td><code>type TReorderEvent = procedure(Sender: TObject; FromIndex: Integer; ToIndex: Integer)</code></td>
+<td>A row moved by its grip (lists with AllowReorder): from where to where.</td>
+</tr>
+<tr>
+<td><code>type TDropFilesEvent = procedure(Sender: TObject; Files: TStringArray)</code></td>
+<td>Files dragged from the file manager and dropped on a control (computers).</td>
+</tr>
+<tr>
+<td><code>type TGestureEvent = procedure(Sender: TObject; Gesture: TGestureInfo; Handled: Boolean)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>type TStartDragEvent = procedure(Sender: TObject; Data: string; Cancel: Boolean)</code></td>
+<td>What is dragged: a text (an item's, an id) set in OnStartDrag; Cancel: no drag.</td>
+</tr>
+<tr>
+<td><code>type TDragOverEvent = procedure(Sender: TObject; Source: TObject; Data: string; X: Integer; Y: Integer; Accept: Boolean)</code></td>
+<td>Source: the control it comes from; Accept: may it be dropped here (default True).</td>
+</tr>
+<tr>
+<td><code>type TDragDropEvent = procedure(Sender: TObject; Source: TObject; Data: string; X: Integer; Y: Integer)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>type TEndDragEvent = procedure(Sender: TObject; Target: TObject; Data: string)</code></td>
+<td>Target: where it was dropped (nil: nowhere it was taken).</td>
+</tr>
+<tr>
+<td><code>type TControlClass = class of TControl</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>type TRectArray = array of TRectI</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>type TEditStates = array of TEditState</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>type TSyntaxSpans = array of TSyntaxSpan</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>type THighlightEvent = procedure(Sender: TObject; AText: string; Spans: TSyntaxSpans)</code></td>
+<td>Colors the text: add a span for each part that is not plain text.</td>
+</tr>
+<tr>
+<td><code>type TCompletionEvent = procedure(Sender: TObject; Word: string; Items: TStrings)</code></td>
+<td>Word is what is typed before the caret (letters, digits, _ and dots: 'orders.cu'); Items gets the words that may follow (only those that begin with the part after the last dot are shown).</td>
+</tr>
+<tr>
+<td><code>type TFormClass = class of TForm</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<h2 id="routines"><a class="anchor" href="#routines">#</a>Routines</h2>
+<h3 id="usedarktheme"><a class="anchor" href="#usedarktheme">#</a>UseDarkTheme</h3>
+<pre><code class="language-pascal">procedure UseDarkTheme(Dark: Boolean)
+</code></pre>
+<p>Light or dark colors for every control; repaints.</p>
+<h3 id="usestyle"><a class="anchor" href="#usestyle">#</a>UseStyle</h3>
+<pre><code class="language-pascal">function UseStyle(const Name: string): Boolean
+</code></pre>
+<p>Styles: 'pastel' (the same everywhere), 'fluent' (Windows 11), 'material'
+(Android), 'auto' (the one of the platform it runs on: Fluent on Windows,
+Material on Android, Pastel elsewhere), or a style loaded from a .pstyle
+file (LoadStyle; an app's assets/styles/*.pstyle by their names). The
+light or dark theme stays. False: no such style.</p>
+<h3 id="platformstyle"><a class="anchor" href="#platformstyle">#</a>PlatformStyle</h3>
+<pre><code class="language-pascal">function PlatformStyle: string
+</code></pre>
+<p>The style 'auto' picks here.</p>
+<h3 id="loadstyle"><a class="anchor" href="#loadstyle">#</a>LoadStyle</h3>
+<pre><code class="language-pascal">function LoadStyle(const Name: string; const Text: string): string
+</code></pre>
+<p>A style from the text of a .pstyle file (TOML: base = &quot;material&quot;, [colors],
+[colors.dark], [button], [field]..., [look.Name]); '' or what is wrong.</p>
+<h3 id="stylenames"><a class="anchor" href="#stylenames">#</a>StyleNames</h3>
+<pre><code class="language-pascal">function StyleNames: TStringArray
+</code></pre>
+<p>The styles there are (built in and loaded).</p>
+<h3 id="findlook"><a class="anchor" href="#findlook">#</a>FindLook</h3>
+<pre><code class="language-pascal">function FindLook(const Name: string): TStyleLook
+</code></pre>
+<p>A [look.Name] of the style in use (its dark one in the dark theme); nil: none.</p>
+<h3 id="drawfocus"><a class="anchor" href="#drawfocus">#</a>DrawFocus</h3>
+<pre><code class="language-pascal">procedure DrawFocus(C: TCanvas32; const R: TRectI; Radius: Single)
+</code></pre>
+<p>The keyboard's focus around R, as the style draws it.</p>
+<h3 id="drawfocus-1"><a class="anchor" href="#drawfocus-1">#</a>DrawFocus</h3>
+<pre><code class="language-pascal">procedure DrawFocus(C: TCanvas32; Ctrl: TControl; const R: TRectI; Radius: Single)
+</code></pre>
+<p>The same for a focused control: the ring always (Pastel), the outline when
+the keyboard moved the focus (Fluent, Material).</p>
+<h3 id="paintfield"><a class="anchor" href="#paintfield">#</a>PaintField</h3>
+<pre><code class="language-pascal">procedure PaintField(C: TCanvas32; const R: TRectI; Focused: Boolean; Hovered: Boolean; Enabled: Boolean; Editable: Boolean; Error: Boolean; Look: TStyleLook = nil)
+</code></pre>
+<p>The box of an edit, a combo box or a date picker in the style; Look may be nil.</p>
+<h3 id="fieldheight"><a class="anchor" href="#fieldheight">#</a>FieldHeight</h3>
+<pre><code class="language-pascal">function FieldHeight(LineHeight: Integer): Integer
+</code></pre>
+<p>The height of such a box for a line of text.</p>
+<h3 id="styleradius"><a class="anchor" href="#styleradius">#</a>StyleRadius</h3>
+<pre><code class="language-pascal">function StyleRadius(R: Integer): Integer
+</code></pre>
+<p>A radius of the style: -1 is the theme's Radius.</p>
+<h3 id="syntaxcolor"><a class="anchor" href="#syntaxcolor">#</a>SyntaxColor</h3>
+<pre><code class="language-pascal">function SyntaxColor(Kind: TSyntaxKind): TColor32
+</code></pre>
+<p>The color of a kind of code (syntax highlighting) in the light or dark theme.</p>
+<h3 id="setthemevalue"><a class="anchor" href="#setthemevalue">#</a>SetThemeValue</h3>
+<pre><code class="language-pascal">function SetThemeValue(const Name: string; const Value: string): Boolean
+</code></pre>
+<p>Changes one theme value by its name in assets/theme.toml: 'accent',
+'background', 'surface', 'text', 'border', 'danger', ... are colors
+('#0EA5E9'); 'radius' and 'font_size' numbers. Hover and pressed shades
+follow the color. False for an unknown name or a bad value.</p>
+<h3 id="invalidatearea"><a class="anchor" href="#invalidatearea">#</a>InvalidateArea</h3>
+<pre><code class="language-pascal">procedure InvalidateArea(const R: TRectI)
+</code></pre>
+<p>Asks for a repaint of a part of the window (layout units).</p>
+<h3 id="requestanimation"><a class="anchor" href="#requestanimation">#</a>RequestAnimation</h3>
+<pre><code class="language-pascal">procedure RequestAnimation
+</code></pre>
+<p>Asks for another frame soon (animations): of the whole window, or only
+of the control that moves.</p>
+<h3 id="animationtime"><a class="anchor" href="#animationtime">#</a>AnimationTime</h3>
+<pre><code class="language-pascal">function AnimationTime: QWord
+</code></pre>
+<p>The clock animations are drawn by (milliseconds); FrozenTime &lt;&gt; 0 stops it.</p>
+<h3 id="requestanimation-1"><a class="anchor" href="#requestanimation-1">#</a>RequestAnimation</h3>
+<pre><code class="language-pascal">procedure RequestAnimation(Control: TControl)
+</code></pre>
+<h3 id="processtimers"><a class="anchor" href="#processtimers">#</a>ProcessTimers</h3>
+<pre><code class="language-pascal">function ProcessTimers(NowMs: QWord): Integer
+</code></pre>
+<p>Runs the timers that are due; the milliseconds until the next one (-1: none).</p>
+<h3 id="drawgrip"><a class="anchor" href="#drawgrip">#</a>DrawGrip</h3>
+<pre><code class="language-pascal">procedure DrawGrip(C: TCanvas32; X: Integer; Y: Integer; W: Integer; H: Integer; Col: TColor32)
+</code></pre>
+<p>A list row's grip, three short lines (&quot;hold here to move&quot;), in the middle of X, Y, W, H.</p>
+<h3 id="releaselater"><a class="anchor" href="#releaselater">#</a>ReleaseLater</h3>
+<pre><code class="language-pascal">procedure ReleaseLater(Obj: TObject)
+</code></pre>
+<p>Frees Obj soon, outside the event that is running (a dialog closed by its own button).</p>
+<h3 id="calllater"><a class="anchor" href="#calllater">#</a>CallLater</h3>
+<pre><code class="language-pascal">procedure CallLater(Event: TNotifyEvent; Sender: TObject)
+</code></pre>
+<p>Calls Event(Sender) soon, outside the event that is running: answers that
+come at once are given the same way as those that come later.</p>
+<h3 id="processreleases"><a class="anchor" href="#processreleases">#</a>ProcessReleases</h3>
+<pre><code class="language-pascal">procedure ProcessReleases
+</code></pre>
+<p>Calls what CallLater was given, then frees what ReleaseLater was given
+(ProcessTimers does it too).</p>
+<h3 id="wraptext"><a class="anchor" href="#wraptext">#</a>WrapText</h3>
+<pre><code class="language-pascal">function WrapText(Font: TPastelFont; const S: string; Width: Integer): TStringArray
+</code></pre>
+<p>Splits text into lines that fit Width (at spaces; long words are broken).</p>
+<h3 id="registercontrol"><a class="anchor" href="#registercontrol">#</a>RegisterControl</h3>
+<pre><code class="language-pascal">procedure RegisterControl(AClass: TControlClass)
+</code></pre>
+<h3 id="findcontrolclass"><a class="anchor" href="#findcontrolclass">#</a>FindControlClass</h3>
+<pre><code class="language-pascal">function FindControlClass(const AName: string): TControlClass
+</code></pre>
+<h3 id="controlclasscount"><a class="anchor" href="#controlclasscount">#</a>ControlClassCount</h3>
+<pre><code class="language-pascal">function ControlClassCount: Integer
+</code></pre>
+<h3 id="controlclassat"><a class="anchor" href="#controlclassat">#</a>ControlClassAt</h3>
+<pre><code class="language-pascal">function ControlClassAt(Index: Integer): TControlClass
+</code></pre>
+<h3 id="registernonvisual"><a class="anchor" href="#registernonvisual">#</a>RegisterNonVisual</h3>
+<pre><code class="language-pascal">procedure RegisterNonVisual(AClass: TComponentClass)
+</code></pre>
+<p>Components without a place on the form (TTimer...) that .pform files can create.</p>
+<h3 id="findnonvisualclass"><a class="anchor" href="#findnonvisualclass">#</a>FindNonVisualClass</h3>
+<pre><code class="language-pascal">function FindNonVisualClass(const AName: string): TComponentClass
+</code></pre>
+<h3 id="nonvisualclasscount"><a class="anchor" href="#nonvisualclasscount">#</a>NonVisualClassCount</h3>
+<pre><code class="language-pascal">function NonVisualClassCount: Integer
+</code></pre>
+<h3 id="nonvisualclassat"><a class="anchor" href="#nonvisualclassat">#</a>NonVisualClassAt</h3>
+<pre><code class="language-pascal">function NonVisualClassAt(Index: Integer): TComponentClass
+</code></pre>
+<h3 id="utf16tobyteindex"><a class="anchor" href="#utf16tobyteindex">#</a>Utf16ToByteIndex</h3>
+<pre><code class="language-pascal">function Utf16ToByteIndex(const S: string; U: Integer): Integer
+</code></pre>
+<p>Positions in a UTF-8 string, from 0: UTF-16 units (Java's, JavaScript's) to
+bytes and back; a letter beyond the first 65536 (an emoji) is two units.</p>
+<h3 id="bytetoutf16index"><a class="anchor" href="#bytetoutf16index">#</a>ByteToUtf16Index</h3>
+<pre><code class="language-pascal">function ByteToUtf16Index(const S: string; B: Integer): Integer
+</code></pre>
+<h2 id="constants-and-variables"><a class="anchor" href="#constants-and-variables">#</a>Constants and variables</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>var Theme: TTheme</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>var UIStyle: TUIStyle</code></td>
+<td>The style in use; change it with UseStyle.</td>
+</tr>
+<tr>
+<td><code>var ThemeCustomizer: procedure</code></td>
+<td>Runs after UseDarkTheme set up the light or dark colors: changes to Theme go here. Pastel.App applies assets/theme.toml with it.</td>
+</tr>
+<tr>
+<td><code>var KeyAlt: Boolean</code></td>
+<td>Alt is held (with KeyDown).</td>
+</tr>
+<tr>
+<td><code>var ArrowKeysMoveFocus: Boolean</code></td>
+<td>Arrow keys a control does not use move the focus to the nearest control in that direction (a TV's remote). Pastel.App turns it on for Android.</td>
+</tr>
+<tr>
+<td><code>var MainForm: TForm</code></td>
+<td>The main window's form; dialogs are shown on it. Set by Pastel.App.</td>
+</tr>
+<tr>
+<td><code>var CloseFormHook: function (Form : TForm) : Boolean</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>var PartialRepaint: Boolean</code></td>
+<td>False: always paint the whole window (PASTEL_FULL_REPAINT=1).</td>
+</tr>
+<tr>
+<td><code>const MinShrink = 48</code></td>
+<td>A growing control in a row that is too narrow gets no narrower than this.</td>
+</tr>
+<tr>
+<td><code>const KEY_BACKSPACE = 8</code></td>
+<td>Platform-independent key codes (same values as SDL key codes).</td>
+</tr>
+<tr>
+<td><code>const KEY_TAB = 9</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>const KEY_ENTER = 13</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>const KEY_ESCAPE = 27</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>const KEY_SPACE = 32</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>const KEY_DELETE = 127</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>const KEY_RIGHT = $4000004F</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>const KEY_LEFT = $40000050</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>const KEY_HOME = $4000004A</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>const KEY_END = $4000004D</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>const KEY_KP_ENTER = $40000058</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>const KEY_UP = $40000052</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>const KEY_DOWN = $40000051</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>const KEY_PAGEUP = $4000004B</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>const KEY_PAGEDOWN = $4000004E</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>const KEY_INSERT = $40000049</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>const KEY_F1 = $4000003A</code></td>
+<td>F2 .. F12 follow</td>
+</tr>
+<tr>
+<td><code>const KEY_MENU = $40000076</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>const KEY_APPLICATION = $40000065</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>const mrNone = 0</code></td>
+<td>Results of dialogs (ModalResult)</td>
+</tr>
+<tr>
+<td><code>const mrOk = 1</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>const mrCancel = 2</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>const mrAbort = 3</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>const mrRetry = 4</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>const mrIgnore = 5</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>const mrYes = 6</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>const mrNo = 7</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>const mrClose = 8</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>var WheelFromTouch: Boolean</code></td>
+<td>Set by the app while a finger drags a list (phones): what pulls to refresh.</td>
+</tr>
+<tr>
+<td><code>const ReorderGripWidth = 36</code></td>
+<td>the width of a list row's grip (AllowReorder)</td>
+</tr>
+</tbody></table>
+
+      </article>
+      <p class="edit mt-5"><a href="https://github.com/azrov/pastel/edit/main/docs/api/pastel.ui.md">Improve this page on GitHub</a></p>
+    </main>
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <div class="sticky">
+        <div class="toc-title">On this page</div>
+        <a href="#types">Types</a>
+        <a href="#other-types">Other types</a>
+        <a href="#routines">Routines</a>
+        <a href="#constants-and-variables">Constants and variables</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer py-4 mt-5">
+  <div class="container d-flex flex-wrap gap-3 justify-content-between small text-body-secondary">
+    <span>Pastel 2.1.0-beta.4 · MIT License · built with Pastel.Markdown and Pastel.Pages</span>
+    <span class="d-flex gap-3">
+      <a href="../docs.html">Documentation</a>
+      <a href="../download.html">Download</a>
+      <a href="../contributing.html">Contributing</a>
+      <a href="https://github.com/azrov/pastel">GitHub</a>
+    </span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/delphi.min.js"></script>
+<script src="../assets/site.js"></script>
+</body>
+</html>

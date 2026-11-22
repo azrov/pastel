@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>8. Classes and objects · Pastel</title>
+<meta name="description" content="Pastel: a modern cross-platform app framework and toolchain for Object Pascal. Desktop, phone, web and console apps from one codebase.">
+<script>
+  try { var t = localStorage.getItem('pastel-theme'); } catch (e) {}
+  document.documentElement.dataset.bsTheme = t || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hl-dark">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body class="section-docs">
+<nav class="navbar navbar-expand-lg sticky-top site-header">
+  <div class="container-fluid px-lg-4">
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="../index.html">
+      <span class="logo" aria-hidden="true"></span>Pastel
+    </a>
+        <button class="btn btn-sm btn-outline-secondary d-lg-none me-auto" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">Menu</button>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#top" aria-controls="top" aria-expanded="false" aria-label="Links">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="top">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link active" href="../docs.html">Docs</a></li>
+        <li class="nav-item"><a class="nav-link" href="../getting-started.html">Get started</a></li>
+        <li class="nav-item"><a class="nav-link " href="../download.html">Download</a></li>
+        <li class="nav-item"><a class="nav-link " href="../changelog.html">Changelog</a></li>
+      </ul>
+      <div class="search position-relative my-2 my-lg-0 me-lg-3">
+        <input id="search" class="form-control form-control-sm" type="search" placeholder="Search the docs  /" autocomplete="off" data-base="../" aria-label="Search the docs">
+        <div id="results" class="dropdown-menu shadow"></div>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        <button id="theme" class="btn btn-sm btn-outline-secondary" type="button" aria-label="Light or dark" title="Light or dark"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+        <a class="btn btn-sm btn-outline-secondary" href="https://github.com/azrov/pastel">GitHub</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-lg-4">
+  <div class="row">
+    <aside class="col-lg-3 col-xl-2 docs-sidebar">
+      <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+        <div class="offcanvas-header border-bottom">
+          <h5 class="offcanvas-title" id="sidebarLabel">Documentation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+          <nav class="docs-nav w-100">
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g0" aria-expanded="false">Start</button>
+              <div class="collapse " id="g0">
+                <a href="../readme.html">Overview</a>
+                <a href="../docs.html">All topics</a>
+                <a href="../getting-started.html">Getting started</a>
+                <a href="../commands.html">The pastel command</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start " type="button" data-bs-toggle="collapse" data-bs-target="#g1" aria-expanded="true">Handbook</button>
+              <div class="collapse show" id="g1">
+                <a href="../handbook/README.html">The Pastel Handbook</a>
+                <a href="../handbook/01-hello.html">1. Your first program</a>
+                <a href="../handbook/02-values.html">2. Values, types and variables</a>
+                <a href="../handbook/03-decisions-loops.html">3. Decisions and loops</a>
+                <a href="../handbook/04-routines.html">4. Procedures and functions</a>
+                <a href="../handbook/05-structured-types.html">5. Arrays, records, enumerations and sets</a>
+                <a href="../handbook/06-strings.html">6. Text</a>
+                <a href="../handbook/07-units.html">7. Units</a>
+                <a href="../handbook/08-classes.html" class="current" aria-current="page">8. Classes and objects</a>
+                <a href="../handbook/09-exceptions.html">9. When things go wrong</a>
+                <a href="../handbook/10-generics.html">10. Lists, dictionaries and generics</a>
+                <a href="../handbook/11-files-json.html">11. Files and JSON</a>
+                <a href="../handbook/12-testing.html">12. Testing</a>
+                <a href="../handbook/13-interfaces.html">13. Interfaces and the command line</a>
+                <a href="../handbook/14-first-window.html">14. Your first window</a>
+                <a href="../handbook/15-layout.html">15. Layout</a>
+                <a href="../handbook/16-grids-and-dialogs.html">16. Grids and dialogs</a>
+                <a href="../handbook/17-database.html">17. A database</a>
+                <a href="../handbook/18-charts-and-reports.html">18. Charts and reports</a>
+                <a href="../handbook/19-look-and-languages.html">19. Look and languages</a>
+                <a href="../handbook/20-background.html">20. Work in the background</a>
+                <a href="../handbook/21-phones.html">21. Phones</a>
+                <a href="../handbook/22-shipping.html">22. Shipping</a>
+                <a href="../handbook/appendix-a-cheat-sheet.html">Appendix A. Object Pascal at a glance</a>
+                <a href="../handbook/appendix-b-from-delphi.html">Appendix B. Coming from Delphi or Lazarus</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g2" aria-expanded="false">Guides</button>
+              <div class="collapse " id="g2">
+                <a href="../guide-cli.html">Writing a command-line tool</a>
+                <a href="../guide-api.html">A REST API with a database</a>
+                <a href="../guide-desktop.html">Building a desktop app</a>
+                <a href="../guide-business.html">A business system — desktop app and server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g3" aria-expanded="false">Desktop and phone apps</button>
+              <div class="collapse " id="g3">
+                <a href="../forms.html">Forms and controls</a>
+                <a href="../controls.html">Controls reference</a>
+                <a href="../styles.html">Styles: Fluent, Material and your own</a>
+                <a href="../components.html">Writing components</a>
+                <a href="../android.html">Android</a>
+                <a href="../device.html">The phone&#39;s features</a>
+                <a href="../java.html">Java from Pascal</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g4" aria-expanded="false">Programs and services</button>
+              <div class="collapse " id="g4">
+                <a href="../console.html">Console programs</a>
+                <a href="../data.html">JSON, settings and logging</a>
+                <a href="../documents.html">Reports, PDF, Excel and printing</a>
+                <a href="../system.html">Files, programs, HTTP and the environment</a>
+                <a href="../services.html">Services: programs that keep running</a>
+                <a href="../web.html">Web APIs and sites: Pastel.Web</a>
+                <a href="../websockets.html">WebSockets: Pastel.WebSocket</a>
+                <a href="../mail.html">E-mail: Pastel.Mail</a>
+                <a href="../pages.html">Web pages from templates</a>
+                <a href="../markdown.html">Markdown</a>
+                <a href="../database.html">Databases: Pastel.Db</a>
+                <a href="../sync.html">Data that works offline: Pastel.Sync</a>
+                <a href="../auth.html">Users and login: Pastel.Auth</a>
+                <a href="../security.html">Passwords, tokens and signatures: Pastel.Crypto, Pastel.Jwt</a>
+                <a href="../deploy.html">Deploying to a Linux server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g5" aria-expanded="false">Working with Pastel</button>
+              <div class="collapse " id="g5">
+                <a href="../project.html">The project file: pastel.toml</a>
+                <a href="../workflow.html">Everyday work: watch, format, libraries</a>
+                <a href="../packages.html">Packages</a>
+                <a href="../testing.html">Testing</a>
+                <a href="../vscode.html">Pastel for Visual Studio Code</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g6" aria-expanded="false">Reference</button>
+              <div class="collapse " id="g6">
+                <a href="../api/index.html">Pastel API reference</a>
+                <a href="../compatibility.html">Compatibility: what stays the same</a>
+                <a href="../performance.html">Performance</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g7" aria-expanded="false">Examples</button>
+              <div class="collapse " id="g7">
+                <a href="../examples/components-demo.html">components-demo</a>
+                <a href="../examples/components.html">components</a>
+                <a href="../examples/contacts.html">contacts</a>
+                <a href="../examples/dupfinder.html">dupfinder</a>
+                <a href="../examples/notepad.html">notepad</a>
+                <a href="../examples/notes-api.html">notes-api</a>
+                <a href="../examples/pocket-app.html">pocket-app</a>
+                <a href="../examples/pocket-cli.html">pocket-cli</a>
+                <a href="../examples/pocket-core.html">pocket-core</a>
+                <a href="../examples/salon-api.html">salon-api</a>
+                <a href="../examples/salon-core.html">salon-core</a>
+                <a href="../examples/salon-desk.html">salon-desk</a>
+                <a href="../examples/weather.html">weather</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g8" aria-expanded="false">Project</button>
+              <div class="collapse " id="g8">
+                <a href="../roadmap.html">Pastel roadmap to 1.0</a>
+                <a href="../changelog.html">Changelog</a>
+                <a href="../vscode-changelog.html">Changelog of the VS Code extension</a>
+                <a href="../contributing.html">Contributing to Pastel</a>
+                <a href="../security-policy.html">Security</a>
+                <a href="../code-of-conduct.html">Code of conduct</a>
+                <a href="../announcing-1.0.html">Announcing Pastel 1.0</a>
+              </div>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </aside>
+    <main class="col-12 col-lg-9 col-xl-8 docs-main">
+      <article class="markdown">
+<h1 id="8-classes-and-objects"><a class="anchor" href="#8-classes-and-objects">#</a>8. Classes and objects</h1>
+<p>A record keeps data together. A <strong>class</strong> keeps data together <em>with the code that works on it</em>, and decides which
+parts the rest of the program may touch. Classes are the &quot;Object&quot; in Object Pascal; forms, controls, lists, database
+connections — nearly everything in Pastel is one.</p>
+<h2 id="a-first-class"><a class="anchor" href="#a-first-class">#</a>A first class</h2>
+<pre><code class="language-pascal">program Accounts;
+
+{$mode objfpc}{$H+}
+
+uses
+  SysUtils;
+
+type
+  TAccount = class
+  private
+    FOwner: string;
+    FBalance: Currency;
+  public
+    constructor Create(const AOwner: string);
+    procedure Deposit(Amount: Currency);
+    function Withdraw(Amount: Currency): Boolean;
+    property Owner: string read FOwner;
+    property Balance: Currency read FBalance;
+  end;
+
+constructor TAccount.Create(const AOwner: string);
+begin
+  inherited Create;
+  FOwner := AOwner;
+  FBalance := 0;
+end;
+
+procedure TAccount.Deposit(Amount: Currency);
+begin
+  FBalance := FBalance + Amount;
+end;
+
+function TAccount.Withdraw(Amount: Currency): Boolean;
+begin
+  Result := Amount &lt;= FBalance;
+  if Result then
+    FBalance := FBalance - Amount;
+end;
+
+var
+  A: TAccount;
+begin
+  A := TAccount.Create('Ada');
+  try
+    A.Deposit(100);
+    if not A.Withdraw(150) then
+      WriteLn('Not enough money.');
+    A.Withdraw(30);
+    WriteLn(A.Owner, ' has ', CurrToStr(A.Balance), '.');
+  finally
+    A.Free;
+  end;
+end.
+</code></pre>
+<pre><code class="language-output">Not enough money.
+Ada has 70.
+</code></pre>
+<p>Step by step:</p>
+<ul>
+<li><strong>Fields</strong> hold the data. By custom their names start with <code>F</code>.</li>
+<li><strong>Methods</strong> are the routines of the class, declared in it and written below with the class name in front:
+<code>TAccount.Deposit</code>. Inside a method, the fields of the object are just there — <code>FBalance</code>.</li>
+<li><strong><code>private</code></strong> parts are for the class's own code. <strong><code>public</code></strong> parts are for everyone. The balance is private and
+only readable through the <code>Balance</code> <strong>property</strong>: nobody can set it to a million by mistake; money only moves
+through <code>Deposit</code> and <code>Withdraw</code>, which keep it correct.</li>
+<li>The <strong>constructor</strong> <code>Create</code> makes an object and sets it up; <code>inherited Create</code> lets the parent class (here the root
+of all classes, <code>TObject</code>) do its part first.</li>
+</ul>
+<h2 id="objects-live-until-you-free-them"><a class="anchor" href="#objects-live-until-you-free-them">#</a>Objects live until you free them</h2>
+<p><code>TAccount.Create(...)</code> makes a new object in memory and gives back a <em>reference</em> to it. The variable <code>A</code> holds that
+reference, not the object itself. Pascal has no garbage collector: an object stays in memory until it is freed, so
+<strong>every <code>Create</code> needs a <code>Free</code></strong>.</p>
+<p>The pattern that never forgets:</p>
+<pre><code class="language-pascal">A := TAccount.Create('Ada');
+try
+  // use A
+finally
+  A.Free;
+end;
+</code></pre>
+<p><code>try … finally</code> runs the <code>finally</code> part <em>whatever happens</em> in the <code>try</code> part — even when an error (chapter 9) jumps
+out of it. Write the <code>try</code> right after the <code>Create</code>, and the <code>Free</code> before anything else.</p>
+<p>To find a forgotten <code>Free</code>, let Free Pascal count: with these lines in <code>pastel.toml</code>, a debug build lists at its end
+every piece of memory that was not freed, and where it was made:</p>
+<pre><code class="language-toml">[profile.debug]
+options = [&quot;-gh&quot;]
+</code></pre>
+<h3 id="references-not-copies"><a class="anchor" href="#references-not-copies">#</a>References, not copies</h3>
+<p>Because variables hold references, assigning one object variable to another does <strong>not</strong> copy the object:</p>
+<pre><code class="language-pascal">program References;
+
+{$mode objfpc}{$H+}
+
+type
+  TBox = class
+    Value: Integer;
+  end;
+
+var
+  A, B: TBox;
+begin
+  A := TBox.Create;
+  try
+    A.Value := 1;
+    B := A;                        // the same object, a second name for it
+    B.Value := 2;
+    WriteLn('A.Value = ', A.Value);
+    WriteLn('Same object? ', A = B);
+  finally
+    A.Free;                        // once: there is only one object
+  end;
+end.
+</code></pre>
+<pre><code class="language-output">A.Value = 2
+Same object? TRUE
+</code></pre>
+<p>Compare this with records (chapter 5), where assignment copied everything. After <code>A.Free</code>, <code>B</code> points to freed
+memory: using it is a bug. A variable that points to nothing holds <code>nil</code>; <code>Assigned(A)</code> asks whether it is not
+<code>nil</code>, and <code>FreeAndNil(A)</code> frees and sets it to <code>nil</code> in one step.</p>
+<p>(<code>TBox</code> has a public field without <code>private</code>: fine for a tiny example; real classes keep their fields private.)</p>
+<h2 id="properties"><a class="anchor" href="#properties">#</a>Properties</h2>
+<p>A property looks like a field from outside, but the class decides what reading and writing it does. It can read a
+field directly and write through a method that checks the value:</p>
+<pre><code class="language-pascal">property Amount: Currency read FAmount write SetAmount;
+</code></pre>
+<pre><code class="language-pascal">procedure TEntry.SetAmount(AValue: Currency);
+begin
+  if AValue &lt; 0 then
+    raise EArgumentException.Create('an amount is never negative');
+  FAmount := AValue;
+end;
+</code></pre>
+<p>Now <code>E.Amount := -5</code> cannot happen without an error. Properties can also be computed — <code>read GetBalance</code> calls a
+function — or read-only, with no <code>write</code> at all.</p>
+<h2 id="inheritance"><a class="anchor" href="#inheritance">#</a>Inheritance</h2>
+<p>A class can be built on another: it <em>inherits</em> all of the parent's fields, methods and properties, adds its own,
+and can change how inherited methods behave:</p>
+<pre><code class="language-pascal">program Shapes;
+
+{$mode objfpc}{$H+}
+
+uses
+  SysUtils;
+
+type
+  TShape = class
+  public
+    function Area: Double; virtual; abstract;
+    function Describe: string; virtual;
+  end;
+
+  TCircle = class(TShape)
+  private
+    FRadius: Double;
+  public
+    constructor Create(ARadius: Double);
+    function Area: Double; override;
+    function Describe: string; override;
+  end;
+
+  TRectangle = class(TShape)
+  private
+    FWidth, FHeight: Double;
+  public
+    constructor Create(AWidth, AHeight: Double);
+    function Area: Double; override;
+  end;
+
+function TShape.Describe: string;
+begin
+  Result := Format('%s with an area of %.2f', [ClassName, Area]);
+end;
+
+constructor TCircle.Create(ARadius: Double);
+begin
+  inherited Create;
+  FRadius := ARadius;
+end;
+
+function TCircle.Area: Double;
+begin
+  Result := Pi * FRadius * FRadius;
+end;
+
+function TCircle.Describe: string;
+begin
+  Result := inherited Describe + Format(' (radius %.1f)', [FRadius]);
+end;
+
+constructor TRectangle.Create(AWidth, AHeight: Double);
+begin
+  inherited Create;
+  FWidth := AWidth;
+  FHeight := AHeight;
+end;
+
+function TRectangle.Area: Double;
+begin
+  Result := FWidth * FHeight;
+end;
+
+var
+  List: array of TShape;
+  S: TShape;
+  Total: Double;
+begin
+  List := [TCircle.Create(1), TRectangle.Create(2, 3), TCircle.Create(0.5)];
+  Total := 0;
+  for S in List do
+  begin
+    WriteLn(S.Describe);
+    Total := Total + S.Area;
+    if S is TCircle then
+      WriteLn('  (a round one)');
+  end;
+  WriteLn(Format('Together: %.2f', [Total]));
+  for S in List do
+    S.Free;
+end.
+</code></pre>
+<pre><code class="language-output">TCircle with an area of 3.14 (radius 1.0)
+  (a round one)
+TRectangle with an area of 6.00
+TCircle with an area of 0.79 (radius 0.5)
+  (a round one)
+Together: 9.93
+</code></pre>
+<ul>
+<li><strong><code>class(TShape)</code></strong> makes <code>TCircle</code> a kind of <code>TShape</code>. A variable of type <code>TShape</code> can hold any shape.</li>
+<li><strong><code>virtual</code></strong> methods can be replaced by child classes with <strong><code>override</code></strong>; the object's <em>real</em> class decides which
+one runs. <code>S.Describe</code> on a circle runs <code>TCircle.Describe</code> even though <code>S</code> is a <code>TShape</code> — this is
+<em>polymorphism</em>: one loop handles every kind of shape.</li>
+<li><strong><code>abstract</code></strong> says the parent has no code for it; every child must give one. (Creating a <code>TShape</code> itself would
+be a mistake, and calling its <code>Area</code> an error.)</li>
+<li><strong><code>inherited Describe</code></strong> calls the parent's version from inside the child's.</li>
+<li><strong><code>is</code></strong> asks whether an object is of a class (or a child of it); <strong><code>as</code></strong> converts the reference, with an error if
+it is not: <code>(S as TCircle)</code>.</li>
+<li><code>ClassName</code> is the class's name, a method every object has from <code>TObject</code>.</li>
+</ul>
+<h3 id="destructors"><a class="anchor" href="#destructors">#</a>Destructors</h3>
+<p>When a class owns other objects, it frees them in its <strong>destructor</strong>, which always looks like this:</p>
+<pre><code class="language-pascal">destructor TReport.Destroy;
+begin
+  FLines.Free;               // what this object made
+  inherited Destroy;         // then the parent's part
+end;
+</code></pre>
+<p>declared in the class as <code>destructor Destroy; override;</code>. Never call <code>Destroy</code> yourself — call <code>Free</code>, which calls
+<code>Destroy</code> and does nothing when the reference is <code>nil</code>.</p>
+<h2 id="in-pocket-an-entry-as-an-object"><a class="anchor" href="#in-pocket-an-entry-as-an-object">#</a>In Pocket: an entry as an object</h2>
+<p>Chapter 5 kept an entry in a record. As a class, it can protect its amount (never negative) and answer questions
+about itself (<code>SignedAmount</code>: negative for an expense). This is Pocket's <code>TEntry</code>, here inside a small program;
+chapter 10 puts it in its unit next to the list of entries:</p>
+<pre><code class="language-pascal">program EntryObject;
+
+{$mode objfpc}{$H+}
+
+uses
+  SysUtils;
+
+type
+  TEntryKind = (ekExpense, ekIncome);
+
+  { One expense or income. }
+  TEntry = class
+  private
+    FId: Int64;
+    FDate: TDateTime;
+    FKind: TEntryKind;
+    FCategory: string;
+    FAmount: Currency;
+    FNote: string;
+    procedure SetAmount(AValue: Currency);
+  public
+    { The amount with its sign: an expense is negative. }
+    function SignedAmount: Currency;
+    property Id: Int64 read FId write FId;
+    property Date: TDateTime read FDate write FDate;
+    property Kind: TEntryKind read FKind write FKind;
+    property Category: string read FCategory write FCategory;
+    { Always positive; EArgumentException otherwise. }
+    property Amount: Currency read FAmount write SetAmount;
+    property Note: string read FNote write FNote;
+  end;
+
+procedure TEntry.SetAmount(AValue: Currency);
+begin
+  if AValue &lt; 0 then
+    raise EArgumentException.CreateFmt('an amount is never negative (%s): the kind says expense or income',
+      [CurrToStr(AValue)]);
+  FAmount := AValue;
+end;
+
+function TEntry.SignedAmount: Currency;
+begin
+  if FKind = ekExpense then
+    Result := -FAmount
+  else
+    Result := FAmount;
+end;
+
+var
+  E: TEntry;
+begin
+  E := TEntry.Create;
+  try
+    E.Date := EncodeDate(2026, 11, 3);
+    E.Kind := ekExpense;
+    E.Category := 'Food';
+    E.Amount := 12.50;
+    E.Note := 'Lunch';
+    WriteLn(FormatDateTime('yyyy-mm-dd', E.Date), ' ', E.Category, ' ', CurrToStr(E.SignedAmount));
+  finally
+    E.Free;
+  end;
+end.
+</code></pre>
+<pre><code class="language-output">2026-11-03 Food -12.5
+</code></pre>
+<p><code>TEntry</code> needs no constructor of its own: <code>TObject.Create</code> is enough, and every field of a new object starts at
+zero, <code>''</code> or <code>False</code>. <code>Id</code> is 0 until something that keeps entries (chapter 11) gives it a number.</p>
+<h2 id="exercises"><a class="anchor" href="#exercises">#</a>Exercises</h2>
+<ol>
+<li>Give <code>TAccount</code> a property <code>History: string</code> that lists every deposit and withdrawal, one per line.</li>
+<li>Add a <code>TSquare</code> to the shapes, as a child of <code>TRectangle</code> with one size. Which methods does it need?</li>
+<li>Write a class <code>TCounter</code> with <code>Increment</code>, <code>Reset</code> and a read-only <code>Value</code>. Create two counters and show that
+they are separate.</li>
+<li>★ Add <code>options = [&quot;-gh&quot;]</code> under <code>[profile.debug]</code> in <code>pastel.toml</code>, remove a <code>Free</code> from one of the programs and
+run it. Read what it says about the memory at the end.</li>
+</ol>
+<p>Next: <a href="../handbook/09-exceptions.html">9. When things go wrong</a></p>
+
+      </article>
+      <p class="edit mt-5"><a href="https://github.com/azrov/pastel/edit/main/docs/handbook/08-classes.md">Improve this page on GitHub</a></p>
+    </main>
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <div class="sticky">
+        <div class="toc-title">On this page</div>
+        <a href="#a-first-class">A first class</a>
+        <a href="#objects-live-until-you-free-them">Objects live until you free them</a>
+        <a href="#properties">Properties</a>
+        <a href="#inheritance">Inheritance</a>
+        <a href="#in-pocket-an-entry-as-an-object">In Pocket: an entry as an object</a>
+        <a href="#exercises">Exercises</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer py-4 mt-5">
+  <div class="container d-flex flex-wrap gap-3 justify-content-between small text-body-secondary">
+    <span>Pastel 2.1.0-beta.4 · MIT License · built with Pastel.Markdown and Pastel.Pages</span>
+    <span class="d-flex gap-3">
+      <a href="../docs.html">Documentation</a>
+      <a href="../download.html">Download</a>
+      <a href="../contributing.html">Contributing</a>
+      <a href="https://github.com/azrov/pastel">GitHub</a>
+    </span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/delphi.min.js"></script>
+<script src="../assets/site.js"></script>
+</body>
+</html>

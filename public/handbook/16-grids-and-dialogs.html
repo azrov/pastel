@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>16. Grids and dialogs · Pastel</title>
+<meta name="description" content="Pastel: a modern cross-platform app framework and toolchain for Object Pascal. Desktop, phone, web and console apps from one codebase.">
+<script>
+  try { var t = localStorage.getItem('pastel-theme'); } catch (e) {}
+  document.documentElement.dataset.bsTheme = t || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hl-dark">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body class="section-docs">
+<nav class="navbar navbar-expand-lg sticky-top site-header">
+  <div class="container-fluid px-lg-4">
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="../index.html">
+      <span class="logo" aria-hidden="true"></span>Pastel
+    </a>
+        <button class="btn btn-sm btn-outline-secondary d-lg-none me-auto" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">Menu</button>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#top" aria-controls="top" aria-expanded="false" aria-label="Links">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="top">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link active" href="../docs.html">Docs</a></li>
+        <li class="nav-item"><a class="nav-link" href="../getting-started.html">Get started</a></li>
+        <li class="nav-item"><a class="nav-link " href="../download.html">Download</a></li>
+        <li class="nav-item"><a class="nav-link " href="../changelog.html">Changelog</a></li>
+      </ul>
+      <div class="search position-relative my-2 my-lg-0 me-lg-3">
+        <input id="search" class="form-control form-control-sm" type="search" placeholder="Search the docs  /" autocomplete="off" data-base="../" aria-label="Search the docs">
+        <div id="results" class="dropdown-menu shadow"></div>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        <button id="theme" class="btn btn-sm btn-outline-secondary" type="button" aria-label="Light or dark" title="Light or dark"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+        <a class="btn btn-sm btn-outline-secondary" href="https://github.com/azrov/pastel">GitHub</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-lg-4">
+  <div class="row">
+    <aside class="col-lg-3 col-xl-2 docs-sidebar">
+      <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+        <div class="offcanvas-header border-bottom">
+          <h5 class="offcanvas-title" id="sidebarLabel">Documentation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+          <nav class="docs-nav w-100">
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g0" aria-expanded="false">Start</button>
+              <div class="collapse " id="g0">
+                <a href="../readme.html">Overview</a>
+                <a href="../docs.html">All topics</a>
+                <a href="../getting-started.html">Getting started</a>
+                <a href="../commands.html">The pastel command</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start " type="button" data-bs-toggle="collapse" data-bs-target="#g1" aria-expanded="true">Handbook</button>
+              <div class="collapse show" id="g1">
+                <a href="../handbook/README.html">The Pastel Handbook</a>
+                <a href="../handbook/01-hello.html">1. Your first program</a>
+                <a href="../handbook/02-values.html">2. Values, types and variables</a>
+                <a href="../handbook/03-decisions-loops.html">3. Decisions and loops</a>
+                <a href="../handbook/04-routines.html">4. Procedures and functions</a>
+                <a href="../handbook/05-structured-types.html">5. Arrays, records, enumerations and sets</a>
+                <a href="../handbook/06-strings.html">6. Text</a>
+                <a href="../handbook/07-units.html">7. Units</a>
+                <a href="../handbook/08-classes.html">8. Classes and objects</a>
+                <a href="../handbook/09-exceptions.html">9. When things go wrong</a>
+                <a href="../handbook/10-generics.html">10. Lists, dictionaries and generics</a>
+                <a href="../handbook/11-files-json.html">11. Files and JSON</a>
+                <a href="../handbook/12-testing.html">12. Testing</a>
+                <a href="../handbook/13-interfaces.html">13. Interfaces and the command line</a>
+                <a href="../handbook/14-first-window.html">14. Your first window</a>
+                <a href="../handbook/15-layout.html">15. Layout</a>
+                <a href="../handbook/16-grids-and-dialogs.html" class="current" aria-current="page">16. Grids and dialogs</a>
+                <a href="../handbook/17-database.html">17. A database</a>
+                <a href="../handbook/18-charts-and-reports.html">18. Charts and reports</a>
+                <a href="../handbook/19-look-and-languages.html">19. Look and languages</a>
+                <a href="../handbook/20-background.html">20. Work in the background</a>
+                <a href="../handbook/21-phones.html">21. Phones</a>
+                <a href="../handbook/22-shipping.html">22. Shipping</a>
+                <a href="../handbook/appendix-a-cheat-sheet.html">Appendix A. Object Pascal at a glance</a>
+                <a href="../handbook/appendix-b-from-delphi.html">Appendix B. Coming from Delphi or Lazarus</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g2" aria-expanded="false">Guides</button>
+              <div class="collapse " id="g2">
+                <a href="../guide-cli.html">Writing a command-line tool</a>
+                <a href="../guide-api.html">A REST API with a database</a>
+                <a href="../guide-desktop.html">Building a desktop app</a>
+                <a href="../guide-business.html">A business system — desktop app and server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g3" aria-expanded="false">Desktop and phone apps</button>
+              <div class="collapse " id="g3">
+                <a href="../forms.html">Forms and controls</a>
+                <a href="../controls.html">Controls reference</a>
+                <a href="../styles.html">Styles: Fluent, Material and your own</a>
+                <a href="../components.html">Writing components</a>
+                <a href="../android.html">Android</a>
+                <a href="../device.html">The phone&#39;s features</a>
+                <a href="../java.html">Java from Pascal</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g4" aria-expanded="false">Programs and services</button>
+              <div class="collapse " id="g4">
+                <a href="../console.html">Console programs</a>
+                <a href="../data.html">JSON, settings and logging</a>
+                <a href="../documents.html">Reports, PDF, Excel and printing</a>
+                <a href="../system.html">Files, programs, HTTP and the environment</a>
+                <a href="../services.html">Services: programs that keep running</a>
+                <a href="../web.html">Web APIs and sites: Pastel.Web</a>
+                <a href="../websockets.html">WebSockets: Pastel.WebSocket</a>
+                <a href="../mail.html">E-mail: Pastel.Mail</a>
+                <a href="../pages.html">Web pages from templates</a>
+                <a href="../markdown.html">Markdown</a>
+                <a href="../database.html">Databases: Pastel.Db</a>
+                <a href="../sync.html">Data that works offline: Pastel.Sync</a>
+                <a href="../auth.html">Users and login: Pastel.Auth</a>
+                <a href="../security.html">Passwords, tokens and signatures: Pastel.Crypto, Pastel.Jwt</a>
+                <a href="../deploy.html">Deploying to a Linux server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g5" aria-expanded="false">Working with Pastel</button>
+              <div class="collapse " id="g5">
+                <a href="../project.html">The project file: pastel.toml</a>
+                <a href="../workflow.html">Everyday work: watch, format, libraries</a>
+                <a href="../packages.html">Packages</a>
+                <a href="../testing.html">Testing</a>
+                <a href="../vscode.html">Pastel for Visual Studio Code</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g6" aria-expanded="false">Reference</button>
+              <div class="collapse " id="g6">
+                <a href="../api/index.html">Pastel API reference</a>
+                <a href="../compatibility.html">Compatibility: what stays the same</a>
+                <a href="../performance.html">Performance</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g7" aria-expanded="false">Examples</button>
+              <div class="collapse " id="g7">
+                <a href="../examples/components-demo.html">components-demo</a>
+                <a href="../examples/components.html">components</a>
+                <a href="../examples/contacts.html">contacts</a>
+                <a href="../examples/dupfinder.html">dupfinder</a>
+                <a href="../examples/notepad.html">notepad</a>
+                <a href="../examples/notes-api.html">notes-api</a>
+                <a href="../examples/pocket-app.html">pocket-app</a>
+                <a href="../examples/pocket-cli.html">pocket-cli</a>
+                <a href="../examples/pocket-core.html">pocket-core</a>
+                <a href="../examples/salon-api.html">salon-api</a>
+                <a href="../examples/salon-core.html">salon-core</a>
+                <a href="../examples/salon-desk.html">salon-desk</a>
+                <a href="../examples/weather.html">weather</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g8" aria-expanded="false">Project</button>
+              <div class="collapse " id="g8">
+                <a href="../roadmap.html">Pastel roadmap to 1.0</a>
+                <a href="../changelog.html">Changelog</a>
+                <a href="../vscode-changelog.html">Changelog of the VS Code extension</a>
+                <a href="../contributing.html">Contributing to Pastel</a>
+                <a href="../security-policy.html">Security</a>
+                <a href="../code-of-conduct.html">Code of conduct</a>
+                <a href="../announcing-1.0.html">Announcing Pastel 1.0</a>
+              </div>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </aside>
+    <main class="col-12 col-lg-9 col-xl-8 docs-main">
+      <article class="markdown">
+<h1 id="16-grids-and-dialogs"><a class="anchor" href="#16-grids-and-dialogs">#</a>16. Grids and dialogs</h1>
+<p>Pocket's window has its layout; now it needs its entries. This chapter fills the list, adds a dialog for one entry,
+and asks before deleting — the everyday work of a business app.</p>
+<h2 id="the-forms-data"><a class="anchor" href="#the-forms-data">#</a>The form's data</h2>
+<p>A form is a class (chapter 8), so it can keep fields of its own beside its controls. Pocket's main form keeps the
+store, the list of all entries, and the month shown:</p>
+<!-- part of: examples/pocket-app/src/forms/Home.pas -->
+<pre><code class="language-pascal">  THomeForm = class(THomeFormBase)
+    procedure FormCreate(Sender: TObject);
+    procedure ScreenChange(Sender: TObject);
+    procedure PrevClick(Sender: TObject);
+    procedure NextClick(Sender: TObject);
+    procedure EntriesChange(Sender: TObject);
+    procedure AddClick(Sender: TObject);
+    procedure EditClick(Sender: TObject);
+    procedure DeleteClick(Sender: TObject);
+    procedure PdfClick(Sender: TObject);
+    procedure ExcelClick(Sender: TObject);
+    procedure ImportClick(Sender: TObject);
+  private
+    FStore: TDbStore;
+    FEntries: TEntryList;      { all of them; owns them }
+    FShown: TEntryList;        { the month's, in the grid's order; does not own them }
+    FYear, FMonth: Word;
+    FEditing: TEntry;          { the entry in the dialog; nil: a new one }
+    procedure ShowMonth;
+    function Selected: TEntry;
+    procedure EntryDone(Sender: TObject; AResult: Integer);
+    procedure DeleteAnswered(Sender: TObject; AResult: Integer);
+    procedure ExportMonth(const Ext: string);
+    procedure ExportTo(Sender: TObject; Ok: Boolean; const FileName: string);
+    procedure ImportChosen(Sender: TObject; Ok: Boolean; const FileName: string);
+    procedure ImportWork(Sender: TObject);
+    procedure ImportDone(Sender: TObject);
+  public
+    destructor Destroy; override;
+  end;
+</code></pre>
+<p><code>FormCreate</code> (the form's <code>OnCreate</code>, when the form is made) opens the store and loads the entries; the destructor
+frees what the form made, in the other order:</p>
+<!-- part of: examples/pocket-app/src/forms/Home.pas -->
+<pre><code class="language-pascal">procedure THomeForm.FormCreate(Sender: TObject);
+begin
+  FStore := TDbStore.Create(DatabaseUrl);
+  FEntries := TEntryList.Create;
+  FShown := TEntryList.Create(False);
+  FStore.Load(FEntries);
+  FYear := YearOf(Date);
+  FMonth := MonthOf(Date);
+  ShowMonth;
+end;
+</code></pre>
+<!-- part of: examples/pocket-app/src/forms/Home.pas -->
+<pre><code class="language-pascal">destructor THomeForm.Destroy;
+begin
+  FShown.Free;
+  FEntries.Free;
+  FStore.Free;
+  inherited Destroy;
+end;
+</code></pre>
+<p>The store and <code>DatabaseUrl</code> are chapter 17's. Note <code>TEntryList.Create(False)</code>: <code>FShown</code> holds the same entries as
+<code>FEntries</code> but does not own them (chapter 10) — freeing it does not free them.</p>
+<h2 id="tgrid"><a class="anchor" href="#tgrid">#</a>TGrid</h2>
+<p>A <code>TGrid</code> shows rows and columns. Its columns are declared in the <code>.pform</code> (chapter 15 has Pocket's):</p>
+<pre><code class="language-text">object AmountColumn: TGridColumn
+  Title = 'Amount'
+  Field = 'amount'
+  Kind = Money              // Text, Number, Money, Date, Check, Icon
+  Width = 120               // 0: shares the room left
+  Alignment = Right
+end
+</code></pre>
+<p>The rows are added in code, one array of strings each, in the columns' order:</p>
+<pre><code class="language-pascal">Entries.Clear;
+Entries.AddRow(['2026-11-03', 'Food', 'Lunch', '-12.5']);
+</code></pre>
+<p>A cell keeps its value <strong>as data</strong>: a date as <code>2026-11-03</code>, an amount with a dot. The column's <code>Kind</code> decides how it
+is shown — in the user's language (<code>03.11.2026</code> and <code>-12,50</code> in Turkish) — and how it sorts (as a date, as a
+number). Never put a formatted text in a <code>Money</code> cell; give it the value.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Row</code></td>
+<td>the selected row (<code>-1</code>: none)</td>
+</tr>
+<tr>
+<td><code>RowCount</code>, <code>Cells[Col, Row]</code></td>
+<td>the rows, a cell's value</td>
+</tr>
+<tr>
+<td><code>RowSelect</code>, <code>Striped</code>, <code>Sortable</code>, <code>Editable</code></td>
+<td>whole rows selected, every other row shaded, a click on a title sorts, cells can be typed in</td>
+</tr>
+<tr>
+<td><code>OnChange</code></td>
+<td>the selection changed</td>
+</tr>
+<tr>
+<td><code>OnDblClick</code></td>
+<td>a double click (or Enter) on a row</td>
+</tr>
+</tbody></table>
+<h3 id="showing-a-month"><a class="anchor" href="#showing-a-month">#</a>Showing a month</h3>
+<p><code>ShowMonth</code> puts the month on screen: the totals in the cards, the entries in the grid, the expenses in the chart
+(chapter 18):</p>
+<!-- part of: examples/pocket-app/src/forms/Home.pas -->
+<pre><code class="language-pascal">procedure THomeForm.ShowMonth;
+var
+  S: TMonthSummary;
+  E: TEntry;
+  T: TCategoryTotal;
+  Labels: array of string;
+  Values: array of Double;
+  Month: TEntryList;
+begin
+  MonthLabel.Text := MonthName(FMonth) + ' ' + IntToStr(FYear);
+  S := MonthSummary(FEntries, FYear, FMonth);
+  IncomeLabel.Text := Money(S.Income);
+  ExpenseLabel.Text := Money(S.Expenses);
+  BalanceLabel.Text := Money(S.Balance);
+  { the grid: the month's entries, newest first }
+  FEntries.SortByDate;
+  Month := FEntries.InMonth(FYear, FMonth);
+  try
+    FShown.Clear;
+    Entries.Clear;
+    for E in Month do
+    begin
+      FShown.Add(E);
+      Entries.AddRow([DateToIso(E.Date), E.Category, E.Note, CurrToStr(E.SignedAmount, InvariantFormat)]);
+    end;
+    { the chart: the month's expenses by category }
+    Labels := nil;
+    Values := nil;
+    for T in TotalsByCategory(Month, ekExpense) do
+    begin
+      SetLength(Labels, Length(Labels) + 1);
+      Labels[High(Labels)] := T.Category;
+      SetLength(Values, Length(Values) + 1);
+      Values[High(Values)] := T.Amount;
+    end;
+  finally
+    Month.Free;
+  end;
+  Spending.Clear;
+  if Length(Values) &gt; 0 then
+  begin
+    Spending.SetLabels(Labels);
+    Spending.AddSeries(_('Expenses'), Values);
+  end;
+  EntriesChange(nil);
+end;
+</code></pre>
+<p><code>CurrToStr(…, InvariantFormat)</code> writes the amount with a dot whatever the language — the data form the grid wants.</p>
+<h3 id="which-entry-is-selected"><a class="anchor" href="#which-entry-is-selected">#</a>Which entry is selected?</h3>
+<p>The grid holds strings; the program needs the <code>TEntry</code>. <code>FShown</code> is a list of the entries <strong>in the same order as the
+grid's rows</strong>, so row 3 is <code>FShown[3]</code>:</p>
+<!-- part of: examples/pocket-app/src/forms/Home.pas -->
+<pre><code class="language-pascal">function THomeForm.Selected: TEntry;
+begin
+  if (Entries.Row &gt;= 0) and (Entries.Row &lt; FShown.Count) then
+    Result := FShown[Entries.Row]
+  else
+    Result := nil;
+end;
+</code></pre>
+<!-- part of: examples/pocket-app/src/forms/Home.pas -->
+<pre><code class="language-pascal">procedure THomeForm.EntriesChange(Sender: TObject);
+begin
+  EditButton.Enabled := Selected &lt;&gt; nil;
+  DeleteButton.Enabled := Selected &lt;&gt; nil;
+end;
+</code></pre>
+<p><code>EntriesChange</code> runs when the selection changes (<code>OnChange = EntriesChange</code> in the <code>.pform</code>) and enables the
+buttons that need a selected entry. <code>ShowMonth</code> calls it too, with <code>nil</code> as the <code>Sender</code> — a handler is an ordinary
+method.</p>
+<p>The arrows move between months:</p>
+<!-- part of: examples/pocket-app/src/forms/Home.pas -->
+<pre><code class="language-pascal">procedure THomeForm.PrevClick(Sender: TObject);
+begin
+  if FMonth = 1 then
+  begin
+    FMonth := 12;
+    Dec(FYear);
+  end
+  else
+    Dec(FMonth);
+  ShowMonth;
+end;
+</code></pre>
+<h2 id="a-dialog-one-entry"><a class="anchor" href="#a-dialog-one-entry">#</a>A dialog: one entry</h2>
+<p>Adding and changing an entry uses the same small form, <code>EntryEditor</code>:</p>
+<!-- file: examples/pocket-app/src/forms/EntryEditor.pform -->
+<pre><code class="language-pascal">// One entry, new or changed: shown with ShowModal over the main window.
+object EntryForm: TEntryForm
+  Title = 'Entry'
+  Width = 380
+  Padding = 20
+  Gap = 10
+  object KindBox: TComboBox
+    Items = ('Expense', 'Income')
+  end
+  object AmountEdit: TCurrencyEdit
+    Placeholder = 'Amount'
+  end
+  object CategoryEdit: TEdit
+    Placeholder = 'Category: Food, Rent, Salary...'
+  end
+  object DateBox: TDatePicker
+  end
+  object NoteEdit: TEdit
+    Placeholder = 'Note'
+  end
+  object ErrorLabel: TLabel
+    Text = ''
+    Color = '#DC2626'
+    WordWrap = True
+  end
+  object EntryButtons: TRow
+    Gap = 8
+    Justify = End
+    object CancelButton: TButton
+      Text = 'Cancel'
+      Style = Secondary
+      Cancel = True
+      ModalResult = mrCancel
+    end
+    object OkButton: TButton
+      Text = 'Save'
+      Default = True
+      OnClick = OkClick
+    end
+  end
+end
+</code></pre>
+<p><img src="../files/docs/handbook/images/entry-dialog.png" alt="The entry dialog"></p>
+<p>New controls here:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>TComboBox</code></td>
+<td>a choice from a list: <code>Items</code>, <code>ItemIndex</code> (<code>0</code> the first)</td>
+</tr>
+<tr>
+<td><code>TCurrencyEdit</code></td>
+<td>an amount: <code>Value</code> (a <code>Currency</code>), <code>Valid</code> (what was typed is an amount) — it reads <code>12,50</code> and <code>12.50</code> both</td>
+</tr>
+<tr>
+<td><code>TDatePicker</code></td>
+<td>a date with a calendar: <code>Date</code>, <code>HasDate</code></td>
+</tr>
+<tr>
+<td><code>TEdit.Completions</code></td>
+<td>words offered while typing — here the categories used before</td>
+</tr>
+</tbody></table>
+<p>Two buttons close the dialog. <em>Cancel</em> has <code>ModalResult = mrCancel</code>: a click closes it with that result, no code
+needed. <code>Cancel = True</code> makes Escape press it, <code>Default = True</code> makes Enter press <em>Save</em>.</p>
+<h3 id="the-dialogs-code"><a class="anchor" href="#the-dialogs-code">#</a>The dialog's code</h3>
+<p>The dialog does not know about the store or the list. It gets an entry to show (<code>Start</code>), checks what was typed
+(<code>OkClick</code>), and gives the values back (<code>ReadInto</code>):</p>
+<!-- part of: examples/pocket-app/src/forms/EntryEditor.pas -->
+<pre><code class="language-pascal">
+type
+  TEntryForm = class(TEntryFormBase)
+    procedure OkClick(Sender: TObject);
+  public
+    { Shows E's values (a new entry: today, an expense); Categories are
+      offered while the category is typed. }
+    procedure Start(E: TEntry; const Categories: array of string);
+    { The values typed, into E (after the dialog closed with mrOk). }
+    procedure ReadInto(E: TEntry);
+  end;
+
+</code></pre>
+<!-- part of: examples/pocket-app/src/forms/EntryEditor.pas -->
+<pre><code class="language-pascal">procedure TEntryForm.OkClick(Sender: TObject);
+begin
+  { the checks: the dialog stays open with the reason }
+  if not AmountEdit.Valid or (AmountEdit.Value &lt;= 0) then
+  begin
+    ErrorLabel.Text := _('Type an amount, like 12.50.');
+    AmountEdit.SetFocus;
+    Exit;
+  end;
+  if Trim(CategoryEdit.Text) = '' then
+  begin
+    ErrorLabel.Text := _('Every entry has a category.');
+    CategoryEdit.SetFocus;
+    Exit;
+  end;
+  if not DateBox.HasDate then
+  begin
+    ErrorLabel.Text := _('Choose the day.');
+    Exit;
+  end;
+  ModalResult := mrOk;        { closes the dialog: Home's method gets mrOk }
+end;
+</code></pre>
+<p>When something is wrong, the dialog says why <strong>and stays open</strong>, with the cursor in the field to fix. Only when all
+is well does it set <code>ModalResult := mrOk</code> — which closes it.</p>
+<p>A dialog that only does its own job can be used from anywhere: a second window, a test. That is the same rule as
+chapter 7's units: each part knows as little as it can.</p>
+<h3 id="showing-it-showmodal"><a class="anchor" href="#showing-it-showmodal">#</a>Showing it: ShowModal</h3>
+<pre><code class="language-pascal">if EntryForm.ShowModal = mrOk then ...      // waits until it is closed
+</code></pre>
+<p>waits, as in Delphi — but phones cannot wait: an Android app must go back to the system while a dialog is open.
+So Pastel apps use the other form, which <strong>returns at once</strong> and calls a method when the dialog closes:</p>
+<!-- part of: examples/pocket-app/src/forms/Home.pas -->
+<pre><code class="language-pascal">procedure THomeForm.AddClick(Sender: TObject);
+var
+  E: TEntry;
+begin
+  FEditing := nil;
+  E := TEntry.Create;
+  try
+    { in the month shown: today, or its first day }
+    if (YearOf(Date) = FYear) and (MonthOf(Date) = FMonth) then
+      E.Date := Date
+    else
+      E.Date := EncodeDate(FYear, FMonth, 1);
+    EntryForm.Start(E, FEntries.Categories);
+  finally
+    E.Free;
+  end;
+  EntryForm.ShowModal(@EntryDone);
+end;
+</code></pre>
+<!-- part of: examples/pocket-app/src/forms/Home.pas -->
+<pre><code class="language-pascal">procedure THomeForm.EditClick(Sender: TObject);
+begin
+  FEditing := Selected;
+  if FEditing = nil then
+    Exit;
+  EntryForm.Start(FEditing, FEntries.Categories);
+  EntryForm.ShowModal(@EntryDone);
+end;
+</code></pre>
+<p><code>@EntryDone</code> is the method to call (a <em>method pointer</em>: its signature must be <code>procedure (Sender: TObject; AResult: Integer)</code>). The form remembers in <code>FEditing</code> what the dialog was opened for — <code>nil</code> for a new entry:</p>
+<!-- part of: examples/pocket-app/src/forms/Home.pas -->
+<pre><code class="language-pascal">{ the dialog closed: saved (mrOk) or not }
+procedure THomeForm.EntryDone(Sender: TObject; AResult: Integer);
+var
+  E: TEntry;
+begin
+  if AResult &lt;&gt; mrOk then
+    Exit;
+  if FEditing = nil then
+  begin
+    E := TEntry.Create;
+    FEntries.Add(E);            { the list owns it from now on }
+  end
+  else
+    E := FEditing;
+  EntryForm.ReadInto(E);
+  FStore.Put(E);                { a new one gets its id }
+  { show the month of the entry }
+  FYear := YearOf(E.Date);
+  FMonth := MonthOf(E.Date);
+  ShowMonth;
+end;
+</code></pre>
+<p>Note who owns what. A new <code>TEntry</code> goes into <code>FEntries</code>, which frees it at the end. In <code>AddClick</code> the temporary
+entry only carries the starting values into the dialog, so it is freed at once — <code>Start</code> copied what it needed.</p>
+<h2 id="asking-first"><a class="anchor" href="#asking-first">#</a>Asking first</h2>
+<p>Deleting cannot be undone, so Pocket asks. <code>Pastel.Dialogs</code> has the usual messages, each in a form that waits and
+one that does not:</p>
+<table>
+<thead>
+<tr>
+<th>Waits</th>
+<th>Does not wait</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>ShowMessage(Msg)</code></td>
+<td><code>ShowMessage(Msg, @Done)</code></td>
+</tr>
+<tr>
+<td><code>if Ask(Msg) then</code></td>
+<td><code>Ask(Msg, @Answered)</code> — gets <code>mrYes</code> or <code>mrNo</code></td>
+</tr>
+<tr>
+<td><code>MessageDlg(Msg, Title, [mrOk, mrCancel])</code></td>
+<td><code>MessageDlg(Msg, Title, Buttons, @Done)</code></td>
+</tr>
+<tr>
+<td><code>InputQuery(Title, Prompt, Value)</code></td>
+<td><code>InputQuery(Title, Prompt, Value, @Done)</code></td>
+</tr>
+<tr>
+<td></td>
+<td><code>ShowToast('Saved')</code> — a moment, no button</td>
+</tr>
+</tbody></table>
+<!-- part of: examples/pocket-app/src/forms/Home.pas -->
+<pre><code class="language-pascal">procedure THomeForm.DeleteClick(Sender: TObject);
+var
+  E: TEntry;
+begin
+  E := Selected;
+  if E &lt;&gt; nil then
+    Ask(Format(_('Delete %s %s?'), [E.Category, Money(E.Amount)]), @DeleteAnswered);
+end;
+</code></pre>
+<!-- part of: examples/pocket-app/src/forms/Home.pas -->
+<pre><code class="language-pascal">procedure THomeForm.DeleteAnswered(Sender: TObject; AResult: Integer);
+var
+  E: TEntry;
+begin
+  E := Selected;
+  if (AResult &lt;&gt; mrYes) or (E = nil) then
+    Exit;
+  FStore.Remove(E.Id);
+  FShown.Remove(E);             { only the list: FShown does not own it }
+  FEntries.Remove(E);           { this frees it }
+  ShowMonth;
+end;
+</code></pre>
+<p><code>DeleteAnswered</code> looks at <code>Selected</code> again instead of keeping the entry from <code>DeleteClick</code>: a lot can happen while a
+question is open, and the safest answer is the one read now. The entry leaves <code>FShown</code> first (which does not free
+it), then <code>FEntries</code> (which does).</p>
+<p>The dialogs follow the platform's style (chapter 19): the buttons in Windows' order on Windows, Android's on
+Android.</p>
+<h2 id="exercises"><a class="anchor" href="#exercises">#</a>Exercises</h2>
+<ol>
+<li>Show the number of entries of the month under the grid (<code>TLabel</code>, <code>FShown.Count</code>).</li>
+<li>Make the grid <code>Sortable</code> and try it. Why does <code>Selected</code> stop working? (Hint: the order of <code>FShown</code>.) Fix it with
+a hidden column that holds the entry's <code>Id</code>, and find the entry by it.</li>
+<li>Add a <em>Duplicate</em> button that opens the dialog with the selected entry's values but saves a new entry.</li>
+<li>★ Ask before closing the entry dialog with <em>Cancel</em> when something was typed (<code>OnCloseQuery</code>).</li>
+</ol>
+<p>Next: <a href="../handbook/17-database.html">17. A database</a></p>
+
+      </article>
+      <p class="edit mt-5"><a href="https://github.com/azrov/pastel/edit/main/docs/handbook/16-grids-and-dialogs.md">Improve this page on GitHub</a></p>
+    </main>
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <div class="sticky">
+        <div class="toc-title">On this page</div>
+        <a href="#the-forms-data">The form&#39;s data</a>
+        <a href="#tgrid">TGrid</a>
+        <a href="#a-dialog-one-entry">A dialog: one entry</a>
+        <a href="#asking-first">Asking first</a>
+        <a href="#exercises">Exercises</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer py-4 mt-5">
+  <div class="container d-flex flex-wrap gap-3 justify-content-between small text-body-secondary">
+    <span>Pastel 2.1.0-beta.4 · MIT License · built with Pastel.Markdown and Pastel.Pages</span>
+    <span class="d-flex gap-3">
+      <a href="../docs.html">Documentation</a>
+      <a href="../download.html">Download</a>
+      <a href="../contributing.html">Contributing</a>
+      <a href="https://github.com/azrov/pastel">GitHub</a>
+    </span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/delphi.min.js"></script>
+<script src="../assets/site.js"></script>
+</body>
+</html>

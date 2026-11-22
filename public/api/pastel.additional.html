@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pastel.Additional · Pastel</title>
+<meta name="description" content="Pastel: a modern cross-platform app framework and toolchain for Object Pascal. Desktop, phone, web and console apps from one codebase.">
+<script>
+  try { var t = localStorage.getItem('pastel-theme'); } catch (e) {}
+  document.documentElement.dataset.bsTheme = t || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hl-dark">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body class="section-docs">
+<nav class="navbar navbar-expand-lg sticky-top site-header">
+  <div class="container-fluid px-lg-4">
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="../index.html">
+      <span class="logo" aria-hidden="true"></span>Pastel
+    </a>
+        <button class="btn btn-sm btn-outline-secondary d-lg-none me-auto" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">Menu</button>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#top" aria-controls="top" aria-expanded="false" aria-label="Links">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="top">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link active" href="../docs.html">Docs</a></li>
+        <li class="nav-item"><a class="nav-link" href="../getting-started.html">Get started</a></li>
+        <li class="nav-item"><a class="nav-link " href="../download.html">Download</a></li>
+        <li class="nav-item"><a class="nav-link " href="../changelog.html">Changelog</a></li>
+      </ul>
+      <div class="search position-relative my-2 my-lg-0 me-lg-3">
+        <input id="search" class="form-control form-control-sm" type="search" placeholder="Search the docs  /" autocomplete="off" data-base="../" aria-label="Search the docs">
+        <div id="results" class="dropdown-menu shadow"></div>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        <button id="theme" class="btn btn-sm btn-outline-secondary" type="button" aria-label="Light or dark" title="Light or dark"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+        <a class="btn btn-sm btn-outline-secondary" href="https://github.com/azrov/pastel">GitHub</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-lg-4">
+  <div class="row">
+    <aside class="col-lg-3 col-xl-2 docs-sidebar">
+      <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+        <div class="offcanvas-header border-bottom">
+          <h5 class="offcanvas-title" id="sidebarLabel">Documentation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+          <nav class="docs-nav w-100">
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g0" aria-expanded="false">Start</button>
+              <div class="collapse " id="g0">
+                <a href="../readme.html">Overview</a>
+                <a href="../docs.html">All topics</a>
+                <a href="../getting-started.html">Getting started</a>
+                <a href="../commands.html">The pastel command</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g1" aria-expanded="false">Handbook</button>
+              <div class="collapse " id="g1">
+                <a href="../handbook/README.html">The Pastel Handbook</a>
+                <a href="../handbook/01-hello.html">1. Your first program</a>
+                <a href="../handbook/02-values.html">2. Values, types and variables</a>
+                <a href="../handbook/03-decisions-loops.html">3. Decisions and loops</a>
+                <a href="../handbook/04-routines.html">4. Procedures and functions</a>
+                <a href="../handbook/05-structured-types.html">5. Arrays, records, enumerations and sets</a>
+                <a href="../handbook/06-strings.html">6. Text</a>
+                <a href="../handbook/07-units.html">7. Units</a>
+                <a href="../handbook/08-classes.html">8. Classes and objects</a>
+                <a href="../handbook/09-exceptions.html">9. When things go wrong</a>
+                <a href="../handbook/10-generics.html">10. Lists, dictionaries and generics</a>
+                <a href="../handbook/11-files-json.html">11. Files and JSON</a>
+                <a href="../handbook/12-testing.html">12. Testing</a>
+                <a href="../handbook/13-interfaces.html">13. Interfaces and the command line</a>
+                <a href="../handbook/14-first-window.html">14. Your first window</a>
+                <a href="../handbook/15-layout.html">15. Layout</a>
+                <a href="../handbook/16-grids-and-dialogs.html">16. Grids and dialogs</a>
+                <a href="../handbook/17-database.html">17. A database</a>
+                <a href="../handbook/18-charts-and-reports.html">18. Charts and reports</a>
+                <a href="../handbook/19-look-and-languages.html">19. Look and languages</a>
+                <a href="../handbook/20-background.html">20. Work in the background</a>
+                <a href="../handbook/21-phones.html">21. Phones</a>
+                <a href="../handbook/22-shipping.html">22. Shipping</a>
+                <a href="../handbook/appendix-a-cheat-sheet.html">Appendix A. Object Pascal at a glance</a>
+                <a href="../handbook/appendix-b-from-delphi.html">Appendix B. Coming from Delphi or Lazarus</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g2" aria-expanded="false">Guides</button>
+              <div class="collapse " id="g2">
+                <a href="../guide-cli.html">Writing a command-line tool</a>
+                <a href="../guide-api.html">A REST API with a database</a>
+                <a href="../guide-desktop.html">Building a desktop app</a>
+                <a href="../guide-business.html">A business system — desktop app and server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g3" aria-expanded="false">Desktop and phone apps</button>
+              <div class="collapse " id="g3">
+                <a href="../forms.html">Forms and controls</a>
+                <a href="../controls.html">Controls reference</a>
+                <a href="../styles.html">Styles: Fluent, Material and your own</a>
+                <a href="../components.html">Writing components</a>
+                <a href="../android.html">Android</a>
+                <a href="../device.html">The phone&#39;s features</a>
+                <a href="../java.html">Java from Pascal</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g4" aria-expanded="false">Programs and services</button>
+              <div class="collapse " id="g4">
+                <a href="../console.html">Console programs</a>
+                <a href="../data.html">JSON, settings and logging</a>
+                <a href="../documents.html">Reports, PDF, Excel and printing</a>
+                <a href="../system.html">Files, programs, HTTP and the environment</a>
+                <a href="../services.html">Services: programs that keep running</a>
+                <a href="../web.html">Web APIs and sites: Pastel.Web</a>
+                <a href="../websockets.html">WebSockets: Pastel.WebSocket</a>
+                <a href="../mail.html">E-mail: Pastel.Mail</a>
+                <a href="../pages.html">Web pages from templates</a>
+                <a href="../markdown.html">Markdown</a>
+                <a href="../database.html">Databases: Pastel.Db</a>
+                <a href="../sync.html">Data that works offline: Pastel.Sync</a>
+                <a href="../auth.html">Users and login: Pastel.Auth</a>
+                <a href="../security.html">Passwords, tokens and signatures: Pastel.Crypto, Pastel.Jwt</a>
+                <a href="../deploy.html">Deploying to a Linux server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g5" aria-expanded="false">Working with Pastel</button>
+              <div class="collapse " id="g5">
+                <a href="../project.html">The project file: pastel.toml</a>
+                <a href="../workflow.html">Everyday work: watch, format, libraries</a>
+                <a href="../packages.html">Packages</a>
+                <a href="../testing.html">Testing</a>
+                <a href="../vscode.html">Pastel for Visual Studio Code</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start " type="button" data-bs-toggle="collapse" data-bs-target="#g6" aria-expanded="true">Reference</button>
+              <div class="collapse show" id="g6">
+                <a href="../api/index.html">Pastel API reference</a>
+                <a href="../compatibility.html">Compatibility: what stays the same</a>
+                <a href="../performance.html">Performance</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g7" aria-expanded="false">Examples</button>
+              <div class="collapse " id="g7">
+                <a href="../examples/components-demo.html">components-demo</a>
+                <a href="../examples/components.html">components</a>
+                <a href="../examples/contacts.html">contacts</a>
+                <a href="../examples/dupfinder.html">dupfinder</a>
+                <a href="../examples/notepad.html">notepad</a>
+                <a href="../examples/notes-api.html">notes-api</a>
+                <a href="../examples/pocket-app.html">pocket-app</a>
+                <a href="../examples/pocket-cli.html">pocket-cli</a>
+                <a href="../examples/pocket-core.html">pocket-core</a>
+                <a href="../examples/salon-api.html">salon-api</a>
+                <a href="../examples/salon-core.html">salon-core</a>
+                <a href="../examples/salon-desk.html">salon-desk</a>
+                <a href="../examples/weather.html">weather</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g8" aria-expanded="false">Project</button>
+              <div class="collapse " id="g8">
+                <a href="../roadmap.html">Pastel roadmap to 1.0</a>
+                <a href="../changelog.html">Changelog</a>
+                <a href="../vscode-changelog.html">Changelog of the VS Code extension</a>
+                <a href="../contributing.html">Contributing to Pastel</a>
+                <a href="../security-policy.html">Security</a>
+                <a href="../code-of-conduct.html">Code of conduct</a>
+                <a href="../announcing-1.0.html">Announcing Pastel 1.0</a>
+              </div>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </aside>
+    <main class="col-12 col-lg-9 col-xl-8 docs-main">
+      <article class="markdown">
+<h1 id="pasteladditional"><a class="anchor" href="#pasteladditional">#</a>Pastel.Additional</h1>
+<p>More standard controls, like the &quot;Additional&quot; page of Delphi's palette:</p>
+<pre><code>TGroupBox    a frame with a title around controls that belong together
+TRadioGroup  a framed list of choices: one of them is chosen (ItemIndex)
+TShape       a rectangle, rounded rectangle, ellipse or circle
+TBevel       a line or a frame that divides a form
+TPaintBox    a place to draw on yourself (OnPaint)
+</code></pre>
+<p><code>uses Pastel.Additional;</code> · source: <a href="https://github.com/azrov/pastel/blob/main/framework/src/pastel.additional.pas">framework/src/pastel.additional.pas</a></p>
+<p><strong>Contents:</strong> <a href="#tgroupbox">TGroupBox</a> · <a href="#tradiogroup">TRadioGroup</a> · <a href="#tshapekind">TShapeKind</a> · <a href="#tshape">TShape</a> · <a href="#tbevelkind">TBevelKind</a> · <a href="#tbevel">TBevel</a> · <a href="#tpaintbox">TPaintBox</a></p>
+<h2 id="types"><a class="anchor" href="#types">#</a>Types</h2>
+<h3 id="tgroupbox"><a class="anchor" href="#tgroupbox">#</a>TGroupBox</h3>
+<pre><code class="language-pascal">type TGroupBox = class(TBox)
+</code></pre>
+<p>A frame with a title (Text) around controls that belong together. Its
+controls are placed freely (Left, Top) like in Delphi; Layout = Flow stacks them.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>constructor Create(AOwner: TComponent)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function TitleHeight: Integer</code></td>
+<td>Height of the title row; free-placed controls start below it (Top &gt;= TitleHeight).</td>
+</tr>
+<tr>
+<td><code>property Text: string</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Layout</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="tradiogroup"><a class="anchor" href="#tradiogroup">#</a>TRadioGroup</h3>
+<pre><code class="language-pascal">type TRadioGroup = class(TControl)
+</code></pre>
+<p>A framed list of choices; one is chosen at a time. Items = ('Cash', 'Card');
+ItemIndex is the chosen one (-1: none). Arrow keys move the choice.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>constructor Create(AOwner: TComponent)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>destructor Destroy</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>function ItemRect(Index: Integer): TRectI</code></td>
+<td>The place of item Index (for tests and custom drawing).</td>
+</tr>
+<tr>
+<td><code>property Value: string</code></td>
+<td>The text of the chosen item, '' when none is chosen.</td>
+</tr>
+<tr>
+<td><code>property Text: string</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Items: TStrings</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property ItemIndex: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Columns: Integer</code></td>
+<td>The items fill the columns from top to bottom.</td>
+</tr>
+<tr>
+<td><code>property OnChange: TNotifyEvent</code></td>
+<td>The user chose another item.</td>
+</tr>
+</tbody></table>
+<h3 id="tshapekind"><a class="anchor" href="#tshapekind">#</a>TShapeKind</h3>
+<pre><code class="language-pascal">type TShapeKind = (skRectangle, skRoundRect, skEllipse, skCircle)
+</code></pre>
+<ul>
+<li><code>skRectangle</code></li>
+<li><code>skRoundRect</code></li>
+<li><code>skEllipse</code></li>
+<li><code>skCircle</code></li>
+</ul>
+<h3 id="tshape"><a class="anchor" href="#tshape">#</a>TShape</h3>
+<pre><code class="language-pascal">type TShape = class(TControl)
+</code></pre>
+<p>A rectangle, rounded rectangle, ellipse or circle. Color fills it (default: the
+theme's surface), BorderColor and BorderWidth outline it.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>constructor Create(AOwner: TComponent)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Shape: TShapeKind</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Color: TColor32</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property BorderColor: TColor32</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property BorderWidth: Integer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Radius: Integer</code></td>
+<td>The corners of a RoundRect.</td>
+</tr>
+</tbody></table>
+<h3 id="tbevelkind"><a class="anchor" href="#tbevelkind">#</a>TBevelKind</h3>
+<pre><code class="language-pascal">type TBevelKind = (bkHorizontal, bkVertical, bkFrame)
+</code></pre>
+<ul>
+<li><code>bkHorizontal</code></li>
+<li><code>bkVertical</code></li>
+<li><code>bkFrame</code></li>
+</ul>
+<h3 id="tbevel"><a class="anchor" href="#tbevel">#</a>TBevel</h3>
+<pre><code class="language-pascal">type TBevel = class(TControl)
+</code></pre>
+<p>A thin line across (Horizontal), down (Vertical) or a frame around its place.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>property Kind: TBevelKind</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property Color: TColor32</code></td>
+<td>The line's color; 0: the theme's border color.</td>
+</tr>
+</tbody></table>
+<h3 id="tpaintbox"><a class="anchor" href="#tpaintbox">#</a>TPaintBox</h3>
+<pre><code class="language-pascal">type TPaintBox = class(TControl)
+</code></pre>
+<p>A place to draw on yourself: OnPaint gets the canvas, clipped to the box;
+Bounds tells where the box is. Invalidate draws it again. The mouse events
+give X, Y inside the box. Without OnPaint a thin frame shows where it is.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>property Color: TColor32</code></td>
+<td>The background; 0: none.</td>
+</tr>
+<tr>
+<td><code>property OnPaint: TPaintEvent</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property OnMouseDown: TPaintMouseEvent</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property OnMouseMove: TPaintMouseEvent</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property OnMouseUp: TPaintMouseEvent</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>property OnClick: TNotifyEvent</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<h2 id="other-types"><a class="anchor" href="#other-types">#</a>Other types</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>type TPaintEvent = procedure(Sender: TObject; Canvas: TCanvas32)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>type TPaintMouseEvent = procedure(Sender: TObject; X: Integer; Y: Integer)</code></td>
+<td></td>
+</tr>
+</tbody></table>
+
+      </article>
+      <p class="edit mt-5"><a href="https://github.com/azrov/pastel/edit/main/docs/api/pastel.additional.md">Improve this page on GitHub</a></p>
+    </main>
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <div class="sticky">
+        <div class="toc-title">On this page</div>
+        <a href="#types">Types</a>
+        <a href="#other-types">Other types</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer py-4 mt-5">
+  <div class="container d-flex flex-wrap gap-3 justify-content-between small text-body-secondary">
+    <span>Pastel 2.1.0-beta.4 · MIT License · built with Pastel.Markdown and Pastel.Pages</span>
+    <span class="d-flex gap-3">
+      <a href="../docs.html">Documentation</a>
+      <a href="../download.html">Download</a>
+      <a href="../contributing.html">Contributing</a>
+      <a href="https://github.com/azrov/pastel">GitHub</a>
+    </span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/delphi.min.js"></script>
+<script src="../assets/site.js"></script>
+</body>
+</html>

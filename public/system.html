@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Files, programs, HTTP and the environment · Pastel</title>
+<meta name="description" content="Pastel: a modern cross-platform app framework and toolchain for Object Pascal. Desktop, phone, web and console apps from one codebase.">
+<script>
+  try { var t = localStorage.getItem('pastel-theme'); } catch (e) {}
+  document.documentElement.dataset.bsTheme = t || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hl-dark">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body class="section-docs">
+<nav class="navbar navbar-expand-lg sticky-top site-header">
+  <div class="container-fluid px-lg-4">
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="index.html">
+      <span class="logo" aria-hidden="true"></span>Pastel
+    </a>
+        <button class="btn btn-sm btn-outline-secondary d-lg-none me-auto" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">Menu</button>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#top" aria-controls="top" aria-expanded="false" aria-label="Links">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="top">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link active" href="docs.html">Docs</a></li>
+        <li class="nav-item"><a class="nav-link" href="getting-started.html">Get started</a></li>
+        <li class="nav-item"><a class="nav-link " href="download.html">Download</a></li>
+        <li class="nav-item"><a class="nav-link " href="changelog.html">Changelog</a></li>
+      </ul>
+      <div class="search position-relative my-2 my-lg-0 me-lg-3">
+        <input id="search" class="form-control form-control-sm" type="search" placeholder="Search the docs  /" autocomplete="off" data-base="" aria-label="Search the docs">
+        <div id="results" class="dropdown-menu shadow"></div>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        <button id="theme" class="btn btn-sm btn-outline-secondary" type="button" aria-label="Light or dark" title="Light or dark"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+        <a class="btn btn-sm btn-outline-secondary" href="https://github.com/azrov/pastel">GitHub</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-lg-4">
+  <div class="row">
+    <aside class="col-lg-3 col-xl-2 docs-sidebar">
+      <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+        <div class="offcanvas-header border-bottom">
+          <h5 class="offcanvas-title" id="sidebarLabel">Documentation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+          <nav class="docs-nav w-100">
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g0" aria-expanded="false">Start</button>
+              <div class="collapse " id="g0">
+                <a href="readme.html">Overview</a>
+                <a href="docs.html">All topics</a>
+                <a href="getting-started.html">Getting started</a>
+                <a href="commands.html">The pastel command</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g1" aria-expanded="false">Handbook</button>
+              <div class="collapse " id="g1">
+                <a href="handbook/README.html">The Pastel Handbook</a>
+                <a href="handbook/01-hello.html">1. Your first program</a>
+                <a href="handbook/02-values.html">2. Values, types and variables</a>
+                <a href="handbook/03-decisions-loops.html">3. Decisions and loops</a>
+                <a href="handbook/04-routines.html">4. Procedures and functions</a>
+                <a href="handbook/05-structured-types.html">5. Arrays, records, enumerations and sets</a>
+                <a href="handbook/06-strings.html">6. Text</a>
+                <a href="handbook/07-units.html">7. Units</a>
+                <a href="handbook/08-classes.html">8. Classes and objects</a>
+                <a href="handbook/09-exceptions.html">9. When things go wrong</a>
+                <a href="handbook/10-generics.html">10. Lists, dictionaries and generics</a>
+                <a href="handbook/11-files-json.html">11. Files and JSON</a>
+                <a href="handbook/12-testing.html">12. Testing</a>
+                <a href="handbook/13-interfaces.html">13. Interfaces and the command line</a>
+                <a href="handbook/14-first-window.html">14. Your first window</a>
+                <a href="handbook/15-layout.html">15. Layout</a>
+                <a href="handbook/16-grids-and-dialogs.html">16. Grids and dialogs</a>
+                <a href="handbook/17-database.html">17. A database</a>
+                <a href="handbook/18-charts-and-reports.html">18. Charts and reports</a>
+                <a href="handbook/19-look-and-languages.html">19. Look and languages</a>
+                <a href="handbook/20-background.html">20. Work in the background</a>
+                <a href="handbook/21-phones.html">21. Phones</a>
+                <a href="handbook/22-shipping.html">22. Shipping</a>
+                <a href="handbook/appendix-a-cheat-sheet.html">Appendix A. Object Pascal at a glance</a>
+                <a href="handbook/appendix-b-from-delphi.html">Appendix B. Coming from Delphi or Lazarus</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g2" aria-expanded="false">Guides</button>
+              <div class="collapse " id="g2">
+                <a href="guide-cli.html">Writing a command-line tool</a>
+                <a href="guide-api.html">A REST API with a database</a>
+                <a href="guide-desktop.html">Building a desktop app</a>
+                <a href="guide-business.html">A business system — desktop app and server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g3" aria-expanded="false">Desktop and phone apps</button>
+              <div class="collapse " id="g3">
+                <a href="forms.html">Forms and controls</a>
+                <a href="controls.html">Controls reference</a>
+                <a href="styles.html">Styles: Fluent, Material and your own</a>
+                <a href="components.html">Writing components</a>
+                <a href="android.html">Android</a>
+                <a href="device.html">The phone&#39;s features</a>
+                <a href="java.html">Java from Pascal</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start " type="button" data-bs-toggle="collapse" data-bs-target="#g4" aria-expanded="true">Programs and services</button>
+              <div class="collapse show" id="g4">
+                <a href="console.html">Console programs</a>
+                <a href="data.html">JSON, settings and logging</a>
+                <a href="documents.html">Reports, PDF, Excel and printing</a>
+                <a href="system.html" class="current" aria-current="page">Files, programs, HTTP and the environment</a>
+                <a href="services.html">Services: programs that keep running</a>
+                <a href="web.html">Web APIs and sites: Pastel.Web</a>
+                <a href="websockets.html">WebSockets: Pastel.WebSocket</a>
+                <a href="mail.html">E-mail: Pastel.Mail</a>
+                <a href="pages.html">Web pages from templates</a>
+                <a href="markdown.html">Markdown</a>
+                <a href="database.html">Databases: Pastel.Db</a>
+                <a href="sync.html">Data that works offline: Pastel.Sync</a>
+                <a href="auth.html">Users and login: Pastel.Auth</a>
+                <a href="security.html">Passwords, tokens and signatures: Pastel.Crypto, Pastel.Jwt</a>
+                <a href="deploy.html">Deploying to a Linux server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g5" aria-expanded="false">Working with Pastel</button>
+              <div class="collapse " id="g5">
+                <a href="project.html">The project file: pastel.toml</a>
+                <a href="workflow.html">Everyday work: watch, format, libraries</a>
+                <a href="packages.html">Packages</a>
+                <a href="testing.html">Testing</a>
+                <a href="vscode.html">Pastel for Visual Studio Code</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g6" aria-expanded="false">Reference</button>
+              <div class="collapse " id="g6">
+                <a href="api/index.html">Pastel API reference</a>
+                <a href="compatibility.html">Compatibility: what stays the same</a>
+                <a href="performance.html">Performance</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g7" aria-expanded="false">Examples</button>
+              <div class="collapse " id="g7">
+                <a href="examples/components-demo.html">components-demo</a>
+                <a href="examples/components.html">components</a>
+                <a href="examples/contacts.html">contacts</a>
+                <a href="examples/dupfinder.html">dupfinder</a>
+                <a href="examples/notepad.html">notepad</a>
+                <a href="examples/notes-api.html">notes-api</a>
+                <a href="examples/pocket-app.html">pocket-app</a>
+                <a href="examples/pocket-cli.html">pocket-cli</a>
+                <a href="examples/pocket-core.html">pocket-core</a>
+                <a href="examples/salon-api.html">salon-api</a>
+                <a href="examples/salon-core.html">salon-core</a>
+                <a href="examples/salon-desk.html">salon-desk</a>
+                <a href="examples/weather.html">weather</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g8" aria-expanded="false">Project</button>
+              <div class="collapse " id="g8">
+                <a href="roadmap.html">Pastel roadmap to 1.0</a>
+                <a href="changelog.html">Changelog</a>
+                <a href="vscode-changelog.html">Changelog of the VS Code extension</a>
+                <a href="contributing.html">Contributing to Pastel</a>
+                <a href="security-policy.html">Security</a>
+                <a href="code-of-conduct.html">Code of conduct</a>
+                <a href="announcing-1.0.html">Announcing Pastel 1.0</a>
+              </div>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </aside>
+    <main class="col-12 col-lg-9 col-xl-8 docs-main">
+      <article class="markdown">
+<h1 id="files-programs-http-and-the-environment"><a class="anchor" href="#files-programs-http-and-the-environment">#</a>Files, programs, HTTP and the environment</h1>
+<table>
+<thead>
+<tr>
+<th>Unit</th>
+<th>For</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Pastel.Files</code></td>
+<td>Reading and writing files, folders, paths, sizes</td>
+</tr>
+<tr>
+<td><code>Pastel.Process</code></td>
+<td>Running other programs and reading their output</td>
+</tr>
+<tr>
+<td><code>Pastel.Http</code></td>
+<td>HTTP and HTTPS requests, JSON APIs, downloads</td>
+</tr>
+<tr>
+<td><code>Pastel.Env</code></td>
+<td>Environment variables in UTF-8 on every system</td>
+</tr>
+</tbody></table>
+<p>All text is UTF-8, and errors say in plain words what went wrong and with which file, program or address.</p>
+<h2 id="files-pastelfiles"><a class="anchor" href="#files-pastelfiles">#</a>Files: <code>Pastel.Files</code></h2>
+<pre><code class="language-pascal">uses Pastel.Files;
+
+Text := ReadText('notes.txt');
+WriteText('out/report.txt', Text);              // creates out/ when needed
+AppendText('logs/app.log', 'started' + LineEnding);
+for Line in ReadLines('list.txt') do ...
+WriteLines('names.txt', ['Ali', 'Ayşe']);
+
+for F in ListFiles('photos', '*.jpg', True) do  // True: also in sub-folders
+  WriteLn(F, '  ', FormatSize(FileSize(F)));    // photos/a.jpg  1.4 MB
+</code></pre>
+<p><code>WriteText</code> never leaves a half-written file: it writes a temporary file and puts it in place at the end, so a crash or a full disk keeps the old content.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>ReadText</code>, <code>WriteText</code>, <code>AppendText</code></td>
+<td>Whole files as text (a UTF-8 byte order mark is dropped)</td>
+</tr>
+<tr>
+<td><code>ReadLines</code>, <code>WriteLines</code></td>
+<td>Line by line</td>
+</tr>
+<tr>
+<td><code>ReadBytes</code>, <code>WriteBytes</code></td>
+<td>Binary data (<code>TBytes</code>)</td>
+</tr>
+<tr>
+<td><code>ListFiles(Dir, Pattern, Recursive)</code></td>
+<td>Full paths, sorted</td>
+</tr>
+<tr>
+<td><code>ListDirs(Dir)</code></td>
+<td>Sub-folders, sorted</td>
+</tr>
+<tr>
+<td><code>EnsureDir(Dir)</code></td>
+<td>Creates the folder and its parents</td>
+</tr>
+<tr>
+<td><code>CopyFile(Src, Dest)</code>, <code>MoveFile(Src, Dest)</code></td>
+<td>Create the destination folder; keep the time of the file</td>
+</tr>
+<tr>
+<td><code>DeleteFileIfExists(Name)</code>, <code>DeleteDir(Dir)</code></td>
+<td><code>DeleteDir</code> removes everything inside</td>
+</tr>
+<tr>
+<td><code>FileSize</code>, <code>FileModified</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>JoinPath(['data', 'users', 'ali.json'])</code></td>
+<td>With <code>/</code> or <code>\</code> for the system</td>
+</tr>
+<tr>
+<td><code>RelativePath(File, BaseDir)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>AppDir</code>, <code>HomeDir</code>, <code>MakeTempDir</code></td>
+<td>The program's folder, the user's folder, a new empty temporary folder</td>
+</tr>
+<tr>
+<td><code>FormatSize(1536)</code></td>
+<td><code>'1.5 KB'</code></td>
+</tr>
+</tbody></table>
+<p>Errors raise <code>EFileError</code>: <code>cannot read &quot;config.txt&quot;: cannot open it (does it exist, and may this program read it?)</code>.</p>
+<h2 id="programs-pastelprocess"><a class="anchor" href="#programs-pastelprocess">#</a>Programs: <code>Pastel.Process</code></h2>
+<pre><code class="language-pascal">uses Pastel.Process;
+
+Branch := RunOutput('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
+
+R := Run('tar', ['czf', 'backup.tgz', 'data']);
+if not R.Ok then
+  WriteLn('tar failed: ', R.Errors);
+
+Code := RunLive('apt-get', ['update']);    // its output goes straight to the terminal
+R := Shell('ls *.log | wc -l');            // a shell command line
+if Which('ffmpeg') = '' then
+  WriteLn('please install ffmpeg');
+</code></pre>
+<p>Arguments are passed exactly as given, one by one: spaces, quotes, <code>*</code> and <code>$</code> need no escaping and are not interpreted. Only <code>Shell</code> goes through the system shell (<code>/bin/sh</code>, or <code>cmd.exe</code> on Windows) for pipes, wildcards and redirections.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Run(Exe, Args)</code></td>
+<td>Waits, returns <code>TRunResult</code></td>
+</tr>
+<tr>
+<td><code>RunOutput(Exe, Args)</code></td>
+<td>The output without the last line break; raises <code>EProcessError</code> with the program's error text when it fails</td>
+</tr>
+<tr>
+<td><code>RunLive(Exe, Args)</code></td>
+<td>Shares this program's terminal, returns the exit code</td>
+</tr>
+<tr>
+<td><code>Shell(CommandLine)</code></td>
+<td>Like <code>Run</code>, through the shell</td>
+</tr>
+<tr>
+<td><code>Which(Name)</code></td>
+<td>Full path of a program on <code>PATH</code>, or <code>''</code></td>
+</tr>
+</tbody></table>
+<p><code>TRunResult</code> has <code>ExitCode</code>, <code>Output</code>, <code>Errors</code>, <code>TimedOut</code>, <code>Duration</code> (ms), <code>Ok</code>, <code>Text</code> (the output without the final line break) and <code>Lines</code>.</p>
+<p>Options:</p>
+<pre><code class="language-pascal">Opts := Default(TRunOptions);
+Opts.Dir := '/srv/app';                   // working folder
+Opts.Input := 'yes' + LineEnding;         // sent to its standard input
+Opts.Env := ['LANG=C', 'APP_MODE=test'];  // added to the environment
+Opts.Timeout := 30000;                    // ms; the program is stopped after that
+Opts.MergeErrors := True;                 // standard error into Output too
+R := Run('./migrate', ['--all'], Opts);
+</code></pre>
+<p>A failure reads like <code>&quot;git&quot; failed (exit code 128): fatal: not a git repository</code>. A missing program: <code>program &quot;ffmpeg&quot; was not found (is it installed and on PATH?)</code>.</p>
+<h2 id="http-pastelhttp"><a class="anchor" href="#http-pastelhttp">#</a>HTTP: <code>Pastel.Http</code></h2>
+<pre><code class="language-pascal">uses Pastel.Http, Pastel.Json;
+
+R := HttpGet('https://api.example.com/users/1');
+if R.Ok then
+  WriteLn(R.Body);
+
+Doc := HttpGetJson('https://api.example.com/users');   // raises unless 2xx
+try
+  for User in JArray(Doc, 'items') do
+    WriteLn(JStr(User, 'name'));
+finally
+  Doc.Free;
+end;
+
+HttpDownload('https://example.com/file.zip', 'downloads/file.zip');
+</code></pre>
+<p>For an API you call often, use a client:</p>
+<pre><code class="language-pascal">Api := THttpClient.Create('https://api.example.com/v1');
+try
+  Api.BearerToken := Config.Require('api.token');
+  Api.Timeout := 10000;
+  Api.Headers := ['Accept-Language: tr'];
+
+  R := Api.Get('/orders', ['status', 'open', 'page', '2']);   // /orders?status=open&amp;page=2
+  R.RaiseForStatus;
+  R := Api.PostJson('/orders', '{&quot;item&quot;: 42, &quot;count&quot;: 1}');
+  R := Api.PostForm('/login', ['user', 'ali', 'pass', Secret]);
+  R := Api.Delete('/orders/7');
+finally
+  Api.Free;
+end;
+</code></pre>
+<table>
+<thead>
+<tr>
+<th><code>THttpClient</code></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Get(Path)</code>, <code>Get(Path, Query)</code>, <code>Head</code>, <code>Delete</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Post</code>, <code>Put</code>, <code>Patch(Path, Body, ContentType)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>PostJson</code>, <code>PutJson(Path, Json)</code></td>
+<td>Text or a <code>TJSONData</code></td>
+</tr>
+<tr>
+<td><code>PostForm(Path, ['name', 'value', ...])</code></td>
+<td>Like an HTML form</td>
+</tr>
+<tr>
+<td><code>Request(Method, Path, Body, ContentType)</code></td>
+<td>Any method</td>
+</tr>
+<tr>
+<td><code>Download(Path, FileName)</code></td>
+<td>Streams to the file; nothing is left behind when it fails</td>
+</tr>
+<tr>
+<td><code>BaseUrl</code>, <code>Headers</code>, <code>BearerToken</code>, <code>UserName</code>/<code>Password</code></td>
+<td>Sent with every request</td>
+</tr>
+<tr>
+<td><code>Timeout</code></td>
+<td>Milliseconds for connecting and for each read (default 30000)</td>
+</tr>
+<tr>
+<td><code>FollowRedirects</code></td>
+<td>Default on</td>
+</tr>
+<tr>
+<td><code>OnProgress</code></td>
+<td><code>procedure(Done, Total: Int64)</code> while the answer arrives</td>
+</tr>
+<tr>
+<td><code>Proxy</code></td>
+<td><code>'http://host:port'</code>, or <code>'none'</code></td>
+</tr>
+</tbody></table>
+<p><code>THttpResponse</code> has <code>Status</code>, <code>StatusText</code>, <code>Body</code>, <code>Headers</code>, <code>Url</code> (after redirects), <code>Duration</code>, and:</p>
+<ul>
+<li><code>Ok</code>: status 200–299. Error statuses (404, 500, …) are normal answers, not exceptions.</li>
+<li><code>Header('content-type')</code>: a header by name, any case.</li>
+<li><code>Json</code>: the body parsed (you free it).</li>
+<li><code>RaiseForStatus</code>: <code>EHttpError</code> unless <code>Ok</code>, with the start of the body: <code>GET https://api.example.com/x: 404 Not Found: no such user</code>.</li>
+</ul>
+<p>When no answer comes at all, <code>EHttpError</code> says why:</p>
+<pre><code>cannot find server &quot;api.exmaple.com&quot; (check the address and the network)
+cannot connect to &quot;localhost&quot; (is the server running, and is the port right?)
+certificate of &quot;test.local&quot; is not trusted: self-signed certificate
+the proxy 10.0.0.1 wants a user name and password (http://user:pass@host:port)
+</code></pre>
+<h3 id="https"><a class="anchor" href="#https">#</a>HTTPS</h3>
+<p>Certificates are checked, including that they belong to the host name, just like a browser. Free Pascal 3.2.2 on its own does not do this, nor does it find OpenSSL 3 (what current Linux systems ship) or go through a proxy for HTTPS; <code>Pastel.Http</code> takes care of all three.</p>
+<ul>
+<li><strong>Linux</strong>: needs <code>libssl3</code> (or 1.1), installed on nearly every system. <code>pastel doctor</code> checks it.</li>
+<li><strong>Windows</strong>: nothing to install: <code>Pastel.Http</code> uses Windows' own HTTP (WinINet), with Windows' certificates and proxy settings. (<code>PASTEL_HTTP=fpc</code> uses Free Pascal's instead, which needs <code>libssl-3-x64.dll</code>, <code>libcrypto-3-x64.dll</code> and <code>cacert.pem</code> next to the program.)</li>
+<li><strong>Android</strong>: the phone's own HTTP, also without OpenSSL (<a href="android.html">android.md</a>).</li>
+<li><strong>Own certificates</strong> (a company CA, a test server): <code>SSL_CERT_FILE=/path/ca.pem</code>.</li>
+<li><code>VerifyCertificates := False</code> turns the check off. Only for tests: anyone in between could read and change the traffic.</li>
+</ul>
+<h3 id="proxies"><a class="anchor" href="#proxies">#</a>Proxies</h3>
+<p><code>HTTPS_PROXY</code>, <code>HTTP_PROXY</code> and <code>NO_PROXY</code> are followed like curl does (<code>NO_PROXY=.internal,localhost</code>). <code>localhost</code> never goes through a proxy.</p>
+<h3 id="limits"><a class="anchor" href="#limits">#</a>Limits</h3>
+<p>Addresses are looked up as IPv4; a server reachable only over IPv6 cannot be used yet (a limit of Free Pascal 3.2.2's sockets). Each request opens its own connection.</p>
+<h2 id="environment-pastelenv"><a class="anchor" href="#environment-pastelenv">#</a>Environment: <code>Pastel.Env</code></h2>
+<pre><code class="language-pascal">Port := GetEnv('PORT', '8080');
+if HasEnv('CI') then ...
+SetEnv('APP_MODE', 'test');     // also seen by programs started afterwards
+for S in EnvList do WriteLn(S);  // NAME=value
+</code></pre>
+<p>On Windows, Free Pascal's <code>GetEnvironmentVariable</code> turns letters outside the old code page into <code>?</code> or plain letters (<code>şeker</code> becomes <code>seker</code>). <code>GetEnv</code> gives the real text. All Pastel units use it.</p>
+<h2 id="serial-ports-pastelserial"><a class="anchor" href="#serial-ports-pastelserial">#</a>Serial ports: <code>Pastel.Serial</code></h2>
+<p>Scales, barcode readers, cash drawers, receipt printers, Arduino boards:</p>
+<pre><code class="language-pascal">Port := TSerialPort.Create;
+try
+  Port.Open('/dev/ttyUSB0', 9600);         // Windows: 'COM3'; ListSerialPorts: the ones there
+  Port.WriteText('W'#13);
+  Weight := Port.ReadLine(2000);           // a line, 2 seconds at most ('' when none came)
+finally
+  Port.Free;
+end;
+</code></pre>
+<p><code>DataBits</code>, <code>StopBits</code>, <code>Parity</code>, <code>Flow</code> (none, hardware, software) before <code>Open</code>; <code>Read</code>, <code>Write</code>, <code>SetDTR</code>,
+<code>SetRTS</code>, <code>Flush</code>. On Linux the user must be in the <code>dialout</code> group (<code>sudo usermod -aG dialout $USER</code>).</p>
+<h2 id="long-work-without-a-frozen-window-runinbackground"><a class="anchor" href="#long-work-without-a-frozen-window-runinbackground">#</a>Long work without a frozen window: <code>RunInBackground</code></h2>
+<pre><code class="language-pascal">uses Pastel.Workers;
+
+RunInBackground(@LoadRows, @RowsLoaded, Job);       // Job: what the work needs, and its results
+
+procedure TMainForm.LoadRows(Sender: TObject);      // a thread of its own: no controls here
+begin
+  TJob(TBackgroundTask(Sender).Data).Rows := Db.Query('select ...', []);
+end;
+
+procedure TMainForm.RowsLoaded(Sender: TObject);    // the main thread, after it
+begin
+  with TBackgroundTask(Sender) do
+    if Error &lt;&gt; '' then ShowMessage(Error) else ShowRows(TJob(Data).Rows);
+  TBackgroundTask(Sender).Data.Free;
+end;
+</code></pre>
+<p>The window goes on painting and answering meanwhile. <code>Cancel</code> (before Done): Done is not called and <code>Data</code> is
+freed; the work itself runs to its end. A <code>TDatabase</code> may be used from such threads (each takes a connection
+of its pool).</p>
+<h2 id="crash-reports-pastelcrashreport"><a class="anchor" href="#crash-reports-pastelcrashreport">#</a>Crash reports: <code>Pastel.CrashReport</code></h2>
+<pre><code class="language-pascal">EnableCrashReports('https://api.example.com/crashes', '1.4.2');     // at the start
+...
+except
+  on E: Exception do
+    ReportError(E, 'sync');         // a caught error worth knowing about
+end;
+</code></pre>
+<p>An exception nobody caught is written into a file before the program ends; the next start sends the waiting
+reports to the address (a JSON <code>POST</code>: app, version, system, error, message, where, stack) on a thread of its
+own and removes them.</p>
+<p>An exception that an event handler of a window app does not catch does not end the app: Pastel shows its
+message and the app goes on (as in Delphi), and with crash reports on it is reported too (<code>where</code>: <code>event</code>).
+<code>Application.OnException</code> does something else with it (a status line, a log); <code>Abort</code> is quiet:</p>
+<pre><code class="language-pascal">Application.OnException := @AppError;
+
+procedure TMainForm.AppError(Sender: TObject; E: Exception);
+begin
+  StatusLabel.Text := E.Message;
+end;
+</code></pre>
+<h2 id="updating-itself-pastelupdater"><a class="anchor" href="#updating-itself-pastelupdater">#</a>Updating itself: <code>Pastel.Updater</code></h2>
+<pre><code class="language-pascal">if CheckForUpdate('https://example.com/shop/update.json', '1.4.2', Update) then
+  if Confirm('Version ' + Update.Version + ' is there. Update now?') then
+  begin
+    InstallUpdate(DownloadUpdate(Update));       // checked against its SHA-256
+    Application.Terminate;
+  end;
+</code></pre>
+<p><code>pastel update-manifest https://example.com/shop/ &quot;What is new&quot;</code> writes <code>dist/update.json</code> from the packages in
+<code>dist/</code> (the setup <code>.exe</code>, the <code>.AppImage</code>, the <code>.apk</code>, each with its SHA-256); put it and the packages at that
+address. Windows runs the installer silently (it starts the app again), an AppImage replaces itself, Android asks
+the user to install the <code>.apk</code> (<code>[package.android] permissions = [&quot;install_updates&quot;]</code>; apps of Google Play update
+through Play).</p>
+
+      </article>
+      <p class="edit mt-5"><a href="https://github.com/azrov/pastel/edit/main/docs/system.md">Improve this page on GitHub</a></p>
+    </main>
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <div class="sticky">
+        <div class="toc-title">On this page</div>
+        <a href="#files-pastelfiles">Files: Pastel.Files</a>
+        <a href="#programs-pastelprocess">Programs: Pastel.Process</a>
+        <a href="#http-pastelhttp">HTTP: Pastel.Http</a>
+        <a href="#environment-pastelenv">Environment: Pastel.Env</a>
+        <a href="#serial-ports-pastelserial">Serial ports: Pastel.Serial</a>
+        <a href="#long-work-without-a-frozen-window-runinbackground">Long work without a frozen window: RunInBackground</a>
+        <a href="#crash-reports-pastelcrashreport">Crash reports: Pastel.CrashReport</a>
+        <a href="#updating-itself-pastelupdater">Updating itself: Pastel.Updater</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer py-4 mt-5">
+  <div class="container d-flex flex-wrap gap-3 justify-content-between small text-body-secondary">
+    <span>Pastel 2.1.0-beta.4 · MIT License · built with Pastel.Markdown and Pastel.Pages</span>
+    <span class="d-flex gap-3">
+      <a href="docs.html">Documentation</a>
+      <a href="download.html">Download</a>
+      <a href="contributing.html">Contributing</a>
+      <a href="https://github.com/azrov/pastel">GitHub</a>
+    </span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/delphi.min.js"></script>
+<script src="assets/site.js"></script>
+</body>
+</html>

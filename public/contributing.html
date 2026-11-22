@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contributing to Pastel · Pastel</title>
+<meta name="description" content="Pastel: a modern cross-platform app framework and toolchain for Object Pascal. Desktop, phone, web and console apps from one codebase.">
+<script>
+  try { var t = localStorage.getItem('pastel-theme'); } catch (e) {}
+  document.documentElement.dataset.bsTheme = t || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hl-dark">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body class="section-docs">
+<nav class="navbar navbar-expand-lg sticky-top site-header">
+  <div class="container-fluid px-lg-4">
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="index.html">
+      <span class="logo" aria-hidden="true"></span>Pastel
+    </a>
+        <button class="btn btn-sm btn-outline-secondary d-lg-none me-auto" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">Menu</button>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#top" aria-controls="top" aria-expanded="false" aria-label="Links">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="top">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link active" href="docs.html">Docs</a></li>
+        <li class="nav-item"><a class="nav-link" href="getting-started.html">Get started</a></li>
+        <li class="nav-item"><a class="nav-link " href="download.html">Download</a></li>
+        <li class="nav-item"><a class="nav-link " href="changelog.html">Changelog</a></li>
+      </ul>
+      <div class="search position-relative my-2 my-lg-0 me-lg-3">
+        <input id="search" class="form-control form-control-sm" type="search" placeholder="Search the docs  /" autocomplete="off" data-base="" aria-label="Search the docs">
+        <div id="results" class="dropdown-menu shadow"></div>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        <button id="theme" class="btn btn-sm btn-outline-secondary" type="button" aria-label="Light or dark" title="Light or dark"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+        <a class="btn btn-sm btn-outline-secondary" href="https://github.com/azrov/pastel">GitHub</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-lg-4">
+  <div class="row">
+    <aside class="col-lg-3 col-xl-2 docs-sidebar">
+      <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+        <div class="offcanvas-header border-bottom">
+          <h5 class="offcanvas-title" id="sidebarLabel">Documentation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+          <nav class="docs-nav w-100">
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g0" aria-expanded="false">Start</button>
+              <div class="collapse " id="g0">
+                <a href="readme.html">Overview</a>
+                <a href="docs.html">All topics</a>
+                <a href="getting-started.html">Getting started</a>
+                <a href="commands.html">The pastel command</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g1" aria-expanded="false">Handbook</button>
+              <div class="collapse " id="g1">
+                <a href="handbook/README.html">The Pastel Handbook</a>
+                <a href="handbook/01-hello.html">1. Your first program</a>
+                <a href="handbook/02-values.html">2. Values, types and variables</a>
+                <a href="handbook/03-decisions-loops.html">3. Decisions and loops</a>
+                <a href="handbook/04-routines.html">4. Procedures and functions</a>
+                <a href="handbook/05-structured-types.html">5. Arrays, records, enumerations and sets</a>
+                <a href="handbook/06-strings.html">6. Text</a>
+                <a href="handbook/07-units.html">7. Units</a>
+                <a href="handbook/08-classes.html">8. Classes and objects</a>
+                <a href="handbook/09-exceptions.html">9. When things go wrong</a>
+                <a href="handbook/10-generics.html">10. Lists, dictionaries and generics</a>
+                <a href="handbook/11-files-json.html">11. Files and JSON</a>
+                <a href="handbook/12-testing.html">12. Testing</a>
+                <a href="handbook/13-interfaces.html">13. Interfaces and the command line</a>
+                <a href="handbook/14-first-window.html">14. Your first window</a>
+                <a href="handbook/15-layout.html">15. Layout</a>
+                <a href="handbook/16-grids-and-dialogs.html">16. Grids and dialogs</a>
+                <a href="handbook/17-database.html">17. A database</a>
+                <a href="handbook/18-charts-and-reports.html">18. Charts and reports</a>
+                <a href="handbook/19-look-and-languages.html">19. Look and languages</a>
+                <a href="handbook/20-background.html">20. Work in the background</a>
+                <a href="handbook/21-phones.html">21. Phones</a>
+                <a href="handbook/22-shipping.html">22. Shipping</a>
+                <a href="handbook/appendix-a-cheat-sheet.html">Appendix A. Object Pascal at a glance</a>
+                <a href="handbook/appendix-b-from-delphi.html">Appendix B. Coming from Delphi or Lazarus</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g2" aria-expanded="false">Guides</button>
+              <div class="collapse " id="g2">
+                <a href="guide-cli.html">Writing a command-line tool</a>
+                <a href="guide-api.html">A REST API with a database</a>
+                <a href="guide-desktop.html">Building a desktop app</a>
+                <a href="guide-business.html">A business system — desktop app and server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g3" aria-expanded="false">Desktop and phone apps</button>
+              <div class="collapse " id="g3">
+                <a href="forms.html">Forms and controls</a>
+                <a href="controls.html">Controls reference</a>
+                <a href="styles.html">Styles: Fluent, Material and your own</a>
+                <a href="components.html">Writing components</a>
+                <a href="android.html">Android</a>
+                <a href="device.html">The phone&#39;s features</a>
+                <a href="java.html">Java from Pascal</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g4" aria-expanded="false">Programs and services</button>
+              <div class="collapse " id="g4">
+                <a href="console.html">Console programs</a>
+                <a href="data.html">JSON, settings and logging</a>
+                <a href="documents.html">Reports, PDF, Excel and printing</a>
+                <a href="system.html">Files, programs, HTTP and the environment</a>
+                <a href="services.html">Services: programs that keep running</a>
+                <a href="web.html">Web APIs and sites: Pastel.Web</a>
+                <a href="websockets.html">WebSockets: Pastel.WebSocket</a>
+                <a href="mail.html">E-mail: Pastel.Mail</a>
+                <a href="pages.html">Web pages from templates</a>
+                <a href="markdown.html">Markdown</a>
+                <a href="database.html">Databases: Pastel.Db</a>
+                <a href="sync.html">Data that works offline: Pastel.Sync</a>
+                <a href="auth.html">Users and login: Pastel.Auth</a>
+                <a href="security.html">Passwords, tokens and signatures: Pastel.Crypto, Pastel.Jwt</a>
+                <a href="deploy.html">Deploying to a Linux server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g5" aria-expanded="false">Working with Pastel</button>
+              <div class="collapse " id="g5">
+                <a href="project.html">The project file: pastel.toml</a>
+                <a href="workflow.html">Everyday work: watch, format, libraries</a>
+                <a href="packages.html">Packages</a>
+                <a href="testing.html">Testing</a>
+                <a href="vscode.html">Pastel for Visual Studio Code</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g6" aria-expanded="false">Reference</button>
+              <div class="collapse " id="g6">
+                <a href="api/index.html">Pastel API reference</a>
+                <a href="compatibility.html">Compatibility: what stays the same</a>
+                <a href="performance.html">Performance</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g7" aria-expanded="false">Examples</button>
+              <div class="collapse " id="g7">
+                <a href="examples/components-demo.html">components-demo</a>
+                <a href="examples/components.html">components</a>
+                <a href="examples/contacts.html">contacts</a>
+                <a href="examples/dupfinder.html">dupfinder</a>
+                <a href="examples/notepad.html">notepad</a>
+                <a href="examples/notes-api.html">notes-api</a>
+                <a href="examples/pocket-app.html">pocket-app</a>
+                <a href="examples/pocket-cli.html">pocket-cli</a>
+                <a href="examples/pocket-core.html">pocket-core</a>
+                <a href="examples/salon-api.html">salon-api</a>
+                <a href="examples/salon-core.html">salon-core</a>
+                <a href="examples/salon-desk.html">salon-desk</a>
+                <a href="examples/weather.html">weather</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start " type="button" data-bs-toggle="collapse" data-bs-target="#g8" aria-expanded="true">Project</button>
+              <div class="collapse show" id="g8">
+                <a href="roadmap.html">Pastel roadmap to 1.0</a>
+                <a href="changelog.html">Changelog</a>
+                <a href="vscode-changelog.html">Changelog of the VS Code extension</a>
+                <a href="contributing.html" class="current" aria-current="page">Contributing to Pastel</a>
+                <a href="security-policy.html">Security</a>
+                <a href="code-of-conduct.html">Code of conduct</a>
+                <a href="announcing-1.0.html">Announcing Pastel 1.0</a>
+              </div>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </aside>
+    <main class="col-12 col-lg-9 col-xl-8 docs-main">
+      <article class="markdown">
+<h1 id="contributing-to-pastel"><a class="anchor" href="#contributing-to-pastel">#</a>Contributing to Pastel</h1>
+<p>Thank you for helping! Pastel is a Delphi-like way to build console programs, services and desktop apps in Object Pascal, with VS Code and Free Pascal. Bug reports, ideas, documentation fixes and code are all welcome.</p>
+<h2 id="asking-and-reporting"><a class="anchor" href="#asking-and-reporting">#</a>Asking and reporting</h2>
+<ul>
+<li><strong>A bug:</strong> open an issue with the <em>Bug</em> form. The output of <code>pastel version</code> and <code>pastel doctor</code>, and the smallest project that shows the problem, help most.</li>
+<li><strong>An idea:</strong> open an issue with the <em>Idea</em> form and describe what you want to build, not only the feature. <a href="roadmap.html">ROADMAP.md</a> shows what is planned.</li>
+<li><strong>A security problem:</strong> do not open an issue; see <a href="security-policy.html">SECURITY.md</a>.</li>
+</ul>
+<h2 id="getting-the-code-running"><a class="anchor" href="#getting-the-code-running">#</a>Getting the code running</h2>
+<p>You need Free Pascal 3.2.2 (<code>sudo apt install fpc fpc-source</code>), Node.js 20 for the VS Code extension, and for the desktop tests SDL2 and FreeType (<code>sudo apt install libsdl2-2.0-0 libfreetype6</code>).</p>
+<pre><code class="language-sh">./build.sh                       # bin/pastel
+(cd vscode &amp;&amp; npm ci &amp;&amp; npm run compile)
+sh build.sh test                 # everything: unit, framework, example and end-to-end tests
+</code></pre>
+<p>The database tests also run against PostgreSQL and MySQL/MariaDB when <code>PASTEL_TEST_POSTGRES_URL</code> and <code>PASTEL_TEST_MYSQL_URL</code> are set (see <code>.github/workflows/ci.yml</code>). The Android end-to-end tests run when <code>ppcrossa64</code> and the ARM 64-bit binutils are there, the <code>.apk</code> ones with <code>aapt</code>, <code>zipalign</code>, <code>apksigner</code> and <code>android-sdk-platform-23</code> (see <a href="android.html">docs/android.md</a>). Windows programs are tested too when Wine is installed (<code>sudo apt install wine64</code>): the salon example is built for Windows and its screens, database and sync run under Wine. The VS Code extension has its own tests: <code>npm test</code> and <code>npm run test:integration -- &lt;a new app project&gt;</code> in <code>vscode/</code>.</p>
+<h2 id="how-the-repository-is-organized"><a class="anchor" href="#how-the-repository-is-organized">#</a>How the repository is organized</h2>
+<table>
+<thead>
+<tr>
+<th>Folder</th>
+<th>What is in it</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>cli/</code></td>
+<td>The <code>pastel</code> tool: commands, builder, code generation for forms, packaging</td>
+</tr>
+<tr>
+<td><code>framework/src/</code></td>
+<td>The units programs use (<code>Pastel.*</code>); <code>framework/tests/</code> tests them</td>
+</tr>
+<tr>
+<td><code>framework/android/</code></td>
+<td>Pastel's small Java activity for Android and its <code>classes.dex</code> (rebuilt with <code>tools/android-dex.sh</code> when the Java changes)</td>
+</tr>
+<tr>
+<td><code>vscode/</code></td>
+<td>The VS Code extension: designer, Pascal code intelligence, tasks</td>
+</tr>
+<tr>
+<td><code>examples/</code></td>
+<td>Complete programs; each has tests and is built in CI</td>
+</tr>
+<tr>
+<td><code>docs/</code></td>
+<td>The guides and the API reference (<code>docs/api</code> is generated)</td>
+</tr>
+<tr>
+<td><code>tests/</code></td>
+<td>Unit tests of the tool, <code>run.sh</code> (end-to-end), <code>perf.sh</code> (performance)</td>
+</tr>
+<tr>
+<td><code>tools/</code></td>
+<td>The website (<code>tools/website</code>, a Pastel program), the release scripts, <code>android-dex.sh</code> (Pastel's Android activity) and <code>android-sqlite.sh</code> (SQLite for Android apps, kept in <code>framework/android/lib/</code>)</td>
+</tr>
+</tbody></table>
+<h2 id="making-a-change"><a class="anchor" href="#making-a-change">#</a>Making a change</h2>
+<ol>
+<li><p><strong>Discuss bigger changes first</strong> in an issue, so no work is lost.</p></li>
+<li><p><strong>Write a test</strong> for what you fix or add: a framework test (<code>framework/tests/tests/</code>), an end-to-end check (<code>tests/run.sh</code>) or a UI script (see <a href="forms.html#testing-a-form-without-a-window">docs/forms.md</a>).</p></li>
+<li><p><strong>Keep the style:</strong> <code>bin/pastel fmt cli framework tests examples</code> formats the Pascal code; the tests check it.</p></li>
+<li><p><strong>Document it, with an example, in the same change.</strong> Pastel's docs are meant to answer every &quot;how do I...?&quot; with something to copy:</p>
+<ul>
+<li>a comment above every public declaration (it becomes the API reference: <code>npm run apidoc</code> in <code>vscode/</code>);</li>
+<li>a new control or component: a section <code>### TName</code> in <a href="controls.html">docs/controls.md</a> with a <code>.pform</code> and a code example;</li>
+<li>a new command or option: <a href="commands.html">docs/commands.md</a>;</li>
+<li>a new feature: a section in the topic's page (<a href="docs.html">docs/README.md</a> lists them), and in the guide when it changes how a program is built;</li>
+<li>a new example program: a <code>README.md</code> and a line in <a href="docs.html#examples">docs/README.md</a>;</li>
+<li>a line in <a href="changelog.html">CHANGELOG.md</a>.</li>
+</ul>
+<p><code>tests/docs-coverage.sh</code> fails when a control, a command or an example has no documentation, and the website (<code>tools/website</code>) fails on broken links and #anchors.</p></li>
+<li><p><strong>Keep compatibility:</strong> from 1.0 on, nothing in <code>docs/api/stable.txt</code> may be removed or changed in 1.x; add new things instead. See <a href="compatibility.html">docs/compatibility.md</a>.</p></li>
+<li><p>Run <code>sh build.sh test</code> and open a pull request.</p></li>
+</ol>
+<h2 id="writing-style"><a class="anchor" href="#writing-style">#</a>Writing style</h2>
+<p>Pastel's documentation, messages and comments use plain, short English that non-native speakers read easily: active sentences, common words, an example before an explanation. Error messages say what went wrong and what to do (<code>hint: ...</code>).</p>
+<h2 id="license"><a class="anchor" href="#license">#</a>License</h2>
+<p>By contributing you agree that your contribution is licensed under the <a href="https://github.com/azrov/pastel/blob/main/LICENSE">MIT License</a>.</p>
+<h2 id="releasing"><a class="anchor" href="#releasing">#</a>Releasing</h2>
+<p>For maintainers. A release is made from a tag; the workflows do the rest.</p>
+<ol>
+<li>Set the version: <code>PastelVersion</code> in <code>cli/src/pastel.project.pas</code>, <code>version</code> in <code>vscode/package.json</code>, and a section <code>## &lt;version&gt;</code> at the top of <a href="changelog.html">CHANGELOG.md</a> (and of <code>vscode/CHANGELOG.md</code>).</li>
+<li><code>sh build.sh test</code> and <code>sh tests/perf.sh</code> pass; <code>npm run apidoc -- --freeze</code> in <code>vscode/</code> only if the stable API is meant to change (never within 1.x).</li>
+<li><code>git tag v1.2.3 &amp;&amp; git push --tags</code>. The <em>Release</em> workflow builds Linux (x64, ARM64) and Windows downloads, the <code>.vsix</code> and <code>install.sh</code> and publishes them with the notes from the changelog (tags with a <code>-</code>, like <code>v1.2.3-rc.1</code>, become pre-releases). For final versions, <em>Publish the VS Code extension</em> uploads it to the Marketplace and Open VSX.</li>
+<li>The <em>Website</em> workflow publishes the documentation from <code>main</code>.</li>
+</ol>
+<p>Once, for a new repository: enable GitHub Pages (source: GitHub Actions), and add the secrets <code>VSCE_PAT</code> (a token of the <code>pastel</code> publisher on the Visual Studio Marketplace) and <code>OVSX_PAT</code> (a token from open-vsx.org).</p>
+
+      </article>
+      <p class="edit mt-5"><a href="https://github.com/azrov/pastel/edit/main/CONTRIBUTING.md">Improve this page on GitHub</a></p>
+    </main>
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <div class="sticky">
+        <div class="toc-title">On this page</div>
+        <a href="#asking-and-reporting">Asking and reporting</a>
+        <a href="#getting-the-code-running">Getting the code running</a>
+        <a href="#how-the-repository-is-organized">How the repository is organized</a>
+        <a href="#making-a-change">Making a change</a>
+        <a href="#writing-style">Writing style</a>
+        <a href="#license">License</a>
+        <a href="#releasing">Releasing</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer py-4 mt-5">
+  <div class="container d-flex flex-wrap gap-3 justify-content-between small text-body-secondary">
+    <span>Pastel 2.1.0-beta.4 · MIT License · built with Pastel.Markdown and Pastel.Pages</span>
+    <span class="d-flex gap-3">
+      <a href="docs.html">Documentation</a>
+      <a href="download.html">Download</a>
+      <a href="contributing.html">Contributing</a>
+      <a href="https://github.com/azrov/pastel">GitHub</a>
+    </span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/delphi.min.js"></script>
+<script src="assets/site.js"></script>
+</body>
+</html>

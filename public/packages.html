@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Packages · Pastel</title>
+<meta name="description" content="Pastel: a modern cross-platform app framework and toolchain for Object Pascal. Desktop, phone, web and console apps from one codebase.">
+<script>
+  try { var t = localStorage.getItem('pastel-theme'); } catch (e) {}
+  document.documentElement.dataset.bsTheme = t || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hl-dark">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body class="section-docs">
+<nav class="navbar navbar-expand-lg sticky-top site-header">
+  <div class="container-fluid px-lg-4">
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="index.html">
+      <span class="logo" aria-hidden="true"></span>Pastel
+    </a>
+        <button class="btn btn-sm btn-outline-secondary d-lg-none me-auto" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">Menu</button>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#top" aria-controls="top" aria-expanded="false" aria-label="Links">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="top">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link active" href="docs.html">Docs</a></li>
+        <li class="nav-item"><a class="nav-link" href="getting-started.html">Get started</a></li>
+        <li class="nav-item"><a class="nav-link " href="download.html">Download</a></li>
+        <li class="nav-item"><a class="nav-link " href="changelog.html">Changelog</a></li>
+      </ul>
+      <div class="search position-relative my-2 my-lg-0 me-lg-3">
+        <input id="search" class="form-control form-control-sm" type="search" placeholder="Search the docs  /" autocomplete="off" data-base="" aria-label="Search the docs">
+        <div id="results" class="dropdown-menu shadow"></div>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        <button id="theme" class="btn btn-sm btn-outline-secondary" type="button" aria-label="Light or dark" title="Light or dark"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+        <a class="btn btn-sm btn-outline-secondary" href="https://github.com/azrov/pastel">GitHub</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-lg-4">
+  <div class="row">
+    <aside class="col-lg-3 col-xl-2 docs-sidebar">
+      <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+        <div class="offcanvas-header border-bottom">
+          <h5 class="offcanvas-title" id="sidebarLabel">Documentation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+          <nav class="docs-nav w-100">
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g0" aria-expanded="false">Start</button>
+              <div class="collapse " id="g0">
+                <a href="readme.html">Overview</a>
+                <a href="docs.html">All topics</a>
+                <a href="getting-started.html">Getting started</a>
+                <a href="commands.html">The pastel command</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g1" aria-expanded="false">Handbook</button>
+              <div class="collapse " id="g1">
+                <a href="handbook/README.html">The Pastel Handbook</a>
+                <a href="handbook/01-hello.html">1. Your first program</a>
+                <a href="handbook/02-values.html">2. Values, types and variables</a>
+                <a href="handbook/03-decisions-loops.html">3. Decisions and loops</a>
+                <a href="handbook/04-routines.html">4. Procedures and functions</a>
+                <a href="handbook/05-structured-types.html">5. Arrays, records, enumerations and sets</a>
+                <a href="handbook/06-strings.html">6. Text</a>
+                <a href="handbook/07-units.html">7. Units</a>
+                <a href="handbook/08-classes.html">8. Classes and objects</a>
+                <a href="handbook/09-exceptions.html">9. When things go wrong</a>
+                <a href="handbook/10-generics.html">10. Lists, dictionaries and generics</a>
+                <a href="handbook/11-files-json.html">11. Files and JSON</a>
+                <a href="handbook/12-testing.html">12. Testing</a>
+                <a href="handbook/13-interfaces.html">13. Interfaces and the command line</a>
+                <a href="handbook/14-first-window.html">14. Your first window</a>
+                <a href="handbook/15-layout.html">15. Layout</a>
+                <a href="handbook/16-grids-and-dialogs.html">16. Grids and dialogs</a>
+                <a href="handbook/17-database.html">17. A database</a>
+                <a href="handbook/18-charts-and-reports.html">18. Charts and reports</a>
+                <a href="handbook/19-look-and-languages.html">19. Look and languages</a>
+                <a href="handbook/20-background.html">20. Work in the background</a>
+                <a href="handbook/21-phones.html">21. Phones</a>
+                <a href="handbook/22-shipping.html">22. Shipping</a>
+                <a href="handbook/appendix-a-cheat-sheet.html">Appendix A. Object Pascal at a glance</a>
+                <a href="handbook/appendix-b-from-delphi.html">Appendix B. Coming from Delphi or Lazarus</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g2" aria-expanded="false">Guides</button>
+              <div class="collapse " id="g2">
+                <a href="guide-cli.html">Writing a command-line tool</a>
+                <a href="guide-api.html">A REST API with a database</a>
+                <a href="guide-desktop.html">Building a desktop app</a>
+                <a href="guide-business.html">A business system — desktop app and server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g3" aria-expanded="false">Desktop and phone apps</button>
+              <div class="collapse " id="g3">
+                <a href="forms.html">Forms and controls</a>
+                <a href="controls.html">Controls reference</a>
+                <a href="styles.html">Styles: Fluent, Material and your own</a>
+                <a href="components.html">Writing components</a>
+                <a href="android.html">Android</a>
+                <a href="device.html">The phone&#39;s features</a>
+                <a href="java.html">Java from Pascal</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g4" aria-expanded="false">Programs and services</button>
+              <div class="collapse " id="g4">
+                <a href="console.html">Console programs</a>
+                <a href="data.html">JSON, settings and logging</a>
+                <a href="documents.html">Reports, PDF, Excel and printing</a>
+                <a href="system.html">Files, programs, HTTP and the environment</a>
+                <a href="services.html">Services: programs that keep running</a>
+                <a href="web.html">Web APIs and sites: Pastel.Web</a>
+                <a href="websockets.html">WebSockets: Pastel.WebSocket</a>
+                <a href="mail.html">E-mail: Pastel.Mail</a>
+                <a href="pages.html">Web pages from templates</a>
+                <a href="markdown.html">Markdown</a>
+                <a href="database.html">Databases: Pastel.Db</a>
+                <a href="sync.html">Data that works offline: Pastel.Sync</a>
+                <a href="auth.html">Users and login: Pastel.Auth</a>
+                <a href="security.html">Passwords, tokens and signatures: Pastel.Crypto, Pastel.Jwt</a>
+                <a href="deploy.html">Deploying to a Linux server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start " type="button" data-bs-toggle="collapse" data-bs-target="#g5" aria-expanded="true">Working with Pastel</button>
+              <div class="collapse show" id="g5">
+                <a href="project.html">The project file: pastel.toml</a>
+                <a href="workflow.html">Everyday work: watch, format, libraries</a>
+                <a href="packages.html" class="current" aria-current="page">Packages</a>
+                <a href="testing.html">Testing</a>
+                <a href="vscode.html">Pastel for Visual Studio Code</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g6" aria-expanded="false">Reference</button>
+              <div class="collapse " id="g6">
+                <a href="api/index.html">Pastel API reference</a>
+                <a href="compatibility.html">Compatibility: what stays the same</a>
+                <a href="performance.html">Performance</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g7" aria-expanded="false">Examples</button>
+              <div class="collapse " id="g7">
+                <a href="examples/components-demo.html">components-demo</a>
+                <a href="examples/components.html">components</a>
+                <a href="examples/contacts.html">contacts</a>
+                <a href="examples/dupfinder.html">dupfinder</a>
+                <a href="examples/notepad.html">notepad</a>
+                <a href="examples/notes-api.html">notes-api</a>
+                <a href="examples/pocket-app.html">pocket-app</a>
+                <a href="examples/pocket-cli.html">pocket-cli</a>
+                <a href="examples/pocket-core.html">pocket-core</a>
+                <a href="examples/salon-api.html">salon-api</a>
+                <a href="examples/salon-core.html">salon-core</a>
+                <a href="examples/salon-desk.html">salon-desk</a>
+                <a href="examples/weather.html">weather</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g8" aria-expanded="false">Project</button>
+              <div class="collapse " id="g8">
+                <a href="roadmap.html">Pastel roadmap to 1.0</a>
+                <a href="changelog.html">Changelog</a>
+                <a href="vscode-changelog.html">Changelog of the VS Code extension</a>
+                <a href="contributing.html">Contributing to Pastel</a>
+                <a href="security-policy.html">Security</a>
+                <a href="code-of-conduct.html">Code of conduct</a>
+                <a href="announcing-1.0.html">Announcing Pastel 1.0</a>
+              </div>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </aside>
+    <main class="col-12 col-lg-9 col-xl-8 docs-main">
+      <article class="markdown">
+<h1 id="packages"><a class="anchor" href="#packages">#</a>Packages</h1>
+<p>A <strong>package</strong> is a Pastel library that someone published: serial ports, charts, a barcode reader. You add it with one command, and Pastel fetches it, keeps its exact version in <code>pastel.lock</code> and compiles it with your project. It works like Composer for PHP or npm for JavaScript.</p>
+<pre><code class="language-sh">pastel search serial         # what is there
+pastel add serial            # fetch it, add it to pastel.toml and pastel.lock
+pastel build                 # its units can now be used: uses Serial;
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Composer (PHP)</th>
+<th>Pastel</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>composer.json</code> → <code>require</code></td>
+<td><code>pastel.toml</code> → <code>[dependencies]</code></td>
+</tr>
+<tr>
+<td><code>composer.lock</code></td>
+<td><code>pastel.lock</code></td>
+</tr>
+<tr>
+<td><code>composer require x</code></td>
+<td><code>pastel add x</code></td>
+</tr>
+<tr>
+<td><code>composer update</code></td>
+<td><code>pastel update</code></td>
+</tr>
+<tr>
+<td><code>composer install</code></td>
+<td>nothing to do: <code>pastel build</code> fetches what is missing</td>
+</tr>
+<tr>
+<td><code>composer remove x</code></td>
+<td><code>pastel remove x</code></td>
+</tr>
+<tr>
+<td>Packagist</td>
+<td>the registry: <a href="https://github.com/azrov/pastel-packages">github.com/azrov/pastel-packages</a></td>
+</tr>
+<tr>
+<td><code>vendor/</code></td>
+<td>one cache for all projects: <code>~/.cache/pastel</code></td>
+</tr>
+</tbody></table>
+<h2 id="free-pascals-own-packages"><a class="anchor" href="#free-pascals-own-packages">#</a>Free Pascal's own packages</h2>
+<p>Free Pascal comes with about 140 packages, and a Pastel project can use all of them without adding anything: write the unit in <code>uses</code> and build. Pastel itself is built on several (<code>fpjson</code>, <code>fphttpclient</code>, <code>sqldb</code>, <code>process</code>).</p>
+<pre><code class="language-pascal">uses
+  zipper, RegExpr, md5, base64, DOM, XMLRead, fpimage, fpreadpng, Generics.Collections, IniFiles;
+
+var
+  R: TRegExpr;
+begin
+  R := TRegExpr.Create('\d+');
+  if R.Exec('order 123') then
+    ShowMessage(R.Match[0]);      // 123
+  R.Free;
+end;
+</code></pre>
+<p>Some useful ones:</p>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Units</th>
+<th>For</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>paszlib</code></td>
+<td><code>zipper</code>, <code>zstream</code></td>
+<td>Zip files, compressed streams</td>
+</tr>
+<tr>
+<td><code>regexpr</code></td>
+<td><code>RegExpr</code></td>
+<td>Regular expressions</td>
+</tr>
+<tr>
+<td><code>hash</code></td>
+<td><code>md5</code>, <code>sha1</code>, <code>crc</code></td>
+<td>Checksums</td>
+</tr>
+<tr>
+<td><code>fcl-base</code></td>
+<td><code>base64</code>, <code>IniFiles</code>, <code>CustApp</code>, <code>uriparser</code></td>
+<td>Everyday helpers</td>
+</tr>
+<tr>
+<td><code>fcl-xml</code></td>
+<td><code>DOM</code>, <code>XMLRead</code>, <code>XMLWrite</code>, <code>XPath</code></td>
+<td>XML</td>
+</tr>
+<tr>
+<td><code>fcl-image</code></td>
+<td><code>fpimage</code>, <code>fpreadpng</code>, <code>fpwritejpeg</code>...</td>
+<td>Reading and writing pictures</td>
+</tr>
+<tr>
+<td><code>rtl-generics</code>, <code>fcl-stl</code></td>
+<td><code>Generics.Collections</code>, <code>gmap</code>, <code>ghashmap</code></td>
+<td>Lists and dictionaries of any type</td>
+</tr>
+<tr>
+<td><code>fcl-db</code></td>
+<td><code>sqldb</code>, <code>sqlite3conn</code>, <code>pqconnection</code>, <code>mysql80conn</code></td>
+<td>Databases directly (Pastel.Db is easier)</td>
+</tr>
+<tr>
+<td><code>fcl-net</code>, <code>fcl-web</code></td>
+<td><code>ssockets</code>, <code>fphttpclient</code>, <code>fphttpserver</code></td>
+<td>Network (Pastel.Http and Pastel.Web are easier)</td>
+</tr>
+<tr>
+<td><code>numlib</code>, <code>symbolic</code></td>
+<td><code>typ</code>, <code>inv</code>, <code>symbolic</code></td>
+<td>Mathematics</td>
+</tr>
+</tbody></table>
+<p>Packages that wrap a C library (<code>libcurl</code>, <code>openssl</code>, <code>sdl</code>, <code>cairo</code>, <code>gtk2</code>, <code>libvlc</code>...) also need that library on the computer the program runs on.</p>
+<p>Building for another system (<code>pastel build --target win64</code>) needs Free Pascal's packages for that system too; <code>pastel doctor --install win64</code> sets them up.</p>
+<h2 id="adding-a-package"><a class="anchor" href="#adding-a-package">#</a>Adding a package</h2>
+<pre><code class="language-sh">pastel add serial               # the newest version: serial = &quot;^1.2.0&quot;
+pastel add serial@^1.0          # a range of versions
+pastel add serial@1.2.3         # exactly this one
+</code></pre>
+<p><code>pastel.toml</code> gets a line:</p>
+<pre><code class="language-toml">[dependencies]
+serial = &quot;^1.2.0&quot;
+</code></pre>
+<p>and the code uses its units like your own:</p>
+<pre><code class="language-pascal">uses
+  Serial;
+</code></pre>
+<p>A library's controls and components appear in the designer's toolbox, like the project's own (<a href="components.html">components.md</a>).</p>
+<h3 id="from-a-git-repository"><a class="anchor" href="#from-a-git-repository">#</a>From a git repository</h3>
+<p>A package that is not in the registry (your company's own, or one being written) comes straight from its repository:</p>
+<pre><code class="language-sh">pastel add chart --git https://github.com/someone/pastel-chart
+pastel add gpio --git https://github.com/azrov/pastel-extras --path gpio --branch main
+</code></pre>
+<pre><code class="language-toml">[dependencies]
+chart = { git = &quot;https://github.com/someone/pastel-chart&quot;, version = &quot;^0.3&quot; }
+gpio = { git = &quot;https://github.com/azrov/pastel-extras&quot;, path = &quot;gpio&quot;, branch = &quot;main&quot; }
+tools = { git = &quot;git@github.com:my-company/tools.git&quot;, rev = &quot;a1b2c3d&quot; }
+</code></pre>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>git</code></td>
+<td>The repository: <code>https://...</code>, <code>git@...</code> (with your SSH key: private repositories work), or a folder</td>
+</tr>
+<tr>
+<td><code>path</code></td>
+<td>The folder of the package in the repository, when it holds several</td>
+</tr>
+<tr>
+<td><code>version</code></td>
+<td>A range of its tags (below)</td>
+</tr>
+<tr>
+<td><code>branch</code></td>
+<td>The newest commit of a branch instead of a version; <code>pastel update</code> moves to the newest again</td>
+</tr>
+<tr>
+<td><code>rev</code></td>
+<td>One commit</td>
+</tr>
+</tbody></table>
+<h3 id="from-a-folder-on-this-computer"><a class="anchor" href="#from-a-folder-on-this-computer">#</a>From a folder on this computer</h3>
+<pre><code class="language-sh">pastel add salon-core --path ../salon-core
+</code></pre>
+<pre><code class="language-toml">[dependencies]
+salon-core = { path = &quot;../salon-core&quot; }
+</code></pre>
+<p>Nothing is fetched or locked: the folder is used as it is, and changes in it are compiled right away (<a href="workflow.html#dependencies">workflow.md</a>).</p>
+<h2 id="versions"><a class="anchor" href="#versions">#</a>Versions</h2>
+<p>A package's versions are the tags of its repository: <code>v1.2.3</code> (or <code>1.2.3</code>). In <code>pastel.toml</code> you write which versions are fine — usually with <code>^</code>, which allows everything that should not break your code:</p>
+<table>
+<thead>
+<tr>
+<th>Written</th>
+<th>Allows</th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>&quot;^1.2.0&quot;</code></td>
+<td><code>&gt;= 1.2.0</code>, <code>&lt; 2.0.0</code></td>
+<td>the default of <code>pastel add</code></td>
+</tr>
+<tr>
+<td><code>&quot;^0.3.1&quot;</code></td>
+<td><code>&gt;= 0.3.1</code>, <code>&lt; 0.4.0</code></td>
+<td>before 1.0, the second number counts</td>
+</tr>
+<tr>
+<td><code>&quot;~1.2.3&quot;</code></td>
+<td><code>&gt;= 1.2.3</code>, <code>&lt; 1.3.0</code></td>
+<td>only fixes</td>
+</tr>
+<tr>
+<td><code>&quot;1.2.3&quot;</code></td>
+<td>exactly 1.2.3</td>
+<td></td>
+</tr>
+<tr>
+<td><code>&quot;1.2&quot;</code></td>
+<td>any 1.2.x</td>
+<td></td>
+</tr>
+<tr>
+<td><code>&quot;&gt;=1.0, &lt;1.5&quot;</code></td>
+<td>a range</td>
+<td></td>
+</tr>
+<tr>
+<td><code>&quot;*&quot;</code></td>
+<td>any version</td>
+<td></td>
+</tr>
+</tbody></table>
+<p>Pre-releases (<code>1.0.0-rc.1</code>) are only used when the range names one: <code>&quot;^1.0.0-rc.1&quot;</code>.</p>
+<h2 id="pastellock"><a class="anchor" href="#pastellock">#</a>pastel.lock</h2>
+<p><code>pastel add</code> and <code>pastel update</code> write <code>pastel.lock</code> next to <code>pastel.toml</code>: the exact version and commit of every package, also of the packages your packages use.</p>
+<pre><code class="language-toml">[package.serial]
+version = &quot;1.2.3&quot;
+git = &quot;https://github.com/azrov/pastel-extras&quot;
+path = &quot;serial&quot;
+commit = &quot;4f2a9c1e...&quot;
+</code></pre>
+<p><strong>Put it in git.</strong> Every computer — yours, a colleague's, the CI — then builds with exactly the same code, until someone runs <code>pastel update</code>. <code>pastel build</code> never changes a locked version; it only adds what is new in <code>pastel.toml</code>.</p>
+<pre><code class="language-sh">pastel update               # every package: the newest version pastel.toml allows
+pastel update serial        # only this one
+pastel deps                 # what is used, and why
+</code></pre>
+<pre><code>$ pastel deps
+greet 0.3.0  https://github.com/azrov/pastel-extras (greet)
+  serial 0.2.0  https://github.com/azrov/pastel-extras (serial)
+</code></pre>
+<p>When two libraries need versions of a package that cannot both be met (one <code>^1.0</code>, the other <code>^2.0</code>), Pastel says so and changes nothing; update one of them.</p>
+<h2 id="where-packages-are-kept"><a class="anchor" href="#where-packages-are-kept">#</a>Where packages are kept</h2>
+<p>Each repository is fetched once and each version is unpacked once, into a cache for all projects:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Linux</td>
+<td><code>~/.cache/pastel</code> (or <code>$XDG_CACHE_HOME/pastel</code>)</td>
+</tr>
+<tr>
+<td>Windows</td>
+<td><code>%LOCALAPPDATA%\pastel\cache</code></td>
+</tr>
+<tr>
+<td>Anywhere</td>
+<td><code>PASTEL_CACHE=/some/folder</code></td>
+</tr>
+</tbody></table>
+<p>With <code>pastel.lock</code> and the cache, building needs no network. Deleting the cache is safe: what is needed is fetched again. Packages are fetched with <strong>git</strong>, which must be installed.</p>
+<h2 id="publishing-a-package"><a class="anchor" href="#publishing-a-package">#</a>Publishing a package</h2>
+<p>A package is a Pastel library (<code>pastel new lib</code>) in a git repository:</p>
+<pre><code class="language-sh">pastel new lib serial
+cd serial
+# write src/serial.pas, tests/serial_test.pas, README.md
+git init &amp;&amp; git add -A &amp;&amp; git commit -m &quot;First version&quot;
+git tag v0.1.0
+git remote add origin https://github.com/you/pastel-serial
+git push -u origin main --tags
+</code></pre>
+<p>Anyone can use it now with <code>--git</code>. To make <code>pastel add serial</code> find it, add it to the registry with a pull request to <a href="https://github.com/azrov/pastel-packages">pastel-packages</a>, one entry in <code>packages.toml</code>:</p>
+<pre><code class="language-toml">[serial]
+git = &quot;https://github.com/you/pastel-serial&quot;
+description = &quot;Serial ports: COM on Windows, /dev/ttyUSB0 on Linux&quot;
+</code></pre>
+<p><code>path = &quot;serial&quot;</code> when the package is a folder of a bigger repository (like <a href="https://github.com/azrov/pastel-extras">pastel-extras</a>).</p>
+<p>Good packages:</p>
+<ul>
+<li>have a <code>README.md</code> with an example, and tests (<code>pastel test</code>);</li>
+<li>get a new tag for every release: <code>v1.2.4</code> for a fix, <code>v1.3.0</code> for something new, <code>v2.0.0</code> when code that uses it must change;</li>
+<li>name their units after the package (<code>Serial</code>, <code>SerialPorts</code>), so they do not meet units of other packages;</li>
+<li>list their own packages in their <code>pastel.toml</code> like any project.</li>
+</ul>
+<h3 id="another-registry"><a class="anchor" href="#another-registry">#</a>Another registry</h3>
+<p>A company can keep its own list: <code>PASTEL_REGISTRY</code> is a git repository (or a folder) with a <code>packages.toml</code>.</p>
+<pre><code class="language-sh">export PASTEL_REGISTRY=https://git.my-company.com/pastel-packages
+</code></pre>
+
+      </article>
+      <p class="edit mt-5"><a href="https://github.com/azrov/pastel/edit/main/docs/packages.md">Improve this page on GitHub</a></p>
+    </main>
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <div class="sticky">
+        <div class="toc-title">On this page</div>
+        <a href="#free-pascals-own-packages">Free Pascal&#39;s own packages</a>
+        <a href="#adding-a-package">Adding a package</a>
+        <a href="#versions">Versions</a>
+        <a href="#pastellock">pastel.lock</a>
+        <a href="#where-packages-are-kept">Where packages are kept</a>
+        <a href="#publishing-a-package">Publishing a package</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer py-4 mt-5">
+  <div class="container d-flex flex-wrap gap-3 justify-content-between small text-body-secondary">
+    <span>Pastel 2.1.0-beta.4 · MIT License · built with Pastel.Markdown and Pastel.Pages</span>
+    <span class="d-flex gap-3">
+      <a href="docs.html">Documentation</a>
+      <a href="download.html">Download</a>
+      <a href="contributing.html">Contributing</a>
+      <a href="https://github.com/azrov/pastel">GitHub</a>
+    </span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/delphi.min.js"></script>
+<script src="assets/site.js"></script>
+</body>
+</html>

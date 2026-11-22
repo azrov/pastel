@@ -1,0 +1,731 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>13. Interfaces and the command line · Pastel</title>
+<meta name="description" content="Pastel: a modern cross-platform app framework and toolchain for Object Pascal. Desktop, phone, web and console apps from one codebase.">
+<script>
+  try { var t = localStorage.getItem('pastel-theme'); } catch (e) {}
+  document.documentElement.dataset.bsTheme = t || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hl-dark">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body class="section-docs">
+<nav class="navbar navbar-expand-lg sticky-top site-header">
+  <div class="container-fluid px-lg-4">
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="../index.html">
+      <span class="logo" aria-hidden="true"></span>Pastel
+    </a>
+        <button class="btn btn-sm btn-outline-secondary d-lg-none me-auto" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">Menu</button>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#top" aria-controls="top" aria-expanded="false" aria-label="Links">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="top">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link active" href="../docs.html">Docs</a></li>
+        <li class="nav-item"><a class="nav-link" href="../getting-started.html">Get started</a></li>
+        <li class="nav-item"><a class="nav-link " href="../download.html">Download</a></li>
+        <li class="nav-item"><a class="nav-link " href="../changelog.html">Changelog</a></li>
+      </ul>
+      <div class="search position-relative my-2 my-lg-0 me-lg-3">
+        <input id="search" class="form-control form-control-sm" type="search" placeholder="Search the docs  /" autocomplete="off" data-base="../" aria-label="Search the docs">
+        <div id="results" class="dropdown-menu shadow"></div>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        <button id="theme" class="btn btn-sm btn-outline-secondary" type="button" aria-label="Light or dark" title="Light or dark"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+        <a class="btn btn-sm btn-outline-secondary" href="https://github.com/azrov/pastel">GitHub</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-lg-4">
+  <div class="row">
+    <aside class="col-lg-3 col-xl-2 docs-sidebar">
+      <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+        <div class="offcanvas-header border-bottom">
+          <h5 class="offcanvas-title" id="sidebarLabel">Documentation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+          <nav class="docs-nav w-100">
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g0" aria-expanded="false">Start</button>
+              <div class="collapse " id="g0">
+                <a href="../readme.html">Overview</a>
+                <a href="../docs.html">All topics</a>
+                <a href="../getting-started.html">Getting started</a>
+                <a href="../commands.html">The pastel command</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start " type="button" data-bs-toggle="collapse" data-bs-target="#g1" aria-expanded="true">Handbook</button>
+              <div class="collapse show" id="g1">
+                <a href="../handbook/README.html">The Pastel Handbook</a>
+                <a href="../handbook/01-hello.html">1. Your first program</a>
+                <a href="../handbook/02-values.html">2. Values, types and variables</a>
+                <a href="../handbook/03-decisions-loops.html">3. Decisions and loops</a>
+                <a href="../handbook/04-routines.html">4. Procedures and functions</a>
+                <a href="../handbook/05-structured-types.html">5. Arrays, records, enumerations and sets</a>
+                <a href="../handbook/06-strings.html">6. Text</a>
+                <a href="../handbook/07-units.html">7. Units</a>
+                <a href="../handbook/08-classes.html">8. Classes and objects</a>
+                <a href="../handbook/09-exceptions.html">9. When things go wrong</a>
+                <a href="../handbook/10-generics.html">10. Lists, dictionaries and generics</a>
+                <a href="../handbook/11-files-json.html">11. Files and JSON</a>
+                <a href="../handbook/12-testing.html">12. Testing</a>
+                <a href="../handbook/13-interfaces.html" class="current" aria-current="page">13. Interfaces and the command line</a>
+                <a href="../handbook/14-first-window.html">14. Your first window</a>
+                <a href="../handbook/15-layout.html">15. Layout</a>
+                <a href="../handbook/16-grids-and-dialogs.html">16. Grids and dialogs</a>
+                <a href="../handbook/17-database.html">17. A database</a>
+                <a href="../handbook/18-charts-and-reports.html">18. Charts and reports</a>
+                <a href="../handbook/19-look-and-languages.html">19. Look and languages</a>
+                <a href="../handbook/20-background.html">20. Work in the background</a>
+                <a href="../handbook/21-phones.html">21. Phones</a>
+                <a href="../handbook/22-shipping.html">22. Shipping</a>
+                <a href="../handbook/appendix-a-cheat-sheet.html">Appendix A. Object Pascal at a glance</a>
+                <a href="../handbook/appendix-b-from-delphi.html">Appendix B. Coming from Delphi or Lazarus</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g2" aria-expanded="false">Guides</button>
+              <div class="collapse " id="g2">
+                <a href="../guide-cli.html">Writing a command-line tool</a>
+                <a href="../guide-api.html">A REST API with a database</a>
+                <a href="../guide-desktop.html">Building a desktop app</a>
+                <a href="../guide-business.html">A business system — desktop app and server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g3" aria-expanded="false">Desktop and phone apps</button>
+              <div class="collapse " id="g3">
+                <a href="../forms.html">Forms and controls</a>
+                <a href="../controls.html">Controls reference</a>
+                <a href="../styles.html">Styles: Fluent, Material and your own</a>
+                <a href="../components.html">Writing components</a>
+                <a href="../android.html">Android</a>
+                <a href="../device.html">The phone&#39;s features</a>
+                <a href="../java.html">Java from Pascal</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g4" aria-expanded="false">Programs and services</button>
+              <div class="collapse " id="g4">
+                <a href="../console.html">Console programs</a>
+                <a href="../data.html">JSON, settings and logging</a>
+                <a href="../documents.html">Reports, PDF, Excel and printing</a>
+                <a href="../system.html">Files, programs, HTTP and the environment</a>
+                <a href="../services.html">Services: programs that keep running</a>
+                <a href="../web.html">Web APIs and sites: Pastel.Web</a>
+                <a href="../websockets.html">WebSockets: Pastel.WebSocket</a>
+                <a href="../mail.html">E-mail: Pastel.Mail</a>
+                <a href="../pages.html">Web pages from templates</a>
+                <a href="../markdown.html">Markdown</a>
+                <a href="../database.html">Databases: Pastel.Db</a>
+                <a href="../sync.html">Data that works offline: Pastel.Sync</a>
+                <a href="../auth.html">Users and login: Pastel.Auth</a>
+                <a href="../security.html">Passwords, tokens and signatures: Pastel.Crypto, Pastel.Jwt</a>
+                <a href="../deploy.html">Deploying to a Linux server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g5" aria-expanded="false">Working with Pastel</button>
+              <div class="collapse " id="g5">
+                <a href="../project.html">The project file: pastel.toml</a>
+                <a href="../workflow.html">Everyday work: watch, format, libraries</a>
+                <a href="../packages.html">Packages</a>
+                <a href="../testing.html">Testing</a>
+                <a href="../vscode.html">Pastel for Visual Studio Code</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g6" aria-expanded="false">Reference</button>
+              <div class="collapse " id="g6">
+                <a href="../api/index.html">Pastel API reference</a>
+                <a href="../compatibility.html">Compatibility: what stays the same</a>
+                <a href="../performance.html">Performance</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g7" aria-expanded="false">Examples</button>
+              <div class="collapse " id="g7">
+                <a href="../examples/components-demo.html">components-demo</a>
+                <a href="../examples/components.html">components</a>
+                <a href="../examples/contacts.html">contacts</a>
+                <a href="../examples/dupfinder.html">dupfinder</a>
+                <a href="../examples/notepad.html">notepad</a>
+                <a href="../examples/notes-api.html">notes-api</a>
+                <a href="../examples/pocket-app.html">pocket-app</a>
+                <a href="../examples/pocket-cli.html">pocket-cli</a>
+                <a href="../examples/pocket-core.html">pocket-core</a>
+                <a href="../examples/salon-api.html">salon-api</a>
+                <a href="../examples/salon-core.html">salon-core</a>
+                <a href="../examples/salon-desk.html">salon-desk</a>
+                <a href="../examples/weather.html">weather</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g8" aria-expanded="false">Project</button>
+              <div class="collapse " id="g8">
+                <a href="../roadmap.html">Pastel roadmap to 1.0</a>
+                <a href="../changelog.html">Changelog</a>
+                <a href="../vscode-changelog.html">Changelog of the VS Code extension</a>
+                <a href="../contributing.html">Contributing to Pastel</a>
+                <a href="../security-policy.html">Security</a>
+                <a href="../code-of-conduct.html">Code of conduct</a>
+                <a href="../announcing-1.0.html">Announcing Pastel 1.0</a>
+              </div>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </aside>
+    <main class="col-12 col-lg-9 col-xl-8 docs-main">
+      <article class="markdown">
+<h1 id="13-interfaces-and-the-command-line"><a class="anchor" href="#13-interfaces-and-the-command-line">#</a>13. Interfaces and the command line</h1>
+<p>Pocket keeps its entries in a JSON file. In part 2 the app will keep them in a database. The code that <em>uses</em> the
+entries should not care where they live — and with an <strong>interface</strong>, it does not. At the end of this chapter, part 1
+is done: Pocket is a finished command-line program.</p>
+<h2 id="an-interface-is-a-promise"><a class="anchor" href="#an-interface-is-a-promise">#</a>An interface is a promise</h2>
+<p>An interface lists methods, without code. A class that <em>implements</em> it promises to have them:</p>
+<pre><code class="language-pascal">program Speakers;
+
+{$mode objfpc}{$H+}
+
+type
+  ISpeaker = interface
+    ['{4E0C5A7B-1D2E-4F3A-9B8C-7D6E5F4A3B2C}']
+    function Speak: string;
+  end;
+
+  TDog = class(TInterfacedObject, ISpeaker)
+    function Speak: string;
+  end;
+
+  TRobot = class(TInterfacedObject, ISpeaker)
+    function Speak: string;
+  end;
+
+function TDog.Speak: string;
+begin
+  Result := 'Woof';
+end;
+
+function TRobot.Speak: string;
+begin
+  Result := 'Beep';
+end;
+
+procedure Introduce(S: ISpeaker);
+begin
+  WriteLn('It says: ', S.Speak);
+end;
+
+var
+  S: ISpeaker;
+begin
+  S := TDog.Create;
+  Introduce(S);
+  S := TRobot.Create;            // the dog is freed here: nothing uses it any more
+  Introduce(S);
+end.                             // and the robot here
+</code></pre>
+<pre><code class="language-output">It says: Woof
+It says: Beep
+</code></pre>
+<ul>
+<li><code>ISpeaker = interface</code> lists what a speaker can do. By custom, interface names start with <code>I</code>. The GUID in brackets
+(any unique one: <code>uuidgen</code> in a terminal makes one) lets the program ask an object at run time whether it has the
+interface (<code>Supports</code>, <code>as</code>).</li>
+<li><code>TDog = class(TInterfacedObject, ISpeaker)</code> — a class, built on <code>TInterfacedObject</code>, that implements <code>ISpeaker</code>.</li>
+<li><code>Introduce</code> takes <strong>any</strong> speaker. It does not know dogs or robots, and never will need to.</li>
+</ul>
+<p>How is that different from a parent class with a virtual method (chapter 8)? A class has only one parent, but it can
+implement many interfaces — a <code>TDog</code> could also be an <code>IPet</code> and an <code>ISerializable</code>. Interfaces describe what an
+object <em>can do</em>, not what it <em>is</em>.</p>
+<h3 id="no-free-reference-counting"><a class="anchor" href="#no-free-reference-counting">#</a>No Free: reference counting</h3>
+<p>There is no <code>Free</code> in that program, and no leak. An object used through an interface counts how many interface
+variables point to it; when the count drops to zero, it frees itself. <code>S := TRobot.Create</code> dropped the dog's count
+to zero.</p>
+<p>The rule that comes with it: <strong>use such an object only through interface variables.</strong> Mixing a class variable and an
+interface variable for the same object leads to an object freed too early, or freed twice. Pocket's store follows
+the rule — the program holds an <code>IEntryStore</code>, never a <code>TJsonStore</code>.</p>
+<h2 id="pockets-store"><a class="anchor" href="#pockets-store">#</a>Pocket's store</h2>
+<p>The store is an interface with three methods, and its first implementation keeps the entries in the JSON file of
+chapter 11 — the procedures of that chapter, moved into a class. <code>src/pocketstore.pas</code> in <code>pocket-core</code>:</p>
+<!-- file: examples/pocket-core/src/pocketstore.pas -->
+<pre><code class="language-pascal">{ Where the entries are kept. The program only knows IEntryStore, so the
+  place can change - a JSON file now, a database later - without changing
+  the code that uses it.
+
+    Store := TJsonStore.Create('pocket.json');     // Store: IEntryStore
+    Store.Load(Entries);
+    ...
+    Store.Save(Entries);
+
+  An interface variable frees its object by itself when nothing uses it any
+  more: no Free for Store.
+
+  Handbook: chapter 11 (files and JSON), chapter 13 (interfaces). }
+unit PocketStore;
+
+{$mode objfpc}{$H+}
+
+interface
+
+uses
+  SysUtils, PocketEntries;
+
+type
+  EStoreError = class(Exception);
+
+  IEntryStore = interface
+    ['{6D1A4C1E-3F0B-4B5E-9C61-2A9E4F7B8D10}']
+    { Fills Entries (emptied first) with what is kept. }
+    procedure Load(Entries: TEntryList);
+    { Keeps all of them; entries without an id get one. }
+    procedure Save(Entries: TEntryList);
+    { Where they are, for messages: a file's name. }
+    function Where: string;
+  end;
+
+  (* The entries in a JSON file:
+      [{&quot;id&quot;: 1, &quot;date&quot;: &quot;2026-11-03&quot;, &quot;kind&quot;: &quot;expense&quot;,
+        &quot;category&quot;: &quot;Food&quot;, &quot;amount&quot;: 12.5, &quot;note&quot;: &quot;Lunch&quot;}, ...] *)
+  TJsonStore = class(TInterfacedObject, IEntryStore)
+  private
+    FFileName: string;
+  public
+    constructor Create(const AFileName: string);
+    procedure Load(Entries: TEntryList);
+    procedure Save(Entries: TEntryList);
+    function Where: string;
+  end;
+
+{ '2026-11-03' and back; the files and the database keep dates this way. }
+function DateToIso(D: TDateTime): string;
+function IsoToDate(const S: string): TDateTime;
+
+{ The next free id: one more than the biggest in the list. }
+function NextId(Entries: TEntryList): Int64;
+
+implementation
+
+uses
+  fpjson, Pastel.Json, Pastel.Files;
+
+function DateToIso(D: TDateTime): string;
+begin
+  Result := FormatDateTime('yyyy&quot;-&quot;mm&quot;-&quot;dd', D);
+end;
+
+function IsoToDate(const S: string): TDateTime;
+var
+  Y, M, D: Integer;
+begin
+  if (Length(S) &lt; 10) or not TryStrToInt(Copy(S, 1, 4), Y) or not TryStrToInt(Copy(S, 6, 2), M) or
+    not TryStrToInt(Copy(S, 9, 2), D) or not TryEncodeDate(Y, M, D, Result) then
+    raise EStoreError.CreateFmt('&quot;%s&quot; is not a date like 2026-11-03', [S]);
+end;
+
+function NextId(Entries: TEntryList): Int64;
+var
+  E: TEntry;
+begin
+  Result := 1;
+  for E in Entries do
+    if E.Id &gt;= Result then
+      Result := E.Id + 1;
+end;
+
+constructor TJsonStore.Create(const AFileName: string);
+begin
+  inherited Create;
+  FFileName := AFileName;
+end;
+
+function TJsonStore.Where: string;
+begin
+  Result := FFileName;
+end;
+
+procedure TJsonStore.Load(Entries: TEntryList);
+var
+  Data: TJSONData;
+  Item: TJSONData;
+  Kind: TEntryKind;
+  E: TEntry;
+  I: Integer;
+begin
+  Entries.Clear;
+  if not FileExists(FFileName) then
+    Exit;                                  { nothing kept yet: an empty list }
+  try
+    Data := LoadJsonFile(FFileName);
+  except
+    on Ex: Exception do
+      raise EStoreError.CreateFmt('%s cannot be read: %s', [FFileName, Ex.Message]);
+  end;
+  try
+    if not (Data is TJSONArray) then
+      raise EStoreError.CreateFmt('%s is not a list of entries', [FFileName]);
+    for I := 0 to Data.Count - 1 do
+    begin
+      Item := Data.Items[I];
+      if not TryParseKind(JStr(Item, 'kind'), Kind) then
+        raise EStoreError.CreateFmt('%s: entry %d has the kind &quot;%s&quot;', [FFileName, I + 1, JStr(Item, 'kind')]);
+      E := Entries.AddEntry(IsoToDate(JStr(Item, 'date')), Kind, JStr(Item, 'category'),
+        JFloat(Item, 'amount'), JStr(Item, 'note'));
+      E.Id := JInt(Item, 'id');
+    end;
+  finally
+    Data.Free;
+  end;
+end;
+
+procedure TJsonStore.Save(Entries: TEntryList);
+var
+  List: TJSONArray;
+  E: TEntry;
+begin
+  List := TJSONArray.Create;
+  try
+    for E in Entries do
+    begin
+      if E.Id = 0 then
+        E.Id := NextId(Entries);
+      List.Add(JObject(['id', E.Id, 'date', DateToIso(E.Date), 'kind', KindName(E.Kind),
+        'category', E.Category, 'amount', Double(E.Amount), 'note', E.Note]));
+    end;
+    if ExtractFileDir(FFileName) &lt;&gt; '' then
+      EnsureDir(ExtractFileDir(FFileName));
+    SaveJsonFile(FFileName, List);
+  finally
+    List.Free;
+  end;
+end;
+
+end.
+</code></pre>
+<p>New things in it:</p>
+<ul>
+<li><code>EStoreError</code> is the exception for everything that can go wrong with the kept data; a program catches it to show
+the user one clear line.</li>
+<li><code>TJsonStore.Load</code> wraps <code>LoadJsonFile</code>'s exception in an <code>EStoreError</code> that names the file.</li>
+<li><code>IsoToDate</code> checks the date with <code>TryEncodeDate</code> instead of trusting the file.</li>
+<li><code>Save</code> gives entries without an id the next free one.</li>
+<li>The comment around the file's example uses <code>(* … *)</code>: the JSON in it has <code>{ }</code>, which would end a <code>{ }</code> comment
+early.</li>
+</ul>
+<p>The app in part 2 adds a second store, <code>TDbStore</code>, with a database behind the same three methods.</p>
+<h2 id="pocket-on-the-command-line"><a class="anchor" href="#pocket-on-the-command-line">#</a>Pocket on the command line</h2>
+<p>Command-line programs take <em>arguments</em>: <code>pocket add 12.50 Food --note Lunch</code>. <code>Pastel.Args</code> reads them: you
+describe the commands, options and flags, and it parses the command line, checks it, and writes the help:</p>
+<!-- file: examples/pocket-cli/src/main.pas -->
+<pre><code class="language-pascal">{ Pocket on the command line: write down what you spend and earn, see where
+  the money goes.
+
+    pocket add 12.50 Food --note Lunch
+    pocket add 3000 Salary --income
+    pocket list --month 2026-11
+    pocket report
+    pocket remove 7
+
+  The entries are kept in ~/.pocket/pocket.json (--file or POCKET_FILE: another one).
+  Handbook: part 1, chapters 1 to 13. }
+program PocketCli;
+
+{$mode objfpc}{$H+}
+
+uses
+  SysUtils, DateUtils, Pastel.Args, Pastel.Term, Pastel.Files, AppInfo,
+  PocketMoney, PocketEntries, PocketReports, PocketStore;
+
+var
+  Args: TArgs;
+  Store: IEntryStore;
+  Entries: TEntryList;
+
+{ 'today', '2026-11-03' or '' (today) }
+function ParseDay(const S: string): TDateTime;
+begin
+  if (S = '') or SameText(S, 'today') then
+    Result := Date
+  else if SameText(S, 'yesterday') then
+    Result := Date - 1
+  else
+    Result := IsoToDate(S);
+end;
+
+{ '2026-11' -&gt; the year and month; '' -&gt; this month }
+procedure ParseMonth(const S: string; out Year, Month: Word);
+var
+  Y, M: Integer;
+begin
+  if S = '' then
+  begin
+    Year := YearOf(Date);
+    Month := MonthOf(Date);
+    Exit;
+  end;
+  if (Length(S) &lt;&gt; 7) or (S[5] &lt;&gt; '-') or not TryStrToInt(Copy(S, 1, 4), Y) or
+    not TryStrToInt(Copy(S, 6, 2), M) or (M &lt; 1) or (M &gt; 12) then
+    raise EArgsError.CreateFmt('&quot;%s&quot; is not a month like 2026-11', [S]);
+  Year := Y;
+  Month := M;
+end;
+
+procedure AddCommand;
+var
+  Amount: Currency;
+  Kind: TEntryKind;
+  E: TEntry;
+begin
+  if not TryParseMoney(Args.Get('amount'), Amount) or (Amount &lt;= 0) then
+    raise EArgsError.CreateFmt('&quot;%s&quot; is not an amount like 12.50', [Args.Get('amount')]);
+  if Args.Has('income') then
+    Kind := ekIncome
+  else
+    Kind := ekExpense;
+  E := Entries.AddEntry(ParseDay(Args.Get('date')), Kind, Args.Get('category'), Amount, Args.Get('note'));
+  Store.Save(Entries);
+  WriteLn(Format('Added #%d: %s %s %s', [E.Id, KindName(Kind), FormatMoney(Amount), E.Category]));
+end;
+
+procedure ListCommand;
+var
+  Year, Month: Word;
+  InMonth: TEntryList;
+  E: TEntry;
+  T: TTable;
+begin
+  ParseMonth(Args.Get('month'), Year, Month);
+  Entries.SortByDate;
+  InMonth := Entries.InMonth(Year, Month);
+  try
+    if InMonth.Count = 0 then
+    begin
+      WriteLn(Format('Nothing in %d-%.2d.', [Year, Month]));
+      Exit;
+    end;
+    T := TTable.Create(['#', 'Date', 'Category', 'Amount', 'Note']);
+    try
+      T.SetAlign(3, alRight);
+      for E in InMonth do
+        T.AddRow([IntToStr(E.Id), DateToIso(E.Date), E.Category, FormatMoney(E.SignedAmount), E.Note]);
+      T.Print;
+    finally
+      T.Free;
+    end;
+    WriteLn(Format('Balance of %d-%.2d: %s', [Year, Month, FormatMoney(InMonth.Balance)]));
+  finally
+    InMonth.Free;
+  end;
+end;
+
+procedure ReportCommand;
+var
+  Year, Month: Word;
+  S: TMonthSummary;
+  InMonth: TEntryList;
+  T: TCategoryTotal;
+begin
+  ParseMonth(Args.Get('month'), Year, Month);
+  S := MonthSummary(Entries, Year, Month);
+  WriteLn(Bold(Format('%d-%.2d', [Year, Month])));
+  WriteLn(Format('  Income    %12s', [FormatMoney(S.Income)]));
+  WriteLn(Format('  Expenses  %12s', [FormatMoney(S.Expenses)]));
+  WriteLn(Format('  Balance   %12s', [FormatMoney(S.Balance)]));
+  InMonth := Entries.InMonth(Year, Month);
+  try
+    if InMonth.Expenses = 0 then
+      Exit;
+    WriteLn;
+    WriteLn(Bold('Where it went'));
+    for T in TotalsByCategory(InMonth, ekExpense) do
+      WriteLn(Format('  %-12s %12s  %3.0f%%', [T.Category, FormatMoney(T.Amount), T.Percent]));
+  finally
+    InMonth.Free;
+  end;
+end;
+
+procedure RemoveCommand;
+var
+  E: TEntry;
+begin
+  E := Entries.FindById(Args.GetInt('id'));
+  if E = nil then
+    raise EArgsError.CreateFmt('there is no entry #%d (pocket list shows them)', [Args.GetInt('id')]);
+  Entries.Remove(E);          { the list owns it: this frees it too }
+  Store.Save(Entries);
+  WriteLn(Format('Removed #%d.', [Args.GetInt('id')]));
+end;
+
+begin
+  Args := TArgs.Create(AppName, 'Write down what you spend and earn; see where the money goes.');
+  Entries := TEntryList.Create;
+  try
+    Args.Version := AppVersion;
+    Args.Option('file', 'f', 'Where the entries are kept').Env('POCKET_FILE')
+      .Default(JoinPath([HomeDir, '.pocket', 'pocket.json']));
+    with Args.Command('add', 'Write down an expense (or with --income an income)') do
+    begin
+      Positional('amount', 'How much: 12.50');
+      Positional('category', 'Food, Rent, Salary...');
+      Flag('income', 'i', 'It is an income');
+      Option('date', 'd', 'The day: 2026-11-03, today, yesterday', 'today');
+      Option('note', 'n', 'A few words');
+    end;
+    with Args.Command('list', 'The entries of a month') do
+      Option('month', 'm', 'Which month: 2026-11 (this month when not given)');
+    with Args.Command('report', 'A month in short, and where the money went') do
+      Option('month', 'm', 'Which month: 2026-11 (this month when not given)');
+    with Args.Command('remove', 'Remove an entry') do
+      Positional('id', 'Its number (pocket list shows it)').IsInteger;
+    Args.Example('pocket add 12.50 Food --note Lunch');
+    Args.Example('pocket add 3000 Salary --income');
+    Args.Example('pocket report --month 2026-11');
+    Args.Parse;
+
+    Store := TJsonStore.Create(Args.Get('file'));
+    try
+      Store.Load(Entries);
+      case Args.CommandName of
+        'add': AddCommand;
+        'list': ListCommand;
+        'report': ReportCommand;
+        'remove': RemoveCommand;
+      else
+        WriteLn(Args.HelpText);
+      end;
+    except
+      on E: EArgsError do
+      begin
+        WriteLn(StdErr, 'error: ', E.Message);
+        ExitCode := 2;
+      end;
+      on E: EStoreError do
+      begin
+        WriteLn(StdErr, 'error: ', E.Message);
+        ExitCode := 1;
+      end;
+    end;
+  finally
+    Entries.Free;
+    Args.Free;
+  end;
+end.
+</code></pre>
+<p>How it fits together:</p>
+<ul>
+<li><strong>The description</strong>: <code>Args.Command('add', …)</code> makes a sub-command with its own <code>Positional</code> arguments, <code>Option</code>s
+(<code>--date 2026-11-03</code> or <code>-d …</code>) and <code>Flag</code>s (<code>--income</code>). <code>.Env('POCKET_FILE')</code> lets an environment variable give
+the option; <code>.Default(...)</code> is used when neither does. <code>Args.Parse</code> reads the real command line; for <code>--help</code>,
+<code>--version</code> or a mistake it prints what is needed and ends the program.</li>
+<li><strong>One routine per command</strong>, chosen with <code>case Args.CommandName of</code>. Each is short because the work is in the
+library.</li>
+<li><strong>Errors the user can fix</strong> — a wrong amount, a missing entry, a broken file — are exceptions (<code>EArgsError</code>,
+<code>EStoreError</code>) caught in one place at the bottom: one line on the error output and an <em>exit code</em> (0 is success;
+scripts check it). Anything else is a bug and stops the program with its message.</li>
+<li><strong><code>InMonth.Free</code></strong> in <code>ListCommand</code> and <code>ReportCommand</code> — the leak of chapter 10, fixed.</li>
+<li><strong><code>TTable</code></strong> from <code>Pastel.Term</code> lines up the columns, also with letters like <em>ş</em>.</li>
+</ul>
+<p>The project file of <code>pocket-cli</code> names the library:</p>
+<pre><code class="language-toml">[project]
+name = &quot;pocket&quot;
+version = &quot;1.0.0&quot;
+type = &quot;console&quot;
+
+[build]
+main = &quot;src/main.pas&quot;
+
+[dependencies]
+pocket-core = { path = &quot;../pocket-core&quot; }
+</code></pre>
+<h3 id="using-it"><a class="anchor" href="#using-it">#</a>Using it</h3>
+<pre><code class="language-sh">pastel build
+POCKET=./build/linux/debug/pocket          # on Windows: build\windows\debug\pocket.exe
+$POCKET add 3000 Salary --income --date 2026-11-01
+$POCKET add 12.50 Food --note Lunch --date 2026-11-03
+$POCKET add 900 Rent --date 2026-11-05
+$POCKET add &quot;47,5&quot; Food -n Market -d 2026-11-09
+$POCKET list --month 2026-11
+$POCKET report -m 2026-11
+</code></pre>
+<pre><code class="language-text">Added #1: income 3,000.00 Salary
+Added #2: expense 12.50 Food
+Added #3: expense 900.00 Rent
+Added #4: expense 47.50 Food
+#  Date        Category    Amount  Note
+-  ----------  --------  --------  ------
+4  2026-11-09  Food        -47.50  Market
+3  2026-11-05  Rent       -900.00
+2  2026-11-03  Food        -12.50  Lunch
+1  2026-11-01  Salary    3,000.00
+Balance of 2026-11: 2,040.00
+2026-11
+  Income        3,000.00
+  Expenses        960.00
+  Balance       2,040.00
+
+Where it went
+  Rent               900.00   94%
+  Food                60.00    6%
+</code></pre>
+<pre><code class="language-sh">$POCKET add abc Food
+</code></pre>
+<pre><code class="language-text">error: &quot;abc&quot; is not an amount like 12.50
+</code></pre>
+<p><code>pocket --help</code> lists the commands, and <code>pocket add --help</code> the options of one. <code>pastel build --release</code> makes the
+program you give to others; <code>pastel package</code> packs it (chapter 22).</p>
+<p>Part 1 is done. You know the language well enough to read most Pascal code, and Pocket works. Part 2 gives it a
+window.</p>
+<h2 id="exercises"><a class="anchor" href="#exercises">#</a>Exercises</h2>
+<ol>
+<li>Add a command <code>pocket categories</code> that lists the categories used, each with the number of its entries.</li>
+<li>Add an option <code>--category</code> to <code>list</code> that shows only the entries of one category.</li>
+<li>Write a second <code>IEntryStore</code>, <code>TCsvStore</code>, that keeps the entries in a CSV file (<code>Pastel.Sheets</code> has <code>ReadCsv</code> and
+<code>WriteCsv</code>). Change one line of <code>main.pas</code> to use it.</li>
+<li>★ Add a command <code>pocket export --to entries.csv</code> that loads from the JSON store and saves into a <code>TCsvStore</code>: two
+stores, one program, no change to either store.</li>
+</ol>
+<p>Next: <a href="../handbook/14-first-window.html">14. Your first window</a></p>
+
+      </article>
+      <p class="edit mt-5"><a href="https://github.com/azrov/pastel/edit/main/docs/handbook/13-interfaces.md">Improve this page on GitHub</a></p>
+    </main>
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <div class="sticky">
+        <div class="toc-title">On this page</div>
+        <a href="#an-interface-is-a-promise">An interface is a promise</a>
+        <a href="#pockets-store">Pocket&#39;s store</a>
+        <a href="#pocket-on-the-command-line">Pocket on the command line</a>
+        <a href="#exercises">Exercises</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer py-4 mt-5">
+  <div class="container d-flex flex-wrap gap-3 justify-content-between small text-body-secondary">
+    <span>Pastel 2.1.0-beta.4 · MIT License · built with Pastel.Markdown and Pastel.Pages</span>
+    <span class="d-flex gap-3">
+      <a href="../docs.html">Documentation</a>
+      <a href="../download.html">Download</a>
+      <a href="../contributing.html">Contributing</a>
+      <a href="https://github.com/azrov/pastel">GitHub</a>
+    </span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/delphi.min.js"></script>
+<script src="../assets/site.js"></script>
+</body>
+</html>

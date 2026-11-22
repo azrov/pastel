@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Changelog · Pastel</title>
+<meta name="description" content="Pastel: a modern cross-platform app framework and toolchain for Object Pascal. Desktop, phone, web and console apps from one codebase.">
+<script>
+  try { var t = localStorage.getItem('pastel-theme'); } catch (e) {}
+  document.documentElement.dataset.bsTheme = t || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hl-dark">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body class="section-changelog">
+<nav class="navbar navbar-expand-lg sticky-top site-header">
+  <div class="container-fluid px-lg-4">
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="index.html">
+      <span class="logo" aria-hidden="true"></span>Pastel
+    </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#top" aria-controls="top" aria-expanded="false" aria-label="Links">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="top">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link " href="docs.html">Docs</a></li>
+        <li class="nav-item"><a class="nav-link" href="getting-started.html">Get started</a></li>
+        <li class="nav-item"><a class="nav-link " href="download.html">Download</a></li>
+        <li class="nav-item"><a class="nav-link active" href="changelog.html">Changelog</a></li>
+      </ul>
+      <div class="search position-relative my-2 my-lg-0 me-lg-3">
+        <input id="search" class="form-control form-control-sm" type="search" placeholder="Search the docs  /" autocomplete="off" data-base="" aria-label="Search the docs">
+        <div id="results" class="dropdown-menu shadow"></div>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        <button id="theme" class="btn btn-sm btn-outline-secondary" type="button" aria-label="Light or dark" title="Light or dark"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+        <a class="btn btn-sm btn-outline-secondary" href="https://github.com/azrov/pastel">GitHub</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-lg-4">
+  <div class="row">
+    <aside class="col-lg-3 col-xl-2 docs-sidebar">
+      <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+        <div class="offcanvas-header border-bottom">
+          <h5 class="offcanvas-title" id="sidebarLabel">Documentation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+          <nav class="docs-nav w-100">
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g0" aria-expanded="false">Start</button>
+              <div class="collapse " id="g0">
+                <a href="readme.html">Overview</a>
+                <a href="docs.html">All topics</a>
+                <a href="getting-started.html">Getting started</a>
+                <a href="commands.html">The pastel command</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g1" aria-expanded="false">Handbook</button>
+              <div class="collapse " id="g1">
+                <a href="handbook/README.html">The Pastel Handbook</a>
+                <a href="handbook/01-hello.html">1. Your first program</a>
+                <a href="handbook/02-values.html">2. Values, types and variables</a>
+                <a href="handbook/03-decisions-loops.html">3. Decisions and loops</a>
+                <a href="handbook/04-routines.html">4. Procedures and functions</a>
+                <a href="handbook/05-structured-types.html">5. Arrays, records, enumerations and sets</a>
+                <a href="handbook/06-strings.html">6. Text</a>
+                <a href="handbook/07-units.html">7. Units</a>
+                <a href="handbook/08-classes.html">8. Classes and objects</a>
+                <a href="handbook/09-exceptions.html">9. When things go wrong</a>
+                <a href="handbook/10-generics.html">10. Lists, dictionaries and generics</a>
+                <a href="handbook/11-files-json.html">11. Files and JSON</a>
+                <a href="handbook/12-testing.html">12. Testing</a>
+                <a href="handbook/13-interfaces.html">13. Interfaces and the command line</a>
+                <a href="handbook/14-first-window.html">14. Your first window</a>
+                <a href="handbook/15-layout.html">15. Layout</a>
+                <a href="handbook/16-grids-and-dialogs.html">16. Grids and dialogs</a>
+                <a href="handbook/17-database.html">17. A database</a>
+                <a href="handbook/18-charts-and-reports.html">18. Charts and reports</a>
+                <a href="handbook/19-look-and-languages.html">19. Look and languages</a>
+                <a href="handbook/20-background.html">20. Work in the background</a>
+                <a href="handbook/21-phones.html">21. Phones</a>
+                <a href="handbook/22-shipping.html">22. Shipping</a>
+                <a href="handbook/appendix-a-cheat-sheet.html">Appendix A. Object Pascal at a glance</a>
+                <a href="handbook/appendix-b-from-delphi.html">Appendix B. Coming from Delphi or Lazarus</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g2" aria-expanded="false">Guides</button>
+              <div class="collapse " id="g2">
+                <a href="guide-cli.html">Writing a command-line tool</a>
+                <a href="guide-api.html">A REST API with a database</a>
+                <a href="guide-desktop.html">Building a desktop app</a>
+                <a href="guide-business.html">A business system — desktop app and server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g3" aria-expanded="false">Desktop and phone apps</button>
+              <div class="collapse " id="g3">
+                <a href="forms.html">Forms and controls</a>
+                <a href="controls.html">Controls reference</a>
+                <a href="styles.html">Styles: Fluent, Material and your own</a>
+                <a href="components.html">Writing components</a>
+                <a href="android.html">Android</a>
+                <a href="device.html">The phone&#39;s features</a>
+                <a href="java.html">Java from Pascal</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g4" aria-expanded="false">Programs and services</button>
+              <div class="collapse " id="g4">
+                <a href="console.html">Console programs</a>
+                <a href="data.html">JSON, settings and logging</a>
+                <a href="documents.html">Reports, PDF, Excel and printing</a>
+                <a href="system.html">Files, programs, HTTP and the environment</a>
+                <a href="services.html">Services: programs that keep running</a>
+                <a href="web.html">Web APIs and sites: Pastel.Web</a>
+                <a href="websockets.html">WebSockets: Pastel.WebSocket</a>
+                <a href="mail.html">E-mail: Pastel.Mail</a>
+                <a href="pages.html">Web pages from templates</a>
+                <a href="markdown.html">Markdown</a>
+                <a href="database.html">Databases: Pastel.Db</a>
+                <a href="sync.html">Data that works offline: Pastel.Sync</a>
+                <a href="auth.html">Users and login: Pastel.Auth</a>
+                <a href="security.html">Passwords, tokens and signatures: Pastel.Crypto, Pastel.Jwt</a>
+                <a href="deploy.html">Deploying to a Linux server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g5" aria-expanded="false">Working with Pastel</button>
+              <div class="collapse " id="g5">
+                <a href="project.html">The project file: pastel.toml</a>
+                <a href="workflow.html">Everyday work: watch, format, libraries</a>
+                <a href="packages.html">Packages</a>
+                <a href="testing.html">Testing</a>
+                <a href="vscode.html">Pastel for Visual Studio Code</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g6" aria-expanded="false">Reference</button>
+              <div class="collapse " id="g6">
+                <a href="api/index.html">Pastel API reference</a>
+                <a href="compatibility.html">Compatibility: what stays the same</a>
+                <a href="performance.html">Performance</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g7" aria-expanded="false">Examples</button>
+              <div class="collapse " id="g7">
+                <a href="examples/components-demo.html">components-demo</a>
+                <a href="examples/components.html">components</a>
+                <a href="examples/contacts.html">contacts</a>
+                <a href="examples/dupfinder.html">dupfinder</a>
+                <a href="examples/notepad.html">notepad</a>
+                <a href="examples/notes-api.html">notes-api</a>
+                <a href="examples/pocket-app.html">pocket-app</a>
+                <a href="examples/pocket-cli.html">pocket-cli</a>
+                <a href="examples/pocket-core.html">pocket-core</a>
+                <a href="examples/salon-api.html">salon-api</a>
+                <a href="examples/salon-core.html">salon-core</a>
+                <a href="examples/salon-desk.html">salon-desk</a>
+                <a href="examples/weather.html">weather</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start " type="button" data-bs-toggle="collapse" data-bs-target="#g8" aria-expanded="true">Project</button>
+              <div class="collapse show" id="g8">
+                <a href="roadmap.html">Pastel roadmap to 1.0</a>
+                <a href="changelog.html">Changelog</a>
+                <a href="vscode-changelog.html" class="current" aria-current="page">Changelog of the VS Code extension</a>
+                <a href="contributing.html">Contributing to Pastel</a>
+                <a href="security-policy.html">Security</a>
+                <a href="code-of-conduct.html">Code of conduct</a>
+                <a href="announcing-1.0.html">Announcing Pastel 1.0</a>
+              </div>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </aside>
+    <main class="col-12 col-lg-9 col-xl-8 docs-main">
+      <article class="markdown">
+<h1 id="changelog"><a class="anchor" href="#changelog">#</a>Changelog</h1>
+<h2 id="160"><a class="anchor" href="#160">#</a>1.6.0</h2>
+<ul>
+<li>The designer's top bar chooses the style the form is shown in: the app's own (<code>assets/theme.toml</code>), <em>Pastel</em>, <em>Fluent (Windows)</em>, <em>Material (Android)</em> or a style file of the project (<code>assets/styles/*.pstyle</code>) — Pastel 2.1</li>
+<li>The designer shows the app's colors from <code>assets/theme.toml</code></li>
+<li><code>.pstyle</code> files open as TOML</li>
+</ul>
+<h2 id="1511"><a class="anchor" href="#1511">#</a>1.5.11</h2>
+<ul>
+<li>The palette has <code>TVideoPlayer</code> (<em>Media</em>) and <code>TTileView</code> (<em>Lists and tables</em>) of Pastel 2.0.0-beta.13</li>
+</ul>
+<h2 id="1510"><a class="anchor" href="#1510">#</a>1.5.10</h2>
+<ul>
+<li>The palette's <em>Media</em> has <code>TBarcode</code> (Pastel 2.0.0-beta.9); <code>TSensor</code>, <code>TNfcReader</code>, <code>TBluetoothLE</code>, <code>TTrayIcon</code> with the components without a place on the form</li>
+</ul>
+<h2 id="159"><a class="anchor" href="#159">#</a>1.5.9</h2>
+<ul>
+<li>The palette's <em>Media</em> has <code>TCameraView</code> and <code>TMapView</code> (Pastel 2.0.0-beta.8); <code>TPushNotifications</code> with the components without a place on the form</li>
+</ul>
+<h2 id="158"><a class="anchor" href="#158">#</a>1.5.8</h2>
+<ul>
+<li>The designer's palette has <em>Media</em>: <code>TWebBrowser</code> and <code>TVideoView</code> (Pastel 2.0.0-beta.7); <code>TMediaPlayer</code> with the components without a place on the form</li>
+</ul>
+<h2 id="157"><a class="anchor" href="#157">#</a>1.5.7</h2>
+<ul>
+<li>Groups of projects (like Delphi's project group): a folder whose <code>pastel.toml</code> has <code>[group]</code> shows its projects in the side bar; F9, Ctrl+F9 and the platform are for the active project (marked; a click on another one, or <em>Pastel: Set Active Project</em>, changes it), the status bar's run button names it; <em>Build All</em>, <em>Build All Platforms</em>, <em>Test All</em>; <em>Pastel: New Group of Projects</em> writes the file (<code>pastel new group</code>)</li>
+</ul>
+<h2 id="156"><a class="anchor" href="#156">#</a>1.5.6</h2>
+<ul>
+<li>Frames: <em>Pastel: New Frame…</em> makes a part of forms (<code>src/frames/Address.pform</code>); the project's frames are in the palette under <em>This project</em>, and a frame on a form is one block in the designer (its controls are edited in its own <code>.pform</code>)</li>
+</ul>
+<h2 id="155"><a class="anchor" href="#155">#</a>1.5.5</h2>
+<ul>
+<li>The designer designs views: the box at the top left chooses <em>All screens</em> (the form) or a <em>Phone</em>, <em>Tablet</em>, <em>TV</em> or <em>Desktop</em> view (• marks those that exist); with a view chosen the form shows with the view's values at that screen's size, and moving, resizing and the Object Inspector change the view's file (<code>Home.tablet.pform</code>)</li>
+<li>New sizes in the size box: Tablet 1024 × 768, TV 960 × 540, Desktop 1100 × 700; view files open their form's designer</li>
+</ul>
+<h2 id="154"><a class="anchor" href="#154">#</a>1.5.4</h2>
+<ul>
+<li><em>Pastel: Android Log</em>: the log of the app on the connected phone (<code>pastel logcat</code>), also in the side bar</li>
+</ul>
+<h2 id="153"><a class="anchor" href="#153">#</a>1.5.3</h2>
+<ul>
+<li>The platform in the status bar (like Delphi's target platforms): F9 and Ctrl+F9 follow it. A phone app starts on <em>android</em>: F9 runs it on the connected phone or emulator, Ctrl+F9 makes the <code>.apk</code>; <em>Pastel: Choose Platform…</em> switches (also android-arm for older phones and TV boxes, android-x86_64 for the emulator)</li>
+<li><em>Pastel: Set App Icon…</em>: a PNG becomes the app's icon (<code>assets/icon.png</code>), from the side bar or a <code>.png</code> in the Explorer</li>
+</ul>
+<h2 id="152"><a class="anchor" href="#152">#</a>1.5.2</h2>
+<ul>
+<li>The New Project wizard makes web sites (<em>Server → Web Site</em>)</li>
+</ul>
+<h2 id="151"><a class="anchor" href="#151">#</a>1.5.1</h2>
+<ul>
+<li>The wizard's Android App and New Form… in an app made for phones make forms for phones (<code>--phone</code>)</li>
+</ul>
+<h2 id="150"><a class="anchor" href="#150">#</a>1.5.0</h2>
+<ul>
+<li>The New Project wizard makes Android apps (<em>Mobile → Android App</em>), and a desktop app can add Android to its platforms</li>
+<li>The palette and the inspector show &quot;Android ✓ (preview)&quot; for the controls that work on phones</li>
+</ul>
+<h2 id="140"><a class="anchor" href="#140">#</a>1.4.0</h2>
+<ul>
+<li>Designer: snap lines — an edge or the middle of a control snaps to its neighbours' while moving or resizing, shown by a purple line (<code>Alt</code> turns them off with the grid)</li>
+<li>The palette's <em>Additional</em> group: GroupBox, RadioGroup, Shape, Bevel, PaintBox; the dialog components in <em>Non-visual</em></li>
+</ul>
+<h2 id="130"><a class="anchor" href="#130">#</a>1.3.0</h2>
+<ul>
+<li>The icon picker (… next to <code>Icon</code>): the built-in icons drawn as they look, with a search box; the pictures in <code>assets/</code>; <em>Choose a picture file…</em> copies one into <code>assets/icons/</code>. <code>FileName</code> and <code>BackgroundImage</code> get the picture picker</li>
+</ul>
+<h2 id="120"><a class="anchor" href="#120">#</a>1.2.0</h2>
+<ul>
+<li>A Welcome page like Android Studio's: recent projects, New Project, Open; shown when VS Code opens without a folder (<code>pastel.showWelcome</code>), or with <strong>Pastel: Welcome</strong></li>
+<li>The New Project wizard: templates grouped as Desktop, Console, Server, Library and Mobile (Android: coming in Pastel 1.5), then the name, the folder and the platforms; the new project opens with its main form in the designer</li>
+<li>Designer: a form that stacks its controls (<code>Layout = Flow</code>, from before 1.4) offers <strong>Place freely</strong>, keeping every control where it is; ⇱ <em>Place freely</em> on a selected row, column or card</li>
+<li>Designer: the palette and the inspector show where a control works (Windows ✓ Linux ✓ · Android)</li>
+<li>New Form… only in app projects</li>
+</ul>
+<h2 id="110"><a class="anchor" href="#110">#</a>1.1.0</h2>
+<ul>
+<li>The designer is laid out like Delphi's IDE: Structure and the Object Inspector (Properties and Events tabs, search, alphabetical) on the left, the form in a window frame in the middle, the Tool Palette in groups with a search box on the right, non-visual components in a tray under the form</li>
+<li>Free placement (<code>Layout = Free</code>): drop controls where they should be, drag to move (also into a panel), eight grips to resize, an 8 pixel grid (<code>Alt</code> places freely), <code>Ctrl+arrows</code> move by a pixel, <code>Shift+arrows</code> resize, align and same-size buttons for several controls; the position and size are shown while dragging</li>
+<li>Flow containers get grips for a fixed width and height too</li>
+<li><code>Anchors</code> as check boxes; colors can also be typed (<code>#RRGGBB</code>); a double-click on an event writes its handler</li>
+<li>The form is shown at its real size (<em>Fit</em> shrinks a big one)</li>
+</ul>
+<h2 id="105"><a class="anchor" href="#105">#</a>1.0.5</h2>
+<ul>
+<li>Designer: properties the <code>.pform</code> does not set show their default — <code>Enabled</code>, <code>Visible</code> and a form's <code>Resizable</code> are ticked, <code>Style</code> says <em>(default: Primary)</em>; choosing the default again removes the line</li>
+<li>Designer: a <strong>Name</strong> row at the top of the properties, like Delphi's Object Inspector (the <code>.pas</code> code is renamed too)</li>
+<li>Designer: <code>BackgroundImage</code> and <code>FileName</code> offer the pictures in <code>assets/</code></li>
+<li>Designer: changes are made one after the other, and a change that would leave the form's <code>object</code>/<code>end</code> lines unbalanced is refused</li>
+<li>A handler is created once, also after a quick second double-click, and before <code>initialization</code> in the unit</li>
+</ul>
+<h2 id="104"><a class="anchor" href="#104">#</a>1.0.4</h2>
+<ul>
+<li>Designer: select several controls (<code>Ctrl+click</code>) and change their common properties, delete, copy or cut them together</li>
+<li>Designer: put controls into a new row, column or card (⊞), take them out again (<em>Unwrap</em>); <code>Alt+Up</code>/<code>Down</code> moves a control among its neighbours</li>
+<li>Designer: a <em>Structure</em> list of every object, also the non-visual ones (timers, actions...)</li>
+<li>Designer: what <code>pastel check</code> finds is outlined on the form and listed under it</li>
+<li>Debugging: objects are shown as their real class with their properties; <code>TStringList</code>, <code>TList</code>, <code>TFPList</code> with their items; JSON values as JSON</li>
+<li>F5 in a library's file debugs the program that uses it, like F9</li>
+</ul>
+<h2 id="103"><a class="anchor" href="#103">#</a>1.0.3</h2>
+<ul>
+<li>Completion and go to definition know the units of packages (<code>pastel add</code>), read from the cache</li>
+<li>Links to the repository on GitHub</li>
+</ul>
+<h2 id="102"><a class="anchor" href="#102">#</a>1.0.2</h2>
+<ul>
+<li>The designer offers the icon names in a button's <code>Icon</code> field</li>
+</ul>
+<h2 id="101"><a class="anchor" href="#101">#</a>1.0.1</h2>
+<ul>
+<li>F9 (Run) in a library's file runs a program that uses it; with several, it asks once and remembers (<em>Pastel: Choose the Program to Run</em> asks again); with none, it offers the library's tests</li>
+<li><code>.pform</code> files show a warning on rows whose controls do not fit the form</li>
+</ul>
+<h2 id="100"><a class="anchor" href="#100">#</a>1.0.0</h2>
+<ul>
+<li>The toolbox shows the controls of the libraries a project uses, and non-visual components (◇): timers, actions, data bindings and your own; adding one puts it at the top of the form</li>
+<li>Ready for the Marketplace and Open VSX; works with Pastel 1.0 (<code>pastel = &quot;1.0&quot;</code> projects)</li>
+<li>The form designer, Pascal code intelligence, tests, routes and tasks as in 0.9, now with a stable <code>pastel</code> tool behind them</li>
+</ul>
+<h2 id="090"><a class="anchor" href="#090">#</a>0.9.0</h2>
+<ul>
+<li>The designer and its toolbox know the controls of your project (<code>src/controls/</code>, made with
+<code>pastel new control</code>): they come first in the toolbox, with their properties in the panel;
+saving a control updates the toolbox and the picture</li>
+<li>New controls in the toolbox and properties: <code>TGrid</code>, <code>TListView</code>, <code>TTreeView</code> (with <code>TGridColumn</code>
+children), <code>TDataBinding</code></li>
+</ul>
+<h2 id="080"><a class="anchor" href="#080">#</a>0.8.0</h2>
+<ul>
+<li>Form designer: undo and redo (Ctrl+Z, Ctrl+Y), copy, cut, paste and duplicate controls
+(Ctrl+C/X/V/D; pasted controls get free names), rename a control with F2 or in the
+properties panel, and the form's <code>.pas</code> code is renamed with it</li>
+<li>Preview at phone, tablet and desktop sizes, and in the dark theme</li>
+<li><strong>Pastel: New Form…</strong> (also in the Pastel panel): a dialog form with OK and Cancel, added to <code>main.pas</code></li>
+<li>The toolbox and properties know the new controls: check boxes, switches, radio buttons, combo boxes,
+list boxes, memos, images, tabs, scroll boxes, progress bars, sliders, spinners, menus, actions, timers</li>
+</ul>
+<h2 id="070"><a class="anchor" href="#070">#</a>0.7.0</h2>
+<ul>
+<li>Pascal code intelligence from the project, the Pastel framework and the Free Pascal sources:
+completion after a dot (<code>NameEdit.</code> → <code>Text</code>, <code>SetFocus</code>, also through properties, function
+results, <code>[index]</code> and string helpers), names in scope, units in <code>uses</code></li>
+<li>Hover with the declaration and its documentation comment; parameter hints while typing a call, with overloads</li>
+<li>Go to definition (also into the framework and Free Pascal), find all references, rename across the project</li>
+<li>Compiler errors underlined while typing: the unsaved text is compiled in the background
+(setting <code>pastel.compileWhileTyping</code>)</li>
+<li>Quick fixes: add the missing unit to <code>uses</code>; create the bodies of methods without one
+(<em>Pastel: Complete Class</em>, Ctrl+Shift+C like Delphi)</li>
+</ul>
+<h2 id="060"><a class="anchor" href="#060">#</a>0.6.0</h2>
+<ul>
+<li>Web APIs: <strong>▶ Send</strong> above every route (<code>Web.Get('/path', @Handler)</code>) sends a request to the running
+server and shows the answer; path parameters, a JSON body and the API key from <code>config.toml</code> are filled in</li>
+<li>Pastel panel: routes, jobs (<code>Every</code>, <code>DailyAt</code>) and database migrations of service and API projects;
+Run Migrations, Migration Status, New Migration…</li>
+<li>New Project offers &quot;api&quot;: a web API with a database</li>
+<li>Setting <code>pastel.serverUrl</code> for Send Request</li>
+</ul>
+<h2 id="031"><a class="anchor" href="#031">#</a>0.3.1</h2>
+<ul>
+<li>&quot;Pastel: Run Tests&quot; command, task and button in the Pastel panel (runs <code>pastel test</code>)</li>
+</ul>
+<h2 id="030"><a class="anchor" href="#030">#</a>0.3.0</h2>
+<ul>
+<li>Pastel panel in the activity bar: Run/Build actions, forms (click to design), source files, project settings;
+&quot;New Project&quot; button when the folder has no project</li>
+<li>&quot;Open Form Designer&quot; in the right-click menus of the Explorer, the editor and editor tabs,
+and as a button on a form's .pas file</li>
+<li>Delphi keys in Pastel projects: F9 run, Ctrl+F9 build, F12 form/code, Ctrl+Shift+Up/Down declaration/body
+(setting: pastel.delphiShortcuts)</li>
+<li>Pascal: syntax colors, outline, symbol search in the project and the Pastel framework (Ctrl+T),
+go to definition, Ctrl+click on a unit in &quot;uses&quot; opens it</li>
+</ul>
+<h2 id="020"><a class="anchor" href="#020">#</a>0.2.0</h2>
+<ul>
+<li>Form designer: select controls, edit properties in a panel, drag to move, add from the toolbox, delete</li>
+<li>Selection follows the editor cursor, and the editor follows the designer</li>
+<li>Event buttons in the designer open a handler's code or create it</li>
+<li>Quick fixes create handlers with the right parameters (e.g. OnCloseQuery)</li>
+<li>&quot;New Project&quot; asks in a dialog whether to open the project, so the question is not missed</li>
+</ul>
+<h2 id="010"><a class="anchor" href="#010">#</a>0.1.0</h2>
+<p>First version:</p>
+<ul>
+<li>Run, Build, Build Release, Build for Platform, Clean and Check Setup commands</li>
+<li>&quot;Pastel Run&quot; button in the status bar and in the editor title</li>
+<li>Build errors (from Pascal code and .pform files) in the Problems panel, with links to the line</li>
+<li>.pform files: syntax colors, completion of controls, properties and values, hover help,
+checks while typing, outline, Ctrl+click on an event handler to open its code</li>
+<li>Quick fix to add a missing event handler to the form's .pas file</li>
+<li>Live form preview beside the editor (updates as you type)</li>
+<li>New Project wizard</li>
+</ul>
+
+      </article>
+      <p class="edit mt-5"><a href="https://github.com/azrov/pastel/edit/main/vscode/CHANGELOG.md">Improve this page on GitHub</a></p>
+    </main>
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <div class="sticky">
+        <div class="toc-title">On this page</div>
+        <a href="#160">1.6.0</a>
+        <a href="#1511">1.5.11</a>
+        <a href="#1510">1.5.10</a>
+        <a href="#159">1.5.9</a>
+        <a href="#158">1.5.8</a>
+        <a href="#157">1.5.7</a>
+        <a href="#156">1.5.6</a>
+        <a href="#155">1.5.5</a>
+        <a href="#154">1.5.4</a>
+        <a href="#153">1.5.3</a>
+        <a href="#152">1.5.2</a>
+        <a href="#151">1.5.1</a>
+        <a href="#150">1.5.0</a>
+        <a href="#140">1.4.0</a>
+        <a href="#130">1.3.0</a>
+        <a href="#120">1.2.0</a>
+        <a href="#110">1.1.0</a>
+        <a href="#105">1.0.5</a>
+        <a href="#104">1.0.4</a>
+        <a href="#103">1.0.3</a>
+        <a href="#102">1.0.2</a>
+        <a href="#101">1.0.1</a>
+        <a href="#100">1.0.0</a>
+        <a href="#090">0.9.0</a>
+        <a href="#080">0.8.0</a>
+        <a href="#070">0.7.0</a>
+        <a href="#060">0.6.0</a>
+        <a href="#031">0.3.1</a>
+        <a href="#030">0.3.0</a>
+        <a href="#020">0.2.0</a>
+        <a href="#010">0.1.0</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer py-4 mt-5">
+  <div class="container d-flex flex-wrap gap-3 justify-content-between small text-body-secondary">
+    <span>Pastel 2.1.0-beta.4 · MIT License · built with Pastel.Markdown and Pastel.Pages</span>
+    <span class="d-flex gap-3">
+      <a href="docs.html">Documentation</a>
+      <a href="download.html">Download</a>
+      <a href="contributing.html">Contributing</a>
+      <a href="https://github.com/azrov/pastel">GitHub</a>
+    </span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/delphi.min.js"></script>
+<script src="assets/site.js"></script>
+</body>
+</html>

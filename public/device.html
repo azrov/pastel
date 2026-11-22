@@ -1,0 +1,739 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The phone&#39;s features · Pastel</title>
+<meta name="description" content="Pastel: a modern cross-platform app framework and toolchain for Object Pascal. Desktop, phone, web and console apps from one codebase.">
+<script>
+  try { var t = localStorage.getItem('pastel-theme'); } catch (e) {}
+  document.documentElement.dataset.bsTheme = t || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hl-dark">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body class="section-docs">
+<nav class="navbar navbar-expand-lg sticky-top site-header">
+  <div class="container-fluid px-lg-4">
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="index.html">
+      <span class="logo" aria-hidden="true"></span>Pastel
+    </a>
+        <button class="btn btn-sm btn-outline-secondary d-lg-none me-auto" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">Menu</button>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#top" aria-controls="top" aria-expanded="false" aria-label="Links">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="top">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link active" href="docs.html">Docs</a></li>
+        <li class="nav-item"><a class="nav-link" href="getting-started.html">Get started</a></li>
+        <li class="nav-item"><a class="nav-link " href="download.html">Download</a></li>
+        <li class="nav-item"><a class="nav-link " href="changelog.html">Changelog</a></li>
+      </ul>
+      <div class="search position-relative my-2 my-lg-0 me-lg-3">
+        <input id="search" class="form-control form-control-sm" type="search" placeholder="Search the docs  /" autocomplete="off" data-base="" aria-label="Search the docs">
+        <div id="results" class="dropdown-menu shadow"></div>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        <button id="theme" class="btn btn-sm btn-outline-secondary" type="button" aria-label="Light or dark" title="Light or dark"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+        <a class="btn btn-sm btn-outline-secondary" href="https://github.com/azrov/pastel">GitHub</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-lg-4">
+  <div class="row">
+    <aside class="col-lg-3 col-xl-2 docs-sidebar">
+      <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+        <div class="offcanvas-header border-bottom">
+          <h5 class="offcanvas-title" id="sidebarLabel">Documentation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+          <nav class="docs-nav w-100">
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g0" aria-expanded="false">Start</button>
+              <div class="collapse " id="g0">
+                <a href="readme.html">Overview</a>
+                <a href="docs.html">All topics</a>
+                <a href="getting-started.html">Getting started</a>
+                <a href="commands.html">The pastel command</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g1" aria-expanded="false">Handbook</button>
+              <div class="collapse " id="g1">
+                <a href="handbook/README.html">The Pastel Handbook</a>
+                <a href="handbook/01-hello.html">1. Your first program</a>
+                <a href="handbook/02-values.html">2. Values, types and variables</a>
+                <a href="handbook/03-decisions-loops.html">3. Decisions and loops</a>
+                <a href="handbook/04-routines.html">4. Procedures and functions</a>
+                <a href="handbook/05-structured-types.html">5. Arrays, records, enumerations and sets</a>
+                <a href="handbook/06-strings.html">6. Text</a>
+                <a href="handbook/07-units.html">7. Units</a>
+                <a href="handbook/08-classes.html">8. Classes and objects</a>
+                <a href="handbook/09-exceptions.html">9. When things go wrong</a>
+                <a href="handbook/10-generics.html">10. Lists, dictionaries and generics</a>
+                <a href="handbook/11-files-json.html">11. Files and JSON</a>
+                <a href="handbook/12-testing.html">12. Testing</a>
+                <a href="handbook/13-interfaces.html">13. Interfaces and the command line</a>
+                <a href="handbook/14-first-window.html">14. Your first window</a>
+                <a href="handbook/15-layout.html">15. Layout</a>
+                <a href="handbook/16-grids-and-dialogs.html">16. Grids and dialogs</a>
+                <a href="handbook/17-database.html">17. A database</a>
+                <a href="handbook/18-charts-and-reports.html">18. Charts and reports</a>
+                <a href="handbook/19-look-and-languages.html">19. Look and languages</a>
+                <a href="handbook/20-background.html">20. Work in the background</a>
+                <a href="handbook/21-phones.html">21. Phones</a>
+                <a href="handbook/22-shipping.html">22. Shipping</a>
+                <a href="handbook/appendix-a-cheat-sheet.html">Appendix A. Object Pascal at a glance</a>
+                <a href="handbook/appendix-b-from-delphi.html">Appendix B. Coming from Delphi or Lazarus</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g2" aria-expanded="false">Guides</button>
+              <div class="collapse " id="g2">
+                <a href="guide-cli.html">Writing a command-line tool</a>
+                <a href="guide-api.html">A REST API with a database</a>
+                <a href="guide-desktop.html">Building a desktop app</a>
+                <a href="guide-business.html">A business system — desktop app and server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start " type="button" data-bs-toggle="collapse" data-bs-target="#g3" aria-expanded="true">Desktop and phone apps</button>
+              <div class="collapse show" id="g3">
+                <a href="forms.html">Forms and controls</a>
+                <a href="controls.html">Controls reference</a>
+                <a href="styles.html">Styles: Fluent, Material and your own</a>
+                <a href="components.html">Writing components</a>
+                <a href="android.html">Android</a>
+                <a href="device.html" class="current" aria-current="page">The phone&#39;s features</a>
+                <a href="java.html">Java from Pascal</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g4" aria-expanded="false">Programs and services</button>
+              <div class="collapse " id="g4">
+                <a href="console.html">Console programs</a>
+                <a href="data.html">JSON, settings and logging</a>
+                <a href="documents.html">Reports, PDF, Excel and printing</a>
+                <a href="system.html">Files, programs, HTTP and the environment</a>
+                <a href="services.html">Services: programs that keep running</a>
+                <a href="web.html">Web APIs and sites: Pastel.Web</a>
+                <a href="websockets.html">WebSockets: Pastel.WebSocket</a>
+                <a href="mail.html">E-mail: Pastel.Mail</a>
+                <a href="pages.html">Web pages from templates</a>
+                <a href="markdown.html">Markdown</a>
+                <a href="database.html">Databases: Pastel.Db</a>
+                <a href="sync.html">Data that works offline: Pastel.Sync</a>
+                <a href="auth.html">Users and login: Pastel.Auth</a>
+                <a href="security.html">Passwords, tokens and signatures: Pastel.Crypto, Pastel.Jwt</a>
+                <a href="deploy.html">Deploying to a Linux server</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g5" aria-expanded="false">Working with Pastel</button>
+              <div class="collapse " id="g5">
+                <a href="project.html">The project file: pastel.toml</a>
+                <a href="workflow.html">Everyday work: watch, format, libraries</a>
+                <a href="packages.html">Packages</a>
+                <a href="testing.html">Testing</a>
+                <a href="vscode.html">Pastel for Visual Studio Code</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g6" aria-expanded="false">Reference</button>
+              <div class="collapse " id="g6">
+                <a href="api/index.html">Pastel API reference</a>
+                <a href="compatibility.html">Compatibility: what stays the same</a>
+                <a href="performance.html">Performance</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g7" aria-expanded="false">Examples</button>
+              <div class="collapse " id="g7">
+                <a href="examples/components-demo.html">components-demo</a>
+                <a href="examples/components.html">components</a>
+                <a href="examples/contacts.html">contacts</a>
+                <a href="examples/dupfinder.html">dupfinder</a>
+                <a href="examples/notepad.html">notepad</a>
+                <a href="examples/notes-api.html">notes-api</a>
+                <a href="examples/pocket-app.html">pocket-app</a>
+                <a href="examples/pocket-cli.html">pocket-cli</a>
+                <a href="examples/pocket-core.html">pocket-core</a>
+                <a href="examples/salon-api.html">salon-api</a>
+                <a href="examples/salon-core.html">salon-core</a>
+                <a href="examples/salon-desk.html">salon-desk</a>
+                <a href="examples/weather.html">weather</a>
+              </div>
+            </div>
+            <div class="group">
+              <button class="group-name btn btn-sm w-100 text-start collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#g8" aria-expanded="false">Project</button>
+              <div class="collapse " id="g8">
+                <a href="roadmap.html">Pastel roadmap to 1.0</a>
+                <a href="changelog.html">Changelog</a>
+                <a href="vscode-changelog.html">Changelog of the VS Code extension</a>
+                <a href="contributing.html">Contributing to Pastel</a>
+                <a href="security-policy.html">Security</a>
+                <a href="code-of-conduct.html">Code of conduct</a>
+                <a href="announcing-1.0.html">Announcing Pastel 1.0</a>
+              </div>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </aside>
+    <main class="col-12 col-lg-9 col-xl-8 docs-main">
+      <article class="markdown">
+<h1 id="the-phones-features"><a class="anchor" href="#the-phones-features">#</a>The phone's features</h1>
+<p><code>Pastel.Device</code> reaches what a phone has and a desktop program usually does not: the share menu, the phone and
+browser apps, vibration, notifications, the camera, the place, files from anywhere on the phone — and the
+permissions some of them need. On Android it uses the phone's own apps and services; on a computer the calls do
+what makes sense there (the browser, the open dialog, desktop notifications) or answer that it is not there.</p>
+<pre><code class="language-pascal">uses
+  Pastel.Device;
+
+ShareText('Your appointment: Monday 10:00', 'Salon');      // WhatsApp, mail, messages...
+ShareFile(InvoicePdf);                                     // a file of the app, to another app
+OpenUrl('tel:05321112233');                                // the phone app, the number typed in
+OpenUrl('https://maps.google.com/?q=Kadıköy');             // the browser or the maps app
+OpenUrl(ReportFile);                                       // a file: the app for it (a PDF viewer)
+Vibrate;                                                   // a short buzz (Vibrate(200): longer)
+Notify('Sync', '12 appointments came in');                 // in the notification bar
+</code></pre>
+<h2 id="calls-that-wait-for-the-user"><a class="anchor" href="#calls-that-wait-for-the-user">#</a>Calls that wait for the user</h2>
+<p>These show something of the phone (the camera app, the file picker, a permission question) and come back when
+the user is done. The app's window stays alive meanwhile; call them from an event (a button's <code>OnClick</code>).
+Each has a second form that does not wait — shown after these — which is the better way on a phone.</p>
+<pre><code class="language-pascal">procedure THomeForm.PhotoClick(Sender: TObject);
+var
+  Photo: string;
+begin
+  Photo := TakePhoto;                         // '' when cancelled or there is no camera app
+  if Photo &lt;&gt; '' then
+    Picture.FileName := Photo;                // a .jpg in the app's cache
+end;
+
+procedure THomeForm.AttachClick(Sender: TObject);
+var
+  F: string;
+begin
+  F := PickFile('application/pdf');           // 'image/*', 'text/*', '*/*'
+  if F &lt;&gt; '' then
+    Attachments.Items.Add(F);                 // a copy in the app's cache, a normal file
+end;
+
+procedure THomeForm.WhereClick(Sender: TObject);
+var
+  Place: TPlace;
+begin
+  if GetLocation(Place) then                  // asks for the permission first
+    PlaceLabel.Text := Format('%.5f, %.5f (±%.0f m)', [Place.Latitude, Place.Longitude, Place.Accuracy])
+  else
+    PlaceLabel.Text := LastDeviceError;       // &quot;the app may not know the place (permission refused)&quot;
+end;
+</code></pre>
+<p>Without waiting, the call returns at once and the answer comes to a method of yours — later, never inside the
+call, also when it is there at once (no camera on a computer):</p>
+<pre><code class="language-pascal">procedure THomeForm.PhotoClick(Sender: TObject);
+begin
+  TakePhoto(@PhotoTaken);
+end;
+
+procedure THomeForm.PhotoTaken(Sender: TObject; Ok: Boolean; const FileName: string);
+begin
+  if Ok then
+    Picture.FileName := FileName
+  else
+    StatusLabel.Text := LastDeviceError;
+end;
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Waits</th>
+<th>Does not wait</th>
+<th>The method gets</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>TakePhoto</code></td>
+<td><code>TakePhoto(@Done)</code></td>
+<td><code>Ok</code>, the file</td>
+</tr>
+<tr>
+<td><code>PickFile(Mime)</code></td>
+<td><code>PickFile(Mime, @Done)</code></td>
+<td><code>Ok</code>, the file</td>
+</tr>
+<tr>
+<td><code>GetLocation(Place)</code></td>
+<td><code>GetLocation(@Done)</code></td>
+<td><code>Ok</code>, the <code>TPlace</code></td>
+</tr>
+<tr>
+<td><code>RequestPermission(P)</code></td>
+<td><code>RequestPermission(P, @Done)</code></td>
+<td><code>Granted</code></td>
+</tr>
+</tbody></table>
+<p><code>TOpenDialog</code> and <code>OpenFileDialog</code> use the same picker on a phone, so code written for the desktop opens files
+there too.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Android</th>
+<th>A computer</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>ShareText</code>, <code>ShareFile</code></td>
+<td>the share menu</td>
+<td>False (<code>LastDeviceError</code> says why)</td>
+</tr>
+<tr>
+<td><code>OpenUrl</code></td>
+<td>the app for the address or file (<code>tel:</code>, <code>mailto:</code>, <code>https:</code>, <code>geo:</code>)</td>
+<td>the browser or the file's app</td>
+</tr>
+<tr>
+<td><code>Vibrate</code></td>
+<td>a buzz</td>
+<td>nothing</td>
+</tr>
+<tr>
+<td><code>Notify</code></td>
+<td>the notification bar (asks for the permission on Android 13+)</td>
+<td>the desktop's notifications (<a href="#notifications">below</a>)</td>
+</tr>
+<tr>
+<td><code>PickFile</code></td>
+<td>the phone's picker (files, Drive, gallery)</td>
+<td>the open dialog</td>
+</tr>
+<tr>
+<td><code>TakePhoto</code></td>
+<td>the camera app</td>
+<td>''</td>
+</tr>
+<tr>
+<td><code>GetLocation</code></td>
+<td>GPS or the network</td>
+<td>False</td>
+</tr>
+<tr>
+<td><code>RequestPermission</code></td>
+<td>asks the user once</td>
+<td>True</td>
+</tr>
+<tr>
+<td><code>PickContact</code>, <code>ReadContacts</code>, <code>AddContact</code></td>
+<td>the phone's contacts (<a href="#contacts-and-the-calendar">below</a>)</td>
+<td>False</td>
+</tr>
+<tr>
+<td><code>AddToCalendar</code></td>
+<td>the calendar app, filled in</td>
+<td>an <code>.ics</code> file in the calendar program</td>
+</tr>
+<tr>
+<td><code>ReadCalendar</code></td>
+<td>the phone's calendars</td>
+<td>False</td>
+</tr>
+<tr>
+<td><code>SetAppShortcuts</code></td>
+<td>the icon's shortcuts (<a href="#links-and-the-icons-shortcuts">below</a>)</td>
+<td>False</td>
+</tr>
+<tr>
+<td><code>EnterPictureInPicture</code></td>
+<td>the video in a small window (<a href="#picture-in-picture">below</a>)</td>
+<td>False</td>
+</tr>
+<tr>
+<td><code>IsMobile</code></td>
+<td>True</td>
+<td>False</td>
+</tr>
+</tbody></table>
+<h2 id="shared-with-the-app"><a class="anchor" href="#shared-with-the-app">#</a>Shared with the app</h2>
+<p>Other apps' share menu (the gallery, the browser, WhatsApp) can list the app. <code>pastel.toml</code> says which kinds it
+takes; a <a href="controls.html#tsharereceiver">TShareReceiver</a> on the main form gets what was shared — also when the share
+opened the app:</p>
+<pre><code class="language-toml">[package.android]
+receive_shares = [&quot;text/plain&quot;, &quot;image/*&quot;]     # &quot;application/pdf&quot;, &quot;*/*&quot; (any file)...
+</code></pre>
+<p><code>TSharedContent</code> holds <code>Text</code> and <code>Subject</code> (a link shared from the browser is its <code>Text</code>), <code>MimeType</code>, and
+<code>Files</code>: what was shared, copied into the app's cache — one or many photos, a PDF. <code>TakeSharedContent(Shared)</code> is
+the same without the component.</p>
+<h2 id="links-and-the-icons-shortcuts"><a class="anchor" href="#links-and-the-icons-shortcuts">#</a>Links and the icon's shortcuts</h2>
+<p><strong>Links</strong> open the app at the right place: from a QR code, a notification, a mail, a web page. <code>pastel.toml</code> lists
+them, for every platform:</p>
+<pre><code class="language-toml">[package]
+links = [&quot;shop://&quot;, &quot;https://shop.example.com/app&quot;]
+</code></pre>
+<p>A <a href="controls.html#tlinkreceiver">TLinkReceiver</a> on the main form gets the address — also the one that started the app:</p>
+<pre><code class="language-pascal">procedure THomeForm.LinksLink(Sender: TObject; const Url: string);
+begin
+  // shop://order/42 or https://shop.example.com/app/order/42
+  if Pos('/order/', Url) &gt; 0 then
+    OpenOrder(StrToIntDef(Copy(Url, LastDelimiter('/', Url) + 1, MaxInt), 0));
+end;
+</code></pre>
+<ul>
+<li><strong>The app's own scheme</strong> (<code>shop://</code>): any link of it opens the app — on Android, and on computers too: the
+<code>.deb</code> and the Windows installer register the scheme, and the app starts with the address (<code>TakeOpenedLink</code> and
+<code>OnLink</code> find it among the arguments).</li>
+<li><strong>Its site's addresses</strong> (<code>https://shop.example.com/app</code>): links under it open the app instead of the browser
+(Android) once the site says the app is its own. <code>pastel package apk</code> writes <code>dist/assetlinks.json</code> with the
+key's fingerprint: put it at <code>https://shop.example.com/.well-known/assetlinks.json</code>. An app from Google Play is
+signed with Play's key: add its fingerprint (Play Console → App integrity) into the same file. Until then Android
+shows the link in the browser.</li>
+</ul>
+<p><strong>The icon's shortcuts</strong> come with a long press on the app's icon (Android 7.1 and newer) and can be dragged to
+the home screen. Set them at every start (they are in the user's language); a tap opens the app and <code>OnShortcut</code>
+gets the <code>Id</code>:</p>
+<pre><code class="language-pascal">SetAppShortcuts([AppShortcut('new', _('New appointment'), 'add'),
+                 AppShortcut('today', _('Today'), 'calendar')]);
+...
+procedure THomeForm.LinksShortcut(Sender: TObject; const Id: string);
+begin
+  if Id = 'new' then NewAppointment
+  else if Id = 'today' then ShowToday;
+end;
+</code></pre>
+<p>The icon is a built-in icon's name, drawn in the theme's accent; launchers show up to four. <code>SetAppShortcuts([])</code>
+removes them.</p>
+<h2 id="contacts-and-the-calendar"><a class="anchor" href="#contacts-and-the-calendar">#</a>Contacts and the calendar</h2>
+<pre><code class="language-pascal">PickContact(@ContactPicked);                         // the phone's list; no permission needed
+...
+procedure THomeForm.ContactPicked(Sender: TObject; Ok: Boolean; const Contact: TContact);
+begin
+  if Ok then
+  begin
+    NameEdit.Text := Contact.Name;
+    PhoneEdit.Text := Contact.Phones[0];             // PickContact(@Done, True): Contact.Emails[0]
+  end;
+end;
+
+AddContact('Ayşe Yılmaz', '0532 111 22 33', 'ayse@example.com');   // the contacts app, filled in: the user saves it
+AddToCalendar('Haircut', Start, Start + EncodeTime(0, 45, 0, 0), 'Salon Kadıköy', 'Ayşe');   // the calendar app, filled in
+</code></pre>
+<p><code>AddContact</code> and <code>AddToCalendar</code> need no permission: the phone's app opens with the fields filled in and the user
+saves. On a computer <code>AddToCalendar</code> writes an <code>.ics</code> file and opens it in the calendar program (Thunderbird,
+Outlook, GNOME Calendar). <code>AllDay = True</code> makes it a whole day.</p>
+<p>Reading them all needs the permission (<code>permissions = [&quot;contacts&quot;]</code>, <code>[&quot;calendar&quot;]</code> and <code>RequestPermission</code>):</p>
+<pre><code class="language-pascal">if RequestPermission(dpContacts) and ReadContacts(People, 'ayşe') then
+  for P in People do
+    List.Items.Add(P.Name + '  ' + string.Join(', ', P.Phones));
+
+if RequestPermission(dpCalendar) and ReadCalendar(Events, Date, Date + 7) then
+  for E in Events do
+    List.Items.Add(FormatDateTime('ddd hh:nn', E.Start) + '  ' + E.Title);
+</code></pre>
+<p><code>TContact</code>: <code>Name</code>, <code>Phones</code>, <code>Emails</code>. <code>TCalendarEvent</code>: <code>Title</code>, <code>Place</code>, <code>Notes</code>, <code>Start</code>, <code>Finish</code> (local times),
+<code>AllDay</code>. A repeating event comes once for every time in the range.</p>
+<h2 id="picture-in-picture"><a class="anchor" href="#picture-in-picture">#</a>Picture-in-picture</h2>
+<p>A video goes on in a small window over other apps (Android 8 and newer), like YouTube's:</p>
+<pre><code class="language-toml">[package.android]
+picture_in_picture = true
+</code></pre>
+<pre><code class="language-pascal">EnterPictureInPicture(Player.VideoWidth, Player.VideoHeight);   // now (a button)
+AutoPictureInPicture(True);           // by itself when the user goes home while it is on: on while a video plays
+</code></pre>
+<p>Meanwhile the form has the small window's size: show only the video there (<code>InPictureInPicture</code> says when; hide
+the buttons around it). <a href="https://github.com/azrov/pastel-tv">Pastel TV</a> turns it on while its player plays.</p>
+<h2 id="notifications"><a class="anchor" href="#notifications">#</a>Notifications</h2>
+<p><code>Notify</code> shows a message in the notification bar. <code>Pastel.Notifications</code> has the rest: at a time, again and
+again, taken back, and which one the user tapped. Each notification has a name: the same name replaces it.</p>
+<pre><code class="language-pascal">uses Pastel.Notifications;
+
+ShowNotification('Sync', '12 appointments came in');
+ScheduleNotification('appt-42', 'Appointment', 'Ayşe at 10:00', IncHour(Start, -1));   // an hour before
+ScheduleNotification('backup', 'Backup', 'Time for the weekly backup', NextMonday9, riWeekly);
+CancelNotification('appt-42');                     // the appointment was cancelled
+</code></pre>
+<p><code>riHourly</code>, <code>riDaily</code> and <code>riWeekly</code> repeat it; a time that has passed shows it now. For taps, put a
+<code>TNotificationCenter</code> on the form (<a href="controls.html#tnotificationcenter">controls.md</a>): its <code>OnNotificationClick</code>
+gets the name of the notification that opened the app.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Android</th>
+<th>Linux</th>
+<th>Windows</th>
+<th>macOS</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Shown</td>
+<td>the notification bar</td>
+<td>the desktop's notifications (D-Bus; <code>notify-send</code> else)</td>
+<td>from the app's icon in the notification area (a toast on Windows 10 and 11)</td>
+<td>the Notification Center</td>
+</tr>
+<tr>
+<td>At a time</td>
+<td>also when the app is closed, and after the phone restarted</td>
+<td>while the app runs</td>
+<td>while the app runs</td>
+<td>while the app runs</td>
+</tr>
+<tr>
+<td>Taken back</td>
+<td>yes</td>
+<td>yes</td>
+<td>the balloon of older Windows</td>
+<td>no</td>
+</tr>
+<tr>
+<td>Taps</td>
+<td><code>OnNotificationClick</code></td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+</tr>
+</tbody></table>
+<p>On Android an alarm may come a few minutes late while the phone sleeps (exact alarms need a permission the user
+gives in the settings). The app lists <code>permissions = [&quot;notifications&quot;]</code> (Android 13 and newer ask the user the
+first time). The small icon in the status bar is made from <code>assets/icon.png</code> — white, the shape of the picture on
+the icon's background — or is <code>assets/notification.png</code> (white on transparent) when there is one.</p>
+<p>In tests, <code>CapturedNotifications := SomeStringList</code> keeps them instead of showing them (<code>'name|title|body'</code>).</p>
+<h2 id="permissions"><a class="anchor" href="#permissions">#</a>Permissions</h2>
+<p>An app may use the network and vibration without asking. For the rest Android asks the user the first time
+(<code>GetLocation</code>, <code>Notify</code> and <code>TakePhoto</code> do it themselves). The <code>.apk</code> lists what the app may ask for:</p>
+<pre><code class="language-toml">[package.android]
+permissions = [&quot;location&quot;, &quot;notifications&quot;, &quot;camera&quot;]
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>In <code>permissions</code></th>
+<th><code>TDevicePermission</code></th>
+<th>For</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>location</code></td>
+<td><code>dpLocation</code></td>
+<td><code>GetLocation</code></td>
+</tr>
+<tr>
+<td><code>notifications</code></td>
+<td><code>dpNotifications</code></td>
+<td>notifications (Android 13 and newer ask)</td>
+</tr>
+<tr>
+<td><code>camera</code></td>
+<td><code>dpCamera</code></td>
+<td>the camera in the app itself; <code>TakePhoto</code> asks for it when the list names it</td>
+</tr>
+<tr>
+<td><code>microphone</code></td>
+<td><code>dpMicrophone</code></td>
+<td>recording sound</td>
+</tr>
+<tr>
+<td><code>contacts</code></td>
+<td><code>dpContacts</code></td>
+<td>reading the phone's contacts</td>
+</tr>
+<tr>
+<td><code>calendar</code></td>
+<td><code>dpCalendar</code></td>
+<td>the phone's calendar</td>
+</tr>
+<tr>
+<td><code>phone</code></td>
+<td><code>dpPhone</code></td>
+<td>calling a number directly (dialing with <code>OpenUrl('tel:...')</code> needs none)</td>
+</tr>
+<tr>
+<td><code>storage</code></td>
+<td><code>dpStorage</code></td>
+<td><code>SaveToGallery</code> on Android 9 and older (newer ones need none)</td>
+</tr>
+<tr>
+<td><code>bluetooth</code></td>
+<td><code>dpBluetooth</code></td>
+<td>Bluetooth devices (Android 12 and newer ask; older ones give it with the app)</td>
+</tr>
+<tr>
+<td><code>biometric</code></td>
+<td>—</td>
+<td>the fingerprint and the face for <code>Authenticate</code> (not asked: given with the app)</td>
+</tr>
+</tbody></table>
+<p>Several are asked in one question of the phone, and the answer says which were given:</p>
+<pre><code class="language-pascal">procedure THomeForm.VideoClick(Sender: TObject);
+begin
+  case PermissionState(dpCamera) of
+    psDenied: ShowMessage('The camera is needed to film the work done.');   // refused once: say why, then ask again
+    psBlocked:                                                                  // refused for good
+      begin
+        if Ask('The camera is off for this app. Open its settings?') then
+          OpenAppSettings;
+        Exit;
+      end;
+  end;
+  RequestPermissions([dpCamera, dpMicrophone], @PermissionsDone);
+end;
+
+procedure THomeForm.PermissionsDone(Sender: TObject; Granted, Blocked: TDevicePermissions);
+begin
+  if [dpCamera, dpMicrophone] &lt;= Granted then
+    StartRecording;
+end;
+</code></pre>
+<p><code>PermissionState</code>: <code>psGranted</code>, <code>psNotAsked</code>, <code>psDenied</code> (refused once — the time to explain why the app needs
+it), <code>psBlocked</code> (refused for good: only the app's page in the settings gives it, <code>OpenAppSettings</code>). On computers
+everything is granted.</p>
+<h2 id="the-screen-and-the-gallery"><a class="anchor" href="#the-screen-and-the-gallery">#</a>The screen and the gallery</h2>
+<pre><code class="language-pascal">KeepScreenOn(True);                  // the screen stays on (a recipe, a map, a kiosk); False: dark by itself again
+WindowState := wsFullScreen;         // the status and navigation bars hidden; a swipe from the edge shows them
+SaveToGallery(PhotoFile, 'Salon');   // a picture into the phone's gallery (Pictures/Salon); computers: the Pictures folder
+</code></pre>
+<h2 id="the-clipboard"><a class="anchor" href="#the-clipboard">#</a>The clipboard</h2>
+<p>Copy and paste in edits use the phone's clipboard, like on a computer; nothing to do.</p>
+<h2 id="background-work-and-jobs"><a class="anchor" href="#background-work-and-jobs">#</a>Background work and jobs</h2>
+<p><code>Pastel.Background</code>: what the app does when it is not on the screen.</p>
+<p><strong>Background work</strong> — something the user started and waits for: music, a recorded route, an upload. The app keeps
+running, with a notification, until <code>StopBackgroundWork</code>; its Pascal code goes on as before (timers, threads, the
+network).</p>
+<pre><code class="language-pascal">uses
+  Pastel.Background;
+
+StartBackgroundWork('Uploading photos', '3 of 20', bkDataSync);   // bkMediaPlayback, bkLocation, bkConnectedDevice
+UpdateBackgroundWork('7 of 20');
+StopBackgroundWork;
+</code></pre>
+<p><strong>Background jobs</strong> — a function Android runs from time to time, also when the app is closed and after the phone
+restarted: a sync, a reminder, a backup. It is registered in a unit's initialization (Android may start the app just
+for it, without its window), runs on a thread of its own — data, files, HTTP; no forms — and answers <code>True</code> when it
+was done (<code>False</code>: Android tries again later).</p>
+<pre><code class="language-pascal">function SyncNow: Boolean;
+begin
+  Result := Store.Sync(ServerUrl);
+end;
+
+initialization
+  RegisterBackgroundJob('sync', @SyncNow);
+
+// when the user turns sync on:
+ScheduleBackgroundJob('sync', 60);          // about every hour (15 minutes at least), when there is a network
+CancelBackgroundJob('sync');
+RunBackgroundJob('sync');                   // now: a &quot;Sync now&quot; button, a test
+</code></pre>
+<p><code>pastel.toml</code> says what the app does in the background — Android asks apps to say it:</p>
+<pre><code class="language-toml">[package.android]
+background = [&quot;jobs&quot;, &quot;data_sync&quot;]    # &quot;jobs&quot;: jobs also after a restart; data_sync, media_playback, location, connected_device
+</code></pre>
+<p>Android decides when a job runs (it saves the battery: not more often than every 15 minutes, later when the phone
+sleeps). On computers apps run as long as they are open: background work changes nothing, and scheduled jobs run
+with a timer while the app is open. <code>InBackgroundJob</code> is <code>True</code> inside a job.</p>
+<h2 id="is-it-you"><a class="anchor" href="#is-it-you">#</a>Is it you?</h2>
+<p>The fingerprint, the face or the phone's PIN before something that matters — a payment, the app's secrets:</p>
+<pre><code class="language-pascal">if CanAuthenticate &lt;&gt; akNone then                    // akBiometric, akDeviceLock: something is set up
+  Authenticate('Pay 120 TL', @PayChecked);
+
+procedure THomeForm.PayChecked(Sender: TObject; Ok: Boolean; const Error: string);
+begin
+  if Ok then
+    Pay
+  else if Error &lt;&gt; 'canceled' then
+    ShowMessage(Error);
+end;
+</code></pre>
+<p>Android 9 and newer show the system's dialog (fingerprint or face; with <code>AllowPin</code>, the default, the PIN,
+pattern or password as well); older ones the lock screen's own check. <code>[package.android] permissions = [&quot;biometric&quot;]</code> (no question to the user). On computers <code>Authenticate</code> answers <code>False</code>.</p>
+<h2 id="push-messages"><a class="anchor" href="#push-messages">#</a>Push messages</h2>
+<p>A server sends a message to a phone — an order is ready, a new appointment — through Firebase Cloud Messaging:</p>
+<ol>
+<li><p>In the <a href="https://console.firebase.google.com">Firebase console</a> add an Android app with the app's id
+(<code>[package.android] id</code>) and put its <code>google-services.json</code> next to <code>pastel.toml</code>.</p></li>
+<li><p><code>pastel.toml</code>:</p>
+<pre><code class="language-toml">[package.android]
+libraries = [&quot;com.google.firebase:firebase-messaging:24.1.0&quot;]
+permissions = [&quot;notifications&quot;]
+</code></pre></li>
+<li><p>A <code>TPushNotifications</code> on the main form (<a href="controls.html#tpushnotifications">controls.md</a>): <code>RequestToken</code> gives the
+phone's token in <code>OnToken</code> — your server sends to it (Firebase's HTTP v1 API) — or <code>Subscribe('offers')</code> and
+the server sends to the topic.</p></li>
+</ol>
+<p><code>pastel package apk</code> puts Pastel's push service in when Firebase's messaging is among the libraries. A message
+while the app is on the screen comes to <code>OnMessage</code>; when it is not, the phone shows it as a notification, and a
+tap opens the app with <code>OnMessage</code> (<code>Msg.Opened</code>, its <code>Data</code>). Android 13 and newer ask the user before showing
+notifications: <code>RequestPermissions([dpNotifications], ...)</code>. On computers there is no push; <code>PushTestMessage</code>
+gives <code>OnMessage</code> a message, for tests.</p>
+<h2 id="speaking-and-listening"><a class="anchor" href="#speaking-and-listening">#</a>Speaking and listening</h2>
+<pre><code class="language-pascal">uses
+  Pastel.Speech;
+
+Speak('Your order is ready');                  // the system's voice; Speak('Siparişiniz hazır', 'tr')
+StopSpeaking;
+Listen(@Heard, 'tr');                          // phones: speech to text, the phone's recognizer
+
+procedure THomeForm.Heard(Sender: TObject; Ok: Boolean; const Text: string);
+begin
+  if Ok then SearchEdit.Text := Text;
+end;
+</code></pre>
+<p>Computers speak with <code>spd-say</code> or <code>espeak</code> (Linux), the Windows voice, <code>say</code> (macOS).</p>
+<h2 id="scanning-codes"><a class="anchor" href="#scanning-codes">#</a>Scanning codes</h2>
+<pre><code class="language-pascal">ScanBarcode(@Scanned);         // Google's code scanner: its own camera screen, no camera permission
+
+procedure THomeForm.Scanned(Sender: TObject; Ok: Boolean; const Text, Format: string);
+begin
+  if Ok then FindProduct(Text);            // Format: 'QR', 'EAN13', 'Code128'...
+end;
+</code></pre>
+<p>It needs <code>[package.android] libraries = [&quot;com.google.android.gms:play-services-code-scanner:16.1.0&quot;]</code> (<code>pastel package</code> then puts Pastel's scanner in). Making codes: <code>TBarcode</code> (<a href="controls.html#tbarcode">controls.md</a>).</p>
+
+      </article>
+      <p class="edit mt-5"><a href="https://github.com/azrov/pastel/edit/main/docs/device.md">Improve this page on GitHub</a></p>
+    </main>
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <div class="sticky">
+        <div class="toc-title">On this page</div>
+        <a href="#calls-that-wait-for-the-user">Calls that wait for the user</a>
+        <a href="#shared-with-the-app">Shared with the app</a>
+        <a href="#links-and-the-icons-shortcuts">Links and the icon&#39;s shortcuts</a>
+        <a href="#contacts-and-the-calendar">Contacts and the calendar</a>
+        <a href="#picture-in-picture">Picture-in-picture</a>
+        <a href="#notifications">Notifications</a>
+        <a href="#permissions">Permissions</a>
+        <a href="#the-screen-and-the-gallery">The screen and the gallery</a>
+        <a href="#the-clipboard">The clipboard</a>
+        <a href="#background-work-and-jobs">Background work and jobs</a>
+        <a href="#is-it-you">Is it you?</a>
+        <a href="#push-messages">Push messages</a>
+        <a href="#speaking-and-listening">Speaking and listening</a>
+        <a href="#scanning-codes">Scanning codes</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer py-4 mt-5">
+  <div class="container d-flex flex-wrap gap-3 justify-content-between small text-body-secondary">
+    <span>Pastel 2.1.0-beta.4 · MIT License · built with Pastel.Markdown and Pastel.Pages</span>
+    <span class="d-flex gap-3">
+      <a href="docs.html">Documentation</a>
+      <a href="download.html">Download</a>
+      <a href="contributing.html">Contributing</a>
+      <a href="https://github.com/azrov/pastel">GitHub</a>
+    </span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/delphi.min.js"></script>
+<script src="assets/site.js"></script>
+</body>
+</html>
